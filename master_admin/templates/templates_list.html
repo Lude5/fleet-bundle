@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <span class="current" data-i18n="sb_templates">Templates</span>{% endblock %}
+{% block heading %}<span data-i18n="tpl_heading">Template library</span>{% endblock %}
+
+{% block topbar_actions %}
+    <a href="/sites/new" class="pill primary" data-i18n="tb_new_site">+ New site from template</a>
+{% endblock %}
+
+{% block extra_css %}
+.tpl-intro { background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); border: 1px solid var(--border-subtle); border-radius: 18px; padding: 28px; margin-bottom: 22px; }
+.tpl-intro h2 { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.tpl-intro p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; max-width: 720px; }
+.tpl-stats { display: flex; gap: 22px; margin-top: 18px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
+.tpl-stats span { color: var(--text-muted); text-transform: uppercase; }
+.tpl-stats span b { color: var(--accent); font-size: 16px; font-family: var(--font-display); display: block; margin-top: 2px; letter-spacing: 0.5px; }
+
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.tpl-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 18px; overflow: hidden; transition: all .2s; display: flex; flex-direction: column; }
+.tpl-card:hover { border-color: var(--border); transform: translateY(-3px); box-shadow: 0 18px 50px rgba(0,0,0,0.4); }
+.tpl-card.live { box-shadow: 0 0 0 1px var(--accent); }
+.tpl-preview { height: 180px; position: relative; overflow: hidden; background: var(--surface-2); }
+.tpl-preview .swatches { display: flex; gap: 2px; height: 100%; }
+.tpl-preview .swatches > div { flex: 1; height: 100%; }
+.tpl-preview .preview-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(10,10,11,0.85) 100%); display: flex; align-items: flex-end; padding: 16px; }
+.tpl-preview .preview-overlay .name { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+.tpl-preview .status-badge { position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.tpl-preview .status-badge.live { background: var(--success); color: #fff; }
+.tpl-preview .status-badge.soon { background: rgba(0,0,0,0.5); color: var(--text-muted); border: 1px solid var(--border-subtle); backdrop-filter: blur(8px); }
+
+.tpl-body { padding: 22px; flex: 1; display: flex; flex-direction: column; }
+.tpl-meta { display: flex; gap: 14px; margin-bottom: 12px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+.tpl-meta .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.tpl-desc { color: var(--text-secondary); font-size: 13px; line-height: 1.65; margin-bottom: 14px; flex: 1; }
+.tpl-features { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 16px; }
+.tpl-features span { padding: 3px 9px; background: var(--surface-2); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); letter-spacing: 0.5px; }
+.tpl-actions { display: flex; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.tpl-actions a, .tpl-actions button { flex: 1; }
+{% endblock %}
+
+{% block content %}
+
+<div class="tpl-intro">
+    <h2 data-i18n="tpl_intro_h">Designs ready to deploy</h2>
+    <p data-i18n="tpl_intro_p">Each template is a fully-built Flask site with the kai-style admin panel, currency switcher, link converter, tutorial, and analytics baked in. Pick one, plug in your spreadsheet URL, click deploy — a new client site is live in 5 minutes. Currently 1 production-ready template; 7 more designs are scoped and ready to build on demand.</p>
+    <div class="tpl-stats">
+        <span data-i18n="tpl_stat_live">Live<b>{{ templates | selectattr('status', 'equalto', 'live') | list | length }}</b></span>
+        <span data-i18n="tpl_stat_planned">Planned<b>{{ templates | selectattr('status', 'equalto', 'coming-soon') | list | length }}</b></span>
+        <span data-i18n="tpl_stat_total">Total<b>{{ templates | length }}</b></span>
+    </div>
+</div>
+
+<div class="tpl-grid">
+    {% for t in templates %}
+    <a href="/templates/{{ t.slug }}" class="tpl-card {{ t.status }}" style="text-decoration:none;color:inherit;">
+        <div class="tpl-preview">
+            <div class="swatches">
+                <div style="background: {{ t.color }};"></div>
+                <div style="background: {{ t.color }}cc;"></div>
+                <div style="background: {{ t.color }}99;"></div>
+                <div style="background: #1c1c20;"></div>
+                <div style="background: #0a0a0b;"></div>
+            </div>
+            <div class="preview-overlay">
+                <span class="name">{{ t.name }}</span>
+            </div>
+            <span class="status-badge {{ 'live' if t.status == 'live' else 'soon' }}" data-i18n="{{ 'tpl_status_live' if t.status == 'live' else 'tpl_status_soon' }}">{{ 'Live' if t.status == 'live' else 'Coming soon' }}</span>
+        </div>
+        <div class="tpl-body">
+            <div class="tpl-meta">
+                <span><span class="dot" style="background:{{ t.color }};"></span>{{ t.theme }}</span>
+                <span>{{ t.fonts.split('·')[0] }}</span>
+            </div>
+            <div class="tpl-desc">{{ t.description }}</div>
+            <div class="tpl-features">
+                {% for f in t.features[:4] %}<span>{{ f }}</span>{% endfor %}
+                {% if t.features|length > 4 %}<span>+{{ t.features|length - 4 }} more</span>{% endif %}
+            </div>
+            <div class="tpl-actions">
+                <span class="btn btn-secondary btn-sm" style="cursor:pointer;text-align:center;" data-i18n="tpl_view_details">View details</span>
+                {% if t.status == 'live' %}
+                <span class="btn btn-primary btn-sm" onclick="event.preventDefault();event.stopPropagation();window.location.href='/templates/{{ t.slug }}/studio';" style="cursor:pointer;text-align:center;" data-i18n="tpl_studio">🎨 Studio</span>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+{% endblock %}

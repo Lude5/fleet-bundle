@@ -1,0 +1,651 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/templates" data-i18n="sb_templates">Templates</a> <span class="sep">›</span> <a href="/templates/{{ tpl.slug }}">{{ tpl.name }}</a> <span class="sep">›</span> <span class="current" data-i18n="studio">Studio</span>{% endblock %}
+{% block heading %}{{ tpl.name }} <span style="opacity:0.4;font-weight:400;">· <span data-i18n="studio">Studio</span></span>{% endblock %}
+
+{% block topbar_actions %}
+    <span id="appliedHint" class="pill" style="opacity:0;transition:opacity .2s;background:rgba(34,197,94,0.12);color:var(--success);border-color:rgba(34,197,94,0.3);">✓ <span data-i18n="studio_applied">Applied live</span></span>
+    <a href="/templates/{{ tpl.slug }}" class="pill" data-i18n="studio_back">← Back to template</a>
+    <button type="button" class="pill" id="copyLinkBtn" data-i18n="studio_share">📋 Copy share link</button>
+{% endblock %}
+
+{% block content_class %}full{% endblock %}
+
+{% block extra_css %}
+.studio-wrap { display: grid; grid-template-columns: 340px 1fr; gap: 16px; height: calc(100vh - 160px); min-height: 640px; }
+@media (max-width: 1100px) { .studio-wrap { grid-template-columns: 1fr; height: auto; } }
+
+.studio-controls { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.studio-controls h3 { font-family: var(--font-display); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.studio-controls .ctl-section { padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px; }
+.studio-controls .ctl-section:last-child { border-bottom: none; padding-bottom: 0; }
+.studio-controls label { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.studio-controls input[type=text], .studio-controls input[type=url] { width: 100%; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text); font-size: 13px; outline: none; transition: border-color .15s; font-family: inherit; }
+.studio-controls input[type=text]:focus, .studio-controls input[type=url]:focus { border-color: var(--accent); }
+
+.help-hint { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-muted); line-height: 1.5; letter-spacing: 0.3px; margin: 0; }
+
+/* Color */
+.color-row { display: flex; gap: 8px; align-items: center; }
+.color-row input[type=color] { width: 44px; height: 38px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-2); cursor: pointer; padding: 2px; flex-shrink: 0; }
+.color-row input[type=text] { flex: 1; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; }
+.color-swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.color-swatches button { aspect-ratio: 1; border-radius: 7px; border: 2px solid transparent; cursor: pointer; transition: transform .12s, border-color .12s; padding: 0; position: relative; }
+.color-swatches button:hover { transform: scale(1.1); }
+.color-swatches button.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg) inset; }
+.color-swatches button.active::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: 12px; font-weight: 900; mix-blend-mode: difference; }
+
+/* Theme cards */
+.theme-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.theme-card { padding: 12px 6px; border: 1px solid var(--border-subtle); border-radius: 9px; cursor: pointer; transition: all .15s; text-align: center; background: transparent; }
+.theme-card .swatch-row { display: flex; gap: 2px; justify-content: center; margin-bottom: 6px; }
+.theme-card .swatch-row span { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.1); }
+.theme-card .nm { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+.theme-card:hover { border-color: var(--border); }
+.theme-card:hover .nm { color: var(--text-secondary); }
+.theme-card.active { border-color: var(--accent); background: var(--accent-dim); }
+.theme-card.active .nm { color: var(--accent); }
+
+/* Font picker */
+.font-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.font-card { padding: 12px 10px; border: 1px solid var(--border-subtle); border-radius: 9px; cursor: pointer; transition: all .15s; background: transparent; text-align: left; }
+.font-card .preview { font-size: 18px; line-height: 1; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text); }
+.font-card .nm { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.font-card:hover { border-color: var(--border); }
+.font-card.active { border-color: var(--accent); background: var(--accent-dim); }
+.font-card.active .nm { color: var(--accent); }
+
+/* Logo upload row */
+.logo-row { display: flex; gap: 6px; }
+.logo-row input { flex: 1; }
+.logo-row button { padding: 0 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+.logo-row button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Reset + actions row */
+.studio-reset { background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); padding: 10px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+.studio-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ============ Preview pane ============ */
+.studio-preview { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.studio-preview-bar { padding: 9px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
+.studio-preview-bar .url { flex: 1; min-width: 140px; padding: 5px 10px; background: var(--bg); border-radius: 6px; font-size: 10.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-preview-bar .device-toggle { display: flex; gap: 2px; background: var(--bg); border-radius: 6px; padding: 2px; }
+.studio-preview-bar .device-toggle button { background: transparent; border: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+.studio-preview-bar .device-toggle button.active { background: var(--surface); color: var(--text); }
+.studio-preview-bar .page-jump { display: flex; gap: 2px; background: var(--bg); border-radius: 6px; padding: 2px; }
+.studio-preview-bar .page-jump button { background: transparent; border: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+.studio-preview-bar .page-jump button.active { background: var(--surface); color: var(--text); }
+
+/* Stage area — holds the device frame, centered, with a soft gradient backdrop */
+.studio-stage { flex: 1; position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at top, var(--surface-2), var(--bg) 70%);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+
+/* ----- Laptop device frame -----
+   Sized so the full assembly (bezel + screen + base) fits inside the stage. */
+.device-laptop-wrap {
+    /* Cap by stage height so the base never gets clipped (incl. its 8% overhang and shadow).
+       The screen is 16:10 — total wrap height ≈ width*(10/16) + 22px (bezel+base). */
+    width: min(96%, calc((100% - 56px) * 1.6)); /* keep aspect, accounting for vertical chrome */
+    max-width: 1080px;
+    max-height: calc(100% - 24px);
+    display: flex; flex-direction: column; align-items: center;
+    /* container query-ish: shrink if needed */
+}
+.device-laptop {
+    width: 100%; aspect-ratio: 16/10;
+    max-height: calc(100% - 18px); /* leave room for base */
+    position: relative; padding: 14px 14px 0; background: #1c1c1f;
+    border-radius: 12px 12px 3px 3px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+    display: flex; flex-direction: column; flex-shrink: 0;
+}
+.device-laptop::before {
+    /* Camera at top center */
+    content: ''; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+    width: 5px; height: 5px; border-radius: 50%; background: #3a3a3d;
+    box-shadow: 0 0 0 1px #555 inset;
+}
+.device-laptop .screen {
+    flex: 1; background: #000; border-radius: 3px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.04); min-height: 0;
+    position: relative;
+}
+/* Iframe rendered at a true desktop viewport (1440x900) and scaled to fit.
+   That way kai's @media (min-width: …) breakpoints fire at the same widths
+   they would on a real laptop, instead of triggering mobile layout in a small box. */
+.device-laptop .screen iframe {
+    position: absolute; top: 0; left: 0;
+    width: 1440px; height: 900px;
+    border: none; background: var(--surface); display: block;
+    transform-origin: top left;
+    /* JS sets --scale based on container width */
+    transform: scale(var(--scale, 1));
+}
+/* Laptop base — wider than the body, gives the open-laptop silhouette */
+.device-laptop-base {
+    width: 110%;
+    max-width: 1188px;
+    height: 14px;
+    background: linear-gradient(180deg, #2a2a2d 0%, #1c1c1f 60%, #111114 100%);
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.5);
+    position: relative; flex-shrink: 0;
+}
+.device-laptop-base::before {
+    /* Trackpad slot */
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 4px; background: #0a0a0c; border-radius: 0 0 6px 6px;
+}
+
+/* ----- iPhone device frame ----- */
+.device-phone {
+    width: 100%; max-width: 380px; aspect-ratio: 9 / 19.5;
+    position: relative; padding: 14px;
+    background: linear-gradient(155deg, #2a2a2d, #1a1a1d 60%, #0e0e10);
+    border-radius: 48px;
+    box-shadow:
+        0 24px 60px rgba(0,0,0,0.55),
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        inset 0 0 0 4px #1a1a1d;
+}
+.device-phone .screen {
+    width: 100%; height: 100%; background: #000; border-radius: 36px; overflow: hidden;
+    position: relative;
+}
+.device-phone .screen iframe {
+    width: 100%; height: 100%; border: none; background: var(--surface); display: block;
+}
+.device-phone::before {
+    /* Dynamic Island */
+    content: ''; position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 28px; background: #000; border-radius: 18px; z-index: 4;
+    box-shadow: inset 0 0 0 1px #111;
+}
+.device-phone::after {
+    /* Bottom home indicator */
+    content: ''; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 4px; background: rgba(255,255,255,0.55); border-radius: 3px; z-index: 4;
+    pointer-events: none;
+}
+/* Phone side buttons */
+.device-phone .vol-up,
+.device-phone .vol-down,
+.device-phone .mute,
+.device-phone .power {
+    position: absolute; background: #1a1a1d; border-radius: 1px;
+}
+.device-phone .mute   { left: -3px; top: 90px;  width: 4px; height: 28px; border-radius: 2px 0 0 2px; }
+.device-phone .vol-up { left: -3px; top: 130px; width: 4px; height: 48px; border-radius: 2px 0 0 2px; }
+.device-phone .vol-down { left: -3px; top: 188px; width: 4px; height: 48px; border-radius: 2px 0 0 2px; }
+.device-phone .power  { right: -3px; top: 150px; width: 4px; height: 70px; border-radius: 0 2px 2px 0; }
+
+/* When stage is in phone mode, give it a different backdrop */
+.studio-stage.phone-mode {
+    background: repeating-linear-gradient(45deg, var(--bg), var(--bg) 10px, var(--surface-2) 10px, var(--surface-2) 11px);
+}
+
+/* Hide states */
+.device-laptop-wrap.hidden, .device-phone.hidden { display: none; }
+
+.frame-loading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 10; }
+.frame-loading.show { display: flex; }
+.frame-loading .spin { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.frame-not-ready { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; background: var(--surface); z-index: 5; padding: 40px; text-align: center; }
+.frame-not-ready.show { display: flex; }
+.frame-not-ready h3 { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+.frame-not-ready p { color: var(--text-muted); font-size: 12px; max-width: 380px; line-height: 1.6; }
+.frame-not-ready code { font-family: var(--font-mono); color: var(--accent); background: var(--surface-2); padding: 4px 10px; border-radius: 6px; font-size: 11px; }
+{% endblock %}
+
+{% block content %}
+
+<div class="studio-wrap">
+    <div class="studio-controls">
+
+        <div class="ctl-section">
+            <h3 data-i18n="studio_brand">Brand name</h3>
+            <p class="help-hint" data-i18n="studio_brand_hint">Type your site's name. Updates live in the nav + footer.</p>
+            <input id="ctlBrand" type="text" placeholder="Mimi Finds" maxlength="40" autocomplete="off">
+        </div>
+
+        <div class="ctl-section">
+            <h3 data-i18n="studio_color">Accent color</h3>
+            <p class="help-hint" data-i18n="studio_color_hint">Buttons, links, glows, and price tags use this.</p>
+            <div class="color-row">
+                <input id="ctlColorPick" type="color" value="#06b6d4">
+                <input id="ctlColorHex" type="text" value="#06b6d4" maxlength="7" autocomplete="off">
+            </div>
+            <div class="color-swatches" id="colorSwatches">
+                <button type="button" data-color="#06b6d4" style="background:#06b6d4;" title="Cyan"></button>
+                <button type="button" data-color="#ef4444" style="background:#ef4444;" title="Red"></button>
+                <button type="button" data-color="#f59e0b" style="background:#f59e0b;" title="Amber"></button>
+                <button type="button" data-color="#22c55e" style="background:#22c55e;" title="Green"></button>
+                <button type="button" data-color="#3b82f6" style="background:#3b82f6;" title="Blue"></button>
+                <button type="button" data-color="#8b5cf6" style="background:#8b5cf6;" title="Violet"></button>
+                <button type="button" data-color="#ec4899" style="background:#ec4899;" title="Pink"></button>
+                <button type="button" data-color="#14b8a6" style="background:#14b8a6;" title="Teal"></button>
+                <button type="button" data-color="#f97316" style="background:#f97316;" title="Orange"></button>
+                <button type="button" data-color="#a3e635" style="background:#a3e635;" title="Lime"></button>
+                <button type="button" data-color="#e11d48" style="background:#e11d48;" title="Rose"></button>
+                <button type="button" data-color="#0ea5e9" style="background:#0ea5e9;" title="Sky"></button>
+                <button type="button" data-color="#7c3aed" style="background:#7c3aed;" title="Purple"></button>
+                <button type="button" data-color="#facc15" style="background:#facc15;" title="Yellow"></button>
+                <button type="button" data-color="#ffffff" style="background:#ffffff;border:1px solid var(--border-subtle);" title="White"></button>
+                <button type="button" data-color="#171717" style="background:#171717;border:1px solid var(--border-subtle);" title="Black"></button>
+            </div>
+        </div>
+
+        <div class="ctl-section">
+            <h3 data-i18n="studio_theme">Theme</h3>
+            <p class="help-hint" data-i18n="studio_theme_hint">Pick a base look. Light, dark, or pure mono.</p>
+            <div class="theme-cards" id="themeCards">
+                <button type="button" class="theme-card active" data-theme="dark">
+                    <div class="swatch-row"><span style="background:#0b0b0b;"></span><span style="background:#141414;"></span><span style="background:#06b6d4;"></span></div>
+                    <div class="nm" data-i18n="studio_theme_dark">Dark</div>
+                </button>
+                <button type="button" class="theme-card" data-theme="light">
+                    <div class="swatch-row"><span style="background:#fafafa;"></span><span style="background:#ffffff;"></span><span style="background:#06b6d4;"></span></div>
+                    <div class="nm" data-i18n="studio_theme_light">Light</div>
+                </button>
+                <button type="button" class="theme-card" data-theme="mono">
+                    <div class="swatch-row"><span style="background:#000000;"></span><span style="background:#0a0a0a;"></span><span style="background:#ffffff;border-color:#666;"></span></div>
+                    <div class="nm" data-i18n="studio_theme_mono">Mono</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="ctl-section">
+            <h3 data-i18n="studio_font">Display font</h3>
+            <p class="help-hint" data-i18n="studio_font_hint">Changes the look of every big headline.</p>
+            <div class="font-cards" id="fontCards">
+                <button type="button" class="font-card active" data-font="anton">
+                    <div class="preview" style="font-family:'Anton',sans-serif;">Anton</div>
+                    <div class="nm" data-i18n="studio_font_anton">Anton · default</div>
+                </button>
+                <button type="button" class="font-card" data-font="bebas">
+                    <div class="preview" style="font-family:'Bebas Neue',sans-serif;">Bebas</div>
+                    <div class="nm" data-i18n="studio_font_bebas">Bebas · classic</div>
+                </button>
+                <button type="button" class="font-card" data-font="playfair">
+                    <div class="preview" style="font-family:'Playfair Display',serif;text-transform:none;">Playfair</div>
+                    <div class="nm" data-i18n="studio_font_playfair">Playfair · serif</div>
+                </button>
+                <button type="button" class="font-card" data-font="dmserif">
+                    <div class="preview" style="font-family:'DM Serif Display',serif;text-transform:none;">DM Serif</div>
+                    <div class="nm" data-i18n="studio_font_dmserif">DM · editorial</div>
+                </button>
+                <button type="button" class="font-card" data-font="syne">
+                    <div class="preview" style="font-family:'Syne',sans-serif;">Syne</div>
+                    <div class="nm" data-i18n="studio_font_syne">Syne · modern</div>
+                </button>
+                <button type="button" class="font-card" data-font="jetbrains">
+                    <div class="preview" style="font-family:'JetBrains Mono',monospace;text-transform:none;font-size:14px;">JetBrains</div>
+                    <div class="nm" data-i18n="studio_font_jetbrains">Mono · tech</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="ctl-section">
+            <h3 data-i18n="studio_logo">Logo</h3>
+            <p class="help-hint" data-i18n="studio_logo_hint">Paste an image URL or upload a file. Replaces the text logo in the nav.</p>
+            <div class="logo-row">
+                <input id="ctlLogo" type="url" placeholder="https://..." autocomplete="off">
+                <button type="button" id="logoUploadBtn" data-i18n="studio_upload">Upload</button>
+                <input id="logoFile" type="file" accept="image/*" style="display:none;">
+            </div>
+        </div>
+
+        <button class="studio-reset" id="resetBtn" data-i18n="studio_reset">↺ Reset to defaults</button>
+
+    </div>
+
+    <div class="studio-preview">
+        <div class="studio-preview-bar">
+            <div class="url" id="urlBar">{{ tpl.preview_url }}?pv=1</div>
+            <div class="page-jump">
+                <button type="button" data-page="/" class="active" data-i18n="studio_page_home">Home</button>
+                <button type="button" data-page="/shop" data-i18n="studio_page_shop">Shop</button>
+            </div>
+            <div class="device-toggle">
+                <button type="button" data-device="desktop" class="active" data-i18n="studio_desktop">💻 Laptop</button>
+                <button type="button" data-device="mobile" data-i18n="studio_mobile">📱 iPhone</button>
+            </div>
+        </div>
+        <div class="studio-stage" id="stage">
+
+            <!-- Laptop frame -->
+            <div class="device-laptop-wrap" id="laptopWrap">
+                <div class="device-laptop">
+                    <div class="screen">
+                        <iframe id="laptopFrame" src="about:blank"></iframe>
+                    </div>
+                </div>
+                <div class="device-laptop-base"></div>
+            </div>
+
+            <!-- iPhone frame -->
+            <div class="device-phone hidden" id="phoneWrap">
+                <span class="mute"></span>
+                <span class="vol-up"></span>
+                <span class="vol-down"></span>
+                <span class="power"></span>
+                <div class="screen">
+                    <iframe id="phoneFrame" src="about:blank"></iframe>
+                </div>
+            </div>
+
+            <div class="frame-loading" id="frameLoading"><div class="spin"></div></div>
+            <div class="frame-not-ready" id="frameNotReady">
+                <h3 data-i18n="studio_not_ready_h">Template site is offline</h3>
+                <p data-i18n="studio_not_ready_p">The kai preview site isn't running. Start it locally with the command below, then refresh this page.</p>
+                <code>cd clients/kai && python app.py</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var BASE_URL = {{ tpl.preview_url | tojson }};
+    var STORAGE_KEY = 'studio_state_{{ tpl.slug }}_v2';
+    var DEFAULT_COLOR = '#06b6d4';
+
+    var state = {
+        brand: '',
+        color: DEFAULT_COLOR,
+        theme: 'dark',
+        font: 'anton',
+        logo: '',
+    };
+
+    // current page being previewed (/, /shop, etc.)
+    var currentPage = '/';
+    var currentDevice = 'desktop'; // 'desktop' or 'mobile'
+    var iframeReady = { laptop: false, phone: false };
+    var debounceTimer = null;
+
+    try {
+        var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        Object.assign(state, saved);
+    } catch (e) {}
+
+    // ============================================================
+    // DOM refs
+    // ============================================================
+    var $brand = document.getElementById('ctlBrand');
+    var $colorPick = document.getElementById('ctlColorPick');
+    var $colorHex = document.getElementById('ctlColorHex');
+    var $logo = document.getElementById('ctlLogo');
+    var $logoFile = document.getElementById('logoFile');
+    var $themeCards = document.querySelectorAll('#themeCards .theme-card');
+    var $fontCards = document.querySelectorAll('#fontCards .font-card');
+    var $swatches = document.querySelectorAll('#colorSwatches button');
+    var $deviceBtns = document.querySelectorAll('.studio-preview-bar [data-device]');
+    var $pageBtns = document.querySelectorAll('.studio-preview-bar [data-page]');
+    var $laptopFrame = document.getElementById('laptopFrame');
+    var $phoneFrame = document.getElementById('phoneFrame');
+    var $laptopWrap = document.getElementById('laptopWrap');
+    var $phoneWrap = document.getElementById('phoneWrap');
+    var $stage = document.getElementById('stage');
+    var $urlBar = document.getElementById('urlBar');
+    var $loading = document.getElementById('frameLoading');
+    var $notReady = document.getElementById('frameNotReady');
+    var $appliedHint = document.getElementById('appliedHint');
+
+    function activeFrame() { return currentDevice === 'mobile' ? $phoneFrame : $laptopFrame; }
+    function activeKey() { return currentDevice === 'mobile' ? 'phone' : 'laptop'; }
+
+    // Scale the laptop iframe so it renders at a real desktop viewport (1440x900)
+    // and is then visually shrunk to fit the laptop frame's screen area.
+    function rescaleLaptop() {
+        var screen = $laptopFrame.parentElement; // .screen
+        if (!screen) return;
+        var w = screen.clientWidth;
+        if (w <= 0) return;
+        var scale = w / 1440;
+        $laptopFrame.style.setProperty('--scale', scale);
+    }
+    // Observe size changes on the laptop screen container
+    if (typeof ResizeObserver !== 'undefined') {
+        var ro = new ResizeObserver(function () { rescaleLaptop(); });
+        ro.observe($laptopFrame.parentElement || document.body);
+    } else {
+        window.addEventListener('resize', rescaleLaptop);
+    }
+    // Initial scale + after each iframe (re)load
+    $laptopFrame.addEventListener('load', rescaleLaptop);
+    setTimeout(rescaleLaptop, 0);
+
+    function isHex(s) { return /^#[0-9a-fA-F]{6}$/.test(s || ''); }
+
+    // ============================================================
+    // URL building
+    // ============================================================
+    function buildUrl(includeChrome) {
+        var u = new URL(BASE_URL + currentPage);
+        u.searchParams.set('pv', '1');
+        if (!includeChrome) u.searchParams.set('hideChrome', '1');
+        if (state.brand) u.searchParams.set('brand', state.brand);
+        if (state.color && state.color !== DEFAULT_COLOR) u.searchParams.set('color', state.color);
+        if (state.theme && state.theme !== 'dark') u.searchParams.set('theme', state.theme);
+        if (state.font && state.font !== 'anton') u.searchParams.set('font', state.font);
+        if (state.logo) u.searchParams.set('logo', state.logo);
+        return u.toString();
+    }
+
+    function updateUrlBar() {
+        $urlBar.textContent = buildUrl(true).replace(/&hideChrome=1/, '');
+    }
+
+    // ============================================================
+    // Save state
+    // ============================================================
+    function persist() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    // ============================================================
+    // Push state to BOTH iframes — live (no reload)
+    // Sends to whichever frames are loaded; the other catches up via URL on its next load.
+    // ============================================================
+    function pushLive() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () {
+            updateUrlBar();
+            persist();
+            var payload = {
+                brand: state.brand, color: state.color, theme: state.theme,
+                font: state.font, logo: state.logo, hideChrome: true,
+            };
+            [
+                { key: 'laptop', el: $laptopFrame },
+                { key: 'phone', el: $phoneFrame },
+            ].forEach(function (f) {
+                if (!iframeReady[f.key] || !f.el.contentWindow) return;
+                try { f.el.contentWindow.postMessage({ type: 'kai-preview-update', payload: payload }, '*'); }
+                catch (e) {}
+            });
+        }, 80);
+    }
+
+    // ============================================================
+    // Hydrate UI from state
+    // ============================================================
+    function hydrate() {
+        $brand.value = state.brand || '';
+        $colorPick.value = isHex(state.color) ? state.color : DEFAULT_COLOR;
+        $colorHex.value = state.color;
+        $logo.value = state.logo || '';
+        $themeCards.forEach(function (b) { b.classList.toggle('active', b.dataset.theme === state.theme); });
+        $fontCards.forEach(function (b) { b.classList.toggle('active', b.dataset.font === state.font); });
+        $swatches.forEach(function (b) { b.classList.toggle('active', b.dataset.color.toLowerCase() === (state.color || '').toLowerCase()); });
+    }
+
+    function markSwatch() {
+        $swatches.forEach(function (b) { b.classList.toggle('active', b.dataset.color.toLowerCase() === (state.color || '').toLowerCase()); });
+    }
+
+    // ============================================================
+    // Load (or reload) both iframes with current state baked into URL
+    // ============================================================
+    function loadAllIframes() {
+        $loading.classList.add('show');
+        $notReady.classList.remove('show');
+        iframeReady.laptop = false;
+        iframeReady.phone = false;
+        var url = buildUrl(false);
+        $laptopFrame.src = url;
+        $phoneFrame.src = url;
+    }
+    function showDevice(dev) {
+        currentDevice = dev;
+        $laptopWrap.classList.toggle('hidden', dev !== 'desktop');
+        $phoneWrap.classList.toggle('hidden', dev !== 'mobile');
+        $stage.classList.toggle('phone-mode', dev === 'mobile');
+    }
+
+    // ============================================================
+    // Bindings
+    // ============================================================
+    $brand.addEventListener('input', function () { state.brand = $brand.value.trim(); pushLive(); });
+
+    $colorPick.addEventListener('input', function () {
+        state.color = $colorPick.value;
+        $colorHex.value = state.color;
+        markSwatch();
+        pushLive();
+    });
+    $colorHex.addEventListener('input', function () {
+        var v = $colorHex.value.trim();
+        if (v && v.charAt(0) !== '#') v = '#' + v;
+        if (isHex(v)) {
+            state.color = v;
+            $colorPick.value = v;
+            markSwatch();
+            pushLive();
+        }
+    });
+    $swatches.forEach(function (b) {
+        b.addEventListener('click', function () {
+            state.color = b.dataset.color;
+            $colorPick.value = state.color;
+            $colorHex.value = state.color;
+            markSwatch();
+            pushLive();
+        });
+    });
+
+    $themeCards.forEach(function (b) {
+        b.addEventListener('click', function () {
+            state.theme = b.dataset.theme;
+            $themeCards.forEach(function (x) { x.classList.toggle('active', x === b); });
+            pushLive();
+        });
+    });
+
+    $fontCards.forEach(function (b) {
+        b.addEventListener('click', function () {
+            state.font = b.dataset.font;
+            $fontCards.forEach(function (x) { x.classList.toggle('active', x === b); });
+            pushLive();
+        });
+    });
+
+    $logo.addEventListener('input', function () { state.logo = $logo.value.trim(); pushLive(); });
+    document.getElementById('logoUploadBtn').addEventListener('click', function () { $logoFile.click(); });
+    $logoFile.addEventListener('change', function () {
+        var f = $logoFile.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+            state.logo = reader.result;
+            $logo.value = '(uploaded file · ' + (f.size / 1024).toFixed(1) + 'KB)';
+            pushLive();
+        };
+        reader.readAsDataURL(f);
+    });
+
+    $deviceBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            $deviceBtns.forEach(function (x) { x.classList.toggle('active', x === b); });
+            showDevice(b.dataset.device);
+        });
+    });
+
+    $pageBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            $pageBtns.forEach(function (x) { x.classList.toggle('active', x === b); });
+            currentPage = b.dataset.page;
+            loadAllIframes();
+        });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+        if (!confirm(tm('confirm_reset_studio'))) return;
+        state = { brand: '', color: DEFAULT_COLOR, theme: 'dark', font: 'anton', logo: '' };
+        hydrate();
+        persist();
+        loadAllIframes();
+    });
+
+    document.getElementById('copyLinkBtn').addEventListener('click', function () {
+        var url = buildUrl(true);
+        navigator.clipboard.writeText(url).then(function () {
+            flashHint('✓ Link copied to clipboard');
+        }).catch(function () {
+            flashHint('Could not copy — ' + url, 4000);
+        });
+    });
+
+    function flashHint(text, ms) {
+        $appliedHint.textContent = text;
+        $appliedHint.style.opacity = '1';
+        clearTimeout($appliedHint._t);
+        $appliedHint._t = setTimeout(function () { $appliedHint.style.opacity = '0'; }, ms || 1400);
+    }
+
+    // ============================================================
+    // Listen for iframe messages
+    // ============================================================
+    window.addEventListener('message', function (e) {
+        if (!e.data || typeof e.data !== 'object') return;
+        // Figure out which iframe sent it
+        var key = null;
+        if (e.source === $laptopFrame.contentWindow) key = 'laptop';
+        else if (e.source === $phoneFrame.contentWindow) key = 'phone';
+        if (!key) return;
+
+        if (e.data.type === 'kai-preview-ready') {
+            iframeReady[key] = true;
+            if (iframeReady.laptop || iframeReady.phone) $loading.classList.remove('show');
+            // Push current state on ready so URL params + state match
+            pushLive();
+        } else if (e.data.type === 'kai-preview-applied') {
+            flashHint('✓ Applied live');
+        }
+    });
+
+    // ============================================================
+    // Boot
+    // ============================================================
+    hydrate();
+    updateUrlBar();
+    showDevice(currentDevice);
+    loadAllIframes();
+
+    // If kai is unreachable entirely, show not-ready after 6s timeout
+    setTimeout(function () {
+        if (!iframeReady.laptop && !iframeReady.phone) {
+            $loading.classList.remove('show');
+            $notReady.classList.add('show');
+        }
+    }, 6000);
+})();
+</script>
+{% endblock %}

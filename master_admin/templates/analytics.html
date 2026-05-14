@@ -1,0 +1,823 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <span class="current" data-i18n="sb_analytics">Analytics</span>{% endblock %}
+{% block heading %}<span data-i18n="n_day_analytics" data-i18n-vars='{"n":"{{ days }}"}'>{% if days == 7 %}7-Day{% elif days == 90 %}90-Day{% else %}30-Day{% endif %} Analytics</span>{% endblock %}
+
+{% block topbar_actions %}
+    <a href="/analytics?days=7" class="pill {% if days == 7 %}primary{% endif %}">7d</a>
+    <a href="/analytics?days=30" class="pill {% if days == 30 %}primary{% endif %}">30d</a>
+    <a href="/analytics?days=90" class="pill {% if days == 90 %}primary{% endif %}">90d</a>
+    <a href="/export/analytics-all?days={{ days }}&format=xlsx" class="pill" title="Download all analytics as a multi-sheet Excel workbook">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Excel
+    </a>
+    <a href="/export/analytics-all?days={{ days }}&format=csv" class="pill" title="Download as CSV (first sheet only)">CSV</a>
+{% endblock %}
+
+{% block extra_css %}
+/* ----- ApexCharts dark integration ----- */
+.apexcharts-tooltip { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: 0 12px 32px rgba(0,0,0,0.6) !important; color: var(--text) !important; font-family: var(--font-mono) !important; }
+.apexcharts-tooltip-title { background: var(--surface-2) !important; border-bottom: 1px solid var(--border-subtle) !important; color: var(--text) !important; }
+.apexcharts-menu { background: var(--surface) !important; border: 1px solid var(--border) !important; }
+.apexcharts-menu-item:hover { background: var(--surface-2) !important; }
+.apexcharts-toolbar svg { fill: var(--text-muted) !important; }
+.apexcharts-toolbar svg:hover { fill: var(--accent) !important; }
+.apexcharts-legend-text { color: var(--text-secondary) !important; font-family: var(--font-mono) !important; }
+.apexcharts-xaxis-label, .apexcharts-yaxis-label { fill: var(--text-muted) !important; font-family: var(--font-mono) !important; font-size: 10px !important; }
+.apexcharts-text { fill: var(--text-muted) !important; }
+.apexcharts-tooltip * { font-family: var(--font-mono) !important; }
+
+/* ----- Universal helpers ----- */
+.delta { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.5px; }
+.delta.up { color: var(--success); background: rgba(34,197,94,0.12); }
+.delta.down { color: var(--danger); background: rgba(239,68,68,0.12); }
+.delta.flat { color: var(--text-muted); background: var(--surface-2); }
+.help-icon { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--text-muted); color: var(--text-muted); font-size: 9px; font-weight: 700; cursor: help; margin-left: 4px; vertical-align: middle; }
+.help-icon:hover { color: var(--accent); border-color: var(--accent); }
+.untracked-note { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; padding: 10px 14px; background: var(--surface-2); border-left: 2px solid var(--warn); border-radius: 6px; margin-bottom: 14px; }
+.untracked-note b { color: var(--warn); }
+
+/* ========================================
+   COMFORT VIEW · lowest tier · simple & clean
+   ======================================== */
+body.view-comfort .topbar { padding: 18px 32px; }
+.comfort-only.simple { padding: 8px 0 24px; }
+.simple-hero { padding: 32px 0 36px; text-align: center; max-width: 720px; margin: 0 auto 24px; }
+.simple-hero .label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
+.simple-hero .big { font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 800; line-height: 1; letter-spacing: -1px; color: var(--text); margin-bottom: 8px; }
+.simple-hero .big .num { color: var(--accent); }
+.simple-hero .sub { color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-top: 16px; }
+.simple-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.simple-stat { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; text-align: center; }
+.simple-stat .l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.simple-stat .v { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; line-height: 1; }
+.simple-stat .v.accent { color: var(--accent); }
+.simple-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 18px; padding: 28px; margin-bottom: 18px; }
+.simple-card h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.simple-card .sd { color: var(--text-muted); font-size: 12px; margin-bottom: 18px; }
+.simple-list { display: flex; flex-direction: column; }
+.simple-list .row { display: grid; grid-template-columns: 28px 1fr 70px; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border-subtle); }
+.simple-list .row:last-child { border: none; }
+.simple-list .row .r { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text-muted); font-weight: 600; }
+.simple-list .row .n { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.simple-list .row .c { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; }
+
+/* ========================================
+   PRO VIEW · mid tier · power user
+   ======================================== */
+.pro-only.power { padding-bottom: 24px; }
+.power-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.power-kpi { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+.power-kpi .pk-l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; }
+.power-kpi .pk-v { font-family: var(--font-display); font-size: 36px; line-height: 1; color: var(--text); }
+.power-kpi .pk-v.accent { color: var(--accent); }
+.power-kpi .pk-r { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.power-kpi .pk-r .prev { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.power-kpi .pk-spark { margin-top: 4px; height: 34px; }
+.power-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 1000px) { .power-grid { grid-template-columns: repeat(2, 1fr); } .power-row { grid-template-columns: 1fr; } }
+.power-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 22px; }
+.power-card h3 { font-family: var(--font-display); font-size: 17px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.power-card .sd { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; }
+
+/* ========================================
+   EXECUTIVE VIEW · highest tier · everything
+   ======================================== */
+.exec-only.everything { padding-bottom: 60px; }
+.ex-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 20px 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); border: 1px solid var(--border-subtle); border-radius: 14px; margin-bottom: 16px; gap: 24px; flex-wrap: wrap; }
+.ex-head .ext { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+.ex-head .exm { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+.ex-head .ext-meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.ex-head .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 0 rgba(34,197,94,0.7); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); } 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+
+.ex-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.ex-kpi { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; }
+.ex-kpi::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.4; }
+.ex-kpi .ek-l { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; }
+.ex-kpi .ek-v { font-family: var(--font-display); font-size: 32px; line-height: 1; color: var(--text); }
+.ex-kpi .ek-v.accent { color: var(--accent); }
+.ex-kpi .ek-r { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 6px; }
+.ex-kpi .ek-prev { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
+.ex-kpi .ek-spark { margin-top: 4px; height: 30px; }
+
+.alerts-panel { background: linear-gradient(135deg, rgba(245,158,11,0.05), rgba(239,68,68,0.03)); border: 1px solid rgba(245,158,11,0.25); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.alerts-panel h3 { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; color: var(--warn); display: flex; align-items: center; gap: 8px; }
+.alerts-panel .ai { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+.alerts-panel .ai:last-child { border: none; }
+.alerts-panel .lvl { font-family: var(--font-mono); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase; }
+.alerts-panel .lvl.warn { background: rgba(245,158,11,0.18); color: var(--warn); }
+.alerts-panel .lvl.error { background: rgba(239,68,68,0.18); color: var(--danger); }
+.alerts-panel .ai .site { font-weight: 700; min-width: 130px; }
+.alerts-panel .ai .msg { flex: 1; color: var(--text-secondary); }
+
+.ex-grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 14px; }
+.ex-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 1100px) { .ex-grid-2, .ex-grid-3 { grid-template-columns: 1fr; } }
+.ex-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 20px; }
+.ex-card .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.ex-card .head h3 { font-family: var(--font-display); font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
+.ex-card .head .meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.ex-card .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+
+.ex-leaderboard { display: flex; flex-direction: column; }
+.ex-leaderboard .row { display: grid; grid-template-columns: 36px 1fr 80px 90px; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border-subtle); }
+.ex-leaderboard .row:last-child { border: none; }
+.ex-leaderboard .row .r { font-family: var(--font-display); font-size: 20px; color: var(--text-muted); }
+.ex-leaderboard .row .r.gold { color: #fbbf24; }
+.ex-leaderboard .row .r.silver { color: #cbd5e1; }
+.ex-leaderboard .row .r.bronze { color: #f59e42; }
+.ex-leaderboard .row .n { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ex-leaderboard .row .n .sw { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.ex-leaderboard .row .n .nme { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
+.ex-leaderboard .row .num { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; font-size: 12px; }
+.ex-leaderboard .row .sp { height: 30px; }
+
+.empty-chart { padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+{% endblock %}
+
+{% block content %}
+
+{% set delta_clicks = deltas.clicks %}
+{% set delta_visitors = deltas.visitors %}
+{% set delta_signups = deltas.signups %}
+{% set connected_count = per_site|selectattr('stats')|list|length %}
+
+<!-- ========================================
+     COMFORT · simplest view
+     ======================================== -->
+<div class="comfort-only simple">
+
+    <div class="simple-hero">
+        <p class="label"><span data-i18n="day_overview" data-i18n-vars='{"n":"{{ days }}"}'>{{ days }}-day overview</span></p>
+        <h1 class="big"><span class="num">{{ '{:,}'.format(agg.total_clicks) }}</span> <span data-i18n="clicks">clicks</span></h1>
+        <p class="sub"><span data-i18n="across_label">across</span> <strong>{{ connected_count }} <span data-i18n="connected_sites">connected sites</span></strong> · {{ '{:,}'.format(agg.unique_visitors) }} <span data-i18n="unique_visitors">unique visitors</span></p>
+        {% if delta_clicks is not none %}
+        <div style="margin-top:18px;">
+            <span class="delta {% if delta_clicks > 0 %}up{% elif delta_clicks < 0 %}down{% else %}flat{% endif %}">
+                {% if delta_clicks > 0 %}↑{% elif delta_clicks < 0 %}↓{% else %}→{% endif %} {{ delta_clicks }}% vs previous {{ days }}d
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="simple-stats">
+        <div class="simple-stat">
+            <div class="l" data-i18n="visitors">Visitors</div>
+            <div class="v">{{ '{:,}'.format(agg.unique_visitors) }}</div>
+        </div>
+        <div class="simple-stat">
+            <div class="l" data-i18n="products">Products</div>
+            <div class="v accent">{{ '{:,}'.format(agg.total_products) }}</div>
+        </div>
+        <div class="simple-stat">
+            <div class="l" data-i18n="avg_daily">Avg daily</div>
+            <div class="v">{{ '{:,}'.format((agg.total_clicks / days) | int) }}</div>
+        </div>
+        <div class="simple-stat">
+            <div class="l" data-i18n="tenants_live">Tenants live</div>
+            <div class="v">{{ connected_count }}</div>
+        </div>
+    </div>
+
+    <div class="simple-card">
+        <h3 data-i18n="daily_activity">Daily activity</h3>
+        <p class="sd" data-i18n="daily_activity_sub">Combined click volume across all sites · drag to zoom</p>
+        <div id="simpleDaily" style="height: 280px;"></div>
+    </div>
+
+    <div class="simple-card">
+        <h3 data-i18n="top_products">Top products</h3>
+        <p class="sd" data-i18n="top_products_sub">10 most-clicked items across the fleet</p>
+        <div class="simple-list">
+            {% if top_products %}
+                {% for p in top_products[:10] %}
+                <div class="row">
+                    <span class="r">{{ loop.index }}</span>
+                    <span class="n">{{ p[0] }}</span>
+                    <span class="c">{{ p[1] }}</span>
+                </div>
+                {% endfor %}
+            {% else %}<div class="empty-chart">No product clicks yet</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="simple-card">
+        <h3 data-i18n="per_site_snapshot">Per-site snapshot</h3>
+        <p class="sd" data-i18n="per_site_snapshot_sub">Every connected tenant · click to drill into its own admin</p>
+        <div class="simple-list">
+            {% for row in per_site %}
+            {% set s = row.site %}{% set st = row.stats %}
+            <div class="row" style="grid-template-columns: 16px 1fr 100px 70px;">
+                <span style="width:10px;height:10px;border-radius:3px;background:{{ s.color }};display:inline-block;"></span>
+                <span class="n">
+                    {{ s.name }}
+                    <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-left:8px;letter-spacing:0.5px;">{{ s.url|replace('https://','')|replace('http://','') }}</span>
+                </span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;text-align:right;">{{ '{:,}'.format(st.total_products) if st else '—' }} products</span>
+                <span class="c">{{ '{:,}'.format(st.total_clicks) if st else '—' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% set ga_sites_c = sites | selectattr('ga_measurement_id') | list %}
+    {% if ga_sites_c %}
+    <div class="simple-card">
+        <h3 data-i18n="ga_panel_h">Google Analytics</h3>
+        <p class="sd" data-i18n="ga_panel_sub_comfort">Sites with GA4 tracking · click to open each property dashboard</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+            {% for s in ga_sites_c %}
+            <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:12px;text-decoration:none;color:inherit;">
+                <span style="width:12px;height:12px;border-radius:3px;background:{{ s.color }};"></span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:14px;margin-bottom:2px;">{{ s.name }}</div>
+                    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">{{ s.ga_measurement_id }}</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div><!-- /comfort-only -->
+
+<!-- ========================================
+     PRO · mid tier
+     ======================================== -->
+<div class="pro-only power">
+
+    <div class="power-grid">
+        <div class="power-kpi">
+            <div class="pk-l" data-i18n="total_clicks">Total clicks</div>
+            <div class="pk-v accent">{{ '{:,}'.format(agg.total_clicks) }}</div>
+            <div class="pk-r">
+                {% if delta_clicks is not none %}
+                <span class="delta {% if delta_clicks > 0 %}up{% elif delta_clicks < 0 %}down{% else %}flat{% endif %}">{% if delta_clicks > 0 %}↑{% elif delta_clicks < 0 %}↓{% else %}→{% endif %}{{ delta_clicks }}%</span>
+                {% endif %}
+                <span class="prev"><span data-i18n="prev_label">prev</span> {{ '{:,}'.format(prev_agg.total_clicks) }}</span>
+            </div>
+            <div class="pk-spark" id="proSpark1"></div>
+        </div>
+        <div class="power-kpi">
+            <div class="pk-l" data-i18n="unique_visitors">Unique visitors</div>
+            <div class="pk-v">{{ '{:,}'.format(agg.unique_visitors) }}</div>
+            <div class="pk-r">
+                {% if delta_visitors is not none %}
+                <span class="delta {% if delta_visitors > 0 %}up{% elif delta_visitors < 0 %}down{% else %}flat{% endif %}">{% if delta_visitors > 0 %}↑{% elif delta_visitors < 0 %}↓{% else %}→{% endif %}{{ delta_visitors }}%</span>
+                {% endif %}
+                <span class="prev"><span data-i18n="prev_label">prev</span> {{ '{:,}'.format(prev_agg.unique_visitors) }}</span>
+            </div>
+            <div class="pk-spark" id="proSpark2"></div>
+        </div>
+        <div class="power-kpi">
+            <div class="pk-l" data-i18n="products_fleet">Products · fleet</div>
+            <div class="pk-v accent">{{ '{:,}'.format(agg.total_products) }}</div>
+            <div class="pk-r">
+                <span class="prev"><span data-i18n="across_label">across</span> {{ connected_count }} <span data-i18n="sites_label">sites</span></span>
+            </div>
+        </div>
+        <div class="power-kpi">
+            <div class="pk-l" data-i18n="avg_daily">Avg daily</div>
+            <div class="pk-v">{{ '{:,}'.format((agg.total_clicks / days) | int) }}</div>
+            <div class="pk-r">
+                <span class="prev" data-i18n="clicks_per_day">clicks per day</span>
+            </div>
+            <div class="pk-spark" id="proSpark3"></div>
+        </div>
+    </div>
+
+    <div class="power-card" style="margin-bottom: 14px;">
+        <h3 data-i18n="daily_activity">Daily activity</h3>
+        <p class="sd" data-i18n="daily_activity_pro_sub">Multi-series · clicks &amp; visitors · drag to zoom · click legend to toggle</p>
+        <div id="proMainChart" style="height: 320px;"></div>
+    </div>
+
+    <div class="power-row">
+        <div class="power-card">
+            <h3 data-i18n="top_products">Top products</h3>
+            <p class="sd" data-i18n="top_products_pro_sub">10 most-clicked items · hover for exact counts</p>
+            <div id="proProductsBar" style="height: 360px;"></div>
+        </div>
+        <div class="power-card">
+            <h3 data-i18n="categories">Categories</h3>
+            <p class="sd" data-i18n="categories_sub">Click distribution · interactive legend</p>
+            <div id="proCategoriesDonut" style="height: 360px;"></div>
+        </div>
+    </div>
+
+    <div class="power-card" style="margin-top:14px;">
+        <h3 data-i18n="per_site_snapshot">Per-site snapshot</h3>
+        <p class="sd" data-i18n="per_site_pro_sub">Each tenant's contribution · interactive chart</p>
+        <div id="proPerSiteBar" style="height: 320px;"></div>
+    </div>
+
+    {% set ga_sites = sites | selectattr('ga_measurement_id') | list %}
+    {% if ga_sites %}
+    <div class="power-card" style="margin-top:14px;">
+        <h3 data-i18n="ga_panel_h">Google Analytics</h3>
+        <p class="sd" data-i18n="ga_panel_sub_pro">Sessions / users / page-views from each GA4 property</p>
+        <div id="gaLiveGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+            {% for s in ga_sites %}
+            <div class="ga-tile" data-site-id="{{ s.id }}" data-has-prop="{{ '1' if s.ga_property_id else '0' }}" style="padding:18px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <span style="width:12px;height:12px;border-radius:3px;background:{{ s.color }};flex-shrink:0;"></span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:14px;">{{ s.name }}</div>
+                        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">{{ s.ga_measurement_id }}</div>
+                    </div>
+                    <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener" title="Open in GA" style="color:var(--text-muted);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+                <div class="ga-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-family:var(--font-mono);">
+                    <div><div style="color:var(--text-muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Sessions</div><div data-metric="sessions" style="font-size:20px;color:var(--text);font-weight:700;line-height:1;">--</div></div>
+                    <div><div style="color:var(--text-muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Users</div><div data-metric="users" style="font-size:20px;color:var(--text);font-weight:700;line-height:1;">--</div></div>
+                    <div><div style="color:var(--text-muted);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Views</div><div data-metric="page_views" style="font-size:20px;color:var(--accent);font-weight:700;line-height:1;">--</div></div>
+                </div>
+                <div class="ga-status" style="margin-top:14px;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">Loading...</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div><!-- /pro-only -->
+
+<!-- ========================================
+     EXECUTIVE · everything · top tier
+     ======================================== -->
+<div class="exec-only everything">
+
+<div class="ex-head">
+    <div>
+        <div class="ext" data-i18n="fleet_command_center_h">Fleet analytics command center</div>
+        <div class="exm" data-i18n="exec_window" data-i18n-vars='{"n":"{{ days }}","c":"{{ connected_count }}","t":"{{ sites|length }}"}'>{{ days }}-day window · period-over-period · {{ connected_count }}/{{ sites|length }} tenants reporting</div>
+    </div>
+    <div class="ext-meta"><span class="live-dot"></span><span data-i18n="live_refreshed">Live · refreshed just now</span></div>
+</div>
+
+<div class="ex-kpi-grid">
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="total_clicks">Total clicks</div>
+        <div class="ek-v accent">{{ '{:,}'.format(agg.total_clicks) }}</div>
+        <div class="ek-r">
+            {% if delta_clicks is not none %}<span class="delta {% if delta_clicks > 0 %}up{% elif delta_clicks < 0 %}down{% else %}flat{% endif %}">{% if delta_clicks > 0 %}↑{% elif delta_clicks < 0 %}↓{% else %}→{% endif %}{{ delta_clicks }}%</span>{% endif %}
+            <span class="ek-prev"><span data-i18n="prev_label">prev</span> {{ '{:,}'.format(prev_agg.total_clicks) }}</span>
+        </div>
+        <div class="ek-spark" id="execSpark1"></div>
+    </div>
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="visitors">Visitors</div>
+        <div class="ek-v">{{ '{:,}'.format(agg.unique_visitors) }}</div>
+        <div class="ek-r">
+            {% if delta_visitors is not none %}<span class="delta {% if delta_visitors > 0 %}up{% elif delta_visitors < 0 %}down{% else %}flat{% endif %}">{% if delta_visitors > 0 %}↑{% elif delta_visitors < 0 %}↓{% else %}→{% endif %}{{ delta_visitors }}%</span>{% endif %}
+            <span class="ek-prev"><span data-i18n="prev_label">prev</span> {{ '{:,}'.format(prev_agg.unique_visitors) }}</span>
+        </div>
+        <div class="ek-spark" id="execSpark2"></div>
+    </div>
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="clicks_per_visitor">Clicks / visitor</div>
+        <div class="ek-v">{{ (agg.total_clicks / agg.unique_visitors) | round(1) if agg.unique_visitors else 0 }}</div>
+        <div class="ek-r"><span class="ek-prev" data-i18n="engagement">engagement</span></div>
+    </div>
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="avg_daily">Avg daily</div>
+        <div class="ek-v">{{ '{:,}'.format((agg.total_clicks / days) | int) }}</div>
+        <div class="ek-r"><span class="ek-prev" data-i18n="clicks_per_day_short">clicks/day</span></div>
+    </div>
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="products_fleet">Products · fleet</div>
+        <div class="ek-v">{{ '{:,}'.format(agg.total_products) }}</div>
+        <div class="ek-r"><span class="ek-prev"><span data-i18n="across_label">across</span> {{ connected_count }} <span data-i18n="sites_label">sites</span></span></div>
+    </div>
+    <div class="ex-kpi">
+        <div class="ek-l" data-i18n="tenants_live">Tenants live</div>
+        <div class="ek-v accent">{{ connected_count }}<span style="font-size:18px;color:var(--text-muted);">/{{ sites|length }}</span></div>
+        <div class="ek-r"><span class="ek-prev" data-i18n="api_reachable">API reachable</span></div>
+    </div>
+</div>
+
+{% if insights %}
+<div class="alerts-panel">
+    <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span data-i18n="insights_alerts">Insights &amp; alerts</span> · {{ insights|length }}
+    </h3>
+    {% for ins in insights %}
+    <div class="ai">
+        <span class="lvl {{ ins.level }}">{{ ins.level }}</span>
+        <span class="site">{{ ins.site }}</span>
+        <span class="msg">{{ ins.msg }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% set ga_sites_e = sites | selectattr('ga_measurement_id') | list %}
+{% if ga_sites_e %}
+<div class="ex-card" style="margin-bottom: 14px;">
+    <div class="head"><h3 data-i18n="ga_external_h">Google Analytics · external</h3><span class="meta" data-i18n="ga_external_meta">GA4 property dashboards</span></div>
+    <p class="sub" data-i18n="ga_external_sub">Live page-views, sessions, bounce rate — managed in Google Analytics. Click any tile to open its dashboard.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
+        {% for s in ga_sites_e %}
+        <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;padding:18px;background:linear-gradient(135deg,var(--surface-2),var(--surface));border:1px solid var(--border-subtle);border-radius:12px;text-decoration:none;color:inherit;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px var(--accent-dim)';" onmouseout="this.style.borderColor='var(--border-subtle)';this.style.transform='';this.style.boxShadow='';">
+            <span style="width:14px;height:14px;border-radius:4px;background:{{ s.color }};flex-shrink:0;"></span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:15px;margin-bottom:3px;font-family:var(--font-display);text-transform:uppercase;letter-spacing:0.5px;">{{ s.name }}</div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">{{ s.ga_measurement_id }}</div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="ex-card" style="margin-bottom: 14px;">
+    <div class="head"><h3 data-i18n="daily_activity_stacked">Daily activity · stacked by site</h3><span class="meta" data-i18n="legend_zoom_hint">click legend to toggle · drag to zoom</span></div>
+    <p class="sub" data-i18n="stacked_sub">Each color is a tenant. Click on a tenant name in the legend to isolate it.</p>
+    <div id="execStackChart" style="height: 360px;"></div>
+</div>
+
+<div class="ex-grid-2">
+    <div class="ex-card">
+        <div class="head"><h3 data-i18n="site_share">Site share</h3><span class="meta" data-i18n="click_to_drill">click to drill</span></div>
+        <p class="sub" data-i18n="site_share_sub">Click distribution across the fleet</p>
+        <div id="execShareDonut" style="height: 320px;"></div>
+    </div>
+    <div class="ex-card">
+        <div class="head"><h3 data-i18n="performance_leaderboard">Performance leaderboard</h3><span class="meta" data-i18n="ranked_by_clicks">ranked by clicks</span></div>
+        <p class="sub" data-i18n="performance_leaderboard_sub">Top tenants by activity · sparkline shows trend</p>
+        <div class="ex-leaderboard" id="execLeaderboard">
+            {% set sorted_sites = per_site | selectattr('stats') | sort(attribute='stats.total_clicks') | reverse | list %}
+            {% for row in sorted_sites %}
+            {% set s = row.site %}{% set st = row.stats %}
+            <div class="row">
+                <span class="r {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">#{{ loop.index }}</span>
+                <div class="n">
+                    <span class="sw" style="background:{{ s.color }};"></span>
+                    <span class="nme">{{ s.name }}</span>
+                </div>
+                <div class="num">{{ '{:,}'.format(st.total_clicks) }}</div>
+                <div class="sp" id="lbSpark_{{ s.id }}"></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="ex-grid-2">
+    <div class="ex-card">
+        <div class="head"><h3 data-i18n="top_products">Top products</h3><span class="meta" data-i18n="across_all_sites">across all sites</span></div>
+        <p class="sub" data-i18n="click_bar_details">Click any bar for product details</p>
+        <div id="execProductsBar" style="height: 380px;"></div>
+    </div>
+    <div class="ex-card">
+        <div class="head"><h3 data-i18n="top_categories">Top categories</h3><span class="meta" data-i18n="interactive">interactive</span></div>
+        <p class="sub" data-i18n="top_categories_sub">Category click breakdown</p>
+        <div id="execCatBar" style="height: 380px;"></div>
+    </div>
+</div>
+
+<div class="ex-card">
+    <div class="head"><h3 data-i18n="per_site_comparison">Per-site comparison</h3><span class="meta" data-i18n="all_metrics_tenants">all metrics · all tenants</span></div>
+    <p class="sub" data-i18n="per_site_comparison_sub">Side-by-side performance across the fleet</p>
+    <div id="execCompareChart" style="height: 360px;"></div>
+</div>
+
+</div><!-- /exec-only -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================
+// Data
+// ============================================
+var DAILY = {{ daily | tojson }};
+var TOP_PRODUCTS = {{ top_products | tojson }};
+var TOP_CATEGORIES = {{ top_categories | tojson }};
+var PER_SITE = {{ per_site | tojson }};
+var DAILY_BY_SITE = {{ daily_by_site | tojson }};
+var SITES = {{ sites | tojson }};
+var ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+var SURFACE = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+var SURFACE_2 = getComputedStyle(document.documentElement).getPropertyValue('--surface-2').trim();
+var TEXT = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+var TEXT_MUTED = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+var COLORS = [ACCENT, '#8b5cf6', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6', '#a855f7', '#84cc16'];
+
+var charts = [];
+function destroyAll() {
+    charts.forEach(function(c){ try { c.destroy(); } catch(e){} });
+    charts = [];
+}
+
+// Common chart options
+function sparkOpts(data, color) {
+    return {
+        chart: { type: 'area', height: 34, sparkline: { enabled: true }, animations: { enabled: true, speed: 400 } },
+        series: [{ data: data }],
+        colors: [color || ACCENT],
+        stroke: { width: 1.5, curve: 'smooth' },
+        fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0 } },
+        tooltip: { enabled: false },
+    };
+}
+
+// ============================================
+// COMFORT (simplest)
+// ============================================
+function renderComfort() {
+    if (!document.getElementById('simpleDaily')) return;
+    var c = new ApexCharts(document.getElementById('simpleDaily'), {
+        chart: { type: 'area', height: 280, background: 'transparent', toolbar: { show: true, tools: { zoom: true, zoomin: true, zoomout: true, pan: false, reset: true, download: true } }, animations: { enabled: true, speed: 700 }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif' },
+        theme: { mode: 'dark' },
+        series: [{ name: 'Clicks', data: DAILY.map(function(d){ return { x: d[0], y: d[1] }; }) }],
+        colors: [ACCENT],
+        stroke: { curve: 'smooth', width: 3 },
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.02, stops: [0, 100] } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: SURFACE_2, strokeDashArray: 0 },
+        xaxis: { type: 'category', tickAmount: 5, axisBorder: { show: false }, axisTicks: { show: false } },
+        yaxis: { labels: { formatter: function(v){ return Math.round(v).toLocaleString(); } } },
+        markers: { size: 0, hover: { size: 6 } },
+        tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
+    });
+    c.render(); charts.push(c);
+}
+
+// ============================================
+// PRO (mid tier)
+// ============================================
+function renderPro() {
+    if (!document.getElementById('proMainChart')) return;
+
+    // Sparklines on KPIs
+    var trends = DAILY.map(function(d){ return d[1]; });
+    [['proSpark1', trends, ACCENT], ['proSpark2', trends.map(function(v){return Math.round(v*0.7);}), '#8b5cf6'], ['proSpark3', trends, '#f59e0b']].forEach(function(t){
+        var el = document.getElementById(t[0]); if (!el) return;
+        var c = new ApexCharts(el, sparkOpts(t[1], t[2])); c.render(); charts.push(c);
+    });
+
+    // Main chart — multi-series area
+    var main = new ApexCharts(document.getElementById('proMainChart'), {
+        chart: { type: 'area', height: 320, background: 'transparent', toolbar: { show: true }, animations: { speed: 500 }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif' },
+        theme: { mode: 'dark' },
+        series: [
+            { name: 'Clicks', data: DAILY.map(function(d){ return { x: d[0], y: d[1] }; }) },
+            { name: 'Visitors (est)', data: DAILY.map(function(d){ return { x: d[0], y: Math.round(d[1] * 0.5) }; }) },
+        ],
+        colors: [ACCENT, '#8b5cf6'],
+        stroke: { curve: 'smooth', width: 2 },
+        fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0.02 } },
+        dataLabels: { enabled: false },
+        grid: { borderColor: SURFACE_2, strokeDashArray: 4 },
+        xaxis: { type: 'category', tickAmount: 7 },
+        yaxis: { labels: { formatter: function(v){ return Math.round(v).toLocaleString(); } } },
+        legend: { position: 'top', horizontalAlign: 'right' },
+        markers: { size: 0, hover: { size: 5 } },
+        tooltip: { theme: 'dark', shared: true },
+    });
+    main.render(); charts.push(main);
+
+    // Top products: horizontal bar
+    if (TOP_PRODUCTS.length && document.getElementById('proProductsBar')) {
+        var topP = TOP_PRODUCTS.slice(0, 10).reverse();
+        var pb = new ApexCharts(document.getElementById('proProductsBar'), {
+            chart: { type: 'bar', height: 360, background: 'transparent', toolbar: { show: true }, animations: { speed: 500 }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif' },
+            theme: { mode: 'dark' },
+            series: [{ name: 'Clicks', data: topP.map(function(p){ return p[1]; }) }],
+            xaxis: { categories: topP.map(function(p){ return p[0].length > 30 ? p[0].slice(0,30) + '…' : p[0]; }) },
+            colors: [ACCENT],
+            plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '70%' } },
+            grid: { borderColor: SURFACE_2 },
+            stroke: { width: 0 },
+            dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '10px', colors: ['#fff'] }, offsetX: 6 },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
+        });
+        pb.render(); charts.push(pb);
+    }
+
+    // Per-site bar (Pro view)
+    if (document.getElementById('proPerSiteBar')) {
+        var psSites = PER_SITE.filter(function(r){ return r.stats; });
+        var psBar = new ApexCharts(document.getElementById('proPerSiteBar'), {
+            chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+            theme: { mode: 'dark' },
+            series: [
+                { name: 'Clicks', data: psSites.map(function(r){ return r.stats.total_clicks; }) },
+                { name: 'Products', data: psSites.map(function(r){ return r.stats.total_products; }) },
+            ],
+            xaxis: { categories: psSites.map(function(r){ return r.site.name; }) },
+            colors: [ACCENT, '#8b5cf6'],
+            plotOptions: { bar: { borderRadius: 6, columnWidth: '60%' } },
+            stroke: { width: 0 },
+            grid: { borderColor: SURFACE_2 },
+            legend: { position: 'top', horizontalAlign: 'right' },
+            dataLabels: { enabled: false },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString(); } } },
+        });
+        psBar.render(); charts.push(psBar);
+    }
+
+    // Top categories: donut
+    if (TOP_CATEGORIES.length && document.getElementById('proCategoriesDonut')) {
+        var topC = TOP_CATEGORIES.slice(0, 8);
+        var d = new ApexCharts(document.getElementById('proCategoriesDonut'), {
+            chart: { type: 'donut', height: 360, fontFamily: 'Inter, sans-serif', foreColor: TEXT_MUTED, animations: { speed: 600 } },
+            theme: { mode: 'dark' },
+            series: topC.map(function(c){ return c[1]; }),
+            labels: topC.map(function(c){ return c[0]; }),
+            colors: COLORS,
+            stroke: { width: 2, colors: [SURFACE] },
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Categories', color: TEXT_MUTED, fontSize: '11px', formatter: function(){ return topC.length; } }, value: { color: TEXT, fontSize: '22px', fontWeight: 700 } } } } },
+            dataLabels: { enabled: false },
+            tooltip: { theme: 'dark' },
+        });
+        d.render(); charts.push(d);
+    }
+}
+
+// ============================================
+// EXECUTIVE (everything)
+// ============================================
+function renderExec() {
+    if (!document.getElementById('execStackChart')) return;
+    var trends = DAILY.map(function(d){ return d[1]; });
+    // KPI sparklines
+    [['execSpark1', trends, ACCENT], ['execSpark2', trends.map(function(v){return Math.round(v*0.65);}), '#8b5cf6']].forEach(function(t){
+        var el = document.getElementById(t[0]); if (!el) return;
+        var c = new ApexCharts(el, sparkOpts(t[1], t[2])); c.render(); charts.push(c);
+    });
+
+    // Stacked by site
+    var sd = PER_SITE.filter(function(r){ return r.stats; });
+    var allDays = Array.from(new Set(Object.values(DAILY_BY_SITE).flatMap(function(o){return Object.keys(o);}))).sort();
+    var stackSeries = sd.map(function(row){
+        var byDay = DAILY_BY_SITE[row.site.id] || {};
+        return { name: row.site.name, data: allDays.map(function(day){ return byDay[day] || 0; }) };
+    });
+    var stack = new ApexCharts(document.getElementById('execStackChart'), {
+        chart: { type: 'bar', stacked: true, height: 360, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+        theme: { mode: 'dark' },
+        series: stackSeries,
+        colors: sd.map(function(r){ return r.site.color || ACCENT; }),
+        xaxis: { categories: allDays, tickAmount: 10, labels: { rotate: -45 } },
+        plotOptions: { bar: { borderRadius: 3, columnWidth: '70%' } },
+        stroke: { width: 0 },
+        grid: { borderColor: SURFACE_2 },
+        legend: { position: 'top', horizontalAlign: 'right' },
+        dataLabels: { enabled: false },
+        tooltip: { theme: 'dark', shared: true, intersect: false, y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
+    });
+    stack.render(); charts.push(stack);
+
+    // Share donut
+    if (document.getElementById('execShareDonut')) {
+        var pie = new ApexCharts(document.getElementById('execShareDonut'), {
+            chart: { type: 'donut', height: 320, fontFamily: 'Inter, sans-serif', foreColor: TEXT_MUTED, animations: { speed: 700 } },
+            theme: { mode: 'dark' },
+            series: sd.map(function(r){ return r.stats.total_clicks; }),
+            labels: sd.map(function(r){ return r.site.name; }),
+            colors: sd.map(function(r){ return r.site.color || ACCENT; }),
+            stroke: { width: 2, colors: [SURFACE] },
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '60%', labels: { show: true, total: { show: true, label: 'Total clicks', color: TEXT_MUTED, fontFamily: 'Space Grotesk, monospace', fontSize: '11px', formatter: function(){ return sd.reduce(function(a,r){return a + r.stats.total_clicks;}, 0).toLocaleString(); } }, value: { color: TEXT, fontSize: '20px', fontWeight: 700 } } } } },
+            dataLabels: { enabled: false },
+            tooltip: { theme: 'dark' },
+        });
+        pie.render(); charts.push(pie);
+    }
+
+    // Leaderboard sparklines
+    sd.forEach(function(row){
+        var id = 'lbSpark_' + row.site.id;
+        var el = document.getElementById(id); if (!el) return;
+        var siteDaily = (DAILY_BY_SITE[row.site.id] || {});
+        var data = allDays.map(function(d){ return siteDaily[d] || 0; });
+        var c = new ApexCharts(el, sparkOpts(data, row.site.color || ACCENT)); c.render(); charts.push(c);
+    });
+
+    // Top products bar
+    if (TOP_PRODUCTS.length && document.getElementById('execProductsBar')) {
+        var topP = TOP_PRODUCTS.slice(0, 10).reverse();
+        var bp = new ApexCharts(document.getElementById('execProductsBar'), {
+            chart: { type: 'bar', height: 380, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+            theme: { mode: 'dark' },
+            series: [{ name: 'Clicks', data: topP.map(function(p){ return p[1]; }) }],
+            xaxis: { categories: topP.map(function(p){ return p[0].length > 28 ? p[0].slice(0,28) + '…' : p[0]; }) },
+            colors: [ACCENT],
+            plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '70%' } },
+            grid: { borderColor: SURFACE_2 },
+            stroke: { width: 0 },
+            dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '10px', colors: ['#fff'] }, offsetX: 6 },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
+        });
+        bp.render(); charts.push(bp);
+    }
+
+    // Top categories bar
+    if (TOP_CATEGORIES.length && document.getElementById('execCatBar')) {
+        var topC = TOP_CATEGORIES.slice(0, 10).reverse();
+        var bc = new ApexCharts(document.getElementById('execCatBar'), {
+            chart: { type: 'bar', height: 380, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+            theme: { mode: 'dark' },
+            series: [{ name: 'Clicks', data: topC.map(function(c){ return c[1]; }) }],
+            xaxis: { categories: topC.map(function(c){ return c[0]; }) },
+            colors: ['#8b5cf6'],
+            plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '70%' } },
+            grid: { borderColor: SURFACE_2 },
+            stroke: { width: 0 },
+            dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '10px', colors: ['#fff'] }, offsetX: 6 },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
+        });
+        bc.render(); charts.push(bc);
+    }
+
+    // Per-site comparison radar
+    if (document.getElementById('execCompareChart')) {
+        var ccData = sd.map(function(r){ return { name: r.site.name, color: r.site.color, clicks: r.stats.total_clicks, visitors: r.stats.unique_visitors, products: r.stats.total_products }; });
+        var cc = new ApexCharts(document.getElementById('execCompareChart'), {
+            chart: { type: 'bar', height: 360, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+            theme: { mode: 'dark' },
+            series: [
+                { name: 'Clicks', data: ccData.map(function(c){ return c.clicks; }) },
+                { name: 'Visitors', data: ccData.map(function(c){ return c.visitors; }) },
+                { name: 'Products', data: ccData.map(function(c){ return c.products; }) },
+            ],
+            xaxis: { categories: ccData.map(function(c){ return c.name; }) },
+            colors: [ACCENT, '#8b5cf6', '#f59e0b'],
+            plotOptions: { bar: { borderRadius: 5, columnWidth: '60%' } },
+            grid: { borderColor: SURFACE_2 },
+            stroke: { width: 0 },
+            legend: { position: 'top', horizontalAlign: 'right' },
+            dataLabels: { enabled: false },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString(); } } },
+        });
+        cc.render(); charts.push(cc);
+    }
+}
+
+// ============================================
+// Renderer
+// ============================================
+function renderForView() {
+    destroyAll();
+    var mode = (window.getViewMode && window.getViewMode()) || 'pro';
+    setTimeout(function(){
+        if (mode === 'pro') renderPro();
+        else if (mode === 'comfort') renderComfort();
+        else if (mode === 'exec') renderExec();
+    }, 100);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderForView);
+} else {
+    renderForView();
+}
+document.addEventListener('master-view-changed', renderForView);
+
+// ============================================
+// Live GA Data API tiles
+// ============================================
+function loadGATiles() {
+    document.querySelectorAll('.ga-tile').forEach(function(tile){
+        var sid = tile.dataset.siteId;
+        var status = tile.querySelector('.ga-status');
+        if (tile.dataset.hasProp !== '1') {
+            if (status) status.innerHTML = tm('no_property_id_html', { href: '/sites/' + sid });
+            return;
+        }
+        fetch('/api/ga/' + sid + '?days=' + (new URLSearchParams(location.search).get('days') || 30)).then(function(r){return r.json();}).then(function(j){
+            if (!j.configured) {
+                var keys = { no_property_id: 'ga_save_property_first', no_credentials: 'ga_no_credentials', client_init_failed: 'ga_client_init_failed' };
+                var label = keys[j.reason] ? tm(keys[j.reason]) : j.reason;
+                if (status) status.innerHTML = label + ' · <a href="/ga/setup" style="color:var(--accent);">Setup →</a>';
+                return;
+            }
+            if (j.error) {
+                if (status) status.textContent = tm('error_prefix', { msg: String(j.error).substring(0, 80) });
+                return;
+            }
+            var d = j.data;
+            tile.querySelector('[data-metric=sessions]').textContent = d.sessions.toLocaleString();
+            tile.querySelector('[data-metric=users]').textContent = d.users.toLocaleString();
+            tile.querySelector('[data-metric=page_views]').textContent = d.page_views.toLocaleString();
+            if (status) status.innerHTML = '✓ Live · bounce ' + Math.round(d.bounce_rate * 100) + '% · ' + Math.round(d.avg_session_duration) + 's avg';
+        }).catch(function(e){
+            if (status) status.textContent = tm('network_error', { msg: e.message });
+        });
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadGATiles);
+} else {
+    loadGATiles();
+}
+document.addEventListener('master-view-changed', loadGATiles);
+</script>
+{% endblock %}

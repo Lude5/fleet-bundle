@@ -1,0 +1,49 @@
+# Fleet bundle — single Render Web Service hosting master_admin + every template
+# under one URL. Used to demo new templates to Talan and Mimi.
+#
+# IMPORTANT: autoDeploy is OFF. Updates only happen when manually triggered
+# via the Render dashboard or the Render API. This is intentional — kaiom
+# pushes when ready, not on every commit.
+
+services:
+  - type: web
+    name: fleet-bundle
+    env: python
+    plan: starter            # $7/month, includes 512 MB RAM + persistent disk support
+    region: oregon           # match Talan's other services if known; oregon is Render default
+    autoDeploy: false        # MANUAL DEPLOYS ONLY — push to GitHub does NOT trigger a deploy
+    branch: main
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile -
+    healthCheckPath: /
+    disk:
+      name: fleet-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: lude2026          # master_admin login password
+      - key: KAI_ADMIN_PASSWORD
+        value: changeme123       # kai's /kai/admin login
+      - key: MAYWOOD_ADMIN_PASSWORD
+        value: changeme123       # maywood's /maywood/admin login
+      - key: KAI_DATA_DIR
+        value: /var/data/kai
+      - key: MAYWOOD_DATA_DIR
+        value: /var/data/maywood
+      - key: MASTER_ADMIN_DATA_DIR
+        value: /var/data/master_admin
+      # Bundle-specific: tell each subapp it's mounted under a path
+      - key: KAI_SCRIPT_ROOT
+        value: /kai
+      - key: MAYWOOD_SCRIPT_ROOT
+        value: /maywood
+      # Optional — set if/when needed
+      # - key: OPENAI_API_KEY
+      #   sync: false
+      # - key: META_PIXEL_ID
+      #   sync: false

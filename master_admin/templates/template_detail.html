@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/templates" data-i18n="sb_templates">Templates</a> <span class="sep">›</span> <span class="current">{{ tpl.name }}</span>{% endblock %}
+{% block heading %}{{ tpl.name }}{% endblock %}
+
+{% block topbar_actions %}
+    {% if tpl.preview_url %}
+    <a href="{{ tpl.preview_url }}" target="_blank" rel="noopener" class="pill primary">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span data-i18n="tpl_live_preview_short">Live preview</span>
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content_class %}narrow{% endblock %}
+
+{% block extra_css %}
+.det-hero { padding: 32px; background: linear-gradient(135deg, {{ tpl.color }}22, transparent 60%), var(--surface); border: 1px solid var(--border-subtle); border-radius: 20px; margin-bottom: 22px; position: relative; overflow: hidden; }
+.det-hero::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: {{ tpl.color }}; }
+.det-hero .label { font-family: var(--font-mono); font-size: 10px; color: {{ tpl.color }}; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
+.det-hero h1 { font-family: var(--font-display); font-size: 48px; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 10px; }
+.det-hero .sub { color: var(--text-secondary); font-size: 15px; line-height: 1.7; max-width: 620px; }
+.det-pills { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.det-pills span { padding: 5px 11px; background: var(--surface-2); border-radius: 7px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-secondary); }
+.det-pills span.live { background: var(--success); color: #fff; }
+.det-pills span.soon { background: var(--warn); color: #fff; }
+
+.det-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+@media (max-width: 800px) { .det-row { grid-template-columns: 1fr; } }
+.det-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; }
+.det-card h3 { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.det-card .sub { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; }
+
+.det-tokens { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.det-tokens .tok { padding: 14px; background: var(--surface-2); border-radius: 10px; }
+.det-tokens .tok .l { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.det-tokens .tok .v { font-size: 14px; font-weight: 600; word-break: break-word; }
+.det-tokens .swatch { width: 60px; height: 30px; border-radius: 6px; margin-top: 6px; }
+
+.det-features-list { display: flex; flex-direction: column; gap: 8px; }
+.det-features-list .ft { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface-2); border-radius: 10px; font-size: 13px; }
+.det-features-list .ft .check { color: var(--success); }
+{% endblock %}
+
+{% block content %}
+
+<div class="det-hero">
+    <p class="label"><span data-i18n="tpl_label">Template</span> · {{ tpl.theme }}</p>
+    <h1>{{ tpl.name }}</h1>
+    <p class="sub">{{ tpl.description }}</p>
+    <div class="det-pills">
+        <span class="{{ tpl.status }}" data-i18n="{{ 'tpl_status_live_full' if tpl.status == 'live' else 'tpl_status_soon' }}">{{ 'Live · production-ready' if tpl.status == 'live' else 'Coming soon' }}</span>
+        <span>{{ tpl.theme }}</span>
+        <span>{{ tpl.fonts }}</span>
+    </div>
+</div>
+
+<div class="det-row">
+    <div class="det-card">
+        <h3 data-i18n="tpl_design_tokens">Design tokens</h3>
+        <p class="sub" data-i18n="tpl_design_tokens_sub">Brand color · typography · style fingerprint</p>
+        <div class="det-tokens">
+            <div class="tok">
+                <div class="l" data-i18n="tpl_brand_color">Brand color</div>
+                <div class="v">{{ tpl.color }}</div>
+                <div class="swatch" style="background: {{ tpl.color }};"></div>
+            </div>
+            <div class="tok">
+                <div class="l" data-i18n="tpl_theme">Theme</div>
+                <div class="v">{{ tpl.theme }}</div>
+            </div>
+            <div class="tok" style="grid-column: 1 / -1;">
+                <div class="l" data-i18n="tpl_fonts">Fonts</div>
+                <div class="v">{{ tpl.fonts }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="det-card">
+        <h3 data-i18n="tpl_features_included">Features included</h3>
+        <p class="sub" data-i18n="tpl_features_included_sub">What ships out of the box</p>
+        <div class="det-features-list">
+            {% for f in tpl.features %}
+            <div class="ft">
+                <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ f }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if tpl.status == 'live' %}
+<div class="det-card" style="background: linear-gradient(135deg, var(--accent-dim), var(--surface)); border-color: var(--accent);">
+    <h3 data-i18n="tpl_use_h">Use this template</h3>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 18px;" data-i18n="tpl_use_p">Pre-built and ready. Create a new tenant from this template and we'll clone the folder, prep the agent / affiliate / brand color, and deploy to Render.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="/templates/{{ tpl.slug }}/studio" class="btn btn-primary" data-i18n="tpl_open_studio">🎨 Open preview studio</a>
+        <a href="/sites/new?template={{ tpl.slug }}" class="btn btn-secondary" data-i18n="tpl_create_from" data-i18n-vars='{"name":"{{ tpl.name }}"}'>+ Create site from {{ tpl.name }}</a>
+        <a href="{{ tpl.preview_url }}" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="tpl_open_preview">Open live preview →</a>
+        <a href="{{ tpl.preview_url }}/admin" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="tpl_open_admin">Open template's admin</a>
+    </div>
+</div>
+{% else %}
+<div class="det-card" style="background: linear-gradient(135deg, rgba(245,158,11,0.08), var(--surface)); border-color: rgba(245,158,11,0.25);">
+    <h3 data-i18n="tpl_build_h">Build this template</h3>
+    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 18px;" data-i18n="tpl_build_p">Design and tokens are spec'd above — building this from the kai base would take ~1 day. Say the word and we'll fork kai and apply this design.</p>
+    <div style="display: flex; gap: 10px;">
+        <a href="/templates" class="btn btn-secondary" data-i18n="tpl_back">← Back to all templates</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

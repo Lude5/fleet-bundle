@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.installed.cfg
+build/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+venv/
+env/
+ENV/
+.venv/
+
+# SQLite & local data
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Render local artifacts
+.render/
+
+# Auto-memory & local secrets that should never be committed
+.ga-creds.json
+master_admin/.ga-creds.json

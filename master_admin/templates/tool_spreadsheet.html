@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/tools" data-i18n="tools">Tools</a> <span class="sep">›</span> <span class="current" data-i18n="spreadsheet_import">Spreadsheet import</span>{% endblock %}
+{% block heading %}<span data-i18n="spreadsheet_import">Spreadsheet import</span>{% endblock %}
+{% block content_class %}narrow{% endblock %}
+
+{% block content %}
+
+{% if error %}<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);padding:12px 16px;border-radius:10px;font-family:var(--font-mono);font-size:12px;margin-bottom:18px;">{{ error }}</div>{% endif %}
+
+<div class="card" style="margin-bottom:18px;">
+    <p style="color:var(--text-secondary);font-size:13px;line-height:1.6;margin-bottom:18px;" data-i18n="ts_intro">
+        Auto-detects columns (name, link, CNY/USD price, image). Sheet name → category. Output overwrites clients/{slug}/static/products.json.
+    </p>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="field form-full">
+                <label data-i18n="ts_sheets_url">Google Sheets URL</label>
+                <input class="input" name="url" placeholder="https://docs.google.com/spreadsheets/d/..." required>
+                <span class="hint" data-i18n="ts_sheets_hint">Sheet must be shared "Anyone with the link can view"</span>
+            </div>
+            <div class="field">
+                <label data-i18n="ts_target_site">Target site</label>
+                <select class="select" name="target" required>
+                    {% for s in sites %}<option value="{{ s.slug }}" {% if (target or 'kai') == s.slug %}selected{% endif %}>{{ s.name }} ({{ s.slug }})</option>{% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label data-i18n="ts_cny_rate">CNY → USD rate</label>
+                <input class="input" name="cny_rate" value="6.5">
+                <span class="hint" data-i18n="ts_cny_hint">Divides CNY prices to get USD</span>
+            </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;">
+            <button class="btn btn-primary" data-i18n="ts_run_import">Run import</button>
+            <a href="/tools" class="btn btn-secondary" data-i18n="cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% if output %}
+<div class="card">
+    <div class="card-head">
+        <h2 data-i18n="ts_output">Output</h2>
+        <span class="sub" data-i18n="ts_output_sub">stdout + stderr from parse_spreadsheet.py</span>
+    </div>
+    <pre style="background:var(--surface-2);padding:16px;border-radius:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);overflow-x:auto;line-height:1.55;white-space:pre-wrap;">{{ output }}</pre>
+    <p style="margin-top:14px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);" data-i18n="ts_restart_note">
+        Restart the target site (or wait for its auto-reload) for changes to take effect.
+    </p>
+</div>
+{% endif %}
+{% endblock %}

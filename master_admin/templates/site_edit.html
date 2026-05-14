@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/sites" data-i18n="sb_sites">Sites</a> <span class="sep">›</span> <span class="current">{{ site.name }}</span>{% endblock %}
+{% block heading %}{{ site.name }}{% endblock %}
+
+{% block topbar_actions %}
+    {% if site.url %}<a href="{{ site.url }}" target="_blank" rel="noopener" class="pill" data-i18n="view_site">View site →</a>{% endif %}
+    {% if site.admin_url %}<a href="{{ site.admin_url }}" target="_blank" rel="noopener" class="pill primary" data-i18n="open_admin">Open admin →</a>{% endif %}
+{% endblock %}
+
+{% block content_class %}narrow{% endblock %}
+
+{% block content %}
+
+{% if saved %}
+<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--success);padding:12px 16px;border-radius:10px;font-family:var(--font-mono);font-size:12px;margin-bottom:18px;letter-spacing:1px;text-transform:uppercase;" data-i18n="saved">
+    Saved · changes persist to sites.json
+</div>
+{% endif %}
+
+<form method="POST">
+    <div class="card" style="margin-bottom:18px;">
+        <div class="card-head">
+            <h2 data-i18n="brand">Brand</h2>
+            <span class="sub" data-i18n="brand_sub">Identity & affiliate</span>
+        </div>
+        <div class="form-grid">
+            <div class="field">
+                <label data-i18n="display_name">Display name</label>
+                <input class="input" name="name" value="{{ site.name }}" required>
+            </div>
+            <div class="field">
+                <label data-i18n="slug_ro">Slug (read-only)</label>
+                <input class="input" value="{{ site.slug }}" disabled>
+            </div>
+            <div class="field form-full">
+                <label data-i18n="description">Description</label>
+                <input class="input" name="description" value="{{ site.description }}">
+            </div>
+            <div class="field">
+                <label data-i18n="brand_color">Brand color (hex)</label>
+                <input class="input" name="color" value="{{ site.color }}">
+            </div>
+            <div class="field">
+                <label data-i18n="status">Status</label>
+                <select class="select" name="tag">
+                    <option value="live" {% if site.tag == 'live' %}selected{% endif %} data-i18n="status_opt_live">Live</option>
+                    <option value="wip" {% if site.tag == 'wip' %}selected{% endif %} data-i18n="status_opt_wip">WIP</option>
+                    <option value="template" {% if site.tag == 'template' %}selected{% endif %} data-i18n="status_opt_template">Template</option>
+                    <option value="down" {% if site.tag == 'down' %}selected{% endif %} data-i18n="status_opt_down">Down</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+        <div class="card-head">
+            <h2 data-i18n="endpoints">Endpoints</h2>
+            <span class="sub" data-i18n="endpoints_sub">URLs & access</span>
+        </div>
+        <div class="form-grid">
+            <div class="field form-full">
+                <label data-i18n="public_url">Public URL</label>
+                <input class="input" name="url" value="{{ site.url }}" placeholder="https://acmefinds.com">
+            </div>
+            <div class="field form-full">
+                <label data-i18n="admin_url">Admin URL</label>
+                <input class="input" name="admin_url" value="{{ site.admin_url }}" placeholder="https://acmefinds.com/admin">
+            </div>
+            <div class="field">
+                <label data-i18n="admin_password">Admin password</label>
+                <input class="input" name="admin_password" value="{{ site.admin_password }}" type="text">
+            </div>
+            <div class="field">
+                <label data-i18n="admin_api_token">Admin API token</label>
+                <input class="input" name="admin_token" id="adminToken" value="{{ site.admin_token }}" placeholder="(empty)">
+                <span class="hint" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <span data-i18n="admin_api_token_hint">Saved on Render as ADMIN_API_TOKEN — used for cross-site API calls.</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="testConnection()" style="white-space:nowrap;" data-i18n="test_connection">Test connection</button>
+                </span>
+                <div id="testResult" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.5px;"></div>
+            </div>
+            <div class="field form-full">
+                <label data-i18n="render_service_id">Render service ID</label>
+                <input class="input" name="render_service_id" value="{{ site.render_service_id }}" placeholder="srv-xxxxxxxxxx">
+                <span class="hint" data-i18n="render_service_id_hint">From Render dashboard URL · used to push env-var changes later.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+        <div class="card-head">
+            <h2 data-i18n="agent_affiliate">Agent & affiliate</h2>
+            <span class="sub" data-i18n="agent_affiliate_sub">Where buy clicks route</span>
+        </div>
+        <div class="form-grid">
+            <div class="field">
+                <label data-i18n="agent_name">Agent name</label>
+                <input class="input" name="agent" value="{{ site.agent }}" placeholder="KakoBuy">
+            </div>
+            <div class="field">
+                <label data-i18n="affiliate_code">Affiliate code</label>
+                <input class="input" name="affiliate_code" value="{{ site.affiliate_code }}">
+            </div>
+            <div class="field form-full">
+                <label data-i18n="agent_signup_url">Agent signup URL (with affcode applied)</label>
+                <input class="input" name="agent_signup" value="{{ site.agent_signup }}" placeholder="https://www.kakobuy.com/register?affcode=xxx">
+            </div>
+            <div class="field">
+                <label data-i18n="product_count">Product count (display only)</label>
+                <input class="input" name="product_count" type="number" value="{{ site.product_count }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px;">
+        <div class="card-head">
+            <h2 data-i18n="ga_panel_h">Google Analytics</h2>
+            <span class="sub" data-i18n="ga_property_sub">GA4 property — tracking + live reporting</span>
+        </div>
+        <div class="form-grid">
+            <div class="field">
+                <label><span data-i18n="ga_measurement_id">Measurement ID</span> <span style="opacity:0.6;" data-i18n="ga_for_tracking">(for tracking)</span></label>
+                <input class="input" name="ga_measurement_id" value="{{ site.ga_measurement_id or '' }}" placeholder="G-XXXXXXXXXX">
+                <span class="hint" data-i18n="ga_measurement_hint">Installed on the site's pages so visits flow to GA.</span>
+            </div>
+            <div class="field">
+                <label><span data-i18n="ga_property_id">Property ID</span> <span style="opacity:0.6;" data-i18n="ga_for_live_data">(for live data in master admin)</span></label>
+                <input class="input" name="ga_property_id" value="{{ site.ga_property_id or '' }}" placeholder="123456789">
+                <span class="hint"><span data-i18n="ga_property_hint">GA → Admin → Property details → Property ID.</span> <a href="/ga/setup" style="color:var(--accent);" data-i18n="ga_setup_guide">Setup guide →</a></span>
+            </div>
+            <div class="field form-full">
+                <span class="hint" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                    {% if site.ga_measurement_id %}
+                    <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="white-space:nowrap;" data-i18n="ga_open">Open Google Analytics →</a>
+                    {% endif %}
+                    {% if site.ga_property_id %}
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="testGA()" data-i18n="ga_test_live">Test live data fetch</button>
+                    <div id="gaTestResult" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:0.5px;width:100%;"></div>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary" data-i18n="save_changes">Save changes</button>
+        <a href="/sites" class="btn btn-secondary" data-i18n="cancel">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function testGA() {
+    var box = document.getElementById('gaTestResult');
+    box.style.display = 'block';
+    box.style.background = 'var(--surface-2)';
+    box.style.color = 'var(--text-secondary)';
+    box.textContent = tm('pinging_ga');
+    try {
+        var res = await fetch('/api/ga/{{ site.id }}?days=30');
+        var json = await res.json();
+        if (!json.configured) {
+            box.style.background = 'rgba(245,158,11,0.12)';
+            box.style.color = 'var(--warn)';
+            var keys = { no_property_id: 'ga_save_property_first', no_credentials: 'ga_no_credentials', client_init_failed: 'ga_client_init_failed' };
+            box.textContent = '⚠ ' + (keys[json.reason] ? tm(keys[json.reason]) : json.reason);
+        } else if (json.error) {
+            box.style.background = 'rgba(239,68,68,0.12)';
+            box.style.color = 'var(--danger)';
+            box.textContent = '✗ ' + json.error.substring(0, 200);
+        } else {
+            var d = json.data;
+            box.style.background = 'rgba(34,197,94,0.12)';
+            box.style.color = 'var(--success)';
+            box.innerHTML = '✓ Live · <strong>' + d.sessions.toLocaleString() + '</strong> sessions · <strong>' + d.users.toLocaleString() + '</strong> users · <strong>' + d.page_views.toLocaleString() + '</strong> page views · bounce ' + Math.round(d.bounce_rate * 100) + '%';
+        }
+    } catch (e) {
+        box.style.background = 'rgba(239,68,68,0.12)';
+        box.style.color = 'var(--danger)';
+        box.textContent = '✗ ' + tm('network_error', { msg: e.message });
+    }
+}
+
+async function testConnection() {
+    var box = document.getElementById('testResult');
+    box.style.display = 'block';
+    box.style.background = 'var(--surface-2)';
+    box.style.color = 'var(--text-secondary)';
+    box.textContent = tm('pinging');
+    try {
+        var res = await fetch('/sites/{{ site.id }}/test-api');
+        var json = await res.json();
+        if (json.ok && json.token_valid) {
+            box.style.background = 'rgba(34,197,94,0.12)';
+            box.style.color = 'var(--success)';
+            box.innerHTML = '✓ Connected · <strong>' + (json.site_name || 'site') + '</strong> · agent <strong>' + (json.agent || '—') + '</strong> · ' + json.latency_ms + 'ms';
+        } else if (json.ok && !json.token_valid) {
+            box.style.background = 'rgba(245,158,11,0.12)';
+            box.style.color = 'var(--warn)';
+            box.textContent = tm('site_token_invalid');
+        } else {
+            box.style.background = 'rgba(239,68,68,0.12)';
+            box.style.color = 'var(--danger)';
+            box.textContent = '✗ ' + (json.error || tm('toast_failed')) + (json.latency_ms ? ' (' + json.latency_ms + 'ms)' : '');
+        }
+    } catch (e) {
+        box.style.background = 'rgba(239,68,68,0.12)';
+        box.style.color = 'var(--danger)';
+        box.textContent = '✗ ' + tm('network_error', { msg: e.message });
+    }
+}
+</script>
+{% endblock %}

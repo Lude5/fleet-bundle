@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block crumbs %}<span class="current" data-i18n="sb_dashboard">Dashboard</span>{% endblock %}
+{% block heading %}<span data-i18n="sb_dashboard">Dashboard</span>{% endblock %}
+
+{% block topbar_actions %}
+    <a href="/sites/new" class="pill primary" data-i18n="tb_new_site">+ New site</a>
+{% endblock %}
+
+{% block extra_css %}
+/* ApexCharts theming */
+.apexcharts-tooltip { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: 0 12px 32px rgba(0,0,0,0.6) !important; color: var(--text) !important; font-family: var(--font-mono) !important; }
+.apexcharts-tooltip-title { background: var(--surface-2) !important; border-bottom: 1px solid var(--border-subtle) !important; }
+.apexcharts-legend-text { color: var(--text-secondary) !important; font-family: var(--font-mono) !important; }
+.apexcharts-xaxis-label, .apexcharts-yaxis-label { fill: var(--text-muted) !important; font-family: var(--font-mono) !important; font-size: 10px !important; }
+.apexcharts-text { fill: var(--text-muted) !important; }
+
+/* Live status tags */
+.tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ========================================
+   COMFORT VIEW · simple welcome
+   ======================================== */
+body.view-comfort .topbar { padding: 18px 32px; }
+.dash-comfort .hello { text-align: center; padding: 32px 0 28px; max-width: 720px; margin: 0 auto; }
+.dash-comfort .hello .kicker { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
+.dash-comfort .hello h1 { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; margin-bottom: 10px; }
+.dash-comfort .hello h1 .num { color: var(--accent); }
+.dash-comfort .hello .sub { color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
+.dash-comfort .small-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.dash-comfort .small-stat { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px; text-align: center; }
+.dash-comfort .small-stat .l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.dash-comfort .small-stat .v { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; line-height: 1; }
+.dash-comfort .small-stat .v.accent { color: var(--accent); }
+.dash-comfort .site-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.dash-comfort .scc { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; transition: all .2s; }
+.dash-comfort .scc:hover { transform: translateY(-2px); border-color: var(--border); }
+.dash-comfort .scc .stripe { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.dash-comfort .scc h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; padding-top: 4px; }
+.dash-comfort .scc .url { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 14px; }
+.dash-comfort .scc .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+.dash-comfort .scc .row .lb { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.dash-comfort .scc .row .vl { color: var(--text); font-weight: 600; }
+.dash-comfort .scc .actions { display: flex; gap: 6px; margin-top: 14px; }
+
+/* ========================================
+   PRO VIEW · mid tier · power user
+   ======================================== */
+.dash-pro .pro-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.dash-pro .pro-kpi { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px; position: relative; }
+.dash-pro .pro-kpi .l { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.dash-pro .pro-kpi .v { font-family: var(--font-display); font-size: 30px; line-height: 1; color: var(--text); }
+.dash-pro .pro-kpi .v.accent { color: var(--accent); }
+.dash-pro .pro-kpi .ctx { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.5px; }
+
+.dash-pro .pro-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 1000px) { .dash-pro .pro-row { grid-template-columns: 1fr; } }
+.dash-pro .pro-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 20px; }
+.dash-pro .pro-card h3 { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.dash-pro .pro-card .sd { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+
+.dash-pro .pro-site-row { display: grid; grid-template-columns: 1fr 80px 80px 100px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; }
+.dash-pro .pro-site-row:last-child { border: none; }
+.dash-pro .pro-site-row .n { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dash-pro .pro-site-row .n .sw { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.dash-pro .pro-site-row .n .nme { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.dash-pro .pro-site-row .num { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; }
+
+/* ========================================
+   EXECUTIVE VIEW · everything
+   ======================================== */
+.dash-exec .ex-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 22px 26px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); border: 1px solid var(--border-subtle); border-radius: 14px; margin-bottom: 14px; gap: 24px; flex-wrap: wrap; }
+.dash-exec .ex-head .t { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+.dash-exec .ex-head .m { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; margin-top: 4px; }
+.dash-exec .ex-head .meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.dash-exec .ex-head .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 0 rgba(34,197,94,0.7); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7); } 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+
+.dash-exec .ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.dash-exec .ex-tile { background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 20px; position: relative; overflow: hidden; }
+.dash-exec .ex-tile::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.4; }
+.dash-exec .ex-tile .l { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+.dash-exec .ex-tile .v { font-family: var(--font-display); font-size: 38px; line-height: 1; color: var(--text); }
+.dash-exec .ex-tile .v.accent { color: var(--accent); }
+.dash-exec .ex-tile .v.small { font-size: 24px; }
+.dash-exec .ex-tile .x { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 8px; letter-spacing: 1px; }
+
+.dash-exec .ex-row-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 1100px) { .dash-exec .ex-row-2 { grid-template-columns: 1fr; } }
+.dash-exec .ex-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 22px; }
+.dash-exec .ex-card .hd { display: flex; align-items: center; justify-content: space-between; }
+.dash-exec .ex-card h3 { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.dash-exec .ex-card .meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.dash-exec .ex-card .sd { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; }
+
+.dash-exec .leaderboard { display: flex; flex-direction: column; }
+.dash-exec .leaderboard .row { display: grid; grid-template-columns: 42px 1fr 110px 80px 110px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+.dash-exec .leaderboard .row:last-child { border: none; }
+.dash-exec .leaderboard .row .r { font-family: var(--font-display); font-size: 24px; color: var(--text-muted); }
+.dash-exec .leaderboard .row .r.gold { color: #fbbf24; }
+.dash-exec .leaderboard .row .r.silver { color: #cbd5e1; }
+.dash-exec .leaderboard .row .r.bronze { color: #f59e42; }
+.dash-exec .leaderboard .row .n { display: flex; align-items: center; gap: 10px; }
+.dash-exec .leaderboard .row .n .sw { width: 10px; height: 10px; border-radius: 3px; }
+.dash-exec .leaderboard .row .n .nme { font-weight: 600; font-size: 14px; }
+.dash-exec .leaderboard .row .n .url { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.dash-exec .leaderboard .row .num { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; font-size: 14px; }
+{% endblock %}
+
+{% block content %}
+
+<!-- ========================================
+     COMFORT (simplest)
+     ======================================== -->
+<div class="comfort-only dash-comfort">
+
+<div class="hello">
+    <p class="kicker">Master control plane</p>
+    <h1>Your <span class="num">{{ sites|length }}</span> sites</h1>
+    <p class="sub">Managing <strong>{{ '{:,}'.format(total_products) }} products</strong> across {{ sites|length }} tenants from one dashboard.</p>
+</div>
+
+<div class="small-stats">
+    <div class="small-stat"><div class="l" data-i18n="dash_tenants">Tenants</div><div class="v">{{ sites|length }}</div></div>
+    <div class="small-stat"><div class="l" data-i18n="dash_products">Products</div><div class="v accent">{{ '{:,}'.format(total_products) }}</div></div>
+    <div class="small-stat"><div class="l" data-i18n="dash_live">Live</div><div class="v">{{ live_count }}</div></div>
+</div>
+
+<div class="site-cards">
+    {% for s in sites %}
+    <a href="/sites/{{ s.id }}" class="scc" data-site-id="{{ s.id }}" style="text-decoration:none;color:inherit;">
+        <div class="stripe" style="background:{{ s.color }};"></div>
+        <h3>{{ s.name }}</h3>
+        <div class="url">{{ s.url|replace('https://','')|replace('http://','') }}</div>
+        <div class="row"><span class="lb">Products</span><span class="vl">{{ '{:,}'.format(s.product_count) if s.product_count else 0 }}</span></div>
+        <div class="row"><span class="lb">Agent</span><span class="vl">{{ s.agent or '—' }}</span></div>
+        <div class="row"><span class="lb">Status</span><span class="vl"><span class="tag {{ s.tag }}" data-status-tag><span class="dot"></span><span data-status-label>{{ s.tag }}</span></span></span></div>
+        <div class="actions">
+            {% if s.admin_url %}<a href="{{ s.admin_url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" onclick="event.stopPropagation();">Admin →</a>{% endif %}
+            {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" onclick="event.stopPropagation();">Site →</a>{% endif %}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+</div><!-- /comfort-only -->
+
+<!-- ========================================
+     PRO (mid tier)
+     ======================================== -->
+<div class="pro-only dash-pro">
+
+<div class="pro-strip">
+    <div class="pro-kpi"><div class="l" data-i18n="dash_tenants">Tenants</div><div class="v">{{ sites|length }}</div><div class="ctx" data-i18n="n_live" data-i18n-vars='{"n":"{{ live_count }}"}'>{{ live_count }} live</div></div>
+    <div class="pro-kpi"><div class="l" data-i18n="dash_products_fleet">Products · fleet</div><div class="v accent">{{ '{:,}'.format(total_products) }}</div><div class="ctx" data-i18n="dash_total_catalog">total catalog</div></div>
+    <div class="pro-kpi"><div class="l" data-i18n="dash_avg_site">Avg / site</div><div class="v">{{ '{:,}'.format((total_products / sites|length) | int) if sites|length else 0 }}</div><div class="ctx" data-i18n="products_per_tenant">products per tenant</div></div>
+    <div class="pro-kpi"><div class="l" data-i18n="dash_uptime">Uptime</div><div class="v accent">100<span style="font-size:14px;">%</span></div><div class="ctx" data-i18n="n_of_m_reachable" data-i18n-vars='{"n":"{{ live_count }}","m":"{{ sites|length }}"}'>{{ live_count }}/{{ sites|length }} reachable</div></div>
+</div>
+
+<div class="pro-row">
+    <div class="pro-card">
+        <h3 data-i18n="dash_product_distribution">Product distribution</h3>
+        <p class="sd" data-i18n="catalog_per_tenant">Catalog size per tenant · hover for exact</p>
+        <div id="proSitesBar" style="height: 340px;"></div>
+    </div>
+    <div class="pro-card">
+        <h3 data-i18n="dash_all_tenants">All tenants</h3>
+        <p class="sd" data-i18n="dash_all_tenants_sub">Quick reference · click site to manage</p>
+        {% for s in sites %}
+        <div class="pro-site-row" data-site-id="{{ s.id }}">
+            <div class="n">
+                <span class="sw" style="background:{{ s.color }};"></span>
+                <span class="nme">{{ s.name }}</span>
+            </div>
+            <div class="num">{{ '{:,}'.format(s.product_count) if s.product_count else 0 }}</div>
+            <div><span class="tag {{ s.tag }}" data-status-tag><span class="dot"></span><span data-status-label>{{ s.tag }}</span></span></div>
+            <div style="display:flex;gap:5px;justify-content:flex-end;">
+                <a href="/sites/{{ s.id }}" class="btn btn-secondary btn-sm" data-i18n="site_edit">Edit</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</div><!-- /pro-only -->
+
+<!-- ========================================
+     EXECUTIVE (everything)
+     ======================================== -->
+<div class="exec-only dash-exec">
+
+<div class="ex-head">
+    <div>
+        <div class="t">Fleet command center</div>
+        <div class="m">{{ sites|length }} tenants · {{ live_count }} live · {{ '{:,}'.format(total_products) }} products</div>
+    </div>
+    <div class="meta"><span class="live-dot"></span><span data-i18n="live_refreshed">Live · refreshed just now</span></div>
+</div>
+
+<div class="ex-grid">
+    <div class="ex-tile">
+        <div class="l" data-i18n="dash_tenants">Tenants</div>
+        <div class="v">{{ sites|length }}</div>
+        <div class="x" data-i18n="n_of_m_live" data-i18n-vars='{"n":"{{ live_count }}","m":"{{ sites|length }}"}'>{{ live_count }}/{{ sites|length }} live</div>
+    </div>
+    <div class="ex-tile">
+        <div class="l" data-i18n="dash_products_fleet">Products · fleet</div>
+        <div class="v accent">{{ '{:,}'.format(total_products) }}</div>
+        <div class="x" data-i18n="dash_total_catalog">total catalog</div>
+    </div>
+    <div class="ex-tile">
+        <div class="l" data-i18n="dash_avg_site">Avg / site</div>
+        <div class="v">{{ '{:,}'.format((total_products / sites|length) | int) if sites|length else 0 }}</div>
+        <div class="x" data-i18n="dash_density">density</div>
+    </div>
+    <div class="ex-tile">
+        <div class="l" data-i18n="dash_top_tenant">Top tenant</div>
+        {% set top_site = sites | sort(attribute='product_count') | reverse | first %}
+        <div class="v small">{{ top_site.name if top_site else '—' }}</div>
+        <div class="x" data-i18n="n_products" data-i18n-vars='{"n":"{{ '{:,}'.format(top_site.product_count) if top_site else 0 }}"}'>{{ '{:,}'.format(top_site.product_count) if top_site else 0 }} products</div>
+    </div>
+    <div class="ex-tile">
+        <div class="l" data-i18n="dash_uptime">Uptime</div>
+        <div class="v accent">100<span style="font-size:18px;">%</span></div>
+        <div class="x" data-i18n="dash_all_systems_ok">all systems ok</div>
+    </div>
+</div>
+
+<div class="ex-row-2">
+    <div class="ex-card">
+        <div class="hd"><div><h3 data-i18n="dash_product_distribution">Product distribution</h3><div class="sd">Per tenant · interactive bar chart</div></div></div>
+        <div id="execSitesBar" style="height: 360px;"></div>
+    </div>
+    <div class="ex-card">
+        <div class="hd"><div><h3 data-i18n="dash_fleet_share">Fleet share</h3><div class="sd">% of products per site</div></div></div>
+        <div id="execSitesDonut" style="height: 320px;"></div>
+    </div>
+</div>
+
+<div class="ex-card">
+    <div class="hd"><div><h3 data-i18n="dash_tenant_leaderboard">Tenant leaderboard</h3><div class="sd">Ranked by catalog size · #1 #2 #3 medals</div></div></div>
+    <div class="leaderboard">
+        {% for s in (sites | sort(attribute='product_count') | reverse) %}
+        <div class="row" data-site-id="{{ s.id }}">
+            <span class="r {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">#{{ loop.index }}</span>
+            <div class="n">
+                <span class="sw" style="background:{{ s.color }};"></span>
+                <div>
+                    <div class="nme">{{ s.name }}</div>
+                    <div class="url">{{ s.url|replace('https://','')|replace('http://','') }}</div>
+                </div>
+            </div>
+            <div class="num">{{ '{:,}'.format(s.product_count) if s.product_count else 0 }}</div>
+            <div><span class="tag {{ s.tag }}" data-status-tag><span class="dot"></span><span data-status-label>{{ s.tag }}</span></span></div>
+            <div style="display:flex;justify-content:flex-end;gap:6px;">
+                <a href="/sites/{{ s.id }}" class="btn btn-secondary btn-sm" data-i18n="site_config">Config</a>
+                {% if s.admin_url %}<a href="{{ s.admin_url }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" data-i18n="site_admin">Admin</a>{% endif %}
+                {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" data-i18n="site_site">Site</a>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</div><!-- /exec-only -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var SITES = {{ sites | tojson }};
+var ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+var SURFACE = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+var SURFACE_2 = getComputedStyle(document.documentElement).getPropertyValue('--surface-2').trim();
+var TEXT = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+var TEXT_MUTED = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+
+var dashCharts = [];
+function dashDestroy() { dashCharts.forEach(function(c){ try { c.destroy(); } catch(e){} }); dashCharts = []; }
+
+function renderProDash() {
+    var el = document.getElementById('proSitesBar');
+    if (!el) return;
+    var c = new ApexCharts(el, {
+        chart: { type: 'bar', height: 340, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 600 } },
+        theme: { mode: 'dark' },
+        series: [{ name: 'Products', data: SITES.map(function(s){ return s.product_count || 0; }) }],
+        xaxis: { categories: SITES.map(function(s){ return s.name; }) },
+        colors: [ACCENT],
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '60%', distributed: true } },
+        stroke: { width: 0 },
+        grid: { borderColor: SURFACE_2 },
+        legend: { show: false },
+        dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '11px', colors: ['#fff'] }, formatter: function(v){ return v.toLocaleString(); } },
+        tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' products'; } } },
+    });
+    // Per-site colors
+    c.updateOptions({ colors: SITES.map(function(s){ return s.color || ACCENT; }) });
+    c.render(); dashCharts.push(c);
+}
+
+function renderExecDash() {
+    // Bar chart
+    var b = document.getElementById('execSitesBar');
+    if (b) {
+        var bar = new ApexCharts(b, {
+            chart: { type: 'bar', height: 360, background: 'transparent', toolbar: { show: true }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif', animations: { speed: 700 } },
+            theme: { mode: 'dark' },
+            series: [{ name: 'Products', data: SITES.map(function(s){ return s.product_count || 0; }) }],
+            xaxis: { categories: SITES.map(function(s){ return s.name; }) },
+            colors: SITES.map(function(s){ return s.color || ACCENT; }),
+            plotOptions: { bar: { borderRadius: 6, columnWidth: '60%', distributed: true } },
+            stroke: { width: 0 },
+            grid: { borderColor: SURFACE_2 },
+            legend: { show: false },
+            dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '11px', colors: ['#fff'] }, formatter: function(v){ return v.toLocaleString(); } },
+            tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' products'; } } },
+        });
+        bar.render(); dashCharts.push(bar);
+    }
+    // Donut
+    var d = document.getElementById('execSitesDonut');
+    if (d) {
+        var donut = new ApexCharts(d, {
+            chart: { type: 'donut', height: 320, fontFamily: 'Inter, sans-serif', foreColor: TEXT_MUTED, animations: { speed: 700 } },
+            theme: { mode: 'dark' },
+            series: SITES.map(function(s){ return s.product_count || 0; }),
+            labels: SITES.map(function(s){ return s.name; }),
+            colors: SITES.map(function(s){ return s.color || ACCENT; }),
+            stroke: { width: 2, colors: [SURFACE] },
+            legend: { position: 'bottom', fontSize: '11px' },
+            plotOptions: { pie: { donut: { size: '60%', labels: { show: true, total: { show: true, label: 'Total', color: TEXT_MUTED, fontFamily: 'Space Grotesk, monospace', fontSize: '11px' }, value: { color: TEXT, fontSize: '24px', fontWeight: 700, formatter: function(v){ return Number(v).toLocaleString(); } } } } } },
+            dataLabels: { enabled: false },
+            tooltip: { theme: 'dark' },
+        });
+        donut.render(); dashCharts.push(donut);
+    }
+}
+
+function renderDashboard() {
+    dashDestroy();
+    var mode = (window.getViewMode && window.getViewMode()) || 'pro';
+    setTimeout(function(){
+        if (mode === 'pro') renderProDash();
+        else if (mode === 'exec') renderExecDash();
+        // Comfort has no charts — that's the point
+    }, 100);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderDashboard);
+} else {
+    renderDashboard();
+}
+document.addEventListener('master-view-changed', renderDashboard);
+
+// === Live status pings (all 3 views) ===
+(function(){
+    document.querySelectorAll('[data-site-id]').forEach(function(el){
+        var sid = el.dataset.siteId;
+        var tag = el.querySelector('[data-status-tag]');
+        var label = el.querySelector('[data-status-label]');
+        if (!tag && !label) return;
+        fetch('/sites/' + sid + '/status').then(function(r){return r.json();}).then(function(d){
+            if (tag) {
+                var cls = d.status === 'live' ? 'live' : d.status === 'down' ? 'down' : 'wip';
+                tag.className = 'tag ' + cls;
+            }
+            if (label) {
+                label.textContent = d.status === 'live' ? tm('status_live_latency', { ms: d.latency_ms }) : (d.status === 'down' ? tm('status_down') : d.status);
+            }
+        }).catch(function(){
+            if (tag) tag.className = 'tag down';
+            if (label) label.textContent = tm('status_down');
+        });
+    });
+})();
+</script>
+{% endblock %}

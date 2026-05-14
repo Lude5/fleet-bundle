@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/sites" data-i18n="sb_sites">Sites</a> <span class="sep">›</span> <span class="current" data-i18n="sn_new">New</span>{% endblock %}
+{% block heading %}<span data-i18n="register_site">Register a site</span>{% endblock %}
+{% block content_class %}narrow{% endblock %}
+
+{% block content %}
+<p style="color:var(--text-secondary);font-size:13px;line-height:1.6;margin-bottom:20px;" data-i18n="sn_intro">
+    Adds a site to the master registry so it shows up on the dashboard.
+    To provision a new site from scratch (clone template + GitHub + Render), use python scripts/create_site.py --slug ... from a terminal.
+</p>
+
+{% if error %}<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);padding:12px 16px;border-radius:10px;font-family:var(--font-mono);font-size:12px;margin-bottom:18px;">{{ error }}</div>{% endif %}
+
+<form method="POST">
+    <div class="card" style="margin-bottom:18px;">
+        <div class="form-grid">
+            <div class="field">
+                <label data-i18n="sn_slug">Slug *</label>
+                <input class="input" name="slug" placeholder="acmefinds" required pattern="[a-z0-9-]+">
+                <span class="hint" data-i18n="sn_slug_hint">lowercase, no spaces · folder + repo name</span>
+            </div>
+            <div class="field">
+                <label data-i18n="sn_display_name">Display name *</label>
+                <input class="input" name="name" placeholder="Acme Finds" required>
+            </div>
+            <div class="field form-full">
+                <label data-i18n="public_url">Public URL</label>
+                <input class="input" name="url" placeholder="https://acmefinds.com">
+            </div>
+            <div class="field">
+                <label data-i18n="agent_name">Agent</label>
+                <input class="input" name="agent" value="KakoBuy">
+            </div>
+            <div class="field">
+                <label data-i18n="affiliate_code">Affiliate code</label>
+                <input class="input" name="affiliate_code" placeholder="acme">
+            </div>
+            <div class="field">
+                <label data-i18n="brand_color">Brand color (hex)</label>
+                <input class="input" name="color" value="#06b6d4">
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-primary" data-i18n="sn_register">+ Register site</button>
+    <a href="/sites" class="btn btn-secondary" data-i18n="cancel">Cancel</a>
+</form>
+{% endblock %}

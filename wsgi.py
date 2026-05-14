@@ -1,0 +1,160 @@
+"""
+Fleet bundle WSGI entry point.
+
+Mounts:
+  /                 -> master_admin (control plane, login at /login, dashboard at /)
+  /kai/             -> kai template site
+  /maywood/         -> maywood sheets template site
+
+This is a single Render Web Service that hosts the master admin + every template
+under one URL. Used to show Talan/Mimi big updates without deploying each site
+to its own Render service.
+
+Live production sites (jake, tobey, john, reptools) stay on their own Render
+services — this bundle is for the templates kaiom is building.
+"""
+import os
+import re
+import sys
+from io import BytesIO
+
+# Ensure the bundle root is importable
+HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+# Persistent storage. On Render the disk mounts at /var/data; locally fall back to ./data.
+RENDER_DISK = '/var/data'
+LOCAL_DATA = os.path.join(HERE, 'data')
+DATA_ROOT = RENDER_DISK if os.path.isdir(RENDER_DISK) else LOCAL_DATA
+for sub in ('kai', 'maywood', 'master_admin'):
+    os.makedirs(os.path.join(DATA_ROOT, sub), exist_ok=True)
+
+# Set per-app data dirs BEFORE importing the apps.
+os.environ.setdefault('KAI_DATA_DIR', os.path.join(DATA_ROOT, 'kai'))
+os.environ.setdefault('MAYWOOD_DATA_DIR', os.path.join(DATA_ROOT, 'maywood'))
+os.environ.setdefault('MASTER_ADMIN_DATA_DIR', os.path.join(DATA_ROOT, 'master_admin'))
+
+from werkzeug.middleware.dispatcher import DispatcherMiddleware  # noqa: E402
+
+from master_admin.app import app as master_app  # noqa: E402
+from kai.app import app as kai_app  # noqa: E402
+from maywood.app import app as maywood_app  # noqa: E402
+
+kai_app.config['APPLICATION_ROOT'] = '/kai'
+maywood_app.config['APPLICATION_ROOT'] = '/maywood'
+
+
+# ============================================================
+# URL prefix middleware — rewrites absolute paths in HTML/JS
+# responses so sub-mounted Flask apps work without template edits.
+# ============================================================
+# Matches URL-like attributes/calls that start with a single slash followed by
+# anything except another slash (so we don't touch protocol-relative URLs like
+# //cdn.example.com or fully qualified URLs).
+_URL_RE = re.compile(
+    r'''(?P<prefix>(?:href|src|action|formaction|data-href|data-url)\s*=\s*["'])'''
+    r'''/(?!/)'''
+)
+_FETCH_RE = re.compile(
+    r'''(?P<prefix>(?:fetch|axios\.(?:get|post|put|delete|patch))\s*\(\s*["'])'''
+    r'''/(?!/)'''
+)
+_LOCATION_RE = re.compile(
+    r'''(?P<prefix>window\.location(?:\.href)?\s*=\s*["'])'''
+    r'''/(?!/)'''
+)
+# A whitelist of URL-prefixes that we should rewrite. Without this we'd rewrite
+# /static, /api, /admin, /go etc. — but also any /<word> that the dev wrote.
+# Belt-and-braces: just rewrite whenever the pattern matches; the page's own
+# routes always start with one of these anyway.
+
+class URLPrefixMiddleware:
+    """Rewrites root-relative URLs in HTML/JS responses to include a mount prefix."""
+
+    def __init__(self, app, prefix):
+        self.app = app
+        self.prefix = prefix.rstrip('/')
+
+    def __call__(self, environ, start_response):
+        captured_status = []
+        captured_headers = []
+
+        def custom_start_response(status, headers, exc_info=None):
+            captured_status.append(status)
+            captured_headers.append(headers)
+            # Defer real start_response until after we mutate headers
+            return lambda data: None
+
+        body_iter = self.app(environ, custom_start_response)
+
+        # Determine if this is a rewriteable response
+        headers = captured_headers[0] if captured_headers else []
+        content_type = ''
+        for k, v in headers:
+            if k.lower() == 'content-type':
+                content_type = v.lower()
+                break
+
+        is_rewriteable = (
+            'text/html' in content_type
+            or 'application/javascript' in content_type
+            or 'text/javascript' in content_type
+        )
+
+        if not is_rewriteable:
+            # Pass through as-is
+            start_response(captured_status[0], headers)
+            return body_iter
+
+        # Buffer the entire response
+        buf = BytesIO()
+        try:
+            for chunk in body_iter:
+                if chunk:
+                    buf.write(chunk)
+        finally:
+            if hasattr(body_iter, 'close'):
+                body_iter.close()
+
+        body_bytes = buf.getvalue()
+        try:
+            text = body_bytes.decode('utf-8')
+        except UnicodeDecodeError:
+            # Non-UTF8 — pass through
+            start_response(captured_status[0], headers)
+            return [body_bytes]
+
+        # Apply rewrites
+        text = _URL_RE.sub(lambda m: m.group('prefix') + self.prefix + '/', text)
+        text = _FETCH_RE.sub(lambda m: m.group('prefix') + self.prefix + '/', text)
+        text = _LOCATION_RE.sub(lambda m: m.group('prefix') + self.prefix + '/', text)
+
+        new_body = text.encode('utf-8')
+
+        # Strip any existing Content-Length, then set to the new size
+        new_headers = [(k, v) for (k, v) in headers if k.lower() != 'content-length']
+        new_headers.append(('Content-Length', str(len(new_body))))
+
+        start_response(captured_status[0], new_headers)
+        return [new_body]
+
+
+# Wrap kai and maywood with the rewriter; master_admin is at root so it
+# doesn't need rewriting.
+kai_wrapped = URLPrefixMiddleware(kai_app, '/kai')
+maywood_wrapped = URLPrefixMiddleware(maywood_app, '/maywood')
+
+application = DispatcherMiddleware(master_app, {
+    '/kai': kai_wrapped,
+    '/maywood': maywood_wrapped,
+})
+
+# Gunicorn looks for `app` by default
+app = application
+
+
+if __name__ == '__main__':
+    from werkzeug.serving import run_simple
+    run_simple('0.0.0.0', int(os.environ.get('PORT', 5000)), application,
+               use_reloader=True, use_debugger=True)

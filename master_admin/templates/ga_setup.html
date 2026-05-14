@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/analytics" data-i18n="sb_analytics">Analytics</a> <span class="sep">›</span> <span class="current" data-i18n="ga_setup_title">Google Analytics Setup</span>{% endblock %}
+{% block heading %}<span data-i18n="ga_setup_h">Google Analytics setup</span>{% endblock %}
+{% block content_class %}narrow{% endblock %}
+
+{% block content %}
+
+{% if is_configured %}
+<div style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--success);padding:14px 18px;border-radius:12px;font-family:var(--font-mono);font-size:12px;margin-bottom:24px;letter-spacing:0.5px;">
+    ✓ <strong>Credentials detected</strong> at <code>_master_admin/.ga-creds.json</code> — the GA Data API is ready. Add Property IDs to each site to start pulling live data.
+</div>
+{% else %}
+<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--warn);padding:14px 18px;border-radius:12px;font-family:var(--font-mono);font-size:12px;margin-bottom:24px;letter-spacing:0.5px;">
+    ⚠ <strong>No credentials found.</strong> Follow the 4 steps below to enable live GA data inside the master admin.
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;" data-i18n="ga_why">Why this exists</h2>
+    <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;">
+        The "Open in Google Analytics" buttons elsewhere just deep-link you to GA's own UI. With Data API credentials, the master admin can fetch <strong style="color:var(--accent);">sessions, users, page-views, bounce rate, top pages, top countries, device breakdown</strong> directly from GA and render them next to your click data — no tab-switching.
+    </p>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Step 1 · Create a service account</h2>
+    <ol style="color:var(--text-secondary);font-size:14px;line-height:1.9;padding-left:20px;">
+        <li>Go to <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener" style="color:var(--accent);">console.cloud.google.com</a> and create a new project (or use an existing one). Name it whatever — "lude5-master" works.</li>
+        <li>In the project, open <a href="https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com" target="_blank" rel="noopener" style="color:var(--accent);">Google Analytics Data API</a> and click <strong>Enable</strong>.</li>
+        <li>Go to <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:var(--accent);">IAM &amp; Admin → Service Accounts</a> → <strong>+ Create Service Account</strong>. Name it "master-admin-ga". Skip the optional grants. Click <strong>Done</strong>.</li>
+    </ol>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Step 2 · Generate &amp; save the key</h2>
+    <ol style="color:var(--text-secondary);font-size:14px;line-height:1.9;padding-left:20px;">
+        <li>Click into the new service account → <strong>Keys</strong> tab → <strong>Add Key</strong> → <strong>Create new key</strong> → <strong>JSON</strong>. A file downloads.</li>
+        <li>Save the downloaded JSON file as <code style="color:var(--accent);background:var(--surface-2);padding:3px 8px;border-radius:5px;">{{ '/'.join([request.host.split(':')[0], '_master_admin', '.ga-creds.json']) }}</code> on your PC — i.e. drop it into <code style="color:var(--accent);">C:\Users\talan\clients\_master_admin\.ga-creds.json</code>.</li>
+        <li>Copy the service account <strong>email address</strong> (looks like <code style="color:var(--accent);">master-admin-ga@your-project.iam.gserviceaccount.com</code>) — you need it for the next step.</li>
+    </ol>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Step 3 · Grant access in GA</h2>
+    <ol style="color:var(--text-secondary);font-size:14px;line-height:1.9;padding-left:20px;">
+        <li>Open <a href="https://analytics.google.com/" target="_blank" rel="noopener" style="color:var(--accent);">Google Analytics</a>.</li>
+        <li>Make sure you're on the <strong>property</strong> you want to pull data for (e.g. rep.tools).</li>
+        <li><strong>Admin</strong> (bottom-left gear) → <strong>Property Access Management</strong> → <strong>+ (top right)</strong> → <strong>Add users</strong>.</li>
+        <li>Paste the service account email from Step 2. Role: <strong>Viewer</strong>. Uncheck "Notify new users by email" (optional). Click <strong>Add</strong>.</li>
+        <li>Repeat for each property (one for rep.tools, one for jake's site, etc.) — the service account needs to be granted on every property whose data you want to pull.</li>
+    </ol>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Step 4 · Add property IDs</h2>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:14px;">
+        Each GA property has a <strong>numeric Property ID</strong> (different from the <code style="color:var(--accent);">G-XXXXXXXXXX</code> Measurement ID). Find it: GA → <strong>Admin</strong> → <strong>Property Settings</strong> → <strong>Property details</strong> → <strong>Property ID</strong>.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for s in sites %}
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--surface-2);border-radius:10px;">
+            <span style="width:10px;height:10px;border-radius:3px;background:{{ s.color }};"></span>
+            <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;">{{ s.name }}</div>
+                <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:2px;">
+                    Property ID: <strong style="color:{{ '#22c55e' if s.ga_property_id else 'var(--warn)' }};">{{ s.ga_property_id or 'NOT SET' }}</strong>
+                </div>
+            </div>
+            <a href="/sites/{{ s.id }}" class="btn btn-secondary btn-sm">{{ 'Edit' if s.ga_property_id else 'Add property ID' }}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Verify it works</h2>
+    <p style="color:var(--text-secondary);font-size:14px;line-height:1.7;margin-bottom:12px;">
+        Once steps 1–4 are done, the master admin must be restarted (so it picks up the credentials file). Then:
+    </p>
+    <ol style="color:var(--text-secondary);font-size:14px;line-height:1.9;padding-left:20px;">
+        <li>Restart: stop the master admin and run <code style="color:var(--accent);">python app.py</code> again.</li>
+        <li>Install the Python library: <code style="color:var(--accent);">pip install google-analytics-data</code> (or <code style="color:var(--accent);">pip install -r requirements.txt</code>).</li>
+        <li>Open any site's config page and click <strong>Test live data fetch</strong>. You should see something like:
+            <code style="color:var(--success);display:block;margin-top:6px;font-family:var(--font-mono);font-size:12px;">✓ Live · 1,234 sessions · 567 users · 8,910 page views · bounce 42%</code>
+        </li>
+        <li>The <a href="/analytics" style="color:var(--accent);">Analytics page</a> will now show a "Google Analytics · live" panel with real metrics for every configured site.</li>
+    </ol>
+</div>
+
+<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-align:center;margin-top:24px;letter-spacing:1px;">
+    GA Data API quota is generous (500 requests per project per day). No risk of overage on a single-user admin.
+</p>
+
+{% endblock %}

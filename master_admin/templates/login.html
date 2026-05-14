@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <title>Master Admin · Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0b; --surface: #141416; --surface-2: #1c1c20;
+            --border: #06b6d440; --border-subtle: rgba(255,255,255,0.07);
+            --text: #ffffff; --text-muted: rgba(255,255,255,0.38);
+            --accent: #06b6d4; --accent-hover: #06b6d4dd;
+            --accent-dim: #06b6d41a; --accent-glow: #06b6d433;
+            --danger: #ef4444;
+            --font-display: 'Anton', sans-serif; --font-body: 'Inter', sans-serif; --font-mono: 'Space Grotesk', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; }
+        body::before { content: ''; position: absolute; top: 50%; left: 50%; width: 800px; height: 800px; background: radial-gradient(circle, var(--accent-dim) 0%, transparent 60%); transform: translate(-50%, -50%); pointer-events: none; }
+        body::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 32px 32px; pointer-events: none; }
+        .wrap { position: relative; z-index: 1; width: 100%; max-width: 400px; text-align: center; }
+        .brand { margin-bottom: 32px; }
+        .brand .name { font-family: var(--font-display); font-size: 42px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1; }
+        .brand .name .accent { color: var(--accent); }
+        .brand .badge { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+        .card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 36px 32px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
+        .card h1 { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .card .sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 28px; }
+        .field { text-align: left; margin-bottom: 16px; }
+        .field label { display: block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+        .field input { width: 100%; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; transition: border-color .15s; }
+        .field input:focus { border-color: var(--accent); }
+        .submit { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background .15s, transform .1s, box-shadow .15s; box-shadow: 0 8px 24px var(--accent-glow); }
+        .submit:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); padding: 10px 14px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; margin-bottom: 16px; text-align: left; }
+        .lang-toggle { position: fixed; top: 18px; right: 18px; padding: 7px 14px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; transition: all .15s; z-index: 10; }
+        .lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <button class="lang-toggle" onclick="toggleMasterLang()"><span data-lang-other>中文</span></button>
+    <div class="wrap">
+        <div class="brand">
+            <div class="name">Lude<span class="accent">5</span></div>
+            <span class="badge" data-i18n="sb_master">Master Admin</span>
+        </div>
+        <div class="card">
+            <h1 data-i18n="sign_in">Sign in</h1>
+            <p class="sub" data-i18n="restricted">Restricted access</p>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+            <form method="POST">
+                <div class="field">
+                    <label for="pw" data-i18n="master_password">Master password</label>
+                    <input id="pw" type="password" name="password" placeholder="••••••••••••" required autofocus autocomplete="current-password">
+                </div>
+                <button class="submit" type="submit" data-i18n="enter_control_plane">Enter control plane</button>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/master_i18n.js') }}"></script>
+</body>
+</html>

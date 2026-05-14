@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <span class="current" data-i18n="sb_sites">Sites</span>{% endblock %}
+{% block heading %}<span data-i18n="sb_sites">Sites</span>{% endblock %}
+{% block topbar_actions %}
+    <a href="/sites/new" class="pill primary" data-i18n="tb_new_site">+ New site</a>
+    <a href="/export/sites?format=xlsx" class="pill" title="Download site registry as Excel">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="tb_excel">Excel</span>
+    </a>
+{% endblock %}
+
+{% block extra_css %}
+.dt .pwbox { display: inline-flex; align-items: center; gap: 6px; }
+.dt .pwbox code { font-family: var(--font-mono); font-size: 11px; color: var(--accent); background: var(--surface-2); padding: 3px 8px; border-radius: 6px; filter: blur(4px); transition: filter .15s; cursor: pointer; }
+.dt .pwbox code.shown { filter: none; }
+.dt a.action-link { color: var(--accent); font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-right: 10px; }
+.dt a.action-link:hover { color: var(--accent-hover); text-decoration: underline; }
+.dt a.action-link.danger { color: var(--danger); }
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-head">
+        <h2 data-i18n="all_sites">All sites</h2>
+        <span class="sub" data-i18n="tenants_registered" data-i18n-vars='{"n":"{{ sites|length }}"}'>{{ sites|length }} tenants registered</span>
+    </div>
+    <table class="dt">
+        <thead>
+            <tr>
+                <th data-i18n="th_site">Site</th>
+                <th data-i18n="th_agent">Agent</th>
+                <th data-i18n="th_affcode">Affcode</th>
+                <th data-i18n="th_admin_password">Admin password</th>
+                <th data-i18n="th_status">Status</th>
+                <th data-i18n="th_products">Products</th>
+                <th data-i18n="th_actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for s in sites %}
+            <tr data-site-id="{{ s.id }}">
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="width:10px;height:10px;border-radius:3px;background:{{ s.color }};flex-shrink:0;"></span>
+                        <div>
+                            <div style="font-weight:600;">{{ s.name }}</div>
+                            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">{{ s.url|replace('https://','')|replace('http://','') }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ s.agent or '—' }}</td>
+                <td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent);">{{ s.affiliate_code or '—' }}</code></td>
+                <td>
+                    {% if s.admin_password %}
+                    <span class="pwbox"><code onclick="this.classList.toggle('shown')" title="Click to reveal">{{ s.admin_password }}</code></span>
+                    {% else %}—{% endif %}
+                </td>
+                <td><span class="tag {{ s.tag }}" data-status-tag><span class="dot"></span><span data-status-label>{{ s.tag }}</span></span></td>
+                <td><span style="font-family:var(--font-mono);font-weight:700;color:var(--accent);">{{ '{:,}'.format(s.product_count) if s.product_count else '0' }}</span></td>
+                <td>
+                    <a href="/sites/{{ s.id }}" class="action-link" data-i18n="site_edit">Edit</a>
+                    {% if s.admin_url %}<a href="{{ s.admin_url }}" target="_blank" rel="noopener" class="action-link" data-i18n="site_admin">Admin</a>{% endif %}
+                    {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener" class="action-link" style="color:var(--text-secondary);" data-i18n="site_site">Site</a>{% endif %}
+                    <a href="#" class="action-link danger" data-i18n="site_delete" onclick="event.preventDefault();deleteSite('{{ s.id }}','{{ s.name }}')">Delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Ping every site in parallel on page load to show live status
+(function () {
+    document.querySelectorAll('tr[data-site-id]').forEach(function (tr) {
+        var sid = tr.dataset.siteId;
+        var tag = tr.querySelector('[data-status-tag]');
+        var label = tr.querySelector('[data-status-label]');
+        if (!tag || !label) return;
+        var oldLabel = label.textContent;
+        tag.className = 'tag wip';
+        label.textContent = '…';
+        fetch('/sites/' + sid + '/status').then(function(r){return r.json();}).then(function(d){
+            if (d.status === 'live') {
+                tag.className = 'tag live';
+                label.textContent = tm('status_live_latency', { ms: d.latency_ms });
+            } else if (d.status === 'down') {
+                tag.className = 'tag down';
+                label.textContent = tm('status_down');
+            } else {
+                tag.className = 'tag wip';
+                label.textContent = oldLabel;
+            }
+        }).catch(function(){
+            tag.className = 'tag down';
+            label.textContent = tm('status_down');
+        });
+    });
+})();
+
+async function deleteSite(sid, name) {
+    if (!confirm(tm('confirm_remove_site', { name: name }))) return;
+    var res = await fetch('/sites/' + sid + '/delete', { method: 'POST' });
+    var json = await res.json();
+    if (json.ok) {
+        showToast(tm('toast_site_removed'), 'success');
+        document.querySelector('tr[data-site-id="' + sid + '"]').remove();
+    } else {
+        showToast(tm('toast_failed'), 'error');
+    }
+}
+</script>
+{% endblock %}

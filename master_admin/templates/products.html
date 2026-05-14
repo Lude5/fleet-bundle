@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <span class="current" data-i18n="sb_products">Products</span>{% endblock %}
+{% block heading %}<span data-i18n="unified_product_manager">Unified product manager</span>{% endblock %}
+
+{% block topbar_actions %}
+    <span class="pill" data-i18n="tb_total_matching" data-i18n-vars='{"n":"{{ total }}","m":"{{ sites_with_tokens|length }}"}'>{{ total }} matching · {{ sites_with_tokens|length }} sites connected</span>
+    <a href="/export/products?format=xlsx" class="pill" title="Download every product across every connected site as an Excel workbook">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="tb_excel">Excel</span>
+    </a>
+    <a href="/export/products?format=csv" class="pill" data-i18n="tb_csv">CSV</a>
+{% endblock %}
+
+{% block extra_css %}
+/* Comfort view — product grid */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.pcard { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 14px; overflow: hidden; transition: all .15s; position: relative; }
+.pcard:hover { border-color: var(--border); transform: translateY(-3px); }
+.pcard .swatch { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #fff; display: inline-flex; align-items: center; gap: 5px; z-index: 2; }
+.pcard .swatch .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.pcard img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.pcard .pcard-body { padding: 14px; }
+.pcard .pcard-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard .pcard-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pcard .pcard-price { font-family: var(--font-mono); font-weight: 700; color: var(--accent); font-size: 15px; }
+.pcard .pcard-cat { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; background: var(--surface-3); border-radius: 5px; }
+.pcard .pcard-actions { display: flex; gap: 6px; padding: 0 14px 14px; }
+.pcard .pcard-actions button { flex: 1; padding: 8px 10px; background: var(--surface-3); border: 1px solid var(--border-subtle); border-radius: 7px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .12s; }
+.pcard .pcard-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.pcard .pcard-actions button.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Executive view — full per-site cards with editable product tables (most-complete mode) */
+.exec-rollup { display: flex; flex-direction: column; gap: 18px; }
+.exec-site-card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; }
+.exec-site-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.exec-site-title { display: flex; align-items: center; gap: 12px; }
+.exec-site-title .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+.exec-site-title h3 { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; }
+.exec-site-count { font-family: var(--font-mono); font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; padding: 3px 9px; background: var(--accent-dim); border-radius: 6px; text-transform: uppercase; }
+.exec-products-table { width: 100%; }
+.exec-products-table thead th { font-size: 9px; }
+.exec-products-table tbody tr { transition: background .12s; }
+.exec-products-table tbody tr:hover { background: var(--surface-3); }
+
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.filter-bar .grow { flex: 1; min-width: 240px; position: relative; }
+.filter-bar .grow .input { padding-left: 38px; }
+.filter-bar .grow .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+.filter-bar .select { width: auto; min-width: 160px; padding: 12px 14px; }
+
+.warn-bar { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--warn); padding: 12px 16px; border-radius: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.5px; margin-bottom: 16px; line-height: 1.6; }
+
+.thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+.site-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.site-chip .swatch { width: 8px; height: 8px; border-radius: 2px; }
+.cat-pill { display: inline-block; padding: 3px 9px; background: var(--surface-2); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+.price-cell { font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+.row-actions { display: flex; gap: 4px; }
+.row-actions .btn-xs { padding: 5px 9px; font-size: 9px; letter-spacing: 1px; }
+
+.pagination { display: flex; align-items: center; gap: 10px; padding: 16px 4px 4px; justify-content: flex-end; }
+.pagination a, .pagination .current { padding: 7px 11px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+.pagination .current { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pagination a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Push modal */
+.pm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.pm-overlay.active { display: flex; }
+.pm-modal { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 16px; max-width: 480px; width: 100%; padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+.pm-modal h2 { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+.pm-source { display: flex; gap: 12px; align-items: center; padding: 12px; background: var(--surface-2); border-radius: 10px; margin-bottom: 18px; }
+.pm-source img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: var(--surface-3); }
+.pm-source .info { flex: 1; min-width: 0; }
+.pm-source .name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-source .meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 4px; letter-spacing: 1px; }
+.pm-targets { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.pm-target { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; cursor: pointer; transition: all .15s; }
+.pm-target:hover { background: var(--surface-3); }
+.pm-target input { margin: 0; accent-color: var(--accent); width: 16px; height: 16px; }
+.pm-target.disabled { opacity: 0.4; cursor: not-allowed; }
+.pm-target .swatch { width: 10px; height: 10px; border-radius: 3px; }
+.pm-target .nm { font-size: 13px; font-weight: 600; }
+.pm-target .nt { margin-left: auto; font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+{% endblock %}
+
+{% block content %}
+
+{% if sites_without_tokens %}
+<div class="warn-bar">
+    <strong><span data-i18n="sites_not_connected" data-i18n-vars='{"n":"{{ sites_without_tokens|length }}"}'>{{ sites_without_tokens|length }} site(s) not connected.</span></strong>
+    <span data-i18n="no_token_help">Add an ADMIN_API_TOKEN env var to each client site (Render Dashboard → service → Environment) and paste it on each site's config page so it shows up here.</span><br>
+    <span data-i18n="missing_label">Missing:</span> {% for s in sites_without_tokens %}<code style="color:var(--text);">{{ s.name }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+</div>
+{% endif %}
+
+{% if unreachable_sites %}
+<div class="warn-bar" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:var(--danger);">
+    <strong><span data-i18n="sites_unreachable" data-i18n-vars='{"n":"{{ unreachable_sites|length }}"}'>{{ unreachable_sites|length }} site(s) unreachable.</span></strong>
+    <span data-i18n="unreachable_help">Token saved but the API didn't respond — site may be deploying or down.</span> <span data-i18n="affected_label">Affected:</span>
+    {% for s in unreachable_sites %}<code style="color:var(--text);">{{ s.name }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="GET" class="filter-bar">
+        <div class="grow">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="input" name="q" value="{{ q }}" placeholder="Search across all sites…" data-i18n-placeholder="search_all_sites">
+        </div>
+        <select class="select" name="site">
+            <option value="" data-i18n="all_sites_filter">All sites</option>
+            {% for s in sites_with_tokens %}<option value="{{ s.id }}" {% if site_filter == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+        <select class="select" name="cat">
+            <option value="" data-i18n="all_categories">All categories</option>
+            {% for c in cats %}<option value="{{ c }}" {% if cat_filter == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit" data-i18n="apply">Apply</button>
+        {% if q or site_filter or cat_filter %}<a href="/products" class="btn btn-ghost btn-sm" data-i18n="clear">Clear</a>{% endif %}
+    </form>
+
+    {% if products %}
+    <!-- =================== PRO VIEW: dense table =================== -->
+    <div class="pro-only">
+    <table class="dt">
+        <thead><tr>
+            <th></th>
+            <th data-i18n="th_name">Name</th>
+            <th data-i18n="th_site">Site</th>
+            <th data-i18n="th_category">Category</th>
+            <th data-i18n="th_price">Price</th>
+            <th data-i18n="th_seller">Seller</th>
+            <th data-i18n="th_actions">Actions</th>
+        </tr></thead>
+        <tbody>
+        {% for p in products %}
+            <tr data-pid="{{ p.id }}" data-site="{{ p._site_id }}" data-name="{{ p.name }}">
+                <td><img class="thumb" src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
+                <td>
+                    <div style="font-weight:500;">{{ p.name }}</div>
+                    {% if p.tags %}<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:3px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.tags }}</div>{% endif %}
+                </td>
+                <td><span class="site-chip"><span class="swatch" style="background: {{ p._site_color }};"></span>{{ p._site_name }}</span></td>
+                <td><span class="cat-pill">{{ p.category or '—' }}</span></td>
+                <td class="price-cell">${{ p.price }}</td>
+                <td style="color:var(--text-muted);font-size:12px;">{{ p.seller or '—' }}</td>
+                <td>
+                    <div class="row-actions">
+                        <button type="button" class="btn btn-secondary btn-xs" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
+                        <button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteRow(this)" data-i18n="del">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    </div><!-- /pro-only -->
+
+    <!-- =================== COMFORT VIEW: grid cards =================== -->
+    <div class="comfort-only pgrid">
+    {% for p in products %}
+        <div class="pcard" data-pid="{{ p.id }}" data-site="{{ p._site_id }}" data-name="{{ p.name }}">
+            <div class="swatch"><span class="dot" style="background:{{ p._site_color }};"></span>{{ p._site_name }}</div>
+            <img src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.background='var(--surface-3)';this.removeAttribute('src');">
+            <div class="pcard-body">
+                <div class="pcard-name">{{ p.name }}</div>
+                <div class="pcard-meta">
+                    <span class="pcard-price">${{ p.price }}</span>
+                    <span class="pcard-cat">{{ p.category or '—' }}</span>
+                </div>
+            </div>
+            <div class="pcard-actions">
+                <button type="button" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
+                <button type="button" class="danger" onclick="deleteRow(this)" data-i18n="del">Delete</button>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+    <!-- =================== EXECUTIVE VIEW: full per-site table with all actions =================== -->
+    <div class="exec-only">
+        <div class="exec-rollup">
+            {% set ns = {} %}
+            {% for p in products %}{% if ns.update({p._site_id: ns.get(p._site_id, []) + [p]}) %}{% endif %}{% endfor %}
+            {% for sid, items in ns.items() %}
+                {% set first = items[0] %}
+                <div class="exec-site-card">
+                    <div class="exec-site-head">
+                        <div class="exec-site-title">
+                            <span class="swatch" style="background:{{ first._site_color }};"></span>
+                            <h3>{{ first._site_name }}</h3>
+                            <span class="exec-site-count">{{ items|length }} <span data-i18n="on_this_page">on this page</span></span>
+                        </div>
+                        <a href="?site={{ sid }}" class="btn btn-secondary btn-sm" data-i18n="view_all_this_site">View all on this site →</a>
+                    </div>
+                    <table class="dt exec-products-table">
+                        <thead><tr>
+                            <th></th>
+                            <th data-i18n="th_name">Name</th>
+                            <th data-i18n="th_category">Category</th>
+                            <th data-i18n="th_price">Price</th>
+                            <th data-i18n="th_seller">Seller</th>
+                            <th data-i18n="th_actions">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for p in items %}
+                            <tr data-pid="{{ p.id }}" data-site="{{ p._site_id }}" data-name="{{ p.name }}">
+                                <td><img class="thumb" src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
+                                <td>
+                                    <div style="font-weight:500;">{{ p.name }}</div>
+                                    {% if p.tags %}<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:3px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.tags }}</div>{% endif %}
+                                </td>
+                                <td><span class="cat-pill">{{ p.category or '—' }}</span></td>
+                                <td class="price-cell">${{ p.price }}</td>
+                                <td style="color:var(--text-muted);font-size:12px;">{{ p.seller or '—' }}</td>
+                                <td>
+                                    <div class="row-actions">
+                                        <button type="button" class="btn btn-secondary btn-xs" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
+                                        <button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteRow(this)" data-i18n="del">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);" data-i18n="page_of" data-i18n-vars='{"n":"{{ page }}","m":"{{ total_pages }}","total":"{{ total }}"}'>Page {{ page }} of {{ total_pages }} · {{ total }} products</span>
+        {% if page > 1 %}<a href="?q={{ q }}&site={{ site_filter }}&cat={{ cat_filter }}&page={{ page - 1 }}" data-i18n="prev">‹ Prev</a>{% endif %}
+        {% for p_num in range(1, total_pages + 1) %}
+            {% if p_num == page %}
+                <span class="current">{{ p_num }}</span>
+            {% elif p_num == 1 or p_num == total_pages or (p_num >= page - 2 and p_num <= page + 2) %}
+                <a href="?q={{ q }}&site={{ site_filter }}&cat={{ cat_filter }}&page={{ p_num }}">{{ p_num }}</a>
+            {% elif p_num == page - 3 or p_num == page + 3 %}
+                <span style="color:var(--text-muted);">…</span>
+            {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}<a href="?q={{ q }}&site={{ site_filter }}&cat={{ cat_filter }}&page={{ page + 1 }}" data-i18n="next">Next ›</a>{% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="padding: 60px 24px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 1.5px; font-size: 12px;">
+        {% if not sites_with_tokens %}<span data-i18n="no_connected_sites">No connected sites yet — add an API token to a site to see products here.</span>{% else %}<span data-i18n="no_match">No products match your filters.</span>{% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Push-to-sites modal -->
+<div class="pm-overlay" id="pmModal" onclick="if(event.target===this)closePushModal()">
+    <div class="pm-modal">
+        <h2 data-i18n="push_to_other_sites">Push to other sites</h2>
+        <div class="pm-source">
+            <img id="pmImg" src="" alt="">
+            <div class="info">
+                <div class="name" id="pmName">—</div>
+                <div class="meta"><span id="pmPrice">$0</span> · <span id="pmCat">—</span></div>
+            </div>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;" data-i18n="select_targets">Select targets</p>
+        <div class="pm-targets" id="pmTargets"></div>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" id="pmGo" type="button" onclick="doPush()" style="flex:1;" data-i18n="push">Push</button>
+            <button class="btn btn-secondary" type="button" onclick="closePushModal()" data-i18n="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var SITES = {{ sites_with_tokens|tojson }};
+var pmProduct = null;
+
+function openPushModal(product) {
+    pmProduct = product;
+    document.getElementById('pmName').textContent = product.name;
+    document.getElementById('pmImg').src = product.image || '';
+    document.getElementById('pmPrice').textContent = '$' + product.price;
+    document.getElementById('pmCat').textContent = product.category || '—';
+    var t = document.getElementById('pmTargets');
+    t.innerHTML = '';
+    SITES.forEach(function(s) {
+        var isSource = s.id === product._site_id;
+        var html = '<label class="pm-target ' + (isSource ? 'disabled' : '') + '">'
+            + '<input type="checkbox" value="' + s.id + '" ' + (isSource ? 'disabled' : '') + '>'
+            + '<span class="swatch" style="background:' + s.color + ';"></span>'
+            + '<span class="nm">' + s.name + '</span>'
+            + (isSource ? '<span class="nt">source</span>' : '')
+            + '</label>';
+        t.insertAdjacentHTML('beforeend', html);
+    });
+    document.getElementById('pmModal').classList.add('active');
+}
+function closePushModal() {
+    document.getElementById('pmModal').classList.remove('active');
+    pmProduct = null;
+}
+async function doPush() {
+    if (!pmProduct) return;
+    var targets = Array.from(document.querySelectorAll('#pmTargets input:checked')).map(function(c){return c.value;});
+    if (!targets.length) return showToast(tm('toast_pick_target'), 'error');
+    var btn = document.getElementById('pmGo');
+    btn.disabled = true; btn.textContent = tm('pushing');
+    var res = await fetch('/products/push', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product: pmProduct, targets: targets }),
+    });
+    var json = await res.json();
+    btn.disabled = false; btn.textContent = tm('push');
+    if (!json.ok) return showToast(tm('toast_failed'), 'error');
+    var ok = Object.values(json.results).filter(function(r){return r.ok;}).length;
+    var fail = targets.length - ok;
+    showToast(fail ? tm('toast_pushed_with_fail', { ok: ok, fail: fail }) : tm('toast_pushed', { ok: ok }), fail ? 'error' : 'success');
+    closePushModal();
+}
+
+async function deleteRow(btn) {
+    var tr = btn.closest('tr');
+    var siteId = tr.dataset.site;
+    var pid = tr.dataset.pid;
+    var name = tr.dataset.name;
+    if (!confirm(tm('confirm_delete_product', { name: name }))) return;
+    var res = await fetch('/products/' + siteId + '/' + pid, { method: 'DELETE' });
+    var json = await res.json();
+    if (json.ok) {
+        showToast(tm('toast_deleted'), 'success');
+        tr.remove();
+    } else {
+        showToast(tm('toast_failed'), 'error');
+    }
+}
+
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closePushModal(); });
+</script>
+{% endblock %}
