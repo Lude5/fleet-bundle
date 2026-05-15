@@ -428,7 +428,9 @@
     // URL building
     // ============================================================
     function buildUrl(includeChrome) {
-        var u = new URL(BASE_URL + currentPage);
+        // BASE_URL may be absolute (http://...) or a path (/kai). Resolve
+        // against window.location.origin so relative paths work on the bundle.
+        var u = new URL(BASE_URL + currentPage, window.location.origin);
         u.searchParams.set('pv', '1');
         if (!includeChrome) u.searchParams.set('hideChrome', '1');
         if (state.brand) u.searchParams.set('brand', state.brand);
