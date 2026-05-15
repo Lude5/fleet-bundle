@@ -11,7 +11,7 @@ services:
     env: python
     plan: starter            # $7/month, includes 512 MB RAM + persistent disk support
     region: oregon           # match Talan's other services if known; oregon is Render default
-    autoDeploy: false        # MANUAL DEPLOYS ONLY — push to GitHub does NOT trigger a deploy
+    autoDeploy: true         # AUTO-DEPLOY ON: every push to main triggers a Render deploy
     branch: main
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile -
