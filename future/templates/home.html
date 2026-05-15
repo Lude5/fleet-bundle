@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} // {{ site.agent_name }} Finds Terminal{% endblock %}
+
+{% block extra_css %}
+.hero {
+    padding: 120px 24px 64px;
+    max-width: 1320px;
+    margin: 0 auto;
+    position: relative;
+}
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 64px;
+    align-items: end;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.hero-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 14px;
+    animation: fadeUp .55s ease both;
+}
+.hero-meta::before {
+    content: ''; width: 28px; height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+.hero-meta .ok {
+    color: var(--ok);
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.hero-meta .ok::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--ok); border-radius: 50%;
+    box-shadow: 0 0 6px var(--ok);
+}
+.hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(56px, 10vw, 144px);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
+    color: var(--text);
+    margin-bottom: 20px;
+    animation: fadeUp .65s ease .1s both;
+}
+.hero h1 .accent {
+    color: var(--accent-text);
+    text-shadow: 0 0 32px var(--accent-glow);
+}
+.hero-sub {
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    animation: fadeUp .65s ease .2s both;
+}
+.hero-actions {
+    display: flex; gap: 0;
+    animation: fadeUp .65s ease .3s both;
+}
+.hero-actions .btn { border-right: none; }
+.hero-actions .btn:last-child { border-right: 1px solid; }
+.hero-actions .btn-primary { border-right: 1px solid var(--accent); }
+
+.hero-readouts {
+    display: flex; flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface);
+    animation: fadeUp .7s ease .35s both;
+}
+.hero-readout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: center;
+}
+.hero-readout:last-child { border-bottom: none; }
+.hero-readout .key {
+    font-family: var(--font-mono);
+    font-size: 10px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.16em;
+}
+.hero-readout .val {
+    font-family: var(--font-mono);
+    font-size: 14px; font-weight: 600;
+    color: var(--accent-text);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+@media (max-width: 900px) {
+    .hero { padding: 96px 16px 48px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+    .hero h1 { font-size: clamp(48px, 14vw, 88px); }
+}
+
+/* Telemetry strip */
+.telemetry {
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 14px 0;
+    overflow: hidden;
+    background: var(--surface);
+}
+.telemetry-track {
+    display: flex; gap: 56px;
+    animation: marquee 60s linear infinite;
+    white-space: nowrap;
+}
+.telemetry-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.telemetry-item .accent { color: var(--accent-text); font-weight: 600; }
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* Conveyor */
+.conveyor-section { padding: 64px 0; overflow: hidden; }
+.conveyor-wrap { overflow: hidden; position: relative; padding: 0 24px; }
+.conveyor-track { display: flex; gap: 16px; width: max-content; cursor: grab; user-select: none; }
+.conveyor-track:active { cursor: grabbing; }
+.conv-fade-l, .conv-fade-r { position: absolute; top: 0; bottom: 0; width: 60px; z-index: 5; pointer-events: none; }
+.conv-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.conv-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+.conveyor-track .product-card { flex: 0 0 220px; }
+@media (max-width: 768px) { .conveyor-track .product-card { flex: 0 0 170px; } }
+
+/* About / manifesto block */
+.manifesto {
+    padding: 96px 24px;
+    max-width: 1320px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 64px;
+    border-top: 1px solid var(--border-subtle);
+}
+.manifesto-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--accent-text);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+}
+.manifesto-eyebrow::before {
+    content: ''; width: 24px; height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+.manifesto-num {
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--text-muted);
+    letter-spacing: 0.12em;
+    margin-bottom: 24px;
+}
+.manifesto h2 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+.manifesto p {
+    color: var(--text-secondary);
+    font-size: 14px; line-height: 1.7;
+    margin-bottom: 14px;
+    max-width: 640px;
+}
+.manifesto code {
+    font-family: var(--font-mono);
+    color: var(--accent-text);
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    padding: 1px 6px;
+    font-size: 12px;
+}
+@media (max-width: 900px) {
+    .manifesto { grid-template-columns: 1fr; gap: 24px; padding: 64px 16px; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-grid">
+        <div>
+            <p class="hero-meta">
+                <span>{{ site.product_count_label }} entries</span>
+                <span class="ok">Live feed</span>
+            </p>
+            <h1>Future<br><span class="accent">Finds.</span></h1>
+            <p class="hero-sub">{{ site.name }} is a real-time finds terminal. {{ site.agent_name }} curated drops · trusted Weidian / Taobao / 1688 sellers · ${{ site.coupon_amount }} welcome coupons on first ship.</p>
+            <div class="hero-actions">
+                <a href="/shop" class="btn btn-primary">[ Open shop ]</a>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">[ Sign up · ${{ site.coupon_amount }} ]</a>
+            </div>
+        </div>
+        <div class="hero-readouts">
+            <div class="hero-readout">
+                <span class="key">Status</span>
+                <span class="val" style="color:var(--ok);">ONLINE</span>
+            </div>
+            <div class="hero-readout">
+                <span class="key">Inventory</span>
+                <span class="val"><span data-count="{{ products|length if products else 100 }}" data-suffix="">0</span> SKU</span>
+            </div>
+            <div class="hero-readout">
+                <span class="key">Categories</span>
+                <span class="val">{{ categories|length if categories else 8 }}</span>
+            </div>
+            <div class="hero-readout">
+                <span class="key">Coupons</span>
+                <span class="val"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></span>
+            </div>
+            <div class="hero-readout">
+                <span class="key">Agent</span>
+                <span class="val">{{ site.agent_name|upper }}</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="telemetry" aria-hidden="true">
+    <div class="telemetry-track">
+        <span class="telemetry-item">// <span class="accent">REAL-TIME</span> finds</span>
+        <span class="telemetry-item">// {{ site.agent_name|upper }} <span class="accent">CURATED</span></span>
+        <span class="telemetry-item">// WEIDIAN / TAOBAO / 1688</span>
+        <span class="telemetry-item">// <span class="accent">${{ site.coupon_amount }}</span> WELCOME COUPONS</span>
+        <span class="telemetry-item">// LOWEST INTERNATIONAL SHIPPING</span>
+        <span class="telemetry-item">// SYSTEM <span class="accent">NOMINAL</span></span>
+        <span class="telemetry-item">// <span class="accent">REAL-TIME</span> finds</span>
+        <span class="telemetry-item">// {{ site.agent_name|upper }} <span class="accent">CURATED</span></span>
+        <span class="telemetry-item">// WEIDIAN / TAOBAO / 1688</span>
+        <span class="telemetry-item">// <span class="accent">${{ site.coupon_amount }}</span> WELCOME COUPONS</span>
+        <span class="telemetry-item">// LOWEST INTERNATIONAL SHIPPING</span>
+        <span class="telemetry-item">// SYSTEM <span class="accent">NOMINAL</span></span>
+    </div>
+</div>
+
+{% if conveyor %}
+<section class="conveyor-section reveal">
+    <div class="section" style="padding: 0 24px 24px;">
+        <div class="sec-header">
+            <div>
+                <div class="sec-eyebrow-row"><span class="num">// 01</span><span>Latest drops</span></div>
+                <h2 class="sec-title">Latest drops</h2>
+            </div>
+            <a href="/shop" class="sec-link">Open shop →</a>
+        </div>
+    </div>
+    <div class="conveyor-wrap">
+        <div class="conv-fade-l"></div><div class="conv-fade-r"></div>
+        <div class="conveyor-track" id="conv">
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                <div class="product-card-img-wrap">
+                    <span class="product-card-index">{{ '%03d' % loop.index }}</span>
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">Buy →</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}">
+                <div class="product-card-img-wrap">
+                    <span class="product-card-index">{{ '%03d' % (loop.index + (conveyor|length)) }}</span>
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">Buy →</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<a class="mid-cta reveal" href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
+    <span class="big"><span class="accent">${{ site.coupon_amount }}</span> in welcome coupons</span>
+    <span class="small">// Initiate signup → {{ site.agent_name }} · Lowest shipping rates</span>
+</a>
+
+{% if products %}
+{% set featured = products[:8] %}
+<section class="section reveal">
+    <div class="sec-header">
+        <div>
+            <div class="sec-eyebrow-row"><span class="num">// 02</span><span>High-velocity SKUs</span></div>
+            <h2 class="sec-title">Best selling</h2>
+        </div>
+        <a href="/shop" class="sec-link">View all →</a>
+    </div>
+    <div class="product-grid">
+        {% for p in featured %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">{{ '%03d' % loop.index }}</span>
+                {% if loop.index <= 3 %}<span class="product-card-badge">Top {{ loop.index }}</span>{% endif %}
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">// {{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Buy →</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+{% set cat_counter = namespace(n=2) %}
+{% for cat in categories %}
+{% set cp = products|selectattr('category', 'equalto', cat.slug)|list %}
+{% if cp and cat.slug != 'trending' %}
+{% set cat_counter.n = cat_counter.n + 1 %}
+<hr class="divider">
+<section class="section reveal" style="padding-top: 48px; padding-bottom: 48px;">
+    <div class="sec-header">
+        <div>
+            <div class="sec-eyebrow-row"><span class="num">// {{ '%02d' % cat_counter.n }}</span><span>{{ cat.name|upper }}</span></div>
+            <h2 class="sec-title">{{ cat.name }}</h2>
+        </div>
+        <a href="/shop?category={{ cat.slug }}" class="sec-link">{{ cp|length }} entries →</a>
+    </div>
+    <div class="product-grid">
+        {% for p in cp[:4] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">{{ '%03d' % loop.index }}</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">// {{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Buy →</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+<hr class="divider">
+<div class="stat-row reveal">
+    <div class="stat">
+        <div class="stat-key">// Curated</div>
+        <div class="stat-num"><span data-count="{{ products|length if products else 100 }}" data-suffix="">0</span></div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Coupons</div>
+        <div class="stat-num"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Categories</div>
+        <div class="stat-num">{{ categories|length if categories else 8 }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Uptime</div>
+        <div class="stat-num">100<span style="font-size:24px;">%</span></div>
+    </div>
+</div>
+
+<section class="manifesto reveal">
+    <div>
+        <p class="manifesto-eyebrow">// Brief</p>
+        <p class="manifesto-num">PROTOCOL · 1.0</p>
+    </div>
+    <div>
+        <h2>Real-time {{ site.agent_name }} <span style="color:var(--accent-text); text-shadow: 0 0 16px var(--accent-glow);">finds terminal</span></h2>
+        <p>{{ site.name }} treats the {{ site.agent_name }} index as a live feed — every SKU vetted, sellers verified, drops timestamped. We don't bulk-paste spreadsheets. We don't push promo. We curate with a single rule: <code>does it ship clean</code>.</p>
+        <p>Use the converter to switch any agent link → {{ site.agent_name }} in one click. Sign up via {{ site.name }} for ${{ site.coupon_amount }} in welcome shipping coupons + the platform's lowest international rates.</p>
+        <div style="display:flex; gap:0; margin-top:24px;">
+            <a href="/link-converter" class="btn btn-outline" style="border-right:none;">[ Open converter ]</a>
+            <a href="/tutorial" class="btn btn-outline">[ Tutorial ]</a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section reveal">
+    <p class="section-eyebrow">// Welcome packet</p>
+    <h2><span class="accent">${{ site.coupon_amount }}</span> in coupons unlocked.</h2>
+    <p>Sign up to {{ site.agent_name }} through {{ site.name }} and unlock welcome shipping coupons + the lowest international rates.</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','cta','','')">[ Initiate signup → {{ site.agent_name }} ]</a>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+var convEl = document.getElementById('conv');
+initConveyor(convEl);
+{% endblock %}

@@ -1,0 +1,364 @@
+{% extends "admin_base.html" %}
+{% block crumb %}<span data-i18n="tb_insights">Insights</span>{% endblock %}
+{% block heading %}<span data-i18n="sb_analytics">Analytics</span>{% endblock %}
+
+{% block topbar_actions %}{% endblock %}
+
+{% block admin_extra_css %}
+/* Breakdown tabs (ategoat-style) */
+.bk-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-subtle); margin: -8px -8px 14px; padding: 0 8px; flex-wrap: wrap; }
+.bk-tab { padding: 12px 18px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; white-space: nowrap; margin-bottom: -1px; }
+.bk-tab:hover { color: var(--text); }
+.bk-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.bk-panel { display: none; }
+.bk-panel.active { display: block; }
+.bk-filter { display: flex; align-items: center; gap: 8px; padding: 12px 0 14px; flex-wrap: wrap; }
+.bk-filter .info { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.bk-filter .spacer { flex: 1; }
+.bk-filter .export-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; text-decoration: none; transition: all .15s; }
+.bk-filter .export-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* Dense data table */
+.dt { width: 100%; border-collapse: collapse; }
+.dt thead th { background: var(--surface-2); padding: 11px 12px; text-align: left; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; }
+.dt thead th.num { text-align: right; }
+.dt tbody td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); }
+.dt tbody td.num { text-align: right; font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+.dt tbody tr { transition: background .12s; }
+.dt tbody tr:hover { background: var(--surface-2); }
+.dt .rank-cell { font-family: var(--font-mono); color: var(--text-muted); width: 36px; }
+.dt .share-bar-cell { width: 140px; }
+.dt .share-bar { height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.dt .share-bar > span { display: block; height: 100%; background: var(--accent); }
+
+/* Range picker */
+.range-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); margin-bottom: 20px; }
+.range-pills { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.range-pill { padding: 8px 14px; background: transparent; border: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 8px; text-decoration: none; transition: all .15s; white-space: nowrap; }
+.range-pill:hover { color: var(--text); }
+.range-pill.active { background: var(--accent); color: #fff; }
+.range-spacer { flex: 1; min-width: 16px; }
+.range-custom { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.range-custom label { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.range-custom input[type=date] { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text); padding: 7px 10px; font-size: 12px; font-family: var(--font-mono); color-scheme: dark; }
+.range-custom input[type=date]:focus { outline: none; border-color: var(--accent); }
+.range-custom button { padding: 7px 14px; background: var(--accent); border: none; color: #fff; border-radius: 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; }
+.range-custom button:hover { background: var(--accent-hover); }
+.range-window { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; }
+
+.an-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+.chart-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+.chart-wrap { height: 220px; display: flex; align-items: flex-end; gap: 4px; padding: 16px 0 8px; position: relative; }
+.cb { flex: 1; background: var(--accent-dim); border: 1px solid var(--accent); border-bottom: 0; border-radius: 4px 4px 0 0; min-width: 6px; position: relative; transition: all .15s; cursor: default; }
+.cb:hover { background: var(--accent); }
+.cb .tip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--surface-3); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 10px; white-space: nowrap; color: var(--text); z-index: 5; }
+.cb:hover .tip { display: block; }
+.chart-axis { display: flex; justify-content: space-between; padding-top: 8px; font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+.an-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+@media (max-width: 900px) { .an-cols { grid-template-columns: 1fr; } }
+
+.bar-row { display: grid; grid-template-columns: 1fr 64px 120px; align-items: center; gap: 14px; padding: 10px 4px; border-bottom: 1px solid var(--border-subtle); }
+.bar-row:last-child { border-bottom: none; }
+.bar-row .br-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .br-count { font-family: var(--font-mono); font-size: 11px; color: var(--accent); font-weight: 700; text-align: right; }
+.bar-row .br-bar { height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.bar-row .br-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .5s; }
+
+.empty { padding: 40px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+{% endblock %}
+
+{% block content %}
+
+<!-- Range picker -->
+<div class="range-bar">
+    <div class="range-pills">
+        <a href="/admin/analytics?range=hour"  class="range-pill {% if range_key == 'hour' %}active{% endif %}" data-i18n="rng_hour">Last hour</a>
+        <a href="/admin/analytics?range=today" class="range-pill {% if range_key == 'today' %}active{% endif %}" data-i18n="rng_today">Today</a>
+        <a href="/admin/analytics?range=24h"   class="range-pill {% if range_key == '24h' %}active{% endif %}" data-i18n="rng_24h">24h</a>
+        <a href="/admin/analytics?range=7d"    class="range-pill {% if range_key == '7d' %}active{% endif %}" data-i18n="rng_7d">7d</a>
+        <a href="/admin/analytics?range=30d"   class="range-pill {% if range_key == '30d' %}active{% endif %}" data-i18n="rng_30d">30d</a>
+        <a href="/admin/analytics?range=90d"   class="range-pill {% if range_key == '90d' %}active{% endif %}" data-i18n="rng_90d">90d</a>
+        <a href="/admin/analytics?range=mtd"   class="range-pill {% if range_key == 'mtd' %}active{% endif %}" data-i18n="rng_mtd">MTD</a>
+        <a href="/admin/analytics?range=ytd"   class="range-pill {% if range_key == 'ytd' %}active{% endif %}" data-i18n="rng_ytd">YTD</a>
+        <a href="/admin/analytics?range=1y"    class="range-pill {% if range_key == '1y' %}active{% endif %}" data-i18n="rng_1y">1 year</a>
+    </div>
+    <span class="range-spacer"></span>
+    <form class="range-custom" action="/admin/analytics" method="get">
+        <input type="hidden" name="range" value="custom">
+        <label data-i18n="rng_from">From</label>
+        <input type="date" name="from" value="{{ range_since }}">
+        <label data-i18n="rng_to">to</label>
+        <input type="date" name="to" value="{{ range_until }}">
+        <button type="submit" data-i18n="rng_apply">Apply</button>
+    </form>
+</div>
+
+<p class="range-window">{{ range_since }} → {{ range_until }} · <span data-i18n="rng_bucket_{{ stats.bucket }}">{{ stats.bucket }}</span></p>
+<br>
+
+<!-- Headline stats -->
+<div class="an-stats">
+    {% set span_days = (span_seconds / 86400.0) if span_seconds else 1 %}
+    {% set span_hours = (span_seconds / 3600.0) if span_seconds else 1 %}
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="an_total_clicks">Total Clicks</div>
+        <div class="stat-value accent">{{ stats.total_clicks }}</div>
+        <div class="stat-delta">{{ range_since }} → {{ range_until }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="an_unique">Unique Visitors</div>
+        <div class="stat-value">{{ stats.unique_visitors }}</div>
+        <div class="stat-delta" data-i18n="an_avg_per_visitor" data-i18n-vars='{"n": "{{ (stats.total_clicks / stats.unique_visitors) | round(1) if stats.unique_visitors else 0 }}"}'>{{ (stats.total_clicks / stats.unique_visitors) | round(1) if stats.unique_visitors else 0 }} avg clicks/visitor</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="an_signup_clicks">Signup Clicks</div>
+        <div class="stat-value accent">{{ stats.signup_clicks }}</div>
+        <div class="stat-delta" data-i18n="an_conv" data-i18n-vars='{"pct": "{{ ((stats.signup_clicks / stats.total_clicks * 100) | round(1)) if stats.total_clicks else 0 }}"}'>{{ ((stats.signup_clicks / stats.total_clicks * 100) | round(1)) if stats.total_clicks else 0 }}% conversion</div>
+    </div>
+    <div class="stat-card">
+        {% if span_hours < 48 %}
+        <div class="stat-label" data-i18n="an_hourly_avg">Hourly Avg</div>
+        <div class="stat-value">{{ (stats.total_clicks / span_hours) | round(0) | int }}</div>
+        <div class="stat-delta" data-i18n="an_per_hour">clicks per hour</div>
+        {% else %}
+        <div class="stat-label" data-i18n="an_daily_avg">Daily Avg</div>
+        <div class="stat-value">{{ (stats.total_clicks / span_days) | round(0) | int }}</div>
+        <div class="stat-delta" data-i18n="an_per_day">clicks per day</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Daily chart — interactive ApexChart -->
+<div class="chart-card">
+    <div class="card-head">
+        <h2 data-i18n="an_daily_activity">Daily activity</h2>
+        <span class="sub" data-i18n="an_with_traffic" data-i18n-vars='{"n": "{{ stats.daily | length }}"}'>{{ stats.daily | length }} days with traffic</span>
+    </div>
+    {% if stats.daily %}
+        <div id="kaiDailyChart" style="height: 320px;"></div>
+        <script>
+        (function(){
+            var data = {{ stats.daily | tojson }};
+            var ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            var SURFACE_2 = getComputedStyle(document.documentElement).getPropertyValue('--surface-2').trim();
+            var TEXT_MUTED = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            function init() {
+                var el = document.getElementById('kaiDailyChart');
+                if (!el || typeof ApexCharts === 'undefined') return setTimeout(init, 80);
+                new ApexCharts(el, {
+                    chart: { type: 'area', height: 320, background: 'transparent', toolbar: { show: true, tools: { zoom: true, zoomin: true, zoomout: true, pan: true, reset: true, download: true } }, animations: { speed: 500 }, foreColor: TEXT_MUTED, fontFamily: 'Inter, sans-serif' },
+                    theme: { mode: 'dark' },
+                    series: [
+                        { name: 'Clicks', data: data.map(function(d){ return { x: d.day, y: d.clicks }; }) },
+                        { name: 'Visitors', data: data.map(function(d){ return { x: d.day, y: d.visitors }; }) },
+                    ],
+                    colors: [ACCENT, '#8b5cf6'],
+                    stroke: { curve: 'smooth', width: [2, 2] },
+                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.02, stops: [0, 100] } },
+                    dataLabels: { enabled: false },
+                    grid: { borderColor: SURFACE_2, strokeDashArray: 4 },
+                    xaxis: { type: 'category', tickAmount: 7, labels: { rotate: -45, style: { fontSize: '10px' } } },
+                    yaxis: { labels: { formatter: function(v){ return Math.round(v).toLocaleString(); } } },
+                    markers: { size: 0, hover: { size: 5 } },
+                    legend: { position: 'top', horizontalAlign: 'right' },
+                    tooltip: { theme: 'dark', shared: true, y: { formatter: function(v){ return v.toLocaleString(); } } },
+                }).render();
+            }
+            init();
+        })();
+        </script>
+        <div style="display:none;">
+            {% for day in stats.daily %}
+            <div class="cb" style="height: 0;" title="{{ day.day }}">
+                <div class="tip">{{ day.day }} · {{ day.clicks }} clicks · {{ day.visitors }} visitors</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="chart-axis">
+            <span>{{ stats.daily[0].day }}</span>
+            <span>{{ stats.daily[-1].day }}</span>
+        </div>
+    {% else %}
+        <div class="empty" data-i18n="an_no_traffic">No traffic yet for this period</div>
+    {% endif %}
+</div>
+
+<!-- Breakdown — one tabbed panel mirroring ategoat's tenant-stats layout -->
+<div class="card">
+    <div class="bk-tabs" role="tablist">
+        <button type="button" class="bk-tab active" data-bk-tab="products" onclick="switchBkTab('products')" data-i18n="an_top_products">Top products</button>
+        <button type="button" class="bk-tab" data-bk-tab="categories" onclick="switchBkTab('categories')" data-i18n="an_top_categories">Top categories</button>
+        <button type="button" class="bk-tab" data-bk-tab="pages" onclick="switchBkTab('pages')" data-i18n="an_top_pages">Top pages</button>
+        <button type="button" class="bk-tab" data-bk-tab="types" onclick="switchBkTab('types')" data-i18n="an_types">Interaction types</button>
+    </div>
+
+    {# ============ PRODUCTS ============ #}
+    <div class="bk-panel active" id="bk-products">
+        <div class="bk-filter">
+            <span class="info">{{ range_since }} → {{ range_until }} · <span data-i18n="an_by_clicks">by clicks</span></span>
+            <span class="spacer"></span>
+            <a class="export-btn" href="/admin/analytics/export?kind=products&range={{ range_key }}{% if range_key == 'custom' %}&from={{ range_since }}&to={{ range_until }}{% endif %}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span data-i18n="export_csv">Export CSV</span>
+            </a>
+        </div>
+        {% if stats.top_products %}
+            {% set max_p = stats.top_products[0].clicks %}
+            <div class="table-wrap">
+                <table class="dt">
+                    <thead><tr>
+                        <th></th>
+                        <th data-i18n="th_product">Product</th>
+                        <th class="num" data-i18n="th_clicks">Clicks</th>
+                        <th data-i18n="th_share">Share</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for p in stats.top_products %}
+                        <tr>
+                            <td class="rank-cell">{{ loop.index }}</td>
+                            <td>{{ p.product_name }}</td>
+                            <td class="num">{{ p.clicks }}</td>
+                            <td class="share-bar-cell"><div class="share-bar"><span style="width:{{ (p.clicks / max_p * 100) | int }}%"></span></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-table" data-i18n="an_no_product_clicks">No product clicks yet</div>
+        {% endif %}
+    </div>
+
+    {# ============ CATEGORIES ============ #}
+    <div class="bk-panel" id="bk-categories">
+        <div class="bk-filter">
+            <span class="info">{{ range_since }} → {{ range_until }} · <span data-i18n="an_by_clicks">by clicks</span></span>
+            <span class="spacer"></span>
+            <a class="export-btn" href="/admin/analytics/export?kind=categories&range={{ range_key }}{% if range_key == 'custom' %}&from={{ range_since }}&to={{ range_until }}{% endif %}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span data-i18n="export_csv">Export CSV</span>
+            </a>
+        </div>
+        {% if stats.top_categories %}
+            {% set max_c = stats.top_categories[0].clicks %}
+            <div class="table-wrap">
+                <table class="dt">
+                    <thead><tr>
+                        <th></th>
+                        <th data-i18n="th_category">Category</th>
+                        <th class="num" data-i18n="th_clicks">Clicks</th>
+                        <th data-i18n="th_share">Share</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for c in stats.top_categories %}
+                        <tr>
+                            <td class="rank-cell">{{ loop.index }}</td>
+                            <td>{{ c.category }}</td>
+                            <td class="num">{{ c.clicks }}</td>
+                            <td class="share-bar-cell"><div class="share-bar"><span style="width:{{ (c.clicks / max_c * 100) | int }}%"></span></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-table" data-i18n="an_no_cat_clicks">No category clicks yet</div>
+        {% endif %}
+    </div>
+
+    {# ============ PAGES ============ #}
+    <div class="bk-panel" id="bk-pages">
+        <div class="bk-filter">
+            <span class="info">{{ range_since }} → {{ range_until }} · <span data-i18n="an_by_views">by views</span></span>
+            <span class="spacer"></span>
+            <a class="export-btn" href="/admin/analytics/export?kind=pages&range={{ range_key }}{% if range_key == 'custom' %}&from={{ range_since }}&to={{ range_until }}{% endif %}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span data-i18n="export_csv">Export CSV</span>
+            </a>
+        </div>
+        {% if stats.top_pages %}
+            {% set max_pg = stats.top_pages[0].views %}
+            <div class="table-wrap">
+                <table class="dt">
+                    <thead><tr>
+                        <th></th>
+                        <th data-i18n="th_page">Page</th>
+                        <th class="num" data-i18n="th_views">Views</th>
+                        <th data-i18n="th_share">Share</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for p in stats.top_pages %}
+                        <tr>
+                            <td class="rank-cell">{{ loop.index }}</td>
+                            <td>{{ p.page }}</td>
+                            <td class="num">{{ p.views }}</td>
+                            <td class="share-bar-cell"><div class="share-bar"><span style="width:{{ (p.views / max_pg * 100) | int }}%"></span></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-table" data-i18n="an_no_views">No page views yet</div>
+        {% endif %}
+    </div>
+
+    {# ============ TYPES ============ #}
+    <div class="bk-panel" id="bk-types">
+        <div class="bk-filter">
+            <span class="info">{{ range_since }} → {{ range_until }} · <span data-i18n="an_breakdown">click breakdown</span></span>
+            <span class="spacer"></span>
+            <a class="export-btn" href="/admin/analytics/export?kind=types&range={{ range_key }}{% if range_key == 'custom' %}&from={{ range_since }}&to={{ range_until }}{% endif %}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span data-i18n="export_csv">Export CSV</span>
+            </a>
+        </div>
+        {% if stats.element_types %}
+            {% set max_e = stats.element_types[0].clicks %}
+            <div class="table-wrap">
+                <table class="dt">
+                    <thead><tr>
+                        <th></th>
+                        <th data-i18n="th_type">Type</th>
+                        <th class="num" data-i18n="th_clicks">Clicks</th>
+                        <th data-i18n="th_share">Share</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for e in stats.element_types %}
+                        <tr>
+                            <td class="rank-cell">{{ loop.index }}</td>
+                            <td>{{ e.element_type or 'unknown' }}</td>
+                            <td class="num">{{ e.clicks }}</td>
+                            <td class="share-bar-cell"><div class="share-bar"><span style="width:{{ (e.clicks / max_e * 100) | int }}%"></span></div></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-table" data-i18n="an_no_interactions">No interactions tracked yet</div>
+        {% endif %}
+    </div>
+</div>
+
+<style>.empty-table { padding: 60px 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }</style>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function switchBkTab(name) {
+    document.querySelectorAll('.bk-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.bkTab === name); });
+    document.querySelectorAll('.bk-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'bk-' + name); });
+    // Remember last tab so refresh keeps the user where they were
+    try { localStorage.setItem('an_bk_tab', name); } catch(e) {}
+}
+(function () {
+    try {
+        var saved = localStorage.getItem('an_bk_tab');
+        if (saved && document.getElementById('bk-' + saved)) switchBkTab(saved);
+    } catch (e) {}
+})();
+</script>
+{% endblock %}

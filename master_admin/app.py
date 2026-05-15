@@ -809,6 +809,19 @@ def ga_setup():
 
 TEMPLATES_REGISTRY = [
     {
+        'slug': 'future',
+        'name': 'Future Finds',
+        'status': 'live',
+        'description': 'Sci-fi mission-control template — deep dark bg, electric cyan accent, monospace data labels, terminal-style readouts, scanline overlay, live UTC clock. Built for clients who want a Bloomberg-meets-Apple-Vision-Pro vibe.',
+        'color': '#00f5d4',
+        'theme': 'Dark · sci-fi terminal',
+        'fonts': 'Space Grotesk · JetBrains Mono · Inter',
+        'features': ['Live UTC clock in nav', 'Terminal-style spec sheet readouts', 'Scanline overlay', 'Pulsing status dot indicators', 'Monospace data labels everywhere', 'Tabular numerals', 'Cyan glow on hover', 'Telemetry strip marquee', 'Numerical product indices'],
+        'preview_url': '/future',
+        'folder': 'future',
+        'product_count_label': '100+',
+    },
+    {
         'slug': 'maywood',
         'name': 'Maywood Sheets',
         'status': 'live',
