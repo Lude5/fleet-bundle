@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>{% block title %}{{ site.name }} — {{ site.agent_name }} Finds, Outfits & ${{ site.coupon_amount }} Coupons{% endblock %}</title>
     <meta name="description" content="{{ site.name }} — Curated {{ site.agent_name }} finds, outfit bundles, sellers, and ${{ site.coupon_amount }} in welcome coupons.">
     <meta name="keywords" content="{{ site.agent_name|lower }}, {{ site.name|lower }}, {{ site.agent_name|lower }} finds, {{ site.agent_name|lower }} outfits, {{ site.agent_name|lower }} sellers, rep finds, weidian finds, taobao finds, 1688 finds">
@@ -44,7 +44,17 @@
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Default Maywood fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+    <!-- Studio font-picker options (loaded so the Studio preview can switch fonts live) -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            DESIGN TOKENS — light by default (doppel.fit polish)
@@ -117,7 +127,7 @@
         }
         .nav-brand {
             font-family: var(--font-display);
-            font-size: 26px; font-weight: 400;
+            font-size: 34px; font-weight: 400;
             letter-spacing: -0.01em;
             line-height: 1;
             display: inline-flex; align-items: center;
@@ -680,60 +690,157 @@
            SIGNUP POPUP
            ============================================================ */
         .popup-overlay {
-            display: none; position: fixed; inset: 0;
+            display: flex; position: fixed; inset: 0;
             background: rgba(0,0,0,0.45);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             z-index: 500;
             align-items: center; justify-content: center;
             padding: 20px;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .25s ease, visibility 0s linear .25s, backdrop-filter .25s ease;
         }
-        .popup-overlay.active { display: flex; }
+        .popup-overlay.active {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transition: opacity .25s ease, backdrop-filter .25s ease;
+        }
         .popup {
-            background: var(--surface);
+            background: var(--bg);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius);
-            max-width: 420px; width: 100%;
-            text-align: center; padding: 44px 32px 36px;
+            max-width: 440px; width: 100%;
+            text-align: left; padding: 0;
             position: relative;
             box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            opacity: 0; transform: scale(.94) translateY(10px);
+            transition: opacity .3s ease, transform .45s cubic-bezier(.16, 1, .3, 1);
         }
+        .popup-overlay.active .popup {
+            opacity: 1; transform: scale(1) translateY(0);
+        }
+        .popup-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .popup-brand {
+            font-family: var(--font-display);
+            font-size: 22px; font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1;
+            display: inline-flex; align-items: center;
+        }
+        .popup-brand .accent { font-style: italic; color: var(--accent-text); margin-left: 3px; }
         .popup-close {
-            position: absolute; top: 14px; right: 14px;
-            background: var(--surface-2); border: none;
+            background: transparent; border: none;
             color: var(--text-muted);
             width: 32px; height: 32px;
             border-radius: 50%;
-            font-size: 18px; cursor: pointer;
+            font-size: 22px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
+            transition: all .15s ease;
+            line-height: 1;
         }
-        .popup-close:hover { color: var(--text); }
-        .popup-label {
+        .popup-close:hover { color: var(--text); background: var(--surface-2); }
+        .popup-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .popup-card {
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 26px 22px;
+            text-align: center;
+        }
+        .popup-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px;
+            background: var(--accent-dim);
+            color: var(--accent-text);
+            border-radius: var(--radius-pill);
             font-family: var(--font-body);
             font-size: 11px; font-weight: 600;
-            color: var(--accent-text);
-            text-transform: uppercase; letter-spacing: 0.12em;
+            text-transform: uppercase; letter-spacing: 0.08em;
             margin-bottom: 14px;
         }
-        .popup h2 {
+        .popup-headline {
             font-family: var(--font-display);
-            font-size: 36px; font-weight: 400;
-            letter-spacing: -0.02em;
-            margin-bottom: 12px;
-            line-height: 1.05;
+            font-size: 26px; font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1.15;
+            margin-bottom: 8px;
+            color: var(--text);
         }
-        .popup h2 .italic { font-style: italic; color: var(--accent-text); }
-        .popup p {
-            color: var(--text-secondary);
-            font-size: 14px; margin-bottom: 24px;
-            line-height: 1.6;
-        }
-        .popup .btn { width: 100%; justify-content: center; }
-        .popup-dismiss {
+        .popup-headline strong { font-weight: 400; }
+        .popup-headline .italic { font-style: italic; color: var(--accent-text); }
+        .popup-sub {
+            color: var(--text-muted);
             font-family: var(--font-body);
-            font-size: 12px; color: var(--text-muted);
-            margin-top: 14px; cursor: pointer;
+            font-size: 12px;
+            margin-bottom: 18px;
         }
-        .popup-dismiss:hover { color: var(--text); }
+        .popup-cta {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--text); color: var(--bg);
+            border-radius: var(--radius-pill);
+            font-family: var(--font-body);
+            font-size: 13px; font-weight: 600;
+            transition: background .15s ease, transform .15s ease, color .15s ease;
+            text-decoration: none;
+        }
+        .popup-cta:hover {
+            background: var(--accent); color: var(--accent-on);
+            transform: translateY(-1px);
+        }
+        .popup-hint {
+            font-family: var(--font-body);
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            margin-bottom: 0;
+        }
+        .popup-prefs {
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px;
+        }
+        .popup-prefs-text { flex: 1; min-width: 0; }
+        .popup-prefs-title {
+            font-family: var(--font-body);
+            font-size: 13px; font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        .popup-prefs-sub {
+            font-family: var(--font-body);
+            color: var(--text-muted);
+            font-size: 11px;
+            margin: 0;
+        }
+        .popup-tutorial-link {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-family: var(--font-body);
+            font-size: 12px; font-weight: 600;
+            color: var(--accent-text);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: gap .15s ease;
+        }
+        .popup-tutorial-link:hover { gap: 7px; }
+        .popup-foot {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-subtle);
+            font-family: var(--font-body);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            background: var(--surface);
+        }
+        .popup-foot a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+        .popup-foot a:hover { color: var(--text); }
 
         /* ============================================================
            PRODUCT DETAIL MODAL
@@ -922,7 +1029,7 @@
         }
         .footer-brand {
             font-family: var(--font-display);
-            font-size: 28px; font-weight: 400;
+            font-size: 36px; font-weight: 400;
             letter-spacing: -0.01em;
             margin-bottom: 8px; line-height: 1;
             display: inline-flex; align-items: center;
@@ -1183,13 +1290,28 @@
     </div>
 
     <div class="popup-overlay" id="popup">
-        <div class="popup">
-            <button class="popup-close" onclick="closePopup()" aria-label="Close">&times;</button>
-            <p class="popup-label">Welcome offer</p>
-            <h2>${{ site.coupon_amount }} <span class="italic">in coupons</span></h2>
-            <p>Sign up to {{ site.agent_name }} today and unlock up to ${{ site.coupon_amount }} in welcome shipping coupons.</p>
-            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','popup','','')">Claim ${{ site.coupon_amount }} coupon</a>
-            <p class="popup-dismiss" onclick="closePopup()">Maybe later</p>
+        <div class="popup" role="dialog" aria-modal="true" aria-labelledby="popupHeadline">
+            <header class="popup-head">
+                <div class="popup-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
+                <button class="popup-close" onclick="closePopup()" aria-label="Close">&times;</button>
+            </header>
+            <div class="popup-body">
+                <div class="popup-card">
+                    <span class="popup-badge">&#9889; Welcome offer</span>
+                    <h2 class="popup-headline" id="popupHeadline">Sign up now to unlock up to <strong>${{ site.coupon_amount }} <span class="italic">in coupons</span></strong>.</h2>
+                    <p class="popup-sub">Fast access · Works on all devices · Takes seconds</p>
+                    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="popup-cta" onclick="trackClick('signup','popup','','')">&#9889; Sign up to {{ site.agent_name }}</a>
+                    <p class="popup-hint">New to {{ site.agent_name }}? Check the buying tutorial below.</p>
+                </div>
+                <div class="popup-prefs">
+                    <div class="popup-prefs-text">
+                        <div class="popup-prefs-title">&#128214; Buying tutorial</div>
+                        <p class="popup-prefs-sub">Step-by-step guide to your first {{ site.agent_name }} order.</p>
+                    </div>
+                    <a href="/tutorial" class="popup-tutorial-link" onclick="closePopup()">Read the guide &rarr;</a>
+                </div>
+            </div>
+            <p class="popup-foot">By continuing, you agree to our <a href="/terms">terms</a>.</p>
         </div>
     </div>
 

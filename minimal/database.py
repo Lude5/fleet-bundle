@@ -1,0 +1,488 @@
+import sqlite3
+import os
+import json
+import shutil
+from datetime import datetime, timedelta
+
+DB_PATH = '/data/site.db' if os.path.exists('/data') else 'site.db'
+BACKUP_DIR = '/data/backups' if os.path.exists('/data') else 'data/backups'
+
+
+def get_db():
+    os.makedirs(os.path.dirname(DB_PATH) if os.path.dirname(DB_PATH) else '.', exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS products (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            price TEXT DEFAULT '',
+            price_numeric REAL DEFAULT 0,
+            url TEXT DEFAULT '',
+            image TEXT DEFAULT '',
+            category TEXT DEFAULT '',
+            seller TEXT DEFAULT '',
+            rating REAL DEFAULT 0,
+            batch TEXT DEFAULT '',
+            retail_price TEXT DEFAULT '',
+            review_count INTEGER DEFAULT 0,
+            tags TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS categories (
+            slug TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            icon TEXT DEFAULT '',
+            description TEXT DEFAULT '',
+            sort_order INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS clicks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id TEXT,
+            product_name TEXT DEFAULT '',
+            category TEXT DEFAULT '',
+            element_type TEXT DEFAULT '',
+            page TEXT DEFAULT '',
+            referrer TEXT DEFAULT '',
+            user_ip TEXT DEFAULT '',
+            user_agent TEXT DEFAULT '',
+            country TEXT DEFAULT '',
+            clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_stats (
+            date TEXT PRIMARY KEY,
+            total_clicks INTEGER DEFAULT 0,
+            unique_visitors INTEGER DEFAULT 0,
+            top_product TEXT DEFAULT '',
+            top_category TEXT DEFAULT '',
+            page_views INTEGER DEFAULT 0,
+            signup_clicks INTEGER DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_clicks_product ON clicks(product_id);
+        CREATE INDEX IF NOT EXISTS idx_clicks_date ON clicks(clicked_at);
+        CREATE INDEX IF NOT EXISTS idx_clicks_category ON clicks(category);
+        CREATE INDEX IF NOT EXISTS idx_clicks_page ON clicks(page);
+        CREATE INDEX IF NOT EXISTS idx_clicks_element ON clicks(element_type);
+    ''')
+    # Migrations for older DBs
+    for col, ddl in [
+        ('tags',       'ALTER TABLE products ADD COLUMN tags TEXT DEFAULT ""'),
+        ('featured',   'ALTER TABLE products ADD COLUMN featured INTEGER DEFAULT 0'),
+        ('position',   'ALTER TABLE products ADD COLUMN position INTEGER DEFAULT 999999'),
+        ('listing_id', 'ALTER TABLE products ADD COLUMN listing_id TEXT DEFAULT ""'),
+        ('weight',     'ALTER TABLE products ADD COLUMN weight TEXT DEFAULT ""'),
+        ('quality',    'ALTER TABLE products ADD COLUMN quality TEXT DEFAULT ""'),
+        ('sales',      'ALTER TABLE products ADD COLUMN sales INTEGER DEFAULT 0'),
+        ('qc_photos',  'ALTER TABLE products ADD COLUMN qc_photos TEXT DEFAULT ""'),
+    ]:
+        try:
+            conn.execute(ddl)
+        except Exception:
+            pass
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_products_order ON products(featured DESC, position ASC, created_at DESC)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_products_listing ON products(listing_id)')
+    conn.close()
+
+
+SHOP_ORDER = 'featured DESC, position ASC, created_at DESC'
+
+
+def get_products(category=None):
+    conn = get_db()
+    if category:
+        rows = conn.execute(
+            f'SELECT * FROM products WHERE category = ? ORDER BY {SHOP_ORDER}',
+            (category,)
+        ).fetchall()
+    else:
+        rows = conn.execute(f'SELECT * FROM products ORDER BY {SHOP_ORDER}').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_product(product_id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_listing_variants(product):
+    """Return all products sharing this product's listing_id (its variants/colorways).
+
+    Falls back to the product's own URL if listing_id isn't set yet. The returned
+    list includes the product itself, ordered with featured + position.
+    """
+    if not product:
+        return []
+    listing_id = (product.get('listing_id') or '').strip()
+    conn = get_db()
+    if listing_id:
+        rows = conn.execute(
+            f'SELECT * FROM products WHERE listing_id = ? ORDER BY {SHOP_ORDER}',
+            (listing_id,)
+        ).fetchall()
+    else:
+        # Fallback: products with the same purchase URL
+        url = product.get('url') or ''
+        if url and 'placeholder' not in url:
+            rows = conn.execute(
+                f'SELECT * FROM products WHERE url = ? ORDER BY {SHOP_ORDER}',
+                (url,)
+            ).fetchall()
+        else:
+            rows = [conn.execute('SELECT * FROM products WHERE id = ?', (product['id'],)).fetchone()]
+            rows = [r for r in rows if r]
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_product(product):
+    conn = get_db()
+    conn.execute('''
+        INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ''', (
+        product.get('id', ''),
+        product.get('name', ''),
+        product.get('price', ''),
+        float(product.get('price_numeric', 0) or 0),
+        product.get('url', ''),
+        product.get('image', ''),
+        product.get('category', ''),
+        product.get('seller', ''),
+        float(product.get('rating', 0) or 0),
+        product.get('batch', ''),
+        product.get('retail_price', ''),
+        int(product.get('review_count', 0) or 0),
+        product.get('tags', ''),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def add_products_bulk(products):
+    conn = get_db()
+    for p in products:
+        conn.execute('''
+            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (
+            p.get('id', ''),
+            p.get('name', ''),
+            p.get('price', ''),
+            float(p.get('price_numeric', 0) or 0),
+            p.get('url', ''),
+            p.get('image', ''),
+            p.get('category', ''),
+            p.get('seller', ''),
+            float(p.get('rating', 0) or 0),
+            p.get('batch', ''),
+            p.get('retail_price', ''),
+            int(p.get('review_count', 0) or 0),
+            p.get('tags', ''),
+        ))
+    conn.commit()
+    conn.close()
+
+
+def update_product(product_id, updates):
+    conn = get_db()
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position']
+    sets = []
+    vals = []
+    for key in allowed:
+        if key in updates:
+            sets.append(f'{key} = ?')
+            vals.append(updates[key])
+    if not sets:
+        conn.close()
+        return
+    sets.append('updated_at = CURRENT_TIMESTAMP')
+    vals.append(product_id)
+    conn.execute(f'UPDATE products SET {", ".join(sets)} WHERE id = ?', vals)
+    conn.commit()
+    conn.close()
+
+
+def delete_product(product_id):
+    conn = get_db()
+    conn.execute('DELETE FROM products WHERE id = ?', (product_id,))
+    conn.commit()
+    conn.close()
+
+
+def set_featured(product_ids, featured):
+    """Pin/unpin multiple products."""
+    if not product_ids:
+        return 0
+    conn = get_db()
+    qmarks = ','.join('?' * len(product_ids))
+    conn.execute(
+        f'UPDATE products SET featured = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({qmarks})',
+        (1 if featured else 0, *product_ids)
+    )
+    n = conn.total_changes
+    conn.commit()
+    conn.close()
+    return n
+
+
+def move_category(product_ids, category):
+    """Bulk-move products to a different category."""
+    if not product_ids:
+        return 0
+    conn = get_db()
+    qmarks = ','.join('?' * len(product_ids))
+    conn.execute(
+        f'UPDATE products SET category = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({qmarks})',
+        (category, *product_ids)
+    )
+    n = conn.total_changes
+    conn.commit()
+    conn.close()
+    return n
+
+
+def reorder_products(ordered_ids):
+    """Assign positions 1..N in the given order. Products not in the list keep their existing position."""
+    if not ordered_ids:
+        return 0
+    conn = get_db()
+    for i, pid in enumerate(ordered_ids, start=1):
+        conn.execute('UPDATE products SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', (i, pid))
+    conn.commit()
+    n = len(ordered_ids)
+    conn.close()
+    return n
+
+
+def search_products(query):
+    """Token-based fuzzy search.
+
+    Splits the query into words and requires every word to appear somewhere in
+    name/tags/seller/category. Relevance prefers matches in the name.
+    Words ≤2 chars are kept (e.g. "lv", "nb") because brand aliases need them.
+    """
+    try:
+        try:
+            from .tag_utils import tokenize_query
+        except ImportError:
+            from tag_utils import tokenize_query
+        tokens = tokenize_query(query)
+    except ImportError:
+        tokens = [t.lower() for t in (query or '').split() if t]
+    if not tokens:
+        return []
+
+    conn = get_db()
+    where_clauses = []
+    params = []
+    # Each token must be found somewhere
+    for tok in tokens:
+        like = f'%{tok}%'
+        where_clauses.append('(LOWER(name) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(seller) LIKE ? OR LOWER(category) LIKE ?)')
+        params.extend([like, like, like, like])
+    # Relevance: how many tokens hit the name (strongest signal)
+    relevance_parts = []
+    for tok in tokens:
+        relevance_parts.append('(CASE WHEN LOWER(name) LIKE ? THEN 3 WHEN LOWER(tags) LIKE ? THEN 1 ELSE 0 END)')
+        like = f'%{tok}%'
+        params.extend([like, like])  # used in SELECT below, appended after WHERE params
+    # Reorder: WHERE params first, then SELECT-side relevance params
+    sql_params = []
+    # WHERE params
+    for tok in tokens:
+        like = f'%{tok}%'
+        sql_params.extend([like, like, like, like])
+    # SELECT relevance params
+    for tok in tokens:
+        like = f'%{tok}%'
+        sql_params.extend([like, like])
+
+    relevance_sql = ' + '.join(relevance_parts) if relevance_parts else '0'
+    where_sql = ' AND '.join(where_clauses)
+    sql = f'''
+        SELECT *, ({relevance_sql}) AS relevance
+        FROM products
+        WHERE {where_sql}
+        ORDER BY relevance DESC, {SHOP_ORDER}
+    '''
+    rows = conn.execute(sql, sql_params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_categories():
+    conn = get_db()
+    rows = conn.execute('SELECT * FROM categories ORDER BY sort_order').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_category(slug, name, icon='', description='', sort_order=0):
+    conn = get_db()
+    conn.execute('''
+        INSERT OR REPLACE INTO categories (slug, name, icon, description, sort_order)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (slug, name, icon, description, sort_order))
+    conn.commit()
+    conn.close()
+
+
+def record_click(data):
+    conn = get_db()
+    conn.execute('''
+        INSERT INTO clicks (product_id, product_name, category, element_type, page, referrer, user_ip, user_agent, country)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        data.get('product_id', ''),
+        data.get('product_name', ''),
+        data.get('category', ''),
+        data.get('element_type', 'click'),
+        data.get('page', ''),
+        data.get('referrer', ''),
+        data.get('user_ip', ''),
+        data.get('user_agent', ''),
+        data.get('country', ''),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_analytics(days=30, since=None, until=None):
+    """Pull analytics for a window.
+
+    Either pass `days` (legacy, counts back from now) OR pass explicit
+    `since` / `until` ISO datetime strings for arbitrary windows.
+    """
+    conn = get_db()
+    if since is None:
+        since = (datetime.now() - timedelta(days=days)).isoformat()
+    if until is None:
+        until = datetime.now().isoformat()
+
+    range_args = (since, until)
+
+    total = conn.execute(
+        'SELECT COUNT(*) as c FROM clicks WHERE clicked_at >= ? AND clicked_at <= ?', range_args
+    ).fetchone()['c']
+
+    unique = conn.execute(
+        'SELECT COUNT(DISTINCT user_ip) as c FROM clicks WHERE clicked_at >= ? AND clicked_at <= ?', range_args
+    ).fetchone()['c']
+
+    top_products = conn.execute('''
+        SELECT product_name, COUNT(*) as clicks FROM clicks
+        WHERE clicked_at >= ? AND clicked_at <= ? AND product_name != ''
+        GROUP BY product_name ORDER BY clicks DESC LIMIT 10
+    ''', range_args).fetchall()
+
+    top_categories = conn.execute('''
+        SELECT category, COUNT(*) as clicks FROM clicks
+        WHERE clicked_at >= ? AND clicked_at <= ? AND category != ''
+        GROUP BY category ORDER BY clicks DESC LIMIT 10
+    ''', range_args).fetchall()
+
+    top_pages = conn.execute('''
+        SELECT page, COUNT(*) as views FROM clicks
+        WHERE clicked_at >= ? AND clicked_at <= ? AND page != ''
+        GROUP BY page ORDER BY views DESC LIMIT 10
+    ''', range_args).fetchall()
+
+    element_types = conn.execute('''
+        SELECT element_type, COUNT(*) as clicks FROM clicks
+        WHERE clicked_at >= ? AND clicked_at <= ?
+        GROUP BY element_type ORDER BY clicks DESC
+    ''', range_args).fetchall()
+
+    # Pick a bucket size based on window length so the chart stays useful.
+    # < 6h → hourly, < 60d → daily, < 2y → weekly, else monthly.
+    try:
+        s_dt = datetime.fromisoformat(since)
+        u_dt = datetime.fromisoformat(until)
+        span_h = (u_dt - s_dt).total_seconds() / 3600.0
+    except Exception:
+        span_h = 24 * 30
+    if span_h <= 48:
+        bucket_sql = "strftime('%Y-%m-%d %H:00', clicked_at)"
+        bucket = 'hour'
+    elif span_h <= 24 * 60:
+        bucket_sql = "DATE(clicked_at)"
+        bucket = 'day'
+    elif span_h <= 24 * 365 * 2:
+        bucket_sql = "strftime('%Y-W%W', clicked_at)"
+        bucket = 'week'
+    else:
+        bucket_sql = "strftime('%Y-%m', clicked_at)"
+        bucket = 'month'
+
+    daily = conn.execute(f'''
+        SELECT {bucket_sql} as day, COUNT(*) as clicks, COUNT(DISTINCT user_ip) as visitors
+        FROM clicks WHERE clicked_at >= ? AND clicked_at <= ?
+        GROUP BY day ORDER BY day
+    ''', range_args).fetchall()
+
+    signup_clicks = conn.execute(
+        "SELECT COUNT(*) as c FROM clicks WHERE clicked_at >= ? AND clicked_at <= ? AND element_type = 'signup'", range_args
+    ).fetchone()['c']
+
+    conn.close()
+    return {
+        'total_clicks': total,
+        'unique_visitors': unique,
+        'signup_clicks': signup_clicks,
+        'top_products': [dict(r) for r in top_products],
+        'top_categories': [dict(r) for r in top_categories],
+        'top_pages': [dict(r) for r in top_pages],
+        'element_types': [dict(r) for r in element_types],
+        'daily': [dict(r) for r in daily],
+        'bucket': bucket,
+        'since': since,
+        'until': until,
+    }
+
+
+def backup_database():
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    backup_path = os.path.join(BACKUP_DIR, f'backup_{timestamp}.db')
+    shutil.copy2(DB_PATH, backup_path)
+
+    # Clean backups older than 30 days
+    cutoff = datetime.now() - timedelta(days=30)
+    for f in os.listdir(BACKUP_DIR):
+        fpath = os.path.join(BACKUP_DIR, f)
+        if os.path.isfile(fpath):
+            mtime = datetime.fromtimestamp(os.path.getmtime(fpath))
+            if mtime < cutoff:
+                os.remove(fpath)
+
+    return backup_path
+
+
+def check_auto_backup():
+    """Run backup if last one was > 24hrs ago."""
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    backups = sorted([f for f in os.listdir(BACKUP_DIR) if f.startswith('backup_')])
+    if not backups:
+        return backup_database()
+
+    latest = os.path.join(BACKUP_DIR, backups[-1])
+    mtime = datetime.fromtimestamp(os.path.getmtime(latest))
+    if datetime.now() - mtime > timedelta(hours=24):
+        return backup_database()
+    return None
