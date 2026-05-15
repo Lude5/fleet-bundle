@@ -454,6 +454,11 @@
     // Push state to BOTH iframes — live (no reload)
     // Sends to whichever frames are loaded; the other catches up via URL on its next load.
     // ============================================================
+    // Track when the last applied-ack came back (per-iframe). If postMessage
+    // doesn't roundtrip within the timeout, fall back to a URL reload.
+    var lastApplyAck = { laptop: 0, phone: 0 };
+    var fallbackTimer = null;
+
     function pushLive() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function () {
@@ -463,14 +468,37 @@
                 brand: state.brand, color: state.color, theme: state.theme,
                 font: state.font, logo: state.logo, hideChrome: true,
             };
+            var sentAt = Date.now();
+            var sentTo = [];
             [
                 { key: 'laptop', el: $laptopFrame },
                 { key: 'phone', el: $phoneFrame },
             ].forEach(function (f) {
                 if (!iframeReady[f.key] || !f.el.contentWindow) return;
-                try { f.el.contentWindow.postMessage({ type: 'kai-preview-update', payload: payload }, '*'); }
-                catch (e) {}
+                try {
+                    f.el.contentWindow.postMessage({ type: 'kai-preview-update', payload: payload }, '*');
+                    sentTo.push(f.key);
+                } catch (e) {}
             });
+
+            // SAFETY NET: if ack doesn't arrive within 900ms for any iframe we
+            // sent to, reload that iframe with the new URL — preview-mode.js
+            // reads the same params on init, so this guarantees the change
+            // applies even if postMessage is silently failing.
+            clearTimeout(fallbackTimer);
+            if (sentTo.length === 0) {
+                // No iframe was ready — force a URL reload now (this is the
+                // first interaction before ready handshake completed).
+                loadAllIframes();
+                return;
+            }
+            fallbackTimer = setTimeout(function () {
+                var needsReload = false;
+                sentTo.forEach(function (key) {
+                    if (lastApplyAck[key] < sentAt) needsReload = true;
+                });
+                if (needsReload) loadAllIframes();
+            }, 900);
         }, 80);
     }
 
@@ -627,6 +655,7 @@
             // Push current state on ready so URL params + state match
             pushLive();
         } else if (e.data.type === 'kai-preview-applied') {
+            lastApplyAck[key] = Date.now();
             flashHint('✓ Applied live');
         }
     });

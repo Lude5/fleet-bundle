@@ -90,7 +90,7 @@
 
         .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--nav-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-subtle); }
         .nav-left { display: flex; align-items: center; gap: 24px; }
-        .nav-brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; line-height: 1; display: inline-flex; align-items: center; }
+        .nav-brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 0.04em; line-height: 1; display: inline-flex; align-items: center; }
         .nav-brand .accent { color: var(--accent-text); margin-left: 4px; text-shadow: 0 0 16px var(--accent-glow); }
         .nav-status { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.16em; }
         .status-dot { width: 7px; height: 7px; background: var(--ok); border-radius: 50%; box-shadow: 0 0 8px var(--ok); animation: pulse 2.4s ease-out infinite; }
@@ -152,7 +152,7 @@
         .sec-header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle); }
         .sec-eyebrow-row { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
         .sec-eyebrow-row .num { color: var(--accent-text); font-weight: 600; }
-        .sec-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
+        .sec-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: 0.02em; color: var(--text); line-height: 1.05; }
         .sec-link { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.12em; display: inline-flex; align-items: center; gap: 6px; transition: color 0.15s ease; }
         .sec-link:hover { color: var(--accent-text); }
         .divider { border: none; border-top: 1px solid var(--border-subtle); margin: 0; max-width: 1320px; margin-left: auto; margin-right: auto; }
@@ -165,7 +165,7 @@
         @media (max-width: 768px) { .stat { border-right: none; border-bottom: 1px solid var(--border-subtle); } .stat:last-child { border-bottom: none; } }
 
         .cta-section { padding: 96px 24px; text-align: center; position: relative; max-width: 720px; margin: 0 auto; }
-        .cta-section h2 { font-family: var(--font-display); font-size: clamp(36px, 5vw, 56px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 16px; color: var(--text); }
+        .cta-section h2 { font-family: var(--font-display); font-size: clamp(36px, 5vw, 56px); font-weight: 700; letter-spacing: 0.02em; line-height: 1.1; margin-bottom: 16px; color: var(--text); }
         .cta-section h2 .accent { color: var(--accent-text); text-shadow: 0 0 24px var(--accent-glow); }
         .cta-section p { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.6; }
 
@@ -256,7 +256,7 @@
 
         .footer { padding: 80px 24px 32px; max-width: 1320px; margin: 0 auto; border-top: 1px solid var(--border-subtle); margin-top: 80px; }
         .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 64px; }
-        .footer-brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 12px; line-height: 1; display: inline-flex; align-items: center; }
+        .footer-brand { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 12px; line-height: 1; display: inline-flex; align-items: center; }
         .footer-brand .accent { color: var(--accent-text); margin-left: 4px; text-shadow: 0 0 12px var(--accent-glow); }
         .footer-desc { font-family: var(--font-body); font-size: 13px; color: var(--text-secondary); max-width: 320px; line-height: 1.6; }
         .footer-col h4 { font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 16px; }
