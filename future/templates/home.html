@@ -66,61 +66,10 @@
 .hero-actions .btn:last-child { border-right: 1px solid; }
 .hero-actions .btn-primary { border-right: 1px solid var(--accent); }
 
-/* Control-panel readout BAR — horizontal, full-width, below the hero */
-.readout-bar {
-    max-width: 1320px;
-    margin: 64px auto 0;
-    border: 1px solid var(--border-subtle);
-    background: var(--surface);
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    animation: fadeUp .7s ease .35s both;
-    position: relative;
-}
-.readout-bar::before {
-    /* Subtle scan-bar accent line on top */
-    content: ''; position: absolute; top: -1px; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    box-shadow: 0 0 12px var(--accent-glow);
-    opacity: 0.7;
-}
-.readout-cell {
-    padding: 20px 22px;
-    border-right: 1px solid var(--border-subtle);
-    display: flex; flex-direction: column; gap: 8px;
-    text-align: left;
-}
-.readout-cell:last-child { border-right: none; }
-.readout-cell .key {
-    font-family: var(--font-mono);
-    font-size: 10px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.16em;
-}
-.readout-cell .val {
-    font-family: var(--font-mono);
-    font-size: 16px; font-weight: 600;
-    color: var(--accent-text);
-    font-variant-numeric: tabular-nums;
-    line-height: 1.1;
-}
-.readout-cell .val.ok-val { color: var(--ok); display: inline-flex; align-items: center; gap: 8px; }
-.readout-cell .val.ok-val::before {
-    content: ''; width: 7px; height: 7px;
-    background: var(--ok); border-radius: 50%;
-    box-shadow: 0 0 8px var(--ok);
-    animation: pulse 2.4s ease-out infinite;
-}
-
 @media (max-width: 900px) {
     .hero { padding: 110px 16px 40px; }
     .hero h1 { font-size: clamp(48px, 16vw, 96px); }
     .hero-meta { font-size: 10px; gap: 10px; }
-    .readout-bar { margin-top: 40px; grid-template-columns: repeat(2, 1fr); }
-    .readout-cell { border-bottom: 1px solid var(--border-subtle); }
-    .readout-cell:nth-child(odd) { border-right: 1px solid var(--border-subtle); }
-    .readout-cell:nth-child(even) { border-right: none; }
-    .readout-cell:last-child { grid-column: 1 / -1; border-bottom: none; }
 }
 
 /* Telemetry strip */
@@ -229,28 +178,6 @@
         <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">[ Sign up · ${{ site.coupon_amount }} ]</a>
     </div>
 
-    <div class="readout-bar" aria-label="System status">
-        <div class="readout-cell">
-            <span class="key">// Status</span>
-            <span class="val ok-val">ONLINE</span>
-        </div>
-        <div class="readout-cell">
-            <span class="key">// Inventory</span>
-            <span class="val"><span data-count="{{ products|length if products else 100 }}" data-suffix="">0</span> SKU</span>
-        </div>
-        <div class="readout-cell">
-            <span class="key">// Categories</span>
-            <span class="val">{{ categories|length if categories else 8 }}</span>
-        </div>
-        <div class="readout-cell">
-            <span class="key">// Coupons</span>
-            <span class="val"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></span>
-        </div>
-        <div class="readout-cell">
-            <span class="key">// Agent</span>
-            <span class="val">{{ site.agent_name|upper }}</span>
-        </div>
-    </div>
 </section>
 
 <div class="telemetry" aria-hidden="true">
