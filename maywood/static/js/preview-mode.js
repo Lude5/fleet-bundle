@@ -367,4 +367,28 @@
             window.parent.postMessage({ type: 'kai-preview-ready', state: state }, '*');
         }
     } catch (e) {}
+
+    var PRESERVE_KEYS = ['pv', 'brand', 'color', 'theme', 'font', 'logo', 'hideChrome'];
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href]');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href) return;
+        if (href.charAt(0) === '#') return;
+        if (/^(mailto:|tel:|javascript:|data:)/i.test(href)) return;
+        if (a.target === '_blank') return;
+        try {
+            var u = new URL(href, window.location.href);
+            if (u.origin !== window.location.origin) return;
+            if (a.classList.contains('product-card') || (a.closest && a.closest('.product-card'))) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+            var curParams = new URLSearchParams(window.location.search);
+            PRESERVE_KEYS.forEach(function (k) {
+                var v = curParams.get(k);
+                if (v) u.searchParams.set(k, v);
+            });
+            e.preventDefault();
+            window.location.href = u.toString();
+        } catch (err) {}
+    }, true);
 })();
