@@ -34,6 +34,7 @@
     animation: fadeUp .65s ease .1s both;
 }
 .hero h1 .italic { font-style: italic; font-weight: 400; color: var(--accent-text); }
+.hero h1 .dot { margin-left: 0.08em; }
 .hero-body {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -224,7 +225,7 @@
         <span class="accent-text">·</span>
         <span>{{ site.agent_name|upper }} CATALOGUE</span>
     </p>
-    <h1>{{ site.hero_tagline }}<br><span class="italic">{{ site.hero_sub_tagline }}</span></h1>
+    <h1>{% if site.hero_tagline.endswith('.') %}{{ site.hero_tagline[:-1] }}<span class="dot">.</span>{% else %}{{ site.hero_tagline }}{% endif %}<br><span class="italic">{% if site.hero_sub_tagline.endswith('.') %}{{ site.hero_sub_tagline[:-1] }}<span class="dot">.</span>{% else %}{{ site.hero_sub_tagline }}{% endif %}</span></h1>
     <div class="hero-body">
         <p class="hero-lede"><span class="dropcap">{{ site.name_part1[0]|upper }}</span>{{ site.name }} is a print-style catalogue of {{ site.agent_name }} finds — curated and re-issued every week. Each entry is hand-vetted, every seller is verified, and the entire run is set in this volume for browsing like a magazine.</p>
         <aside class="hero-aside">
