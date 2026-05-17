@@ -152,9 +152,16 @@
 
         .nav-hamburger {
             display: none; background: none; border: 1px solid var(--text);
-            color: var(--text); cursor: pointer; padding: 4px 10px;
-            font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+            cursor: pointer; padding: 7px 8px;
+            width: 36px; height: 30px;
+            flex-direction: column; justify-content: space-between; align-items: stretch;
         }
+        .nav-hamburger span {
+            display: block; height: 2px; width: 100%;
+            background: var(--text);
+            transition: background 0.15s ease;
+        }
+        .nav-hamburger:hover span { background: var(--accent); }
         .mobile-menu {
             display: flex; position: fixed; inset: 0; background: var(--mobile-menu-bg);
             z-index: 200;
@@ -522,7 +529,7 @@
         @media (max-width: 900px) {
             .nav { padding: 12px 16px; top: 24px; }
             .nav-links { display: none; }
-            .nav-hamburger { display: block; }
+            .nav-hamburger { display: flex; }
             .nav-brand { font-size: 22px; }
             .nav-brand .vol { display: none; }
             .section { padding: 48px 16px; }
@@ -574,7 +581,7 @@
             </li>
             <li><a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="nav-cta">Sign up · ${{ site.coupon_amount }}</a></li>
         </ul>
-        <button class="nav-hamburger" onclick="document.getElementById('mob').classList.add('open')" aria-label="Open menu">Menu</button>
+        <button class="nav-hamburger" onclick="document.getElementById('mob').classList.add('open')" aria-label="Open menu"><span></span><span></span><span></span></button>
     </nav>
 
     <div class="mobile-menu" id="mob">
