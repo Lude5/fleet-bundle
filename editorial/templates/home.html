@@ -6,144 +6,177 @@
    EDITORIAL HOME — magazine cover + spreads
    ============================================================ */
 
-/* ---- HERO: split layout with big serif + cover image ---- */
+/* ---- HERO: full-bleed editorial cover with overlay headline ---- */
 .cover {
-    padding: 36px 0 80px;
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--dateline-h) - var(--nav-h));
+    min-height: 620px;
+    max-height: 1080px;
+    overflow: hidden;
+    margin-bottom: 0;
 }
-.cover-grid {
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 64px;
-    align-items: stretch;
+.cover-bg {
+    position: absolute; inset: 0;
+    background: var(--bg-2);
+    overflow: hidden;
 }
-.cover-text { display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding: 12px 0; }
+.cover-bg img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(0.92) contrast(1.08) brightness(0.85);
+    transition: transform 10s ease, filter 1.2s ease;
+}
+.cover:hover .cover-bg img { transform: scale(1.04); }
+.cover-veil {
+    position: absolute; inset: 0;
+    background:
+        linear-gradient(180deg, rgba(5,5,5,0.05) 0%, rgba(5,5,5,0) 35%, rgba(5,5,5,0) 65%, rgba(5,5,5,0.55) 100%),
+        linear-gradient(90deg, rgba(5,5,5,0.35) 0%, rgba(5,5,5,0) 40%);
+    pointer-events: none;
+}
+.cover-inner {
+    position: relative;
+    height: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 48px 32px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: #ffffff;
+}
+.cover-top {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    font-family: var(--font-body); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+}
+.cover-top .accent { color: #ffffff; font-weight: 600; }
+.cover-stack {
+    max-width: 940px;
+}
 .cover-kicker {
     font-family: var(--font-body); font-size: 11px; font-weight: 600;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--text-muted);
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
     display: inline-flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
 }
-.cover-kicker::before { content: ''; width: 36px; height: 1px; background: var(--text); display: inline-block; }
+.cover-kicker::before { content: ''; width: 36px; height: 1px; background: rgba(255,255,255,0.85); }
 .cover-title {
     font-family: var(--font-display);
-    font-size: clamp(56px, 8.5vw, 132px);
-    font-weight: 500;
-    line-height: 0.94;
-    color: var(--text);
-    letter-spacing: -0.025em;
-    margin: 26px 0 32px;
+    font-size: clamp(64px, 11vw, 188px);
+    font-weight: 400;
+    line-height: 0.86;
+    color: #ffffff;
+    letter-spacing: -0.035em;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 32px rgba(0,0,0,0.25);
 }
 .cover-title .italic {
     font-family: var(--font-alt-display);
     font-style: italic; font-weight: 400;
-    color: var(--accent-text);
+    color: #ffffff;
     display: block;
-    margin-top: -0.04em;
+    margin-top: -0.05em;
+    opacity: 0.92;
 }
 .cover-byline {
     font-family: var(--font-serif);
-    font-size: 19px; font-style: italic;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    max-width: 460px;
-    margin-bottom: 36px;
+    font-size: clamp(17px, 1.4vw, 22px);
+    font-style: italic;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.45;
+    max-width: 540px;
+    margin-bottom: 32px;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.25);
 }
-.cover-actions { display: flex; gap: 14px; flex-wrap: wrap; }
-.cover-meta {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    padding-top: 32px;
-    border-top: 1px solid var(--rule);
+.cover-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.cover-actions .btn {
+    background: #ffffff; color: #050505;
+    border-color: #ffffff;
+    padding: 16px 30px;
 }
-.cover-meta dl { font-family: var(--font-body); }
-.cover-meta dt {
-    font-size: 9px; font-weight: 600;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 6px;
+.cover-actions .btn:hover { background: transparent; color: #ffffff; border-color: #ffffff; }
+.cover-actions .btn.btn-outline {
+    background: transparent; color: #ffffff;
+    border-color: rgba(255,255,255,0.65);
 }
-.cover-meta dd {
-    font-family: var(--font-display); font-size: 22px; font-weight: 500;
-    color: var(--text);
-    line-height: 1;
+.cover-actions .btn.btn-outline:hover { background: #ffffff; color: #050505; border-color: #ffffff; }
+.cover-bottom {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    width: 100%;
+    gap: 20px; flex-wrap: wrap;
+    font-family: var(--font-body); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
 }
-.cover-meta dd .italic {
-    font-style: italic; color: var(--accent-text);
-    font-family: var(--font-alt-display);
+.cover-credit {
+    background: rgba(255,255,255,0.92); color: #050505;
+    padding: 8px 14px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
 }
-
-.cover-art {
-    position: relative;
-    background: var(--bg-2);
-    aspect-ratio: 4/5;
-    overflow: hidden;
-    display: block; text-decoration: none;
+.cover-credit .italic { font-family: var(--font-alt-display); font-style: italic; }
+.cover-scroll {
+    display: inline-flex; align-items: center; gap: 12px;
 }
-.cover-art-img {
-    width: 100%; height: 100%; object-fit: cover;
-    filter: contrast(1.04) saturate(0.96);
-    transition: transform 6s ease;
-}
-.cover-art:hover .cover-art-img { transform: scale(1.04); }
-.cover-art-credit {
-    position: absolute; bottom: 14px; left: 14px;
-    background: var(--bg); color: var(--text);
-    padding: 6px 10px;
-    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase;
-}
-.cover-art-issue {
-    position: absolute; top: 14px; right: 14px;
-    background: var(--text); color: var(--bg);
-    padding: 6px 12px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
-    letter-spacing: 0.16em; text-transform: uppercase;
+.cover-scroll .line {
+    display: inline-block;
+    width: 28px; height: 1px;
+    background: rgba(255,255,255,0.6);
 }
 
-@media (max-width: 1024px) {
-    .cover-grid { grid-template-columns: 1fr; gap: 36px; }
-    .cover-art { aspect-ratio: 5/4; }
-}
-@media (max-width: 600px) {
-    .cover { padding: 24px 0 48px; }
-    .cover-title { margin: 18px 0 22px; }
-    .cover-byline { font-size: 16px; margin-bottom: 28px; }
-    .cover-meta { grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 24px; }
-    .cover-meta dd { font-size: 17px; }
-    .cover-actions .btn { padding: 12px 22px; font-size: 10px; letter-spacing: 0.14em; }
+@media (max-width: 768px) {
+    .cover { min-height: 560px; }
+    .cover-inner { padding: 36px 18px 32px; }
+    .cover-byline { font-size: 16px; margin-bottom: 24px; }
+    .cover-actions .btn { padding: 13px 22px; font-size: 10px; letter-spacing: 0.14em; }
+    .cover-top { font-size: 9px; letter-spacing: 0.16em; }
+    .cover-bottom { font-size: 9px; letter-spacing: 0.14em; }
+    .cover-top .hide-sm, .cover-bottom .hide-sm { display: none; }
 }
 
-/* ---- TICKER strip below hero ---- */
-.ticker {
+/* ---- COLOPHON BAR below hero — house statistics, not a marquee ---- */
+.house-bar {
     border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
-    overflow: hidden;
-    padding: 16px 0;
     background: var(--bg);
 }
-.ticker-track {
-    display: inline-flex; gap: 56px;
-    animation: tickerScroll 50s linear infinite;
-    white-space: nowrap;
-    font-family: var(--font-display);
-    font-size: 22px; font-weight: 500;
-    color: var(--text);
-    letter-spacing: -0.005em;
+.house-bar-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
 }
-.ticker-track span.italic {
-    font-style: italic;
-    color: var(--accent-text);
-    font-family: var(--font-alt-display);
-    font-weight: 400;
+.house-stat {
+    display: flex; flex-direction: column;
+    border-left: 1px solid var(--rule-soft);
+    padding-left: 20px;
 }
-.ticker-track .dot {
+.house-stat:first-child { border-left: none; padding-left: 0; }
+.house-stat-key {
+    font-family: var(--font-body); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.24em; text-transform: uppercase;
     color: var(--text-muted);
-    font-family: var(--font-body);
-    font-weight: 400;
-    align-self: center;
+    margin-bottom: 12px;
 }
-@keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.house-stat-val {
+    font-family: var(--font-display); font-size: 32px; font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.house-stat-val .italic {
+    font-family: var(--font-alt-display); font-style: italic;
+}
+@media (max-width: 768px) {
+    .house-bar-inner { grid-template-columns: 1fr 1fr; gap: 22px; padding: 22px 18px; }
+    .house-stat-val { font-size: 24px; }
+}
 
 /* ---- FEATURE editorial — large left image + right text ---- */
 .feature {
@@ -412,68 +445,55 @@
 {% block content %}
 
 <!-- ============================================================
-     COVER — split editorial hero
+     COVER — full-bleed editorial spread with overlay headline
      ============================================================ -->
-<section class="cover container reveal in">
-    <div class="cover-grid">
-        <div class="cover-text">
-            <div>
-                <div class="cover-kicker">{{ site.hero_kicker }} · {{ site.issue_label }}</div>
-                <h1 class="cover-title">{{ site.hero_title }}<span class="italic">{{ site.hero_title_italic }}</span></h1>
-                <p class="cover-byline">{{ site.hero_byline }}</p>
-                <div class="cover-actions">
-                    <a href="/shop" class="btn btn-primary btn-arrow">Open the Edit</a>
-                    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">Subscribe · ${{ site.coupon_amount }}</a>
-                </div>
-            </div>
-            <div class="cover-meta">
-                <dl>
-                    <dt>Edition</dt>
-                    <dd>{{ site.issue_label }}</dd>
-                </dl>
-                <dl>
-                    <dt>Season</dt>
-                    <dd><span class="italic">S/S '26</span></dd>
-                </dl>
-                <dl>
-                    <dt>Entries</dt>
-                    <dd>{{ site.product_count_label }}</dd>
-                </dl>
+<section class="cover">
+    <div class="cover-bg">
+        {% if hero_products %}{% set hp = hero_products[0] %}<img src="{{ hp.image }}" alt="{{ hp.name }}" referrerpolicy="no-referrer">{% endif %}
+    </div>
+    <div class="cover-veil"></div>
+    <div class="cover-inner">
+        <div class="cover-top">
+            <span>{{ site.name }} <span class="accent">·</span> {{ site.issue_label }}</span>
+            <span class="hide-sm">{{ site.issue_season }}</span>
+        </div>
+        <div class="cover-stack">
+            <div class="cover-kicker">{{ site.hero_kicker }} · {{ site.issue_label }}</div>
+            <h1 class="cover-title">{{ site.hero_title }}<span class="italic">{{ site.hero_title_italic }}</span></h1>
+            <p class="cover-byline">{{ site.hero_byline }}</p>
+            <div class="cover-actions">
+                <a href="/shop" class="btn btn-arrow">Open the Edit</a>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">Subscribe · ${{ site.coupon_amount }}</a>
             </div>
         </div>
-        {% if hero_products %}
-        {% set hp = hero_products[0] %}
-        <a href="/go/{{ hp.id }}" target="_blank" rel="noopener" class="cover-art" onclick="trackClick('affiliate','cover','{{ hp.id }}','{{ hp.category }}','{{ hp.name }}')">
-            <img class="cover-art-img" src="{{ hp.image }}" alt="{{ hp.name }}" referrerpolicy="no-referrer">
-            <span class="cover-art-issue">Cover · {{ site.issue_label }}</span>
-            <span class="cover-art-credit">{{ hp.name|truncate(40) }}</span>
-        </a>
-        {% else %}
-        <div class="cover-art">
-            <span class="cover-art-issue">Cover · {{ site.issue_label }}</span>
-            <span class="cover-art-credit">{{ site.hero_kicker }}</span>
+        <div class="cover-bottom">
+            {% if hero_products %}<span class="cover-credit">Cover · <span class="italic">{{ hp.name|truncate(40) }}</span></span>{% else %}<span></span>{% endif %}
+            <span class="cover-scroll"><span class="line"></span> Scroll</span>
         </div>
-        {% endif %}
     </div>
 </section>
 
 <!-- ============================================================
-     TICKER — masthead tagline strip
+     HOUSE BAR — colophon statistics (replaces marquee for editorial)
      ============================================================ -->
-<div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-        <span>The Edit</span><span class="dot">·</span>
-        <span class="italic">curated</span><span class="dot">·</span>
-        <span>{{ site.issue_label }}</span><span class="dot">·</span>
-        <span class="italic">{{ site.issue_season }}</span><span class="dot">·</span>
-        <span>{{ site.agent_name }} Edition</span><span class="dot">·</span>
-        <span class="italic">${{ site.coupon_amount }} credit</span><span class="dot">·</span>
-        <span>The Edit</span><span class="dot">·</span>
-        <span class="italic">curated</span><span class="dot">·</span>
-        <span>{{ site.issue_label }}</span><span class="dot">·</span>
-        <span class="italic">{{ site.issue_season }}</span><span class="dot">·</span>
-        <span>{{ site.agent_name }} Edition</span><span class="dot">·</span>
-        <span class="italic">${{ site.coupon_amount }} credit</span><span class="dot">·</span>
+<div class="house-bar">
+    <div class="house-bar-inner">
+        <div class="house-stat">
+            <div class="house-stat-key">Edition</div>
+            <div class="house-stat-val">{{ site.issue_label }}</div>
+        </div>
+        <div class="house-stat">
+            <div class="house-stat-key">Season</div>
+            <div class="house-stat-val"><span class="italic">{{ site.issue_season }}</span></div>
+        </div>
+        <div class="house-stat">
+            <div class="house-stat-key">Entries</div>
+            <div class="house-stat-val">{{ site.product_count_label }}</div>
+        </div>
+        <div class="house-stat">
+            <div class="house-stat-key">Credit</div>
+            <div class="house-stat-val">${{ site.coupon_amount }}</div>
+        </div>
     </div>
 </div>
 
