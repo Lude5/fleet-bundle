@@ -371,17 +371,24 @@
             max-width: 480px; margin-left: auto; margin-right: auto;
             line-height: 1.6;
         }
-        .mid-cta { background: var(--text); padding: 28px 32px; text-align: center; color: var(--bg); }
-        .mid-cta a { display: block; font-family: var(--font-body); color: var(--bg); }
+        .mid-cta { background: var(--text); padding: 28px 32px; text-align: center; color: var(--bg); overflow: hidden; }
+        .mid-cta a { display: block; font-family: var(--font-body); color: var(--bg); max-width: 100%; }
         .mid-cta .big {
             font-family: var(--font-display);
             font-size: 18px; font-weight: 600;
             letter-spacing: -0.01em;
+            word-break: break-word; overflow-wrap: anywhere; line-height: 1.25;
         }
         .mid-cta .small {
             font-size: 11px; font-weight: 500;
             opacity: 0.7; display: block; margin-top: 6px;
             text-transform: uppercase; letter-spacing: 0.12em;
+            word-break: break-word; overflow-wrap: anywhere; line-height: 1.5;
+        }
+        @media (max-width: 600px) {
+            .mid-cta { padding: 18px 14px; }
+            .mid-cta .big { font-size: 15px; }
+            .mid-cta .small { font-size: 9px; letter-spacing: 0.06em; margin-top: 8px; line-height: 1.6; }
         }
 
         .side-widget { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 90; display: flex; flex-direction: column; gap: 4px; }
