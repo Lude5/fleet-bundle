@@ -259,11 +259,12 @@
         css.push('.btn-primary{background:' + btnBg + ' !important;color:' + btnText + ' !important;border-color:' + btnText + ' !important;}');
         css.push('.btn-primary:hover{background:' + btnText + ' !important;color:' + btnBg + ' !important;border-color:' + btnText + ' !important;}');
 
-        // Sign up (nav-cta, top-right): in dark + mono themes force the text
-        // to black regardless of accent. Light theme keeps the accent-derived text.
-        if (state.theme !== 'light') {
-            css.push('.nav-cta{color:#000000 !important;}');
-        }
+        // Sign up (nav-cta, top-right): hard-contrast vs theme bg, never tied
+        // to accent. light → white bg / black text. dark + mono → black bg / white text.
+        var navBg = state.theme === 'light' ? '#ffffff' : '#000000';
+        var navText = state.theme === 'light' ? '#000000' : '#ffffff';
+        css.push('.nav-cta{background:' + navBg + ' !important;color:' + navText + ' !important;border-color:' + navText + ' !important;}');
+        css.push('.nav-cta:hover{background:' + navText + ' !important;color:' + navBg + ' !important;border-color:' + navText + ' !important;}');
 
         // ---- Font override ----
         if (state.font && FONTS[state.font]) {
