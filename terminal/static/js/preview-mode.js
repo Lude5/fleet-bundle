@@ -57,6 +57,22 @@
         if (lum < 0.25) return shade(hex, 0.55);
         return hex;
     }
+    // When accent BG sits too close to the scene BG luminance, the button
+    // disappears (white accent on light bg, black accent on dark bg, etc.).
+    // Shift accent toward the opposite extreme until it has enough contrast.
+    function luminance(hex) {
+        var c = hexToRgb(hex);
+        if (!c) return 0;
+        return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+    }
+    function contrastSafeAccent(hex, bgHex) {
+        var aLum = luminance(hex);
+        var bLum = luminance(bgHex);
+        var diff = Math.abs(aLum - bLum);
+        if (diff > 0.22) return hex;
+        var push = bLum < 0.5 ? 0.7 : -0.7;
+        return shade(hex, push);
+    }
 
     // ============================================================
     // Theme palettes — all dark, all terminal
@@ -122,8 +138,9 @@
     // ============================================================
     function buildCss(state) {
         var theme = THEMES[state.theme] || THEMES.dark;
-        var color = state.color || '#22c55e';
-        var accentOn = isLight(color) ? '#050805' : '#050805'; // always near-black on terminal
+        var rawColor = state.color || '#22c55e';
+        var color = contrastSafeAccent(rawColor, theme['--bg']);
+        var accentOn = isLight(color) ? '#0a0a0a' : '#f3fff3';
         var accentText = readableAccent(color);
 
         var css = [];

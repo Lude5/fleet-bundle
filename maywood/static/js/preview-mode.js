@@ -72,6 +72,22 @@
         }
     }
 
+    // When the picked accent sits too close to the scene bg luminance, the
+    // button/border disappears (white-on-light, black-on-dark, etc.). Push
+    // accent toward the opposite extreme until it has enough contrast.
+    function luminance(hex) {
+        var c = hexToRgb(hex);
+        if (!c) return 0;
+        return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+    }
+    function contrastSafeAccent(hex, bgHex) {
+        var aLum = luminance(hex);
+        var bLum = luminance(bgHex);
+        if (Math.abs(aLum - bLum) > 0.22) return hex;
+        var push = bLum < 0.5 ? 0.7 : -0.7;
+        return shade(hex, push);
+    }
+
     // ============================================================
     // Theme palettes (light is the default for Maywood)
     // ============================================================
@@ -135,6 +151,7 @@
     function buildCss(state) {
         var theme = THEMES[state.theme] || THEMES.light;
         var color = state.color || '#0d9488';
+        color = contrastSafeAccent(color, theme['--bg']);
         var c = hexToRgb(color) || { r: 13, g: 148, b: 136 };
         var accentOn = isLight(color) ? '#000' : '#fff';
         var accentText = readableAccent(color, state.theme || 'light');
