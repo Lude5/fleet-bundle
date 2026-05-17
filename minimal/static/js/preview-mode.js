@@ -131,6 +131,22 @@
         rootDecls.push('--accent-text:' + accentText + ';');
         css.push(':root{' + rootDecls.join('') + '}');
 
+        // Minimal is intentionally monochrome (uses var(--text)/var(--bg) for most things).
+        // Without these explicit overrides, picking a color in Studio doesn't visibly change anything.
+        // These force the accent color onto the key surfaces.
+        css.push('.nav-cta, .mid-cta, .btn-primary {'
+            + 'background: ' + color + ' !important;'
+            + 'color: ' + accentOn + ' !important;'
+            + 'border-color: ' + color + ' !important;'
+            + '}');
+        css.push('.nav-cta:hover, .btn-primary:hover { background: ' + hexToRgba(color, 0.85) + ' !important; }');
+        css.push('.mid-cta a, .mid-cta .big, .mid-cta .small { color: ' + accentOn + ' !important; }');
+        css.push('.nav-brand .accent, .footer-brand .accent { color: ' + color + ' !important; }');
+        css.push('.product-card-buy { color: ' + color + ' !important; opacity: 0.7; }');
+        css.push('.product-card:hover .product-card-buy { opacity: 1; }');
+        css.push('.cat-filter.active { background: ' + color + ' !important; border-color: ' + color + ' !important; color: ' + accentOn + ' !important; }');
+        css.push('.pagination a.current { background: ' + color + ' !important; border-color: ' + color + ' !important; color: ' + accentOn + ' !important; }');
+
         if (state.font && FONTS[state.font]) {
             css.push(':root{--font-display:' + FONTS[state.font] + ' !important;}');
             css.push('.hero h1,.section-title,.sec-title,.cta-section h2,.popup-headline,.pd-title,'
