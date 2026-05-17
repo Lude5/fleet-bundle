@@ -84,19 +84,32 @@
     }
 
     // When the picked accent sits too close to the scene bg luminance, the
-    // button/border disappears (white-on-light, black-on-dark, etc.). Push
-    // accent toward the opposite extreme until it has enough contrast.
+    // button/border/text disappears. Iteratively push accent away from bg
+    // until contrast ratio is >= 3:1 (WCAG min for graphic objects).
     function luminance(hex) {
         var c = hexToRgb(hex);
         if (!c) return 0;
-        return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
+        // sRGB relative luminance (gamma-corrected)
+        function ch(v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+    }
+    function contrastRatio(aHex, bHex) {
+        var a = luminance(aHex), b = luminance(bHex);
+        var lo = Math.min(a, b), hi = Math.max(a, b);
+        return (hi + 0.05) / (lo + 0.05);
     }
     function contrastSafeAccent(hex, bgHex) {
-        var aLum = luminance(hex);
-        var bLum = luminance(bgHex);
-        if (Math.abs(aLum - bLum) > 0.22) return hex;
-        var push = bLum < 0.5 ? 0.7 : -0.7;
-        return shade(hex, push);
+        if (contrastRatio(hex, bgHex) >= 3) return hex;
+        // Push toward opposite extreme in 0.2 steps until safe (or capped).
+        var bgLum = luminance(bgHex);
+        var dir = bgLum < 0.5 ? 1 : -1; // dark bg → lighten, light bg → darken
+        var out = hex;
+        for (var i = 0; i < 6; i++) {
+            out = shade(out, dir * 0.25);
+            if (contrastRatio(out, bgHex) >= 3) return out;
+        }
+        // Last resort — return pure white/black opposite of bg.
+        return bgLum < 0.5 ? '#ffffff' : '#000000';
     }
 
     // ============================================================
