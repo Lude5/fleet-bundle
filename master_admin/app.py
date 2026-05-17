@@ -809,6 +809,19 @@ def ga_setup():
 
 TEMPLATES_REGISTRY = [
     {
+        'slug': 'volume',
+        'name': 'Volume Studio',
+        'status': 'live',
+        'description': 'Magazine/zine catalogue template — warm cream-paper aesthetic, Playfair Display serif italic accents, masthead dateline bar, TOC-numbered sections, outfit-bundle cards (3-image stack + piece count + total price), and a printed-magazine feel. Inspired by finds.org with editorial polish + heavy print-design treatment. Highly customizable via env vars (issue_number, hero_tagline, hero_sub_tagline).',
+        'color': '#dc2626',
+        'theme': 'Light · magazine/zine',
+        'fonts': 'Playfair Display italic · Inter · JetBrains Mono',
+        'features': ['Top dateline bar with live date', 'Masthead nav with issue number', 'TOC-style section numbering', 'Stacked 2-line italic serif hero', 'Marquee ticker under hero', 'Featured editorial cover story', 'Outfit bundle cards (3-image collage + piece count + total)', 'Cream paper background with subtle texture', 'Square corners + 2px section borders', 'Customizable issue_number / hero_tagline / hero_sub_tagline env vars'],
+        'preview_url': '/volume',
+        'folder': 'volume',
+        'product_count_label': '100+',
+    },
+    {
         'slug': 'future',
         'name': 'Future Finds',
         'status': 'live',

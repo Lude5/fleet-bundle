@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} — VOLUME {{ site.issue_number }} · {{ site.agent_name }} Catalogue{% endblock %}
+
+{% block extra_css %}
+/* HERO — newspaper masthead with drop cap */
+.hero {
+    padding: 140px 24px 56px;
+    max-width: 1280px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.18em;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 14px;
+    animation: fadeUp .55s ease both;
+}
+.hero-eyebrow::before {
+    content: ''; width: 32px; height: 1px;
+    background: var(--accent);
+}
+.hero-eyebrow .accent-text { color: var(--accent-text); }
+.hero h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(64px, 11vw, 160px);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    margin-bottom: 32px;
+    animation: fadeUp .65s ease .1s both;
+}
+.hero h1 .italic { font-style: italic; font-weight: 400; color: var(--accent-text); }
+.hero-body {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 56px;
+    align-items: start;
+    animation: fadeUp .7s ease .2s both;
+}
+.hero-lede {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--text);
+    max-width: 540px;
+}
+.hero-lede .dropcap {
+    float: left;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent-text);
+    margin: 6px 12px 0 0;
+    font-style: normal;
+}
+.hero-aside {
+    padding: 18px 22px;
+    border: 1px solid var(--text);
+    background: var(--surface);
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.hero-aside h3 {
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--accent-text);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--text);
+}
+.hero-aside p { margin-bottom: 10px; }
+.hero-aside p:last-child { margin-bottom: 0; }
+.hero-actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; animation: fadeUp .7s ease .3s both; }
+@media (max-width: 900px) {
+    .hero { padding: 110px 16px 40px; }
+    .hero-body { grid-template-columns: 1fr; gap: 32px; }
+    .hero-lede { font-size: 17px; }
+    .hero-lede .dropcap { font-size: 56px; margin-top: 4px; }
+}
+
+/* Ticker strip — small print-style scrolling marquee */
+.ticker {
+    border-top: 1px solid var(--text);
+    border-bottom: 1px solid var(--text);
+    padding: 12px 0;
+    overflow: hidden;
+    background: var(--surface);
+}
+.ticker-track {
+    display: flex; gap: 48px;
+    animation: marquee 60s linear infinite;
+    white-space: nowrap;
+}
+.ticker-item {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text); letter-spacing: 0.14em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 10px;
+}
+.ticker-item .accent-text { color: var(--accent-text); font-weight: 600; }
+.ticker-item .dot { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; display: inline-block; }
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* Editor's pairings (outfit bundles, magazine-style) */
+.pairings { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 32px 24px; }
+.pairing {
+    background: transparent;
+    border: 1px solid var(--text);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 14px;
+    color: inherit; text-decoration: none;
+    transition: all 0.2s ease;
+}
+.pairing:hover { background: var(--surface); transform: translateY(-2px); }
+.pairing-imgs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    aspect-ratio: 4/3;
+    border: 1px solid var(--border);
+}
+.pairing-imgs img { width: 100%; height: 100%; object-fit: cover; background: var(--surface-2); }
+.pairing-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.pairing-num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--accent-text);
+    text-transform: uppercase; letter-spacing: 0.18em;
+}
+.pairing-meta {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.14em;
+}
+.pairing-name {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 700;
+    line-height: 1.15;
+    color: var(--text);
+}
+.pairing-note {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+}
+.pairing-foot {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+}
+.pairing-foot .price { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+.pairing-foot .open { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.14em; border-bottom: 1px solid currentColor; }
+
+/* Manifesto block */
+.manifesto {
+    padding: 80px 24px;
+    max-width: 1280px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 64px;
+    border-top: 3px double var(--text);
+}
+.manifesto-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px; color: var(--accent-text);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    margin-bottom: 14px;
+}
+.manifesto-pillar {
+    font-family: var(--font-display);
+    font-size: 13px; font-style: italic;
+    color: var(--text-muted);
+}
+.manifesto h2 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+.manifesto h2 .italic { font-style: italic; color: var(--accent-text); font-weight: 400; }
+.manifesto p {
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 14px;
+    max-width: 640px;
+}
+.manifesto p .pull { font-weight: 700; color: var(--text); }
+@media (max-width: 900px) {
+    .manifesto { grid-template-columns: 1fr; gap: 24px; padding: 56px 16px; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <p class="hero-eyebrow">
+        <span>VOLUME {{ site.issue_number }}</span>
+        <span class="accent-text">·</span>
+        <span>{{ site.product_count_label }} ENTRIES</span>
+        <span class="accent-text">·</span>
+        <span>{{ site.agent_name|upper }} CATALOGUE</span>
+    </p>
+    <h1>{{ site.hero_tagline }}<br><span class="italic">{{ site.hero_sub_tagline }}</span></h1>
+    <div class="hero-body">
+        <p class="hero-lede"><span class="dropcap">{{ site.name_part1[0]|upper }}</span>{{ site.name }} is a print-style catalogue of {{ site.agent_name }} finds — curated and re-issued every week. Each entry is hand-vetted, every seller is verified, and the entire run is set in this volume for browsing like a magazine.</p>
+        <aside class="hero-aside">
+            <h3>// In this issue</h3>
+            <p><strong>{{ site.product_count_label }}</strong> hand-curated finds across <strong>{{ categories|length if categories else 8 }}</strong> categories.</p>
+            <p><strong>${{ site.coupon_amount }}</strong> in welcome shipping credits for new {{ site.agent_name }} subscribers.</p>
+            <p><strong>Daily</strong> additions · weekly volume.</p>
+        </aside>
+    </div>
+    <div class="hero-actions">
+        <a href="/shop" class="btn btn-primary">Open Catalogue</a>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">Subscribe · ${{ site.coupon_amount }}</a>
+    </div>
+</section>
+
+<div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+        <span class="ticker-item"><span class="dot"></span> <span class="accent-text">PRINTED DAILY</span></span>
+        <span class="ticker-item">{{ site.agent_name|upper }} CATALOGUE</span>
+        <span class="ticker-item">WEIDIAN / TAOBAO / 1688</span>
+        <span class="ticker-item"><span class="accent-text">VOL {{ site.issue_number }}</span></span>
+        <span class="ticker-item">CURATED · VERIFIED · RE-ISSUED</span>
+        <span class="ticker-item">{{ site.product_count_label }} ENTRIES</span>
+        <span class="ticker-item"><span class="dot"></span> <span class="accent-text">PRINTED DAILY</span></span>
+        <span class="ticker-item">{{ site.agent_name|upper }} CATALOGUE</span>
+        <span class="ticker-item">WEIDIAN / TAOBAO / 1688</span>
+        <span class="ticker-item"><span class="accent-text">VOL {{ site.issue_number }}</span></span>
+        <span class="ticker-item">CURATED · VERIFIED · RE-ISSUED</span>
+        <span class="ticker-item">{{ site.product_count_label }} ENTRIES</span>
+    </div>
+</div>
+
+{% if products %}
+{% set bundle_pool = products[:24] %}
+<section class="section reveal">
+    <div class="sec-header">
+        <div class="sec-number">// Section 01</div>
+        <h2 class="sec-title"><span class="italic">Editor's</span> Pairings</h2>
+        <a href="/shop" class="sec-link">All Pairings →</a>
+    </div>
+    <div class="pairings">
+        {% set bundle_themes = [
+            {'name': 'Weekend Casual', 'count': 4, 'note': 'Quiet pieces that work hard. Layered, tonal, considered.'},
+            {'name': 'Off-Hours Uniform', 'count': 5, 'note': 'Loose silhouettes, broken-in textures, low effort.'},
+            {'name': 'Late-Shift Look', 'count': 4, 'note': 'Black, black, and one heavyweight knit. Done.'},
+            {'name': 'Workshop Drop', 'count': 6, 'note': 'Utility-leaning. Pockets, panels, and grit.'}
+        ] %}
+        {% for b in bundle_themes %}
+        {% set start = loop.index0 * 4 %}
+        {% set bundle_imgs = bundle_pool[start:start + 4] %}
+        {% if bundle_imgs|length >= 2 %}
+        <a href="/shop" class="pairing">
+            <div class="pairing-imgs">
+                {% for p in bundle_imgs[:4] %}
+                <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                {% endfor %}
+            </div>
+            <div class="pairing-head">
+                <span class="pairing-num">No. {{ '%02d' % loop.index }}</span>
+                <span class="pairing-meta">{{ b.count }} pieces</span>
+            </div>
+            <div class="pairing-name">{{ b.name }}</div>
+            <div class="pairing-note">{{ b.note }}</div>
+            <div class="pairing-foot">
+                <span class="price">
+                    {% set total = bundle_imgs|sum(attribute='price_numeric', start=0) %}
+                    ${{ '%.2f' % total }}
+                </span>
+                <span class="open">Open →</span>
+            </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<a class="mid-cta reveal" href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
+    <span class="big">${{ site.coupon_amount }} <span class="italic">in welcome credits.</span></span>
+    <span class="small">Subscribe to {{ site.agent_name }} · Lowest international shipping rates</span>
+</a>
+
+{% if products %}
+{% set featured = products[:8] %}
+<section class="section reveal">
+    <div class="sec-header">
+        <div class="sec-number">// Section 02</div>
+        <h2 class="sec-title">Featured <span class="italic">inventory</span></h2>
+        <a href="/shop" class="sec-link">Full Catalogue →</a>
+    </div>
+    <div class="product-grid">
+        {% for p in featured %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-num">№ {{ '%03d' % loop.index }}</span>
+                {% if loop.index <= 3 %}<span class="product-card-badge">Top {{ loop.index }}</span>{% endif %}
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-meta">
+                    <span>{{ p.category|upper if p.category else 'FINDS' }}</span>
+                    <span>·</span>
+                    <span>Verified</span>
+                </div>
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">via {{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Buy →</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+{% set cat_counter = namespace(n=2) %}
+{% for cat in categories %}
+{% set cp = products|selectattr('category', 'equalto', cat.slug)|list %}
+{% if cp and cat.slug != 'trending' %}
+{% set cat_counter.n = cat_counter.n + 1 %}
+<hr class="divider">
+<section class="section reveal" style="padding-top: 56px; padding-bottom: 56px;">
+    <div class="sec-header">
+        <div class="sec-number">// Section {{ '%02d' % cat_counter.n }}</div>
+        <h2 class="sec-title">{{ cat.name }}</h2>
+        <a href="/shop?category={{ cat.slug }}" class="sec-link">{{ cp|length }} entries →</a>
+    </div>
+    <div class="product-grid">
+        {% for p in cp[:4] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-num">№ {{ '%03d' % loop.index }}</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-meta">
+                    <span>{{ cat.name|upper }}</span>
+                    <span>·</span>
+                    <span>Verified</span>
+                </div>
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">via {{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Buy →</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+<div class="stat-row reveal">
+    <div class="stat">
+        <div class="stat-key">// Inventory</div>
+        <div class="stat-num"><span data-count="{{ products|length if products else 100 }}" data-suffix="">0</span></div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Credits</div>
+        <div class="stat-num"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Categories</div>
+        <div class="stat-num">{{ categories|length if categories else 8 }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-key">// Volume</div>
+        <div class="stat-num">{{ site.issue_number }}</div>
+    </div>
+</div>
+
+<section class="manifesto reveal">
+    <div>
+        <p class="manifesto-eyebrow">// The Brief</p>
+        <p class="manifesto-pillar">A note from the editor.</p>
+    </div>
+    <div>
+        <h2>Less catalogue. More <span class="italic">curation</span>.</h2>
+        <p>{{ site.name }} is not a feed. <span class="pull">It is a printed-style volume</span>, set every week, edited by hand, and read like a magazine. Every entry passes a small set of questions: does it ship well, does it photograph honestly, does it actually belong in the rotation.</p>
+        <p>We don't index the entire internet — we publish a working selection. Each pairing is annotated. Each seller is verified. Each volume is dated. If something falls out of taste, we re-set it for the next print.</p>
+        <div style="display: flex; gap: 0; margin-top: 24px; flex-wrap: wrap;">
+            <a href="/shop" class="btn btn-outline" style="border-right: none;">Read the catalogue</a>
+            <a href="/tutorial" class="btn btn-outline">First time? Tutorial</a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section reveal">
+    <h2>${{ site.coupon_amount }} <span class="italic">in welcome credits.</span></h2>
+    <p>Subscribe to {{ site.agent_name }} through {{ site.name }} and your first ship comes with ${{ site.coupon_amount }} in international-shipping credits — no card, no commitment, just lower freight.</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','cta','','')">Subscribe to {{ site.agent_name }}</a>
+</section>
+{% endblock %}
