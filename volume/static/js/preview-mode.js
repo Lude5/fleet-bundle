@@ -259,6 +259,12 @@
         css.push('.btn-primary{background:' + btnBg + ' !important;color:' + btnText + ' !important;border-color:' + btnText + ' !important;}');
         css.push('.btn-primary:hover{background:' + btnText + ' !important;color:' + btnBg + ' !important;border-color:' + btnText + ' !important;}');
 
+        // Sign up (nav-cta, top-right): in dark + mono themes force the text
+        // to black regardless of accent. Light theme keeps the accent-derived text.
+        if (state.theme !== 'light') {
+            css.push('.nav-cta{color:#000000 !important;}');
+        }
+
         // ---- Font override ----
         if (state.font && FONTS[state.font]) {
             css.push(':root{--font-display:' + FONTS[state.font] + ' !important;}');
