@@ -192,10 +192,15 @@
 
         .mid-cta { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 28px 24px; text-align: center; position: relative; overflow: hidden; }
         .mid-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, var(--accent-glow), transparent 70%); opacity: 0.6; pointer-events: none; }
-        .mid-cta a { display: block; position: relative; font-family: var(--font-display); color: var(--text); }
-        .mid-cta .big { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+        .mid-cta a { display: block; position: relative; font-family: var(--font-display); color: var(--text); max-width: 100%; }
+        .mid-cta .big { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; word-break: break-word; overflow-wrap: anywhere; line-height: 1.2; }
         .mid-cta .big .accent { color: var(--accent-text); }
-        .mid-cta .small { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: block; margin-top: 8px; letter-spacing: 0.12em; text-transform: uppercase; }
+        .mid-cta .small { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); display: block; margin-top: 8px; letter-spacing: 0.12em; text-transform: uppercase; word-break: break-word; overflow-wrap: anywhere; line-height: 1.5; }
+        @media (max-width: 600px) {
+            .mid-cta { padding: 22px 16px; }
+            .mid-cta .big { font-size: 18px; letter-spacing: -0.01em; }
+            .mid-cta .small { font-size: 9px; letter-spacing: 0.08em; margin-top: 10px; line-height: 1.6; }
+        }
 
         /* Side widget removed on Future — replaced by sticky command bar at bottom */
         .side-widget { display: none !important; }
