@@ -421,10 +421,9 @@
         .side-btn.back-top { display: none; }
         .side-btn.back-top.visible { display: flex; }
         @media (max-width: 768px) {
-            .side-widget { right: 8px; gap: 4px; }
-            .side-btn { width: 40px; height: 40px; }
-            .side-btn svg { width: 16px; height: 16px; }
-            .side-btn .side-tip { display: none; }
+            /* Hide side widget on mobile — it was visually overlapping
+               right-side content (sec-link "View all", mid-cta edges, etc.). */
+            .side-widget { display: none !important; }
         }
 
         .popup-overlay {
