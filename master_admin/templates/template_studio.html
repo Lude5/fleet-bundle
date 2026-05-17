@@ -353,14 +353,17 @@
 <script>
 (function () {
     var BASE_URL = {{ tpl.preview_url | tojson }};
-    var STORAGE_KEY = 'studio_state_{{ tpl.slug }}_v2';
-    var DEFAULT_COLOR = '#06b6d4';
+    // v3: defaults now per-template, so bump the key to invalidate old saved state
+    var STORAGE_KEY = 'studio_state_{{ tpl.slug }}_v3';
+    var DEFAULT_COLOR = {{ tpl.color | tojson }};
+    var DEFAULT_THEME = {{ (tpl.natural_theme or 'dark') | tojson }};
+    var DEFAULT_FONT  = {{ (tpl.natural_font or 'anton') | tojson }};
 
     var state = {
         brand: '',
         color: DEFAULT_COLOR,
-        theme: 'dark',
-        font: 'anton',
+        theme: DEFAULT_THEME,
+        font: DEFAULT_FONT,
         logo: '',
     };
 
@@ -434,9 +437,9 @@
         u.searchParams.set('pv', '1');
         if (!includeChrome) u.searchParams.set('hideChrome', '1');
         if (state.brand) u.searchParams.set('brand', state.brand);
-        if (state.color && state.color !== DEFAULT_COLOR) u.searchParams.set('color', state.color);
-        if (state.theme && state.theme !== 'dark') u.searchParams.set('theme', state.theme);
-        if (state.font && state.font !== 'anton') u.searchParams.set('font', state.font);
+        if (state.color && state.color.toLowerCase() !== DEFAULT_COLOR.toLowerCase()) u.searchParams.set('color', state.color);
+        if (state.theme && state.theme !== DEFAULT_THEME) u.searchParams.set('theme', state.theme);
+        if (state.font && state.font !== DEFAULT_FONT) u.searchParams.set('font', state.font);
         if (state.logo) u.searchParams.set('logo', state.logo);
         return u.toString();
     }
