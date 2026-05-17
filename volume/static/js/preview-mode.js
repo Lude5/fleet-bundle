@@ -251,6 +251,14 @@
             css.push('.popup-overlay,.pd-overlay{background:rgba(0,0,0,0.55) !important;}');
         }
 
+        // "Open Catalogue" style — primary buttons always hard-contrast against
+        // the page bg, never tied to the picked accent. light → white BG / black
+        // text; dark + mono → black BG / white text.
+        var btnBg = state.theme === 'light' ? '#ffffff' : '#000000';
+        var btnText = state.theme === 'light' ? '#000000' : '#ffffff';
+        css.push('.btn-primary{background:' + btnBg + ' !important;color:' + btnText + ' !important;border-color:' + btnText + ' !important;}');
+        css.push('.btn-primary:hover{background:' + btnText + ' !important;color:' + btnBg + ' !important;border-color:' + btnText + ' !important;}');
+
         // ---- Font override ----
         if (state.font && FONTS[state.font]) {
             css.push(':root{--font-display:' + FONTS[state.font] + ' !important;}');
