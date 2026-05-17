@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<rect width="400" height="400" fill="#141414" rx="20"/>
+<g transform="translate(60,60)">
+<path d="M80,40 L40,80 L10,60 L60,0 L100,20 L180,20 L220,0 L270,60 L240,80 L200,40 Z" fill="#1a1a1a" stroke="#ff4d6d" stroke-width="2"/>
+<path d="M80,40 L70,280 L210,280 L200,40 Z" fill="#1a1a1a" stroke="#ff4d6d" stroke-width="2"/>
+<text x="140" y="170" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="42" font-weight="900" fill="#fff" opacity="0.4">TEE</text>
+</g></svg>

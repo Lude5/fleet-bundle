@@ -27,7 +27,7 @@ if HERE not in sys.path:
 RENDER_DISK = '/var/data'
 LOCAL_DATA = os.path.join(HERE, 'data')
 DATA_ROOT = RENDER_DISK if os.path.isdir(RENDER_DISK) else LOCAL_DATA
-for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'master_admin'):
+for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'terminal', 'master_admin'):
     os.makedirs(os.path.join(DATA_ROOT, sub), exist_ok=True)
 
 # Set per-app data dirs BEFORE importing the apps.
@@ -36,6 +36,7 @@ os.environ.setdefault('MAYWOOD_DATA_DIR', os.path.join(DATA_ROOT, 'maywood'))
 os.environ.setdefault('MINIMAL_DATA_DIR', os.path.join(DATA_ROOT, 'minimal'))
 os.environ.setdefault('FUTURE_DATA_DIR', os.path.join(DATA_ROOT, 'future'))
 os.environ.setdefault('VOLUME_DATA_DIR', os.path.join(DATA_ROOT, 'volume'))
+os.environ.setdefault('TERMINAL_DATA_DIR', os.path.join(DATA_ROOT, 'terminal'))
 os.environ.setdefault('MASTER_ADMIN_DATA_DIR', os.path.join(DATA_ROOT, 'master_admin'))
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware  # noqa: E402
@@ -46,12 +47,14 @@ from maywood.app import app as maywood_app  # noqa: E402
 from minimal.app import app as minimal_app  # noqa: E402
 from future.app import app as future_app  # noqa: E402
 from volume.app import app as volume_app  # noqa: E402
+from terminal.app import app as terminal_app  # noqa: E402
 
 kai_app.config['APPLICATION_ROOT'] = '/kai'
 maywood_app.config['APPLICATION_ROOT'] = '/maywood'
 minimal_app.config['APPLICATION_ROOT'] = '/minimal'
 future_app.config['APPLICATION_ROOT'] = '/future'
 volume_app.config['APPLICATION_ROOT'] = '/volume'
+terminal_app.config['APPLICATION_ROOT'] = '/terminal'
 
 
 # ============================================================
@@ -156,6 +159,7 @@ maywood_wrapped = URLPrefixMiddleware(maywood_app, '/maywood')
 minimal_wrapped = URLPrefixMiddleware(minimal_app, '/minimal')
 future_wrapped = URLPrefixMiddleware(future_app, '/future')
 volume_wrapped = URLPrefixMiddleware(volume_app, '/volume')
+terminal_wrapped = URLPrefixMiddleware(terminal_app, '/terminal')
 
 application = DispatcherMiddleware(master_app, {
     '/kai': kai_wrapped,
@@ -163,6 +167,7 @@ application = DispatcherMiddleware(master_app, {
     '/minimal': minimal_wrapped,
     '/future': future_wrapped,
     '/volume': volume_wrapped,
+    '/terminal': terminal_wrapped,
 })
 
 # Gunicorn looks for `app` by default

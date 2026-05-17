@@ -936,14 +936,14 @@ TEMPLATES_REGISTRY = [
     {
         'slug': 'terminal',
         'name': 'Terminal Mode',
-        'status': 'coming-soon',
-        'description': 'Hacker-aesthetic. JetBrains Mono everywhere, $-prompt UI elements, ASCII bullets, monospace tables. For audiences that like an "early internet" vibe.',
+        'status': 'live',
+        'description': 'Hacker-aesthetic phosphor CRT terminal. JetBrains Mono everywhere, $-prompt UI elements, scanline overlay, boot-sequence hero. For audiences that like a sci-fi CLI vibe.',
         'color': '#22c55e',
         'theme': 'Dark · CLI',
         'fonts': 'JetBrains Mono',
-        'features': ['Mono UI', 'ASCII separators', 'Terminal-style prompts', 'Type-on animations', 'Green-on-black palette'],
-        'preview_url': '',
-        'folder': '',
+        'features': ['Mono UI', 'CRT scanlines', '$-prompt nav', 'Boot-sequence hero', 'Indexed product packets', 'Phosphor-green palette'],
+        'preview_url': '/terminal',
+        'folder': 'terminal',
     },
 ]
 

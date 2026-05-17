@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} :: {{ site.system_name }} {{ site.system_version }} — {{ site.agent_name }} catalogue{% endblock %}
+
+{% block extra_css %}
+/* ============================================================
+   TERMINAL HOME — boot sequence + tail -f product stream
+   ============================================================ */
+.hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 92vh;
+    max-height: 1100px;
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid var(--accent);
+}
+.hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    opacity: 0.35;
+}
+.hero-bg-col { overflow: hidden; }
+.hero-bg-scroll {
+    display: flex; flex-direction: column; gap: 1px;
+    animation: htick 90s linear infinite;
+}
+.hero-bg-col:nth-child(2) .hero-bg-scroll { animation-duration: 110s; animation-direction: reverse; }
+.hero-bg-col:nth-child(3) .hero-bg-scroll { animation-duration: 80s; }
+@keyframes htick { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+.hero-bg-cell {
+    background: var(--surface-2);
+    aspect-ratio: 1;
+    position: relative;
+}
+.hero-bg-cell img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.1) brightness(0.55); }
+.hero-bg-cell::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 60%, var(--accent-dim));
+    mix-blend-mode: screen;
+}
+.hero-veil {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+        radial-gradient(ellipse 80% 65% at center, transparent 0%, rgba(5,8,5,0.85) 70%, var(--bg) 100%),
+        linear-gradient(180deg, var(--bg) 0%, transparent 18%, transparent 82%, var(--bg) 100%);
+}
+.hero-content {
+    position: relative; z-index: 2;
+    margin: auto;
+    max-width: 920px;
+    padding: 100px 24px 80px;
+    width: 100%;
+}
+.boot-log {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    line-height: 1.7;
+    text-align: left;
+    display: inline-block;
+}
+.boot-log .ok { color: var(--accent-text); }
+.boot-log .warn { color: var(--warn); }
+.boot-log .ln { display: block; opacity: 0; animation: typeIn 0.4s ease forwards; }
+.boot-log .ln:nth-child(1) { animation-delay: 0.0s; }
+.boot-log .ln:nth-child(2) { animation-delay: 0.15s; }
+.boot-log .ln:nth-child(3) { animation-delay: 0.30s; }
+.boot-log .ln:nth-child(4) { animation-delay: 0.45s; }
+.boot-log .ln:nth-child(5) { animation-delay: 0.60s; }
+.boot-log .ln:nth-child(6) { animation-delay: 0.80s; }
+@keyframes typeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.hero-title {
+    font-family: var(--font-mono);
+    font-size: clamp(40px, 9vw, 96px);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    opacity: 0;
+    animation: typeIn 0.5s ease 0.9s forwards;
+    text-shadow: 0 0 18px var(--accent-glow);
+}
+.hero-title .prompt { color: var(--accent-text); }
+.hero-title .accent { color: var(--accent-text); }
+.hero-title .blink {
+    display: inline-block; width: 0.5em; height: 0.85em;
+    background: var(--accent-text);
+    vertical-align: -0.05em; margin-left: 6px;
+    animation: cursor 1s steps(2) infinite;
+}
+.hero-sub {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 600px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: typeIn 0.5s ease 1.05s forwards;
+}
+.hero-sub::before { content: '// '; color: var(--text-muted); }
+.hero-cta-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    opacity: 0; animation: typeIn 0.5s ease 1.2s forwards;
+}
+
+.hero-meta {
+    position: absolute; left: 24px; bottom: 16px; right: 24px;
+    z-index: 3;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+}
+.hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.hero-meta .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 6px var(--accent); animation: blink 1.6s ease-in-out infinite; }
+
+/* ============================================================
+   CONVEYOR — horizontal scroll product strip
+   ============================================================ */
+.conveyor-section { padding: 56px 0 24px; }
+.conveyor-wrap { position: relative; overflow: hidden; }
+.conveyor-fade-l, .conveyor-fade-r {
+    position: absolute; top: 0; bottom: 0; width: 80px; z-index: 5; pointer-events: none;
+}
+.conveyor-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.conveyor-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+.conveyor-track {
+    display: flex; gap: 12px; width: max-content;
+    padding: 0 24px;
+    cursor: grab; user-select: none;
+}
+.conveyor-track:active { cursor: grabbing; }
+.conveyor-track .product-card { flex: 0 0 220px; }
+.conv-btn {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+    width: 32px; height: 56px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent-text);
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.conv-btn:hover { background: var(--accent); color: var(--accent-on); }
+.conv-btn-l { left: 12px; }
+.conv-btn-r { right: 12px; }
+
+/* ============================================================
+   CATEGORY BRACKET STRIP
+   ============================================================ */
+.cat-strip {
+    display: flex; gap: 0; justify-content: flex-start;
+    padding: 8px 24px;
+    border-top: 1px dashed var(--border-subtle);
+    border-bottom: 1px dashed var(--border-subtle);
+    overflow-x: auto;
+    -ms-overflow-style: none; scrollbar-width: none;
+    max-width: 1280px; margin: 0 auto;
+}
+.cat-strip::-webkit-scrollbar { display: none; }
+.cat-strip a {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    padding: 10px 12px;
+    white-space: nowrap;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    border-bottom: 2px solid transparent;
+}
+.cat-strip a::before { content: '['; color: var(--text-muted); margin-right: 2px; }
+.cat-strip a::after { content: ']'; color: var(--text-muted); margin-left: 2px; }
+.cat-strip a:hover { color: var(--accent-text); text-decoration: none; }
+.cat-strip a.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+.cat-strip a.active::before, .cat-strip a.active::after { color: var(--accent-text); }
+
+/* ============================================================
+   SEO README
+   ============================================================ */
+.readme {
+    max-width: 880px;
+    margin: 16px auto 64px;
+    padding: 0 24px;
+}
+.readme-block {
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+.readme-head {
+    padding: 8px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 8px;
+}
+.readme-head::before { content: '$ cat'; color: var(--accent-text); }
+.readme-body { padding: 20px 22px; }
+.readme-body h3 {
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+}
+.readme-body h3::before { content: '# '; color: var(--accent-text); }
+.readme-body p {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 12px;
+}
+.readme-body p::before { content: '> '; color: var(--text-muted); }
+.readme-body p:last-child { margin-bottom: 0; }
+
+/* ============================================================
+   STAT ROW
+   ============================================================ */
+.stat-label {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+    text-transform: lowercase;
+}
+.stat-label::before { content: '> '; color: var(--accent-text); opacity: 0.7; }
+
+@media (max-width: 768px) {
+    .hero { min-height: 80vh; }
+    .hero-bg { grid-template-columns: repeat(2, 1fr); }
+    .hero-content { padding: 90px 18px 72px; }
+    .boot-log { font-size: 10px; }
+    .hero-meta { font-size: 9px; }
+    .conveyor-track .product-card { flex: 0 0 170px; }
+    .conv-btn { display: none; }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     HERO — boot sequence + product mosaic background
+     ============================================================ -->
+<section class="hero">
+    {% if hero_products %}
+    {% set col1 = hero_products[:8] %}
+    {% set col2 = hero_products[8:16] if hero_products|length > 8 else hero_products[:8] %}
+    {% set col3 = hero_products[16:24] if hero_products|length > 16 else hero_products[:8] %}
+    <div class="hero-bg" aria-hidden="true">
+        {% for col in [col1, col2, col3] %}
+        <div class="hero-bg-col">
+            <div class="hero-bg-scroll">
+                {% for p in col %}<div class="hero-bg-cell"><img src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>{% endfor %}
+                {% for p in col %}<div class="hero-bg-cell"><img src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>{% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="hero-veil"></div>
+
+    <div class="hero-content">
+        <div class="boot-log">
+            <span class="ln">[ <span class="ok">ok</span> ] booting {{ site.system_name }} {{ site.system_version }} ...</span>
+            <span class="ln">[ <span class="ok">ok</span> ] mounting catalogue at /srv/{{ site.agent_name|lower }} ...</span>
+            <span class="ln">[ <span class="ok">ok</span> ] resolving {{ site.product_count_label|default('100+ products') }} ...</span>
+            <span class="ln">[ <span class="ok">ok</span> ] auth: guest session granted</span>
+            <span class="ln">[ <span class="warn">!</span> ] welcome bonus available: <span class="ok">${{ site.coupon_amount }}</span> credit on signup</span>
+            <span class="ln">{{ site.shell_prompt }}:~$ <span class="ok">./catalogue --open</span></span>
+        </div>
+
+        <h1 class="hero-title">
+            <span class="prompt">$&nbsp;</span>{{ site.name_part1 }}<span class="accent">_</span>{{ site.name_part2 }}<span class="blink"></span>
+        </h1>
+
+        <p class="hero-sub">curated {{ site.agent_name }} finds, indexed and shipped. lowest rates. zero gatekeeping.</p>
+
+        <div class="hero-cta-row">
+            <a href="/shop" class="btn btn-primary">./browse_catalogue</a>
+            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">claim --coupon=${{ site.coupon_amount }}</a>
+        </div>
+    </div>
+
+    <div class="hero-meta">
+        <span><span class="dot"></span> session: live</span>
+        <span class="hide-sm">{{ site.shell_prompt }}@{{ site.system_name|lower }}</span>
+        <span>v {{ site.system_version }}</span>
+    </div>
+</section>
+
+<!-- ============================================================
+     LATEST DROPS — horizontal conveyor
+     ============================================================ -->
+{% if conveyor %}
+<div class="conveyor-section reveal">
+    <div class="section" style="padding-top:0;padding-bottom:18px;">
+        <div class="sec-header">
+            <div class="sec-prompt">{{ site.shell_prompt }}:~$ <span class="accent">tail -f ./latest_drops</span></div>
+            <h2 class="sec-title">latest_drops<a href="/shop" class="sec-link">view_all &rarr;</a></h2>
+        </div>
+    </div>
+    <div class="conveyor-wrap">
+        <div class="conveyor-fade-l"></div><div class="conveyor-fade-r"></div>
+        <button class="conv-btn conv-btn-l" onclick="scrollConv(-1)" aria-label="prev">&#8249;</button>
+        <button class="conv-btn conv-btn-r" onclick="scrollConv(1)" aria-label="next">&#8250;</button>
+        <div class="conveyor-track" id="conv">
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                <div class="product-card-img-wrap">
+                    <span class="product-card-index">{{ '%03d'|format(loop.index) }}</span>
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">exec</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card">
+                <div class="product-card-img-wrap">
+                    <span class="product-card-index">{{ '%03d'|format(loop.index) }}</span>
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">exec</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================
+     MID CTA — terminal banner
+     ============================================================ -->
+<a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="mid-cta reveal" onclick="trackClick('signup','mid-cta','','')">
+    <span class="big">signup --agent={{ site.agent_name|lower }} --bonus=${{ site.coupon_amount }}</span>
+    <span class="small">// claim welcome credit &middot; lowest shipping rates &middot; guest checkout</span>
+</a>
+
+<!-- ============================================================
+     CATEGORY BRACKET STRIP
+     ============================================================ -->
+<div class="cat-strip reveal">
+    <a href="/shop" class="active">all</a>
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.slug }}">{{ cat.name|lower }}</a>
+    {% endfor %}
+</div>
+
+<!-- ============================================================
+     BEST SELLING / FEATURED GRID
+     ============================================================ -->
+{% if products %}
+{% set featured = products[:8] %}
+<div class="section reveal">
+    <div class="sec-header">
+        <div class="sec-prompt">{{ site.shell_prompt }}:~$ <span class="accent">ls -t ./best_selling</span></div>
+        <h2 class="sec-title">best_selling<a href="/shop" class="sec-link">view_all &rarr;</a></h2>
+    </div>
+    <div class="product-grid">
+        {% for p in featured %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">{{ '%03d'|format(loop.index) }}</span>
+                <span class="product-card-badge">hot</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">exec</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============================================================
+     PER-CATEGORY SECTIONS
+     ============================================================ -->
+{% for cat in categories %}
+{% set cp = products|selectattr('category', 'equalto', cat.slug)|list %}
+{% if cp and cat.slug != 'trending' %}
+<hr class="divider">
+<div class="section reveal" style="padding-top:48px;padding-bottom:48px;">
+    <div class="sec-header">
+        <div class="sec-prompt">{{ site.shell_prompt }}:~$ <span class="accent">cat ./categories/{{ cat.slug }}</span></div>
+        <h2 class="sec-title">{{ cat.name|lower }}<a href="/shop?category={{ cat.slug }}" class="sec-link">view_all ({{ cp|length }}) &rarr;</a></h2>
+    </div>
+    <div class="product-grid">
+        {% for p in cp[:4] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">{{ '%03d'|format(loop.index) }}</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">exec</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+<!-- ============================================================
+     STAT ROW — df -h vibe
+     ============================================================ -->
+<hr class="divider">
+<div class="section reveal" style="padding-top:48px;padding-bottom:24px;">
+    <div class="sec-header">
+        <div class="sec-prompt">{{ site.shell_prompt }}:~$ <span class="accent">df -h ./catalogue</span></div>
+    </div>
+    <div class="stat-row">
+        <div class="stat">
+            <div class="stat-key">products</div>
+            <div class="stat-num" data-count="100" data-suffix="+">0</div>
+            <div class="stat-label">indexed</div>
+        </div>
+        <div class="stat">
+            <div class="stat-key">coupons</div>
+            <div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">$0</div>
+            <div class="stat-label">on signup</div>
+        </div>
+        <div class="stat">
+            <div class="stat-key">categories</div>
+            <div class="stat-num" data-count="10">0</div>
+            <div class="stat-label">mounted</div>
+        </div>
+        <div class="stat">
+            <div class="stat-key">uptime</div>
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">always_on</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     CTA SECTION
+     ============================================================ -->
+<section class="cta-section reveal">
+    <div class="sec-prompt" style="justify-content:center;margin-bottom:14px;">{{ site.shell_prompt }}:~$ <span class="accent">./claim_bonus.sh</span></div>
+    <h2>${{ site.coupon_amount }} <span class="accent">welcome_credit</span></h2>
+    <p>// sign up to {{ site.agent_name }} via our link &mdash; bonus auto-applied &mdash; lowest shipping</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:14px 32px;font-size:13px;" onclick="trackClick('signup','cta','','')">execute --claim ${{ site.coupon_amount }}</a>
+</section>
+
+<!-- ============================================================
+     SEO README
+     ============================================================ -->
+<section class="readme reveal">
+    <div class="readme-block">
+        <div class="readme-head">./README.md</div>
+        <div class="readme-body">
+            <h3>{{ site.name }} &mdash; the {{ site.agent_name }} catalogue</h3>
+            <p>{{ site.name }} is a curated {{ site.agent_name }} finds index: shoes, hoodies, shirts, jackets, accessories, tech &mdash; sourced from trusted Weidian, Taobao, and 1688 sellers. every listing is verified before it hits the catalogue.</p>
+            <p>use the link converter to switch any agent URL straight to {{ site.agent_name }}. signup via the bonus link drops ${{ site.coupon_amount }} of credit into your account &mdash; auto-applied at checkout.</p>
+            <p>// catalogue updates daily &middot; built for the terminal generation</p>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+var convEl = document.getElementById('conv');
+if (convEl && typeof initConveyor === 'function') initConveyor(convEl);
+function scrollConv(dir) {
+    if (!convEl || !convEl._convPos) return;
+    var h = convEl.scrollWidth / 2;
+    var target = convEl._convPos.p + dir * 240 * 3;
+    if (target < 0) target += h;
+    if (target >= h) target -= h;
+    convEl._convPos.target = target;
+}
+{% endblock %}
