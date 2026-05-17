@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>{% block title %}{{ site.name }} — {{ site.issue_label }} · {{ site.issue_season }}{% endblock %}</title>
+    <meta name="description" content="{{ site.name }} — a high-end editorial catalogue of {{ site.agent_name }} finds. Curated, modern, considered.">
+    <meta name="keywords" content="{{ site.agent_name|lower }}, {{ site.name|lower }}, editorial, fashion, curated, weidian, taobao, 1688">
+    <link rel="canonical" href="https://{{ site.domain }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ site.name }}">
+    <meta property="og:title" content="{{ site.name }} — {{ site.issue_label }}">
+    <meta property="og:description" content="A high-end editorial catalogue of {{ site.agent_name }} finds.">
+    <meta property="og:url" content="https://{{ site.domain }}">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    {% if site.meta_pixel_id %}
+    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{{ site.meta_pixel_id }}');fbq('track','PageView');</script>
+    {% endif %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           EDITORIAL HOUSE — high-end fashion editorial
+           Warm ivory paper, deep charcoal text, serif display
+           ============================================================ */
+        :root {
+            --bg: #faf6ef;              /* warm ivory paper */
+            --bg-2: #f4efe5;            /* tonal pull */
+            --paper: #ffffff;           /* card paper */
+            --text: #18181a;            /* deep charcoal */
+            --text-secondary: #4a4a4a;
+            --text-muted: #8a8a8a;
+            --rule: #1a1a1a;            /* hairline rule color */
+            --rule-soft: rgba(24,24,26,0.12);
+            --rule-faint: rgba(24,24,26,0.06);
+            --accent: {{ site.brand_color }};
+            --accent-hover: {{ site.brand_color_shadow }};
+            --accent-text: {{ site.brand_color }};
+            --accent-on: #ffffff;
+            --accent-dim: {{ site.brand_color }}14;
+            --accent-glow: {{ site.brand_color }}22;
+            --font-display: 'Playfair Display', 'Times New Roman', serif;
+            --font-alt-display: 'DM Serif Display', 'Playfair Display', serif;
+            --font-serif: 'Cormorant Garamond', 'Playfair Display', serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+            --nav-h: 64px;
+            --dateline-h: 32px;
+            --radius: 0;
+            --radius-sm: 0;
+            --radius-pill: 999px;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-body);
+            font-size: 15px; line-height: 1.65;
+            background: var(--bg); color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            text-rendering: optimizeLegibility;
+        }
+        ::selection { background: var(--text); color: var(--bg); }
+        a { color: var(--text); text-decoration: none; transition: color .15s ease; }
+        a:hover { color: var(--accent-text); }
+        img { max-width: 100%; display: block; }
+        button { font-family: inherit; cursor: pointer; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--rule-soft); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text); }
+        hr { border: none; border-top: 1px solid var(--rule); }
+        .container { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+        @media (max-width: 768px) { .container { padding: 0 18px; } }
+
+        /* ============================================================
+           DATELINE — top thin strip, always-visible imprint
+           ============================================================ */
+        .dateline {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 110;
+            height: var(--dateline-h);
+            background: var(--text);
+            color: var(--bg);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 28px;
+            font-family: var(--font-body); font-size: 10px; font-weight: 500;
+            letter-spacing: 0.18em; text-transform: uppercase;
+        }
+        .dateline .dl-left, .dateline .dl-right { display: inline-flex; align-items: center; gap: 14px; }
+        .dateline .sep { opacity: 0.35; }
+        .dateline .accent-text { color: var(--accent); font-weight: 600; }
+        @media (max-width: 768px) {
+            .dateline { font-size: 9px; padding: 0 14px; letter-spacing: 0.14em; }
+            .dateline .hide-sm { display: none; }
+        }
+
+        /* ============================================================
+           NAV — masthead under dateline
+           ============================================================ */
+        .nav {
+            position: fixed; top: var(--dateline-h); left: 0; right: 0; z-index: 100;
+            height: var(--nav-h);
+            background: var(--bg);
+            border-bottom: 1px solid var(--rule);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px;
+        }
+        .nav-brand {
+            font-family: var(--font-display);
+            font-size: 30px; font-weight: 900;
+            line-height: 1; letter-spacing: -0.01em;
+            color: var(--text);
+            display: inline-flex; align-items: baseline; gap: 8px;
+            white-space: nowrap;
+        }
+        .nav-brand .italic {
+            font-style: italic; font-weight: 400;
+            color: var(--accent-text);
+            font-family: var(--font-alt-display);
+            font-size: 28px;
+        }
+        .nav-links {
+            display: flex; gap: 30px;
+            list-style: none;
+        }
+        .nav-links a {
+            font-family: var(--font-body);
+            font-size: 11px; font-weight: 600;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            border-bottom: 1px solid transparent;
+        }
+        .nav-links a:hover { color: var(--text); border-bottom-color: var(--text); }
+        .nav-links a.active { color: var(--text); border-bottom-color: var(--accent); }
+        .nav-right { display: flex; align-items: center; gap: 14px; }
+        .nav-cta {
+            padding: 10px 22px;
+            background: var(--text); color: var(--bg);
+            font-family: var(--font-body); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            border: 1px solid var(--text);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .nav-cta:hover { background: transparent; color: var(--text); }
+
+        /* Currency switcher */
+        .currency-switcher { position: relative; }
+        .currency-btn {
+            background: transparent; border: none;
+            color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+            padding: 6px 8px;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .currency-btn:hover { color: var(--text); }
+        .currency-btn .caret { font-size: 8px; opacity: 0.6; }
+        .currency-menu {
+            position: absolute; top: 100%; right: 0;
+            min-width: 150px; margin-top: 8px;
+            background: var(--paper);
+            border: 1px solid var(--rule);
+            display: none; z-index: 110;
+        }
+        .currency-menu.open { display: block; }
+        .currency-menu button {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; padding: 10px 14px;
+            background: transparent; border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+            cursor: pointer; text-align: left;
+        }
+        .currency-menu button:hover { background: var(--bg-2); color: var(--text); }
+        .currency-menu button .sym { color: var(--text-muted); }
+
+        /* Hamburger */
+        .nav-hamburger {
+            display: none; background: none; border: none;
+            cursor: pointer; padding: 6px 4px;
+            width: 32px; height: 28px;
+            flex-direction: column; justify-content: space-between; align-items: stretch;
+        }
+        .nav-hamburger span {
+            display: block; height: 1.5px; width: 100%;
+            background: var(--text);
+            transition: background 0.15s ease;
+        }
+        .nav-hamburger:hover span { background: var(--accent-text); }
+
+        /* Mobile menu */
+        .mobile-menu {
+            display: flex; position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 200;
+            flex-direction: column;
+            padding: 110px 28px 32px;
+            gap: 0;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .3s ease, visibility 0s linear .3s;
+        }
+        .mobile-menu.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .3s ease; }
+        .mobile-menu a {
+            font-family: var(--font-display);
+            font-size: 36px; font-weight: 700;
+            color: var(--text);
+            padding: 14px 0;
+            border-bottom: 1px solid var(--rule-soft);
+            opacity: 0; transform: translateY(8px);
+            transition: opacity .3s ease, transform .4s cubic-bezier(.16,1,.3,1);
+        }
+        .mobile-menu.open a { opacity: 1; transform: translateY(0); }
+        .mobile-menu.open a:nth-child(2) { transition-delay: .06s; }
+        .mobile-menu.open a:nth-child(3) { transition-delay: .12s; }
+        .mobile-menu.open a:nth-child(4) { transition-delay: .18s; }
+        .mobile-menu.open a:nth-child(5) { transition-delay: .24s; }
+        .mobile-menu.open a:nth-child(6) { transition-delay: .30s; }
+        .mobile-menu a .italic {
+            font-style: italic; font-family: var(--font-alt-display);
+            color: var(--accent-text); font-weight: 400;
+        }
+        .mobile-menu a.cta {
+            color: var(--accent-text);
+            font-family: var(--font-serif); font-style: italic;
+            font-size: 28px;
+        }
+        .mobile-close {
+            position: absolute; top: 42px; right: 22px;
+            background: none; border: none;
+            color: var(--text); font-size: 28px; cursor: pointer;
+            font-family: var(--font-body); font-weight: 300;
+            line-height: 1;
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px 28px;
+            font-family: var(--font-body); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.18em; text-transform: uppercase;
+            cursor: pointer; border: 1px solid var(--text);
+            transition: all 0.2s ease;
+            background: transparent; color: var(--text);
+            white-space: nowrap;
+        }
+        .btn-primary { background: var(--text); color: var(--bg); }
+        .btn-primary:hover { background: transparent; color: var(--text); }
+        .btn-outline:hover { background: var(--text); color: var(--bg); }
+        .btn-link {
+            border: none; padding: 6px 0;
+            border-bottom: 1px solid var(--text);
+            color: var(--text);
+            background: transparent;
+            font-family: var(--font-body); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.18em; text-transform: uppercase;
+        }
+        .btn-link:hover { color: var(--accent-text); border-bottom-color: var(--accent); }
+        .btn-arrow::after { content: '→'; font-weight: 400; letter-spacing: 0; }
+
+        /* ============================================================
+           PRODUCT CARDS — editorial, portrait, refined caption
+           ============================================================ */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 48px 28px;
+        }
+        @media (max-width: 768px) {
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 14px; }
+        }
+        .product-card {
+            display: block; color: inherit; text-decoration: none;
+            position: relative;
+            transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+        }
+        .product-card-img-wrap {
+            position: relative;
+            background: var(--bg-2);
+            overflow: hidden;
+            aspect-ratio: 3/4;
+        }
+        .product-card-img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.7s cubic-bezier(.16,1,.3,1), filter 0.5s ease;
+            filter: contrast(1.02) saturate(0.96);
+        }
+        .product-card:hover .product-card-img { transform: scale(1.04); filter: contrast(1.05) saturate(1); }
+        .product-card-index {
+            position: absolute; top: 12px; left: 12px;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+            color: var(--text);
+            background: var(--bg);
+            padding: 4px 8px;
+            letter-spacing: 0.08em;
+        }
+        .product-card-badge {
+            position: absolute; top: 12px; right: 12px;
+            font-family: var(--font-body); font-size: 9px; font-weight: 600;
+            letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--bg); background: var(--text);
+            padding: 5px 9px;
+        }
+        .product-card-body {
+            padding: 18px 0 0;
+            display: grid; grid-template-columns: 1fr auto; gap: 10px 16px;
+            align-items: baseline;
+        }
+        .product-card-name {
+            font-family: var(--font-display);
+            font-size: 17px; font-weight: 500;
+            color: var(--text);
+            line-height: 1.25;
+            grid-column: 1; grid-row: 1;
+            letter-spacing: -0.005em;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-card-price {
+            font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            grid-column: 2; grid-row: 1;
+        }
+        .product-card-seller {
+            font-family: var(--font-body); font-size: 10px; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.16em; text-transform: uppercase;
+            grid-column: 1 / -1; grid-row: 2;
+            margin-top: 2px;
+        }
+        .product-card-seller::before { content: 'via '; opacity: 0.6; text-transform: lowercase; }
+        .product-card-buy {
+            display: none; /* editorial style — no per-card buy CTA */
+        }
+        @media (max-width: 600px) {
+            .product-card-name { font-size: 14px; }
+            .product-card-price { font-size: 11px; }
+            .product-card-seller { font-size: 9px; }
+            .product-card-index { font-size: 9px; padding: 3px 6px; }
+        }
+
+        /* ============================================================
+           SECTION HEADER — TOC-style with rule
+           ============================================================ */
+        .sec-rule {
+            border-top: 1px solid var(--rule);
+            padding-top: 36px;
+            margin-bottom: 36px;
+            display: flex; align-items: baseline; justify-content: space-between;
+            gap: 18px; flex-wrap: wrap;
+        }
+        .sec-num {
+            font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.14em; text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 12px;
+        }
+        .sec-num .num { color: var(--text); font-weight: 600; }
+        .sec-title {
+            font-family: var(--font-display);
+            font-size: clamp(28px, 4vw, 44px); font-weight: 500;
+            color: var(--text);
+            line-height: 1.05;
+            letter-spacing: -0.015em;
+            flex: 1; min-width: 0;
+        }
+        .sec-title .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+        .sec-cta {
+            font-family: var(--font-body); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--text);
+            border-bottom: 1px solid var(--text);
+            padding: 6px 0;
+            white-space: nowrap;
+        }
+        .sec-cta::after { content: ' →'; font-weight: 400; letter-spacing: 0; }
+        .sec-cta:hover { color: var(--accent-text); border-bottom-color: var(--accent); }
+
+        /* ============================================================
+           POPUP — editorial subscription card
+           ============================================================ */
+        .popup-overlay {
+            display: flex; position: fixed; inset: 0;
+            background: rgba(24,24,26,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 500;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .25s ease, visibility 0s linear .25s;
+        }
+        .popup-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .25s ease; }
+        .popup {
+            background: var(--bg);
+            max-width: 540px; width: 100%;
+            padding: 0;
+            opacity: 0; transform: scale(.97) translateY(8px);
+            transition: opacity .3s ease, transform .4s cubic-bezier(.16,1,.3,1);
+            border: 1px solid var(--text);
+        }
+        .popup-overlay.active .popup { opacity: 1; transform: scale(1) translateY(0); }
+        .popup-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 20px;
+            background: var(--text); color: var(--bg);
+            font-family: var(--font-body); font-size: 10px; font-weight: 600;
+            letter-spacing: 0.2em; text-transform: uppercase;
+        }
+        .popup-close {
+            background: transparent; border: none;
+            color: var(--bg);
+            font-size: 18px; cursor: pointer; line-height: 1;
+            padding: 0; font-family: var(--font-body); font-weight: 300;
+        }
+        .popup-body { padding: 40px 36px 36px; text-align: center; }
+        .popup-eyebrow {
+            font-family: var(--font-body); font-size: 10px; font-weight: 600;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .popup h2 {
+            font-family: var(--font-display);
+            font-size: 36px; font-weight: 500;
+            color: var(--text);
+            line-height: 1.05;
+            letter-spacing: -0.015em;
+            margin-bottom: 14px;
+        }
+        .popup h2 .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+        .popup-sub {
+            font-family: var(--font-serif);
+            font-size: 17px; font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-bottom: 26px;
+            max-width: 380px;
+            margin-left: auto; margin-right: auto;
+        }
+        .popup-cta {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 14px 32px;
+            background: var(--text); color: var(--bg);
+            font-family: var(--font-body); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            border: 1px solid var(--text);
+            transition: all 0.2s ease;
+            margin-bottom: 16px;
+        }
+        .popup-cta:hover { background: transparent; color: var(--text); }
+        .popup-foot {
+            font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.14em; text-transform: uppercase;
+        }
+
+        /* ============================================================
+           FOOTER — editorial colophon
+           ============================================================ */
+        .footer {
+            background: var(--bg);
+            border-top: 1px solid var(--rule);
+            padding: 72px 0 32px;
+            margin-top: 96px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.4fr;
+            gap: 48px;
+            padding-bottom: 56px;
+            border-bottom: 1px solid var(--rule-soft);
+        }
+        @media (max-width: 900px) {
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px 28px; }
+        }
+        @media (max-width: 500px) {
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 32px; font-weight: 900;
+            line-height: 1; letter-spacing: -0.01em;
+            color: var(--text);
+            margin-bottom: 14px;
+            display: inline-flex; align-items: baseline; gap: 8px;
+        }
+        .footer-brand .italic {
+            font-style: italic; font-weight: 400;
+            color: var(--accent-text);
+            font-family: var(--font-alt-display);
+            font-size: 30px;
+        }
+        .footer-desc {
+            font-family: var(--font-serif);
+            font-size: 17px; font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            max-width: 320px;
+        }
+        .footer-col h4 {
+            font-family: var(--font-body); font-size: 10px; font-weight: 600;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+        .footer-col a {
+            display: block;
+            font-family: var(--font-body); font-size: 13px; font-weight: 500;
+            color: var(--text);
+            padding: 5px 0;
+        }
+        .footer-col a:hover { color: var(--accent-text); }
+        .footer-news {
+            font-family: var(--font-body); font-size: 13px; line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+        }
+        .footer-news strong { color: var(--text); font-weight: 600; }
+        .footer-meta {
+            padding-top: 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .footer-meta p, .footer-meta a {
+            font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.12em; text-transform: uppercase;
+        }
+        .footer-meta .legal { display: inline-flex; gap: 18px; }
+        .footer-meta a:hover { color: var(--text); }
+
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal { opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1); }
+        .reveal.in { opacity: 1; transform: translateY(0); }
+
+        /* Responsive nav */
+        @media (max-width: 1024px) {
+            .nav-links { display: none; }
+            .nav-hamburger { display: flex; }
+        }
+        @media (max-width: 600px) {
+            .nav { padding: 0 18px; height: 56px; }
+            .nav-brand { font-size: 24px; }
+            .nav-brand .italic { font-size: 22px; }
+            .nav-cta { padding: 8px 16px; font-size: 10px; letter-spacing: 0.12em; }
+            :root { --nav-h: 56px; }
+        }
+
+        /* Body offset so content clears the fixed dateline + nav */
+        body { padding-top: calc(var(--dateline-h) + var(--nav-h)); }
+        @media (max-width: 600px) {
+            body { padding-top: calc(var(--dateline-h) + 56px); }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Dateline -->
+    <div class="dateline">
+        <div class="dl-left">
+            <span>{{ site.name }}</span>
+            <span class="sep">·</span>
+            <span class="hide-sm">{{ site.issue_label }}</span>
+            <span class="sep hide-sm">·</span>
+            <span class="hide-sm accent-text">{{ site.issue_season }}</span>
+        </div>
+        <div class="dl-right">
+            <span class="hide-sm">{{ site.agent_name|upper }} Edition</span>
+            <span class="sep hide-sm">·</span>
+            <span>{{ site.product_count_label }} entries</span>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="italic">{{ site.name_part2 }}</span></a>
+        <ul class="nav-links">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Cover</a></li>
+            <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}">The Edit</a></li>
+            <li><a href="/link-converter" class="{% if '/link-converter' in request.path %}active{% endif %}">Convert</a></li>
+            <li><a href="/tutorial" class="{% if '/tutorial' in request.path %}active{% endif %}">Manual</a></li>
+        </ul>
+        <div class="nav-right">
+            <div class="currency-switcher">
+                <button class="currency-btn" id="currencyBtn"><span id="currencyLabel">USD</span> <span class="caret">▾</span></button>
+                <div class="currency-menu" id="currencyMenu">
+                    <button data-currency="USD"><span>US Dollar</span><span class="sym">$</span></button>
+                    <button data-currency="EUR"><span>Euro</span><span class="sym">€</span></button>
+                    <button data-currency="GBP"><span>British Pound</span><span class="sym">£</span></button>
+                    <button data-currency="CAD"><span>Canadian Dollar</span><span class="sym">CA$</span></button>
+                    <button data-currency="AUD"><span>Australian Dollar</span><span class="sym">A$</span></button>
+                </div>
+            </div>
+            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="nav-cta" onclick="trackClick('signup','nav','','')">Subscribe · ${{ site.coupon_amount }}</a>
+            <button class="nav-hamburger" onclick="document.getElementById('mob').classList.add('open')" aria-label="Open menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div class="mobile-menu" id="mob">
+        <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')" aria-label="Close menu">Close</button>
+        <a href="/">Cover</a>
+        <a href="/shop">The <span class="italic">Edit</span></a>
+        <a href="/link-converter">Convert</a>
+        <a href="/tutorial">Manual</a>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="cta">Subscribe · ${{ site.coupon_amount }}</a>
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">{{ site.name_part1 }}<span class="italic">{{ site.name_part2 }}</span></div>
+                    <p class="footer-desc">A curated study in modern dress — hand-selected, hand-vetted, and continuously re-set for {{ site.agent_name }} subscribers.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Read</h4>
+                    <a href="/">Cover</a>
+                    <a href="/shop">The Edit</a>
+                    <a href="/link-converter">Convert</a>
+                    <a href="/tutorial">Manual</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Browse</h4>
+                    <a href="/shop?category=shoes">Shoes</a>
+                    <a href="/shop?category=jackets">Outerwear</a>
+                    <a href="/shop?category=shirts">Shirts</a>
+                    <a href="/shop?category=accessories">Accessories</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Become a Subscriber</h4>
+                    <p class="footer-news">Receive <strong>${{ site.coupon_amount }}</strong> in shipping credits on your first {{ site.agent_name }} order.</p>
+                    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn-link" onclick="trackClick('signup','footer','','')">Subscribe →</a>
+                </div>
+            </div>
+            <div class="footer-meta">
+                <p>© {{ site.name }} · {{ site.issue_label }} · Edition 2026</p>
+                <div class="legal">
+                    <a href="/privacy">Privacy</a>
+                    <a href="/terms">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Subscription popup (kai-style, every-template requirement) -->
+    <div class="popup-overlay" id="popup" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
+        <div class="popup">
+            <div class="popup-head">
+                <span>{{ site.name|upper }} · House Note</span>
+                <button class="popup-close" onclick="closePopup()" aria-label="Close">×</button>
+            </div>
+            <div class="popup-body">
+                <p class="popup-eyebrow">Welcome Offer</p>
+                <h2 id="popupTitle">Read the issue, <span class="italic">on us.</span></h2>
+                <p class="popup-sub">Become a {{ site.agent_name }} subscriber through {{ site.name }} and your first ship comes with ${{ site.coupon_amount }} in shipping credits.</p>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="popup-cta" onclick="trackClick('signup','popup','','')">Claim ${{ site.coupon_amount }} Credit</a>
+                <p class="popup-foot">No card · No commitment · Continues weekly</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Reveal-on-scroll
+        (function() {
+            if (!('IntersectionObserver' in window)) {
+                document.querySelectorAll('.reveal').forEach(function(el) { el.classList.add('in'); });
+                return;
+            }
+            var io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+                });
+            }, { rootMargin: '0px 0px -80px 0px' });
+            document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+        })();
+
+        // Popup (session-only)
+        function closePopup() {
+            document.getElementById('popup').classList.remove('active');
+            try { sessionStorage.setItem('pp', '1'); } catch (e) {}
+        }
+        (function() {
+            if (sessionStorage.getItem('pp')) return;
+            setTimeout(function() {
+                document.getElementById('popup').classList.add('active');
+            }, 5000);
+        })();
+
+        // Track click stub (real impl posts to /api/click in app.py)
+        window.trackClick = function(type, source, productId, category, name) {
+            try {
+                var body = { type: type, source: source };
+                if (productId) body.product_id = productId;
+                if (category) body.category = category;
+                if (name) body.name = name;
+                navigator.sendBeacon && navigator.sendBeacon('/api/click', JSON.stringify(body));
+                if (window.fbq) {
+                    if (type === 'signup') fbq('track', 'Lead');
+                    else if (type === 'affiliate') fbq('track', 'ViewContent', { content_ids: [productId], content_name: name });
+                }
+            } catch (e) {}
+        };
+
+        // Conveyor (used by home.html for the horizontal scroll strip)
+        window.initConveyor = function(el) {
+            if (!el) return;
+            var pos = { p: 0, target: 0 };
+            el._convPos = pos;
+            var halfW = el.scrollWidth / 2;
+            var dragging = false, startX = 0, startP = 0;
+            function tick() {
+                pos.p += (pos.target - pos.p) * 0.08;
+                if (!dragging) {
+                    pos.target += 0.4; // gentle auto-advance
+                    if (pos.target >= halfW) { pos.target -= halfW; pos.p -= halfW; }
+                }
+                el.style.transform = 'translateX(' + (-pos.p) + 'px)';
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+            el.addEventListener('mousedown', function(e) {
+                dragging = true; startX = e.clientX; startP = pos.target;
+                el.style.cursor = 'grabbing';
+            });
+            window.addEventListener('mousemove', function(e) {
+                if (!dragging) return;
+                pos.target = startP - (e.clientX - startX);
+                if (pos.target < 0) pos.target += halfW;
+                if (pos.target >= halfW) pos.target -= halfW;
+            });
+            window.addEventListener('mouseup', function() {
+                dragging = false; el.style.cursor = 'grab';
+            });
+        };
+
+        // Counters
+        (function() {
+            var counters = document.querySelectorAll('[data-count]');
+            if (!counters.length) return;
+            function animate(el) {
+                var target = parseInt(el.getAttribute('data-count'), 10);
+                var prefix = el.getAttribute('data-prefix') || '';
+                var suffix = el.getAttribute('data-suffix') || '';
+                var dur = 1200, t0 = Date.now();
+                (function step() {
+                    var t = Math.min(1, (Date.now() - t0) / dur);
+                    var v = Math.round(target * (1 - Math.pow(1 - t, 3)));
+                    el.textContent = prefix + v + suffix;
+                    if (t < 1) requestAnimationFrame(step);
+                })();
+            }
+            var io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (e.isIntersecting) { animate(e.target); io.unobserve(e.target); }
+                });
+            });
+            counters.forEach(function(el) { io.observe(el); });
+        })();
+
+        // Currency menu
+        (function() {
+            var btn = document.getElementById('currencyBtn');
+            var menu = document.getElementById('currencyMenu');
+            if (!btn || !menu) return;
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.toggle('open');
+            });
+            document.addEventListener('click', function() { menu.classList.remove('open'); });
+        })();
+    </script>
+    <script src="/static/js/currency.js" defer></script>
+    <script src="/static/js/preview-mode.js" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

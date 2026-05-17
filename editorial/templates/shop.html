@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}The Edit{% if current_category %} · {{ current_category|title }}{% endif %}{% if search_query %} · Results for "{{ search_query }}"{% endif %} | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.shop-header {
+    max-width: 1320px; margin: 0 auto;
+    padding: 56px 32px 24px;
+}
+.shop-eyebrow {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 14px;
+    margin-bottom: 18px;
+}
+.shop-eyebrow::before { content: ''; width: 36px; height: 1px; background: var(--text); }
+.shop-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 7vw, 88px);
+    font-weight: 500;
+    color: var(--text);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    margin-bottom: 28px;
+}
+.shop-header h1 .italic {
+    font-style: italic; color: var(--accent-text);
+    font-family: var(--font-alt-display); font-weight: 400;
+}
+
+.search-wrap {
+    max-width: 560px;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--text);
+    margin-bottom: 28px;
+    background: transparent;
+}
+.search-wrap input {
+    flex: 1; border: none; outline: none;
+    padding: 12px 0;
+    background: none; color: var(--text);
+    font-family: var(--font-serif); font-size: 18px; font-style: italic;
+}
+.search-wrap input::placeholder { color: var(--text-muted); opacity: 0.6; }
+.search-wrap button {
+    background: none; border: none;
+    padding: 10px 4px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+}
+.search-wrap button:hover { color: var(--accent-text); }
+
+.filter-row {
+    display: flex; gap: 0; flex-wrap: wrap;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0;
+}
+.filter-tab {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    padding: 14px 18px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    margin-bottom: -1px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.filter-tab:hover { color: var(--text); }
+.filter-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+.shop-bar {
+    max-width: 1320px; margin: 0 auto;
+    padding: 14px 32px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 18px; flex-wrap: wrap;
+}
+.shop-count {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.14em; text-transform: uppercase;
+}
+.shop-count .accent { color: var(--text); font-weight: 600; }
+.shop-sort {
+    padding: 10px 14px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    border-radius: 0;
+}
+.shop-sort:focus { outline: none; border-color: var(--text); }
+
+.shop-section {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 32px 64px;
+}
+
+.empty {
+    text-align: center;
+    padding: 100px 24px;
+}
+.empty p {
+    font-family: var(--font-serif); font-size: 22px; font-style: italic;
+    color: var(--text-muted);
+}
+
+/* Pagination */
+.pager {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; padding: 56px 0 0;
+    flex-wrap: wrap;
+}
+.pager a, .pager span {
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    border: 1px solid transparent;
+}
+.pager a:hover { color: var(--text); border-color: var(--rule); }
+.pager a.active { color: var(--bg); background: var(--text); border-color: var(--text); }
+.pager .nav-btn {
+    font-family: var(--font-body); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.16em; font-size: 10px;
+    padding: 10px 18px; border: 1px solid var(--text); color: var(--text);
+}
+.pager .nav-btn:hover { background: var(--text); color: var(--bg); }
+.pager .ellipsis { border: none; }
+
+@media (max-width: 768px) {
+    .shop-header { padding: 36px 18px 18px; }
+    .shop-header h1 { font-size: 36px; }
+    .shop-bar { padding: 12px 18px 14px; }
+    .shop-section { padding: 0 18px 48px; }
+    .filter-tab { padding: 12px 12px; font-size: 10px; letter-spacing: 0.12em; }
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="shop-header reveal in">
+    <div class="shop-eyebrow">{{ site.issue_label }} · The Edit</div>
+    <h1>
+        {% if search_query %}Results for <span class="italic">"{{ search_query }}"</span>
+        {% elif current_category %}{{ current_category|capitalize }}<span class="italic">.</span>
+        {% else %}The <span class="italic">Edit</span>
+        {% endif %}
+    </h1>
+
+    <form class="search-wrap" action="/shop" method="get">
+        <input type="text" name="q" placeholder="Search the edit…" value="{{ search_query or '' }}">
+        <button type="submit">Search →</button>
+    </form>
+
+    <div class="filter-row">
+        <a href="/shop" class="filter-tab {% if not current_category %}active{% endif %}">All</a>
+        {% for cat in categories %}
+        <a href="/shop?category={{ cat.slug }}" class="filter-tab {% if current_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="shop-bar">
+    <span class="shop-count"><span class="accent">{{ total }}</span> entries · Page {{ page }} of {{ total_pages }}</span>
+    <select class="shop-sort" onchange="window.location.href='/shop?category={{ current_category }}&sort='+this.value{% if search_query %}+'&q={{ search_query }}'{% endif %}">
+        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Sort: Latest</option>
+        <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Sort: Price ↑</option>
+        <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Sort: Price ↓</option>
+    </select>
+</div>
+
+<section class="shop-section">
+    <div class="product-grid">
+        {% for p in products %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card reveal" onclick="trackClick('affiliate','shop','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">№ {{ '%02d'|format(loop.index + (page - 1) * 40) }}</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                <div class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</div>
+                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if not products %}
+    <div class="empty"><p>No entries match this query.</p></div>
+    {% endif %}
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+        {% if page > 1 %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page - 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="nav-btn">← Prev</a>{% endif %}
+        {% for p_num in range(1, total_pages + 1) %}
+            {% if p_num == page or p_num == 1 or p_num == total_pages or (p_num >= page - 2 and p_num <= page + 2) %}
+                <a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ p_num }}{% if search_query %}&q={{ search_query }}{% endif %}" class="{% if p_num == page %}active{% endif %}">{{ p_num }}</a>
+            {% elif p_num == page - 3 or p_num == page + 3 %}<span class="ellipsis">…</span>{% endif %}
+        {% endfor %}
+        {% if page < total_pages %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page + 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="nav-btn">Next →</a>{% endif %}
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}

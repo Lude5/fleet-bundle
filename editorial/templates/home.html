@@ -1,0 +1,661 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} — {{ site.issue_label }} · {{ site.hero_kicker }}{% endblock %}
+
+{% block extra_css %}
+/* ============================================================
+   EDITORIAL HOME — magazine cover + spreads
+   ============================================================ */
+
+/* ---- HERO: split layout with big serif + cover image ---- */
+.cover {
+    padding: 36px 0 80px;
+}
+.cover-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 64px;
+    align-items: stretch;
+}
+.cover-text { display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding: 12px 0; }
+.cover-kicker {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 14px;
+}
+.cover-kicker::before { content: ''; width: 36px; height: 1px; background: var(--text); display: inline-block; }
+.cover-title {
+    font-family: var(--font-display);
+    font-size: clamp(56px, 8.5vw, 132px);
+    font-weight: 500;
+    line-height: 0.94;
+    color: var(--text);
+    letter-spacing: -0.025em;
+    margin: 26px 0 32px;
+}
+.cover-title .italic {
+    font-family: var(--font-alt-display);
+    font-style: italic; font-weight: 400;
+    color: var(--accent-text);
+    display: block;
+    margin-top: -0.04em;
+}
+.cover-byline {
+    font-family: var(--font-serif);
+    font-size: 19px; font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-width: 460px;
+    margin-bottom: 36px;
+}
+.cover-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+.cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+}
+.cover-meta dl { font-family: var(--font-body); }
+.cover-meta dt {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.cover-meta dd {
+    font-family: var(--font-display); font-size: 22px; font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+}
+.cover-meta dd .italic {
+    font-style: italic; color: var(--accent-text);
+    font-family: var(--font-alt-display);
+}
+
+.cover-art {
+    position: relative;
+    background: var(--bg-2);
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    display: block; text-decoration: none;
+}
+.cover-art-img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: contrast(1.04) saturate(0.96);
+    transition: transform 6s ease;
+}
+.cover-art:hover .cover-art-img { transform: scale(1.04); }
+.cover-art-credit {
+    position: absolute; bottom: 14px; left: 14px;
+    background: var(--bg); color: var(--text);
+    padding: 6px 10px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+}
+.cover-art-issue {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--text); color: var(--bg);
+    padding: 6px 12px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+}
+
+@media (max-width: 1024px) {
+    .cover-grid { grid-template-columns: 1fr; gap: 36px; }
+    .cover-art { aspect-ratio: 5/4; }
+}
+@media (max-width: 600px) {
+    .cover { padding: 24px 0 48px; }
+    .cover-title { margin: 18px 0 22px; }
+    .cover-byline { font-size: 16px; margin-bottom: 28px; }
+    .cover-meta { grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 24px; }
+    .cover-meta dd { font-size: 17px; }
+    .cover-actions .btn { padding: 12px 22px; font-size: 10px; letter-spacing: 0.14em; }
+}
+
+/* ---- TICKER strip below hero ---- */
+.ticker {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden;
+    padding: 16px 0;
+    background: var(--bg);
+}
+.ticker-track {
+    display: inline-flex; gap: 56px;
+    animation: tickerScroll 50s linear infinite;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+}
+.ticker-track span.italic {
+    font-style: italic;
+    color: var(--accent-text);
+    font-family: var(--font-alt-display);
+    font-weight: 400;
+}
+.ticker-track .dot {
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 400;
+    align-self: center;
+}
+@keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* ---- FEATURE editorial — large left image + right text ---- */
+.feature {
+    padding: 96px 0 64px;
+}
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 56px;
+    align-items: center;
+}
+.feature-art {
+    position: relative;
+    aspect-ratio: 4/5;
+    background: var(--bg-2);
+    overflow: hidden;
+    display: block; text-decoration: none;
+}
+.feature-art img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: contrast(1.04) saturate(0.96);
+}
+.feature-num {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 14px;
+    margin-bottom: 22px;
+}
+.feature-num::before { content: ''; width: 28px; height: 1px; background: var(--text-muted); }
+.feature-title {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4vw, 56px); font-weight: 500;
+    color: var(--text);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    margin-bottom: 24px;
+}
+.feature-title .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+.feature-body {
+    font-family: var(--font-serif);
+    font-size: 19px; font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 32px;
+    max-width: 480px;
+}
+@media (max-width: 900px) {
+    .feature-grid { grid-template-columns: 1fr; gap: 32px; }
+    .feature-body { font-size: 17px; }
+}
+
+/* ---- SPREAD: 3-column lookbook ---- */
+.spread { padding: 64px 0; }
+.spread-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+.spread-card {
+    display: block;
+    color: inherit; text-decoration: none;
+}
+.spread-card-img {
+    aspect-ratio: 3/4;
+    background: var(--bg-2);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.spread-card-img img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: contrast(1.04) saturate(0.96);
+    transition: transform 0.7s cubic-bezier(.16,1,.3,1);
+}
+.spread-card:hover .spread-card-img img { transform: scale(1.03); }
+.spread-card-num {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.spread-card-title {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+}
+.spread-card-title .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+.spread-card-meta {
+    font-family: var(--font-body); font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    margin-top: 4px;
+}
+@media (max-width: 768px) {
+    .spread-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    .spread-card-title { font-size: 16px; }
+}
+
+/* ---- PULL QUOTE ---- */
+.pullquote {
+    padding: 96px 0;
+    text-align: center;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    margin: 64px 0;
+}
+.pullquote-text {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 48px); font-weight: 400;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.2;
+    max-width: 880px; margin: 0 auto 28px;
+    letter-spacing: -0.015em;
+}
+.pullquote-text .accent { color: var(--accent-text); }
+.pullquote-cite {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.22em; text-transform: uppercase;
+}
+
+/* ---- CONVEYOR strip ---- */
+.conveyor-section { padding: 24px 0 64px; }
+.conveyor-wrap { position: relative; overflow: hidden; }
+.conveyor-track {
+    display: flex; gap: 24px;
+    padding: 0 32px;
+    width: max-content;
+    cursor: grab;
+    user-select: none;
+}
+.conveyor-track:active { cursor: grabbing; }
+.conveyor-track .product-card { flex: 0 0 240px; }
+.conveyor-fade-l, .conveyor-fade-r {
+    position: absolute; top: 0; bottom: 0; width: 80px; z-index: 5; pointer-events: none;
+}
+.conveyor-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.conveyor-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+@media (max-width: 600px) {
+    .conveyor-track { padding: 0 18px; gap: 16px; }
+    .conveyor-track .product-card { flex: 0 0 180px; }
+}
+
+/* ---- INDEX (cat tiles) ---- */
+.index-strip {
+    padding: 56px 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+}
+.index-tile {
+    background: var(--bg);
+    padding: 38px 24px;
+    text-align: left;
+    transition: background 0.2s ease;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+}
+.index-tile:hover { background: var(--bg-2); }
+.index-tile-num {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.index-tile-name {
+    font-family: var(--font-display); font-size: 26px; font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1;
+}
+.index-tile-count {
+    font-family: var(--font-body); font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-top: 10px;
+}
+@media (max-width: 768px) {
+    .index-strip { grid-template-columns: repeat(2, 1fr); }
+    .index-tile { padding: 24px 16px; }
+    .index-tile-name { font-size: 20px; }
+}
+
+/* ---- COLOPHON: editor's note ---- */
+.colophon {
+    padding: 88px 0 56px;
+    max-width: 760px; margin: 0 auto;
+}
+.colophon-eyebrow {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 14px;
+}
+.colophon-eyebrow::before { content: ''; width: 36px; height: 1px; background: var(--text-muted); }
+.colophon h3 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3.5vw, 42px); font-weight: 500;
+    color: var(--text);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 22px;
+}
+.colophon h3 .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+.colophon p {
+    font-family: var(--font-serif);
+    font-size: 19px; font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+.colophon-sig {
+    font-family: var(--font-display); font-style: italic;
+    font-size: 20px;
+    color: var(--text);
+    margin-top: 26px;
+}
+
+/* ---- CTA STRIP ---- */
+.cta-strip {
+    background: var(--text);
+    color: var(--bg);
+    padding: 72px 32px;
+    text-align: center;
+    margin-top: 32px;
+}
+.cta-strip-eyebrow {
+    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: 18px;
+}
+.cta-strip h2 {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 4.5vw, 56px); font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin-bottom: 22px;
+    color: var(--bg);
+}
+.cta-strip h2 .italic { font-style: italic; color: var(--accent-text); font-family: var(--font-alt-display); font-weight: 400; }
+.cta-strip p {
+    font-family: var(--font-serif);
+    font-size: 18px; font-style: italic;
+    color: rgba(255,255,255,0.7);
+    max-width: 540px;
+    margin: 0 auto 32px;
+    line-height: 1.5;
+}
+.cta-strip .btn {
+    background: var(--bg); color: var(--text);
+    border-color: var(--bg);
+    padding: 16px 36px;
+}
+.cta-strip .btn:hover {
+    background: transparent; color: var(--bg);
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================
+     COVER — split editorial hero
+     ============================================================ -->
+<section class="cover container reveal in">
+    <div class="cover-grid">
+        <div class="cover-text">
+            <div>
+                <div class="cover-kicker">{{ site.hero_kicker }} · {{ site.issue_label }}</div>
+                <h1 class="cover-title">{{ site.hero_title }}<span class="italic">{{ site.hero_title_italic }}</span></h1>
+                <p class="cover-byline">{{ site.hero_byline }}</p>
+                <div class="cover-actions">
+                    <a href="/shop" class="btn btn-primary btn-arrow">Open the Edit</a>
+                    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">Subscribe · ${{ site.coupon_amount }}</a>
+                </div>
+            </div>
+            <div class="cover-meta">
+                <dl>
+                    <dt>Edition</dt>
+                    <dd>{{ site.issue_label }}</dd>
+                </dl>
+                <dl>
+                    <dt>Season</dt>
+                    <dd><span class="italic">S/S '26</span></dd>
+                </dl>
+                <dl>
+                    <dt>Entries</dt>
+                    <dd>{{ site.product_count_label }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% if hero_products %}
+        {% set hp = hero_products[0] %}
+        <a href="/go/{{ hp.id }}" target="_blank" rel="noopener" class="cover-art" onclick="trackClick('affiliate','cover','{{ hp.id }}','{{ hp.category }}','{{ hp.name }}')">
+            <img class="cover-art-img" src="{{ hp.image }}" alt="{{ hp.name }}" referrerpolicy="no-referrer">
+            <span class="cover-art-issue">Cover · {{ site.issue_label }}</span>
+            <span class="cover-art-credit">{{ hp.name|truncate(40) }}</span>
+        </a>
+        {% else %}
+        <div class="cover-art">
+            <span class="cover-art-issue">Cover · {{ site.issue_label }}</span>
+            <span class="cover-art-credit">{{ site.hero_kicker }}</span>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ============================================================
+     TICKER — masthead tagline strip
+     ============================================================ -->
+<div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+        <span>The Edit</span><span class="dot">·</span>
+        <span class="italic">curated</span><span class="dot">·</span>
+        <span>{{ site.issue_label }}</span><span class="dot">·</span>
+        <span class="italic">{{ site.issue_season }}</span><span class="dot">·</span>
+        <span>{{ site.agent_name }} Edition</span><span class="dot">·</span>
+        <span class="italic">${{ site.coupon_amount }} credit</span><span class="dot">·</span>
+        <span>The Edit</span><span class="dot">·</span>
+        <span class="italic">curated</span><span class="dot">·</span>
+        <span>{{ site.issue_label }}</span><span class="dot">·</span>
+        <span class="italic">{{ site.issue_season }}</span><span class="dot">·</span>
+        <span>{{ site.agent_name }} Edition</span><span class="dot">·</span>
+        <span class="italic">${{ site.coupon_amount }} credit</span><span class="dot">·</span>
+    </div>
+</div>
+
+<!-- ============================================================
+     SPREAD I — featured selection (8 cards)
+     ============================================================ -->
+<section class="container reveal" style="padding-top:96px;">
+    <div class="sec-rule">
+        <span class="sec-num"><span class="num">I.</span> Featured Selection</span>
+        <h2 class="sec-title">The pieces<span class="italic"> in rotation</span>.</h2>
+        <a href="/shop" class="sec-cta">Open the Edit</a>
+    </div>
+    <div class="product-grid">
+        {% if products %}
+        {% for p in products[:8] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','featured','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <span class="product-card-index">№ {{ '%02d'|format(loop.index) }}</span>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                <div class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</div>
+                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
+            </div>
+        </a>
+        {% endfor %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- ============================================================
+     FEATURE — large editorial spread (1 piece blown up)
+     ============================================================ -->
+{% if products and products|length > 1 %}
+{% set feat = products[1] %}
+<section class="feature container reveal">
+    <div class="feature-grid">
+        <a href="/go/{{ feat.id }}" target="_blank" rel="noopener" class="feature-art" onclick="trackClick('affiliate','feature','{{ feat.id }}','{{ feat.category }}','{{ feat.name }}')">
+            <img src="{{ feat.image }}" alt="{{ feat.name }}" referrerpolicy="no-referrer">
+        </a>
+        <div>
+            <div class="feature-num"><span>II.</span> The Feature</div>
+            <h2 class="feature-title">A study in <span class="italic">restraint</span>.</h2>
+            <p class="feature-body">{{ feat.name }} — chosen this issue for its quiet authority. Sourced and vetted by the house, set in rotation for the season.</p>
+            <a href="/go/{{ feat.id }}" target="_blank" rel="noopener" class="btn btn-outline btn-arrow" onclick="trackClick('affiliate','feature_cta','{{ feat.id }}','{{ feat.category }}','{{ feat.name }}')">View the Piece</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================
+     PULL QUOTE — editorial credibility
+     ============================================================ -->
+<section class="pullquote container reveal">
+    <p class="pullquote-text">"Curation, not <span class="accent">consumption</span> — every entry passes the question: <em>does it belong in the rotation?</em>"</p>
+    <p class="pullquote-cite">— {{ site.editor_name }}, {{ site.name }}</p>
+</section>
+
+<!-- ============================================================
+     CONVEYOR — latest entries
+     ============================================================ -->
+{% if conveyor %}
+<section class="reveal">
+    <div class="container">
+        <div class="sec-rule">
+            <span class="sec-num"><span class="num">III.</span> Latest Entries</span>
+            <h2 class="sec-title">In <span class="italic">rotation</span>, now.</h2>
+            <a href="/shop?sort=newest" class="sec-cta">View All</a>
+        </div>
+    </div>
+    <div class="conveyor-section">
+        <div class="conveyor-wrap">
+            <div class="conveyor-fade-l"></div>
+            <div class="conveyor-fade-r"></div>
+            <div class="conveyor-track" id="conv">
+                {% for p in conveyor %}
+                <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','conveyor','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                    <div class="product-card-img-wrap">
+                        <span class="product-card-index">№ {{ '%02d'|format(loop.index) }}</span>
+                        <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-card-name">{{ p.name }}</div>
+                        <div class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+                {% for p in conveyor %}
+                <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card">
+                    <div class="product-card-img-wrap">
+                        <span class="product-card-index">№ {{ '%02d'|format(loop.index) }}</span>
+                        <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-card-name">{{ p.name }}</div>
+                        <div class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================
+     INDEX — categories as editorial tiles
+     ============================================================ -->
+{% if categories %}
+<section class="container reveal">
+    <div class="sec-rule">
+        <span class="sec-num"><span class="num">IV.</span> Table of Contents</span>
+        <h2 class="sec-title">By <span class="italic">category</span>.</h2>
+        <a href="/shop" class="sec-cta">Open Index</a>
+    </div>
+</section>
+<div class="container">
+    <div class="index-strip">
+        {% for cat in categories[:8] %}
+        {% set cp = products|selectattr('category', 'equalto', cat.slug)|list if products else [] %}
+        <a href="/shop?category={{ cat.slug }}" class="index-tile">
+            <div class="index-tile-num">№ {{ '%02d'|format(loop.index) }}</div>
+            <div class="index-tile-name">{{ cat.name }}</div>
+            <div class="index-tile-count">{{ cp|length }} entries</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================
+     SPREAD II — second tier of 3 cards (lookbook style)
+     ============================================================ -->
+{% if products and products|length > 9 %}
+<section class="spread container reveal">
+    <div class="sec-rule">
+        <span class="sec-num"><span class="num">V.</span> Lookbook</span>
+        <h2 class="sec-title">Further <span class="italic">reading</span>.</h2>
+        <a href="/shop?sort=newest" class="sec-cta">View All</a>
+    </div>
+    <div class="spread-grid">
+        {% for p in products[8:11] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="spread-card" onclick="trackClick('affiliate','spread','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="spread-card-img">
+                <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="spread-card-num">№ {{ '%02d'|format(loop.index) }}</div>
+            <div class="spread-card-title">{{ p.name|truncate(48) }}</div>
+            <div class="spread-card-meta">${{ p.price }} · {{ p.category|capitalize }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================
+     COLOPHON — editor's note
+     ============================================================ -->
+<section class="colophon container reveal">
+    <div class="colophon-eyebrow">Editor's Note</div>
+    <h3>{{ site.name }} is a <span class="italic">house</span>, not a feed.</h3>
+    <p>Each issue is set by hand — pieces selected for build quality, photograph, and how they actually wear. Subscribers receive ${{ site.coupon_amount }} in shipping credits on the first {{ site.agent_name }} order.</p>
+    <p>The volume re-opens weekly. Continue reading.</p>
+    <div class="colophon-sig">— {{ site.editor_name }}</div>
+</section>
+
+<!-- ============================================================
+     CTA STRIP — final ask
+     ============================================================ -->
+<section class="cta-strip reveal">
+    <p class="cta-strip-eyebrow">Welcome Offer</p>
+    <h2>${{ site.coupon_amount }} in <span class="italic">shipping credits</span>.</h2>
+    <p>Become a {{ site.agent_name }} subscriber via {{ site.name }} and your first ship arrives with credit applied — no card, no commitment.</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-arrow" onclick="trackClick('signup','cta_strip','','')">Claim the Credit</a>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var convEl = document.getElementById('conv');
+    if (convEl && typeof initConveyor === 'function') initConveyor(convEl);
+</script>
+{% endblock %}
