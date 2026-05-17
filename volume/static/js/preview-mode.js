@@ -421,6 +421,16 @@
     // ============================================================
     // 7. State init from URL
     // ============================================================
+    // If the URL has no override params (just ?pv=1), don't touch the page —
+    // the iframe should look identical to the natural deployed site. Overrides
+    // only kick in once the studio sends an explicit value.
+    var OVERRIDE_KEYS = ['brand', 'color', 'theme', 'font', 'logo', 'hideChrome'];
+    function urlHasAnyOverride() {
+        for (var i = 0; i < OVERRIDE_KEYS.length; i++) {
+            if (qs.has(OVERRIDE_KEYS[i])) return true;
+        }
+        return false;
+    }
     function readState() {
         return {
             brand: qs.get('brand') || '',
@@ -433,15 +443,16 @@
     }
 
     var state = readState();
+    var hasOverrideOnLoad = urlHasAnyOverride();
 
     // Apply CSS overrides immediately (before body paints, since this script
-    // is at the end of <head> after the inline <style> block)
-    applyCss(state);
+    // is at the end of <head> after the inline <style> block) — only if the
+    // URL specifies overrides. Otherwise leave the natural CSS untouched.
+    if (hasOverrideOnLoad) applyCss(state);
 
     // Wait for DOM to finish parsing for brand/logo/chrome (body must exist)
     function onReady() {
-        applyBrand(state);
-        applyChrome(state);
+        if (hasOverrideOnLoad) { applyBrand(state); applyChrome(state); }
         ensurePreviewBadge();
     }
     if (document.readyState === 'loading') {
