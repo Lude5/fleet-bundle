@@ -960,6 +960,21 @@ TEMPLATES_REGISTRY = [
         'preview_url': '/terminal',
         'folder': 'terminal',
     },
+    {
+        'slug': 'ategoat',
+        'name': 'AteGoat',
+        'status': 'live',
+        'description': 'Maywood-template site populated with the full 5,839-product ategoat.com catalogue (scraped via their wiligoods WordPress API). Light/refined editorial cards, teal accent, KakoBuy affiliate ready. Use as a starting point for a client who wants a large finds catalogue out of the box.',
+        'color': '#0d9488',
+        'theme': 'Light · refined editorial',
+        'natural_theme': 'light',
+        'natural_font': 'inter',
+        'fonts': 'Instrument Serif italic · Inter · JetBrains Mono',
+        'features': ['5,839 pre-scraped products', '8 categories', 'KakoBuy ready', 'Maywood card style', 'Italic serif hero', 'Customizable via env vars'],
+        'preview_url': '/ategoat',
+        'folder': 'ategoat',
+        'product_count_label': '5,800+',
+    },
 ]
 
 

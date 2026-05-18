@@ -1,0 +1,937 @@
+{% extends "admin_base.html" %}
+{% block crumb %}<span data-i18n="tb_catalog">Catalog</span>{% endblock %}
+{% block heading %}<span data-i18n="sb_products">Products</span>{% endblock %}
+
+{% block topbar_actions %}
+    <span class="pill" id="productTotalPill">{{ products|length }} total</span>
+    <button class="pill" type="button" onclick="document.getElementById('importPanel').scrollIntoView({behavior:'smooth'})" data-i18n="tb_add_product">+ Add</button>
+    <a href="/" target="_blank" class="pill primary" data-i18n="tb_view_site">View site &rarr;</a>
+{% endblock %}
+
+{% block admin_extra_css %}
+/* Search + filter bar */
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.toolbar .grow { flex: 1; min-width: 220px; position: relative; }
+.toolbar .grow .input { padding-left: 38px; }
+.toolbar .grow .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+.toolbar .select { width: auto; min-width: 160px; }
+
+/* Bulk action toolbar */
+.bulk-bar { display: flex; gap: 10px; align-items: center; padding: 12px 14px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: var(--radius-sm); margin-bottom: 14px; flex-wrap: wrap; transition: all .15s; }
+.bulk-bar.hidden { display: none; }
+.bulk-bar .count { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; min-width: 90px; }
+.bulk-bar .select { background: var(--surface); }
+
+/* Reorder mode banner */
+.reorder-hint { display: none; padding: 14px 16px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--radius-sm); margin-bottom: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--warn); display: none; gap: 12px; align-items: center; flex-wrap: wrap; }
+.reorder-mode .reorder-hint { display: flex; }
+.reorder-mode tbody tr { cursor: grab; }
+.reorder-mode .product-cb, .reorder-mode .td-actions, .reorder-mode .star-btn { pointer-events: none; opacity: 0.35; }
+
+/* Product table */
+.product-table th, .product-table td { padding: 12px 10px; }
+.product-table tr.dragging { opacity: 0.4; }
+.product-table tr.drag-over td { box-shadow: 0 -2px 0 var(--accent) inset; }
+.product-table .col-cb { width: 32px; }
+.product-table .col-handle { width: 28px; }
+.product-table .col-star { width: 38px; }
+.product-table .col-thumb { width: 56px; }
+.product-table .col-actions { width: 140px; }
+.product-table .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+.product-table .name-cell { font-weight: 500; }
+.product-table .name-cell .tags-line { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.product-table .price-cell { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent); }
+.product-table .seller-cell { color: var(--text-muted); font-size: 12px; }
+.product-table .cat-pill { display: inline-block; padding: 3px 10px; background: var(--surface-2); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+
+.drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 0 4px; user-select: none; line-height: 1; }
+.drag-handle:active { cursor: grabbing; }
+
+.star-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 4px 6px; line-height: 1; color: var(--text-muted); transition: color .15s, transform .15s; }
+.star-btn:hover { color: var(--warn); transform: scale(1.15); }
+.star-btn.active { color: var(--warn); }
+
+.td-actions { display: flex; gap: 4px; }
+
+/* Tabs for the add-methods panel */
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--radius-sm); margin-bottom: 18px; width: max-content; max-width: 100%; flex-wrap: wrap; }
+.tab-btn { padding: 9px 16px; background: transparent; border: none; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; border-radius: 8px; transition: all .15s; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { background: var(--surface); color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Scrape grid */
+.scrape-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; margin-top: 14px; padding: 4px; }
+.scrape-card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; transition: all .15s; }
+.scrape-card:hover { border-color: var(--border); }
+.scrape-card .check { position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--accent-glow); }
+.scrape-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.scrape-card .sb { padding: 8px 10px; }
+.scrape-card .sb-name { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scrape-card .sb-price { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 3px; }
+
+/* Edit modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); max-width: 640px; width: 100%; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+.modal h2 { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+.modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 18px; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { border-color: var(--accent); color: var(--accent); }
+.edit-preview { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; background: var(--surface-2); margin-bottom: 18px; display: none; }
+
+.empty-table { padding: 60px 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+
+/* === Comfort view: product grid === */
+.padmin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.padmin-card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; position: relative; transition: all .15s; }
+.padmin-card:hover { border-color: var(--border); transform: translateY(-2px); }
+.padmin-card .pa-star { position: absolute; top: 8px; right: 8px; z-index: 2; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.padmin-card .pa-star .star-btn { padding: 0; font-size: 16px; }
+.padmin-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.padmin-card .pa-body { padding: 12px; }
+.padmin-card .pa-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.padmin-card .pa-row { display: flex; justify-content: space-between; align-items: center; }
+.padmin-card .pa-price { font-family: var(--font-mono); font-weight: 700; color: var(--accent); font-size: 13px; }
+.padmin-card .pa-cat { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; background: var(--surface-3); border-radius: 4px; }
+.padmin-card .pa-actions { display: flex; gap: 5px; padding: 0 12px 12px; }
+.padmin-card .pa-actions button { flex: 1; padding: 7px; background: var(--surface-3); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+.padmin-card .pa-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.padmin-card .pa-actions button.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* === Executive view: compact list with sales-rank emphasis === */
+.padmin-compact { display: flex; flex-direction: column; gap: 1px; background: var(--border-subtle); border-radius: 12px; overflow: hidden; }
+.padmin-compact .pcomp { display: grid; grid-template-columns: 36px 44px 1fr 80px 80px 80px; gap: 14px; align-items: center; padding: 10px 14px; background: var(--surface); transition: background .12s; }
+.padmin-compact .pcomp:hover { background: var(--surface-2); }
+.padmin-compact .pcomp .rank { font-family: var(--font-mono); color: var(--text-muted); font-size: 11px; font-weight: 700; }
+.padmin-compact .pcomp .img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: var(--surface-2); }
+.padmin-compact .pcomp .nm { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.padmin-compact .pcomp .cat { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-align: right; text-transform: uppercase; letter-spacing: 1px; }
+.padmin-compact .pcomp .price { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; font-size: 13px; }
+.padmin-compact .pcomp .star-cell { display: flex; justify-content: flex-end; }
+
+/* Pagination */
+.pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 4px 4px; border-top: 1px solid var(--border-subtle); margin-top: 8px; flex-wrap: wrap; }
+.pagination-bar .page-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.pagination-bar .page-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pagination-bar .page-size-label { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.pagination-bar .page-size { width: 70px; padding: 7px 10px; font-size: 12px; }
+.pagination-bar .page-info { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text); letter-spacing: 1px; min-width: 110px; text-align: center; }
+.pagination-bar .page-btn { width: 36px; height: 36px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .15s; }
+.pagination-bar .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.pagination-bar .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.loading-block { padding: 28px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+
+.help-line { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.55; }
+.help-line strong { color: var(--accent); font-weight: 700; }
+
+@media (max-width: 768px) {
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar .select { width: 100%; }
+    .product-table .col-thumb, .product-table .name-cell .tags-line, .product-table .seller-cell { display: none; }
+    .product-table th, .product-table td { padding: 10px 6px; }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- ADD PRODUCTS (primary, top) -->
+<!-- ============================================================ -->
+<div class="card" id="importPanel">
+    <div class="card-head">
+        <h2 data-i18n="add_products">Add products</h2>
+        <span class="sub" data-i18n="add_sub">Scrape · Manual · Bulk · Categories</span>
+    </div>
+
+    <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="scrape" onclick="switchTab('scrape')" data-i18n="tab_scrape">Scrape link</button>
+        <button class="tab-btn" data-tab="manual" onclick="switchTab('manual')" data-i18n="tab_manual">Add manually</button>
+        <button class="tab-btn" data-tab="bulk" onclick="switchTab('bulk')" data-i18n="tab_bulk">Bulk JSON</button>
+        <button class="tab-btn" data-tab="cat" onclick="switchTab('cat')" data-i18n="tab_categories">Categories</button>
+    </div>
+
+    <!-- TAB: Scrape -->
+    <div class="tab-panel active" id="tab-scrape">
+        <p class="help-line" data-i18n="scrape_help">Paste a Weidian / Taobao / 1688 link and every variant (colorway, size, style) will be scraped with image and price.</p>
+        <div class="form-grid">
+            <div class="field form-full">
+                <label data-i18n="scrape_link_label">Product link *</label>
+                <input type="url" id="scrapeUrl" class="input" placeholder="https://weidian.com/item.html?itemID=...">
+            </div>
+            <div class="field">
+                <label data-i18n="scrape_category">Category</label>
+                <input type="text" id="scrapeCategory" class="input" placeholder="shoes">
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-primary" onclick="scrapeLink()" data-i18n="scrape_btn">Scrape</button>
+            </div>
+        </div>
+
+        <div id="scrapeLoading" class="loading-block" style="display:none;" data-i18n="scrape_loading">Scraping… this may take a few seconds.</div>
+
+        <div id="scrapeResults" style="display:none;margin-top:18px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+                <h3 style="font-family:var(--font-display);font-size:16px;text-transform:uppercase;letter-spacing:1px;" id="scrapeResultTitle">—</h3>
+                <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;" id="scrapeResultCount">—</span>
+            </div>
+            <div class="scrape-grid" id="scrapeGrid"></div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="importAll()" data-i18n="import_selected">Import selected</button>
+                <button class="btn btn-secondary btn-sm" onclick="clearScrape()" data-i18n="clear">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: Manual -->
+    <div class="tab-panel" id="tab-manual">
+        <form id="addForm" onsubmit="return addProduct(event)">
+            <div class="form-grid">
+                <div class="field">
+                    <label data-i18n="manual_name">Product name *</label>
+                    <input type="text" id="pName" class="input" required placeholder="Jordan 4 Black Cat">
+                </div>
+                <div class="field">
+                    <label data-i18n="manual_category">Category</label>
+                    <input type="text" id="pCategory" class="input" placeholder="shoes">
+                </div>
+                <div class="field">
+                    <label data-i18n="manual_price">Price (USD)</label>
+                    <input type="text" id="pPrice" class="input" placeholder="45">
+                </div>
+                <div class="field">
+                    <label data-i18n="manual_retail">Retail price</label>
+                    <input type="text" id="pRetail" class="input" placeholder="190">
+                </div>
+                <div class="field form-full">
+                    <label data-i18n="manual_url">Product URL</label>
+                    <input type="url" id="pUrl" class="input" placeholder="https://weidian.com/...">
+                </div>
+                <div class="field form-full">
+                    <label data-i18n="manual_image">Image URL</label>
+                    <input type="url" id="pImage" class="input" placeholder="https://...">
+                </div>
+                <div class="field">
+                    <label data-i18n="manual_seller">Seller</label>
+                    <input type="text" id="pSeller" class="input" placeholder="Seller name">
+                </div>
+                <div class="field">
+                    <label data-i18n="manual_batch">Batch</label>
+                    <input type="text" id="pBatch" class="input" placeholder="Batch name">
+                </div>
+            </div>
+            <div style="margin-top:14px;">
+                <button type="submit" class="btn btn-primary" data-i18n="add_product_btn">+ Add product</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TAB: Bulk -->
+    <div class="tab-panel" id="tab-bulk">
+        <p class="help-line">Paste a JSON array. Each product needs at minimum <strong data-i18n="bulk_help_strong">name, price, url, image, category</strong>. Tags auto-generate.</p>
+        <textarea id="bulkJson" class="textarea" placeholder='[{"name":"Jordan 4","price":"45","url":"...","image":"...","category":"shoes"}]'></textarea>
+        <div style="margin-top:14px;">
+            <button class="btn btn-primary" onclick="bulkUpload()" data-i18n="upload">Upload</button>
+        </div>
+    </div>
+
+    <!-- TAB: Categories -->
+    <div class="tab-panel" id="tab-cat">
+        <div class="form-grid">
+            <div class="field">
+                <label data-i18n="cat_slug">Slug *</label>
+                <input type="text" id="cSlug" class="input" placeholder="shoes">
+            </div>
+            <div class="field">
+                <label data-i18n="cat_name">Display name *</label>
+                <input type="text" id="cName" class="input" placeholder="Shoes">
+            </div>
+            <div class="field">
+                <label data-i18n="cat_icon">Icon (emoji)</label>
+                <input type="text" id="cIcon" class="input" placeholder="">
+            </div>
+            <div class="field">
+                <label data-i18n="cat_order">Sort order</label>
+                <input type="number" id="cOrder" class="input" value="0">
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <button class="btn btn-primary" onclick="addCategory()" data-i18n="add_category_btn">+ Add category</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PRODUCT LIST (catalog) -->
+<!-- ============================================================ -->
+<div class="card" id="productPanel" style="margin-bottom:24px;">
+    <div class="card-head">
+        <h2 data-i18n="tb_catalog">Catalog</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleSelectAll()" data-i18n="select_all">Select all</button>
+            <button class="btn btn-secondary btn-sm" id="reorderBtn" onclick="toggleReorderMode()" data-i18n="reorder_mode">Reorder mode</button>
+        </div>
+    </div>
+
+    <p class="help-line" data-i18n="cat_help">
+        Tip: Click ⭐ to pin a product to the top of the shop page. Check rows to bulk-move them between categories or delete. In Reorder Mode, drag rows to set the exact order shown on /shop.
+    </p>
+
+    <div class="reorder-hint">
+        <span data-i18n="reorder_help">Reorder mode: filter to one category first, drag rows, then save.</span>
+        <button class="btn btn-primary btn-sm" onclick="saveReorder()" data-i18n="save_order">Save order</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleReorderMode()" data-i18n="cancel">Cancel</button>
+    </div>
+
+    <div class="bulk-bar hidden" id="bulkBar">
+        <span class="count" id="bulkCount">0 selected</span>
+        <select id="bulkMoveCat" class="select">
+            <option value="" data-i18n="move_to">Move to category…</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="bulkMoveCategory()" data-i18n="move">Move</button>
+        <button class="btn btn-secondary btn-sm" onclick="bulkFeature(true)" data-i18n="pin">⭐ Pin</button>
+        <button class="btn btn-secondary btn-sm" onclick="bulkFeature(false)" data-i18n="unpin">Unpin</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSelected()" data-i18n="delete">Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearSelection()" style="margin-left:auto;" data-i18n="clear">Clear</button>
+    </div>
+
+    <div class="toolbar">
+        <div class="grow">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="tableSearch" class="input" placeholder="Search name, seller, tags…" data-i18n-placeholder="search_placeholder" oninput="filterTable()">
+        </div>
+        <select id="tableCatFilter" class="select" onchange="filterTable()">
+            <option value="" data-i18n="all_categories">All categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <select id="tableFeaturedFilter" class="select" onchange="filterTable()">
+            <option value="" data-i18n="all_products_filter">All products</option>
+            <option value="1" data-i18n="pinned_only">⭐ Pinned only</option>
+            <option value="0" data-i18n="not_pinned">Not pinned</option>
+        </select>
+    </div>
+
+    <div class="table-wrap pro-only">
+        <table class="data product-table" id="productTable">
+            <thead>
+                <tr>
+                    <th class="col-cb"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll()"></th>
+                    <th class="col-handle"></th>
+                    <th class="col-star"></th>
+                    <th class="col-thumb"></th>
+                    <th data-i18n="th_name">Name</th>
+                    <th data-i18n="th_category">Category</th>
+                    <th data-i18n="th_price">Price</th>
+                    <th data-i18n="th_seller">Seller</th>
+                    <th class="col-actions" data-i18n="th_actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="productTbody">
+                {% for p in products %}
+                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
+                    <td><input type="checkbox" class="product-cb" value="{{ p.id }}" onchange="updateBulkBar()"></td>
+                    <td><span class="drag-handle" title="Drag to reorder">⋮⋮</span></td>
+                    <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
+                    <td><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
+                    <td class="name-cell">
+                        {{ p.name }}
+                        {% if p.tags %}<span class="tags-line">{{ p.tags }}</span>{% endif %}
+                    </td>
+                    <td><span class="cat-pill">{{ p.category or '—' }}</span></td>
+                    <td class="price-cell">${{ p.price }}</td>
+                    <td class="seller-cell">{{ p.seller or '—' }}</td>
+                    <td>
+                        <div class="td-actions">
+                            <button class="btn btn-secondary btn-xs" onclick="openEdit(this.closest('tr'))" data-i18n="edit">Edit</button>
+                            <button class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not products %}
+        <div class="empty-table" data-i18n="empty_table">No products yet. Use the Add Products panel above.</div>
+        {% endif %}
+    </div>
+
+    <!-- ============ COMFORT VIEW: grid of product cards ============ -->
+    <div class="comfort-only padmin-grid" id="productGrid">
+        {% for p in products %}
+        <div class="padmin-card" data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
+            <div class="pa-star">
+                <button class="star-btn {% if p.featured %}active{% endif %}" type="button" onclick="toggleFeatureCard(this)" title="Pin to top">★</button>
+            </div>
+            <img src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'">
+            <div class="pa-body">
+                <div class="pa-name">{{ p.name }}</div>
+                <div class="pa-row">
+                    <span class="pa-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="pa-cat">{{ p.category or '—' }}</span>
+                </div>
+            </div>
+            <div class="pa-actions">
+                <button type="button" onclick="openEditCard(this.closest('.padmin-card'))" data-i18n="edit">Edit</button>
+                <button type="button" class="danger" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ============ EXEC VIEW: compact ranked list ============ -->
+    <div class="exec-only padmin-compact" id="productCompact">
+        {% for p in products %}
+        <div class="pcomp" data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
+            <span class="rank">{{ loop.index }}</span>
+            <img class="img" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'">
+            <span class="nm">{{ p.name }}</span>
+            <span class="cat">{{ p.category or '—' }}</span>
+            <span class="price">${{ p.price }}</span>
+            <span class="star-cell">
+                <button class="star-btn {% if p.featured %}active{% endif %}" type="button" onclick="toggleFeatureCard(this)">★</button>
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" id="paginationBar">
+        <span class="page-count" id="pageCount">{{ products|length }} products</span>
+        <div class="page-controls">
+            <label class="page-size-label">
+                <select id="pageSizeSelect" class="select page-size" onchange="changePageSize(this.value)">
+                    <option value="20">20</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="0">All</option>
+                </select>
+                <span data-i18n="per_page">per page</span>
+            </label>
+            <button type="button" class="page-btn" id="prevPageBtn" onclick="gotoPage(-1)" aria-label="Previous page">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button type="button" class="page-btn" id="nextPageBtn" onclick="gotoPage(1)" aria-label="Next page">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)closeEdit()">
+    <div class="modal">
+        <button class="modal-close" onclick="closeEdit()">&times;</button>
+        <h2 data-i18n="edit_product">Edit product</h2>
+        <img class="edit-preview" id="editPreview" alt="Preview" onerror="this.style.display='none'">
+        <input type="hidden" id="editId">
+        <div class="form-grid">
+            <div class="field form-full">
+                <label data-i18n="manual_name">Product name</label>
+                <input type="text" id="editName" class="input">
+            </div>
+            <div class="field">
+                <label data-i18n="manual_category">Category</label>
+                <select id="editCategory" class="select">
+                    <option value="">—</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label data-i18n="manual_price">Price (USD)</label>
+                <input type="text" id="editPrice" class="input">
+            </div>
+            <div class="field">
+                <label data-i18n="manual_seller">Seller</label>
+                <input type="text" id="editSeller" class="input">
+            </div>
+            <div class="field">
+                <label data-i18n="manual_retail">Retail price</label>
+                <input type="text" id="editRetail" class="input">
+            </div>
+            <div class="field form-full">
+                <label data-i18n="manual_image">Image URL</label>
+                <input type="url" id="editImage" class="input" oninput="var p=document.getElementById('editPreview');p.src=this.value;p.style.display='block';">
+            </div>
+            <div class="field form-full">
+                <label data-i18n="manual_url">Product URL</label>
+                <input type="url" id="editUrl" class="input">
+            </div>
+            <div class="field">
+                <label data-i18n="manual_batch">Batch</label>
+                <input type="text" id="editBatch" class="input">
+            </div>
+            <div class="field">
+                <label data-i18n="tags_label">Tags</label>
+                <input type="text" id="editTags" class="input">
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px;">
+            <button class="btn btn-primary" onclick="saveEdit()" style="flex:1;" data-i18n="save_changes">Save changes</button>
+            <button class="btn btn-secondary" onclick="closeEdit()" data-i18n="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + name); });
+}
+
+// === EDIT ===
+function openEdit(tr) {
+    document.getElementById('editId').value = tr.dataset.id;
+    document.getElementById('editName').value = tr.dataset.name;
+    document.getElementById('editCategory').value = tr.dataset.cat;
+    document.getElementById('editPrice').value = tr.dataset.price;
+    document.getElementById('editImage').value = tr.dataset.image;
+    document.getElementById('editUrl').value = tr.dataset.url;
+    document.getElementById('editSeller').value = tr.dataset.seller;
+    document.getElementById('editBatch').value = tr.dataset.batch;
+    document.getElementById('editRetail').value = tr.dataset.retail;
+    document.getElementById('editTags').value = tr.dataset.tags;
+    var preview = document.getElementById('editPreview');
+    if (tr.dataset.image) { preview.src = tr.dataset.image; preview.style.display = 'block'; }
+    else { preview.style.display = 'none'; }
+    document.getElementById('editModal').classList.add('active');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('active'); }
+async function saveEdit() {
+    var pid = document.getElementById('editId').value;
+    var data = {
+        name: document.getElementById('editName').value,
+        price: document.getElementById('editPrice').value,
+        image: document.getElementById('editImage').value,
+        url: document.getElementById('editUrl').value,
+        category: document.getElementById('editCategory').value,
+        seller: document.getElementById('editSeller').value,
+        batch: document.getElementById('editBatch').value,
+        retail_price: document.getElementById('editRetail').value,
+        tags: document.getElementById('editTags').value,
+    };
+    try {
+        var res = await fetch('/admin/products/update/' + pid, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data),
+        });
+        var json = await res.json();
+        if (json.ok) {
+            showToast(t('product_updated'), 'success');
+            closeEdit();
+            var tr = document.querySelector('tr[data-id="' + pid + '"]');
+            if (tr) {
+                Object.keys(data).forEach(function(k){ tr.dataset[k] = data[k]; });
+                tr.dataset.cat = data.category;
+                tr.dataset.retail = data.retail_price;
+                var cells = tr.querySelectorAll('td');
+                var img = cells[3].querySelector('img');
+                if (img) { img.src = data.image; img.style.display = ''; }
+                cells[4].childNodes[0].textContent = data.name + ' ';
+                var catPill = cells[5].querySelector('.cat-pill'); if (catPill) catPill.textContent = data.category || '—';
+                cells[6].textContent = '$' + data.price;
+                cells[7].textContent = data.seller || '—';
+            }
+        } else { showToast(json.error || t('update_failed'), 'error'); }
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeEdit();
+});
+
+// === SEARCH & FILTER (with pagination) ===
+var PAGE_SIZE = 50;
+var currentPage = 1;
+var TOTAL_PRODUCTS = {{ products|length }};
+
+function getMatchingRows() {
+    var q = document.getElementById('tableSearch').value.toLowerCase();
+    var cat = document.getElementById('tableCatFilter').value;
+    var feat = document.getElementById('tableFeaturedFilter').value;
+    return Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
+        var name = (tr.dataset.name || '').toLowerCase();
+        var seller = (tr.dataset.seller || '').toLowerCase();
+        var tags = (tr.dataset.tags || '').toLowerCase();
+        var rowCat = tr.dataset.cat || '';
+        var rowFeat = tr.dataset.featured || '0';
+        if (q && !name.includes(q) && !seller.includes(q) && !tags.includes(q)) return false;
+        if (cat && rowCat !== cat) return false;
+        if (feat && rowFeat !== feat) return false;
+        return true;
+    });
+}
+
+function applyPagination() {
+    var matching = getMatchingRows();
+    var totalMatching = matching.length;
+    var size = PAGE_SIZE || totalMatching || 1;
+    var totalPages = Math.max(1, Math.ceil(totalMatching / size));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    // Hide everything, then show only the slice
+    document.querySelectorAll('#productTable tbody tr').forEach(function(tr) { tr.style.display = 'none'; });
+    var start = (currentPage - 1) * size;
+    var end = PAGE_SIZE ? start + size : totalMatching;
+    matching.slice(start, end).forEach(function(tr) { tr.style.display = ''; });
+
+    // Update UI
+    var pageInfo = document.getElementById('pageInfo');
+    var pageCount = document.getElementById('pageCount');
+    var prevBtn = document.getElementById('prevPageBtn');
+    var nextBtn = document.getElementById('nextPageBtn');
+    if (pageInfo) pageInfo.textContent = t('page_n_of_m', { n: currentPage, m: totalPages });
+    if (pageCount) {
+        pageCount.textContent = totalMatching === TOTAL_PRODUCTS
+            ? t('n_products', { n: TOTAL_PRODUCTS })
+            : t('n_of_m_products', { n: totalMatching, m: TOTAL_PRODUCTS });
+    }
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+    var pill = document.getElementById('productTotalPill');
+    if (pill) pill.textContent = totalMatching === TOTAL_PRODUCTS
+        ? t('n_total', { n: TOTAL_PRODUCTS })
+        : t('n_shown_of_total', { n: totalMatching, m: TOTAL_PRODUCTS });
+
+    updateBulkBar();
+}
+
+function filterTable() {
+    currentPage = 1;
+    applyPagination();
+}
+
+function changePageSize(size) {
+    PAGE_SIZE = parseInt(size) || 0;  // 0 = show all
+    currentPage = 1;
+    applyPagination();
+}
+
+function gotoPage(delta) {
+    currentPage += delta;
+    applyPagination();
+    // Scroll catalog into view so the user sees the page change
+    var panel = document.getElementById('productPanel');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// === ADD ===
+async function addProduct(e) {
+    e.preventDefault();
+    var data = {
+        name: document.getElementById('pName').value,
+        price: document.getElementById('pPrice').value,
+        price_numeric: parseFloat(document.getElementById('pPrice').value) || 0,
+        retail_price: document.getElementById('pRetail').value,
+        url: document.getElementById('pUrl').value,
+        image: document.getElementById('pImage').value,
+        category: document.getElementById('pCategory').value,
+        seller: document.getElementById('pSeller').value,
+        batch: document.getElementById('pBatch').value,
+    };
+    var res = await fetch('/admin/products/add', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    var json = await res.json();
+    if (json.ok) { showToast(t('product_added'), 'success'); document.getElementById('addForm').reset(); setTimeout(function(){location.reload();}, 800); }
+    else showToast(json.error || t('failed'), 'error');
+}
+
+// === BULK JSON ===
+async function bulkUpload() {
+    var raw = document.getElementById('bulkJson').value;
+    var products;
+    try { products = JSON.parse(raw); } catch(e) { return showToast(t('invalid_json'), 'error'); }
+    if (!Array.isArray(products)) return showToast(t('must_be_array'), 'error');
+    var res = await fetch('/admin/products/bulk', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ products: products }) });
+    var json = await res.json();
+    if (json.ok) { showToast(t('n_uploaded', { n: json.count }), 'success'); setTimeout(function(){location.reload();}, 800); }
+    else showToast(json.error || t('failed'), 'error');
+}
+
+// === CATEGORY ===
+async function addCategory() {
+    var data = {
+        slug: document.getElementById('cSlug').value,
+        name: document.getElementById('cName').value,
+        icon: document.getElementById('cIcon').value,
+        sort_order: parseInt(document.getElementById('cOrder').value) || 0,
+    };
+    if (!data.slug || !data.name) return showToast(t('slug_name_required'), 'error');
+    var res = await fetch('/admin/categories/add', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    var json = await res.json();
+    if (json.ok) { showToast(t('category_added'), 'success'); setTimeout(function(){location.reload();}, 800); }
+    else showToast(json.error || t('failed'), 'error');
+}
+
+// === DELETE ===
+async function deleteProduct(id) {
+    if (!confirm(t('delete_one_confirm'))) return;
+    var res = await fetch('/admin/products/delete/' + id, { method: 'DELETE' });
+    var json = await res.json();
+    if (json.ok) {
+        showToast(t('product_deleted'), 'success');
+        var tr = document.querySelector('tr[data-id="' + id + '"]'); if (tr) tr.remove();
+    }
+}
+
+// === SELECTION ===
+function toggleSelectAll() {
+    var rows = Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr){return tr.style.display !== 'none';});
+    var cbs = rows.map(function(tr){return tr.querySelector('.product-cb');}).filter(Boolean);
+    var allChecked = cbs.length > 0 && cbs.every(function(cb){return cb.checked;});
+    cbs.forEach(function(cb){cb.checked = !allChecked;});
+    var main = document.getElementById('selectAllCb'); if (main) main.checked = !allChecked;
+    updateBulkBar();
+}
+function clearSelection() {
+    document.querySelectorAll('.product-cb').forEach(function(cb){cb.checked = false;});
+    var main = document.getElementById('selectAllCb'); if (main) main.checked = false;
+    updateBulkBar();
+}
+function selectedIds() {
+    return Array.from(document.querySelectorAll('.product-cb:checked')).map(function(cb){return cb.value;});
+}
+function updateBulkBar() {
+    var ids = selectedIds();
+    document.getElementById('bulkCount').textContent = t('n_selected', { n: ids.length });
+    document.getElementById('bulkBar').classList.toggle('hidden', ids.length === 0);
+}
+
+// === Comfort/exec view helpers ===
+function openEditCard(el) {
+    // Build a fake "tr" with the same dataset shape so openEdit reuses the same logic.
+    openEdit(el);
+}
+async function toggleFeatureCard(btn) {
+    // Same as toggleFeature but tolerant of any data-id container (tr/card/div).
+    var container = btn.closest('[data-id]');
+    if (!container) return;
+    var pid = container.dataset.id;
+    var willBe = !btn.classList.contains('active');
+    btn.classList.toggle('active', willBe);
+    container.dataset.featured = willBe ? '1' : '0';
+    // Also update the matching row in pro-view (if it exists in same DOM)
+    document.querySelectorAll('[data-id="' + pid + '"]').forEach(function(el) {
+        el.dataset.featured = willBe ? '1' : '0';
+        var sib = el.querySelector('.star-btn');
+        if (sib) sib.classList.toggle('active', willBe);
+    });
+    var res = await fetch('/admin/products/feature', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: [pid], featured: willBe }) });
+    var json = await res.json();
+    if (!json.ok) {
+        btn.classList.toggle('active', !willBe);
+        document.querySelectorAll('[data-id="' + pid + '"]').forEach(function(el) {
+            el.dataset.featured = !willBe ? '1' : '0';
+            var sib = el.querySelector('.star-btn');
+            if (sib) sib.classList.toggle('active', !willBe);
+        });
+        showToast(json.error || t('failed'), 'error');
+    } else {
+        showToast(t(willBe ? 'pinned_to_top' : 'unpinned'), 'success');
+    }
+}
+
+// === FEATURE ===
+async function toggleFeature(btn) {
+    var tr = btn.closest('tr');
+    var pid = tr.dataset.id;
+    var willBe = !btn.classList.contains('active');
+    btn.classList.toggle('active', willBe);
+    tr.dataset.featured = willBe ? '1' : '0';
+    var res = await fetch('/admin/products/feature', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: [pid], featured: willBe }) });
+    var json = await res.json();
+    if (!json.ok) {
+        btn.classList.toggle('active', !willBe);
+        tr.dataset.featured = !willBe ? '1' : '0';
+        showToast(json.error || t('failed'), 'error');
+    } else {
+        showToast(t(willBe ? 'pinned_to_top' : 'unpinned'), 'success');
+    }
+}
+async function bulkFeature(featured) {
+    var ids = selectedIds();
+    if (!ids.length) return showToast(t('no_products_selected'), 'error');
+    var res = await fetch('/admin/products/feature', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: ids, featured: featured }) });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    ids.forEach(function(id){
+        var tr = document.querySelector('tr[data-id="' + id + '"]');
+        if (!tr) return;
+        tr.dataset.featured = featured ? '1' : '0';
+        var s = tr.querySelector('.star-btn'); if (s) s.classList.toggle('active', featured);
+    });
+    showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
+}
+
+// === BULK MOVE ===
+async function bulkMoveCategory() {
+    var ids = selectedIds();
+    if (!ids.length) return showToast(t('no_products_selected'), 'error');
+    var cat = document.getElementById('bulkMoveCat').value;
+    if (!cat) return showToast(t('pick_category_first'), 'error');
+    if (!confirm(t('move_confirm', { n: ids.length, cat: cat }))) return;
+    var res = await fetch('/admin/products/move-category', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: ids, category: cat }) });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    ids.forEach(function(id){
+        var tr = document.querySelector('tr[data-id="' + id + '"]');
+        if (!tr) return;
+        tr.dataset.cat = cat;
+        var pill = tr.querySelector('.cat-pill'); if (pill) pill.textContent = cat;
+    });
+    clearSelection();
+    showToast(t('moved_to', { n: ids.length, cat: cat }), 'success');
+}
+
+async function deleteSelected() {
+    var ids = selectedIds();
+    if (!ids.length) return showToast(t('no_products_selected'), 'error');
+    if (!confirm(t('delete_n_confirm', { n: ids.length }))) return;
+    var res = await fetch('/admin/products/delete-batch', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: ids }) });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    ids.forEach(function(id){ var tr = document.querySelector('tr[data-id="' + id + '"]'); if (tr) tr.remove(); });
+    showToast(t('n_deleted', { n: ids.length }), 'success');
+    updateBulkBar();
+}
+
+// === REORDER ===
+var reorderActive = false;
+function toggleReorderMode() {
+    reorderActive = !reorderActive;
+    var panel = document.getElementById('productPanel');
+    panel.classList.toggle('reorder-mode', reorderActive);
+    document.getElementById('reorderBtn').textContent = reorderActive ? 'Cancel reorder' : 'Reorder mode';
+    if (reorderActive) {
+        attachDragHandlers();
+        showToast(t('reorder_filter_hint'), 'info');
+    }
+}
+function attachDragHandlers() {
+    document.querySelectorAll('#productTbody tr').forEach(function(tr){
+        tr.draggable = true;
+        tr.addEventListener('dragstart', onDragStart);
+        tr.addEventListener('dragover', onDragOver);
+        tr.addEventListener('dragleave', onDragLeave);
+        tr.addEventListener('drop', onDrop);
+        tr.addEventListener('dragend', onDragEnd);
+    });
+}
+var draggedRow = null;
+function onDragStart(e) {
+    if (!reorderActive) { e.preventDefault(); return; }
+    draggedRow = this; this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', this.dataset.id); } catch(_) {}
+}
+function onDragOver(e) {
+    if (!reorderActive || !draggedRow || this === draggedRow) return;
+    e.preventDefault();
+    this.classList.add('drag-over');
+}
+function onDragLeave() { this.classList.remove('drag-over'); }
+function onDrop(e) {
+    if (!reorderActive || !draggedRow || this === draggedRow) return;
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    this.parentNode.insertBefore(draggedRow, this);
+}
+function onDragEnd() {
+    document.querySelectorAll('#productTbody tr').forEach(function(tr){tr.classList.remove('dragging','drag-over');});
+    draggedRow = null;
+}
+async function saveReorder() {
+    var visible = Array.from(document.querySelectorAll('#productTbody tr')).filter(function(tr){return tr.style.display !== 'none';});
+    var ids = visible.map(function(tr){return tr.dataset.id;});
+    if (!ids.length) return showToast(t('nothing_to_save'), 'error');
+    var res = await fetch('/admin/products/reorder', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: ids }) });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    showToast(t('saved_order_n', { n: ids.length }), 'success');
+    toggleReorderMode();
+}
+
+// === SCRAPE ===
+var scrapedProducts = [];
+async function scrapeLink() {
+    var url = document.getElementById('scrapeUrl').value.trim();
+    var category = document.getElementById('scrapeCategory').value.trim();
+    if (!url) return showToast(t('enter_url'), 'error');
+    document.getElementById('scrapeLoading').style.display = 'block';
+    document.getElementById('scrapeResults').style.display = 'none';
+    try {
+        var res = await fetch('/admin/scrape', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url: url, category: category }) });
+        var data = await res.json();
+        document.getElementById('scrapeLoading').style.display = 'none';
+        if (data.error) return showToast(data.error, 'error');
+        if (!data.products || !data.products.length) return showToast(t('no_products_found'), 'error');
+        scrapedProducts = data.products;
+        document.getElementById('scrapeResultTitle').textContent = data.listing_name || t('scraped_products');
+        document.getElementById('scrapeResultCount').textContent = t('n_variants', { n: data.total_variants });
+        var grid = document.getElementById('scrapeGrid'); grid.innerHTML = '';
+        data.products.forEach(function(p, i){
+            var card = document.createElement('div');
+            card.className = 'scrape-card';
+            card.dataset.index = i;
+            card.dataset.selected = 'true';
+            card.onclick = function(){
+                var sel = this.dataset.selected === 'true';
+                this.dataset.selected = sel ? 'false' : 'true';
+                this.style.opacity = sel ? '0.35' : '1';
+                this.querySelector('.check').style.display = sel ? 'none' : 'flex';
+            };
+            card.innerHTML = '<div class="check">✓</div>'
+                + '<img src="' + (p.image || '') + '" onerror="this.style.background=\'var(--surface-3)\'">'
+                + '<div class="sb"><div class="sb-name">' + (p.name || '—') + '</div>'
+                + '<div class="sb-price">$' + (p.price || '?') + '</div></div>';
+            grid.appendChild(card);
+        });
+        document.getElementById('scrapeResults').style.display = 'block';
+        showToast(t('found_n_items', { n: data.total_variants }), 'success');
+    } catch(e) {
+        document.getElementById('scrapeLoading').style.display = 'none';
+        showToast(t('scrape_failed', { msg: e.message }), 'error');
+    }
+}
+async function importAll() {
+    var products = scrapedProducts.filter(function(_, i){
+        var card = document.querySelector('[data-index="' + i + '"]');
+        return !card || card.dataset.selected === 'true';
+    });
+    if (!products.length) return showToast(t('no_products_selected'), 'error');
+    var res = await fetch('/admin/scrape/import', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ products: products }) });
+    var json = await res.json();
+    if (json.ok) { showToast(t('n_imported', { n: json.count }), 'success'); setTimeout(function(){location.reload();}, 1200); }
+    else showToast(json.error || t('failed'), 'error');
+}
+function clearScrape() {
+    scrapedProducts = [];
+    document.getElementById('scrapeResults').style.display = 'none';
+    document.getElementById('scrapeUrl').value = '';
+}
+
+// === Init ===
+(function init(){
+    var p = new URLSearchParams(location.search);
+    var cat = p.get('cat');
+    if (cat) { document.getElementById('tableCatFilter').value = cat; }
+    applyPagination();
+    // When the admin language toggles, re-render anything we set via JS.
+    document.addEventListener('admin-lang-changed', function () {
+        applyPagination();
+        updateBulkBar();
+    });
+})();
+</script>
+{% endblock %}

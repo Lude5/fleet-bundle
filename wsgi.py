@@ -27,7 +27,7 @@ if HERE not in sys.path:
 RENDER_DISK = '/var/data'
 LOCAL_DATA = os.path.join(HERE, 'data')
 DATA_ROOT = RENDER_DISK if os.path.isdir(RENDER_DISK) else LOCAL_DATA
-for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'terminal', 'editorial', 'master_admin'):
+for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'terminal', 'editorial', 'ategoat', 'master_admin'):
     os.makedirs(os.path.join(DATA_ROOT, sub), exist_ok=True)
 
 # Set per-app data dirs BEFORE importing the apps.
@@ -38,6 +38,7 @@ os.environ.setdefault('FUTURE_DATA_DIR', os.path.join(DATA_ROOT, 'future'))
 os.environ.setdefault('VOLUME_DATA_DIR', os.path.join(DATA_ROOT, 'volume'))
 os.environ.setdefault('TERMINAL_DATA_DIR', os.path.join(DATA_ROOT, 'terminal'))
 os.environ.setdefault('EDITORIAL_DATA_DIR', os.path.join(DATA_ROOT, 'editorial'))
+os.environ.setdefault('ATEGOAT_DATA_DIR', os.path.join(DATA_ROOT, 'ategoat'))
 os.environ.setdefault('MASTER_ADMIN_DATA_DIR', os.path.join(DATA_ROOT, 'master_admin'))
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware  # noqa: E402
@@ -50,6 +51,7 @@ from future.app import app as future_app  # noqa: E402
 from volume.app import app as volume_app  # noqa: E402
 from terminal.app import app as terminal_app  # noqa: E402
 from editorial.app import app as editorial_app  # noqa: E402
+from ategoat.app import app as ategoat_app  # noqa: E402
 
 kai_app.config['APPLICATION_ROOT'] = '/kai'
 maywood_app.config['APPLICATION_ROOT'] = '/maywood'
@@ -58,6 +60,7 @@ future_app.config['APPLICATION_ROOT'] = '/future'
 volume_app.config['APPLICATION_ROOT'] = '/volume'
 terminal_app.config['APPLICATION_ROOT'] = '/terminal'
 editorial_app.config['APPLICATION_ROOT'] = '/editorial'
+ategoat_app.config['APPLICATION_ROOT'] = '/ategoat'
 
 
 # ============================================================
@@ -164,6 +167,7 @@ future_wrapped = URLPrefixMiddleware(future_app, '/future')
 volume_wrapped = URLPrefixMiddleware(volume_app, '/volume')
 terminal_wrapped = URLPrefixMiddleware(terminal_app, '/terminal')
 editorial_wrapped = URLPrefixMiddleware(editorial_app, '/editorial')
+ategoat_wrapped = URLPrefixMiddleware(ategoat_app, '/ategoat')
 
 application = DispatcherMiddleware(master_app, {
     '/kai': kai_wrapped,
@@ -173,6 +177,7 @@ application = DispatcherMiddleware(master_app, {
     '/volume': volume_wrapped,
     '/terminal': terminal_wrapped,
     '/editorial': editorial_wrapped,
+    '/ategoat': ategoat_wrapped,
 })
 
 # Gunicorn looks for `app` by default
