@@ -330,27 +330,16 @@
 </section>
 {% endif %}
 
-{% if products %}
-{% set bundle_pool = products[:24] %}
+{% if bundles %}
 <section class="section reveal">
     <div class="sec-header">
         <h2 class="sec-title">Outfit <span class="italic">bundles</span></h2>
-        <a href="/shop?category=outfits" class="sec-link">See all <span class="arrow">→</span></a>
     </div>
     <div class="bundle-row">
-        {% set bundle_themes = [
-            {'name': 'Off-duty Sunday', 'count': 4},
-            {'name': 'Streetwear staples', 'count': 5},
-            {'name': 'Refined casual', 'count': 4},
-            {'name': 'Layered weekday', 'count': 6}
-        ] %}
-        {% for b in bundle_themes %}
-        {% set start = loop.index0 * 4 %}
-        {% set bundle_imgs = bundle_pool[start:start + 4] %}
-        {% if bundle_imgs|length >= 2 %}
-        <a href="/shop" class="bundle-card">
+        {% for b in bundles %}
+        <a href="/bundle/{{ b.slug }}" class="bundle-card">
             <div class="bundle-card-imgs">
-                {% for p in bundle_imgs[:4] %}
+                {% for p in b.products[:4] %}
                 <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 {% endfor %}
             </div>
@@ -358,14 +347,10 @@
                 <div class="bundle-card-name">{{ b.name }}</div>
                 <div class="bundle-card-row">
                     <span class="bundle-card-count">{{ b.count }} pieces</span>
-                    <span class="bundle-card-price">
-                        {% set total = bundle_imgs|sum(attribute='price_numeric', start=0) %}
-                        ${{ '%.2f' % total }}
-                    </span>
+                    <span class="bundle-card-price">${{ '%.2f' % b.total }}</span>
                 </div>
             </div>
         </a>
-        {% endif %}
         {% endfor %}
     </div>
 </section>

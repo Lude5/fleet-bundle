@@ -151,7 +151,79 @@ def home():
         products=products,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
-        categories=categories)
+        categories=categories,
+        bundles=_all_bundles_with_picks(products))
+
+
+# ============================================================
+# Outfit bundles — curated multi-piece looks
+# ============================================================
+BUNDLE_RECIPES = [
+    {'slug': 'off-duty',
+     'name': 'Off-duty Sunday',
+     'tagline': 'Easy weekend layer — hoodie, soft pants, sneakers, one accessory.',
+     'cats': ['hoodies', 'pants', 'accessories', 'shoes']},
+    {'slug': 'streetwear',
+     'name': 'Streetwear staples',
+     'tagline': 'The base streetwear kit — tee, hoodie, pants, jacket, sneakers.',
+     'cats': ['shirts', 'hoodies', 'pants', 'jackets', 'shoes']},
+    {'slug': 'refined',
+     'name': 'Refined casual',
+     'tagline': 'Clean lines, neutral palette — shirt, jacket, pants, shoes.',
+     'cats': ['shirts', 'jackets', 'pants', 'shoes']},
+    {'slug': 'layered',
+     'name': 'Layered weekday',
+     'tagline': 'Six-piece layered build — jacket, hoodie, shirt, pants, shoes, accessory.',
+     'cats': ['jackets', 'hoodies', 'shirts', 'pants', 'shoes', 'accessories']},
+]
+
+
+def _bundle_products(recipe, all_products):
+    """Pick one product per recipe category, stable across page loads."""
+    import hashlib
+    by_cat = {}
+    for p in all_products:
+        by_cat.setdefault(p.get('category', ''), []).append(p)
+    # Sort each category bucket so picks are deterministic.
+    for cat in by_cat:
+        by_cat[cat] = sorted(by_cat[cat], key=lambda x: x.get('id', ''))
+    picks = []
+    used_ids = set()
+    for cat in recipe['cats']:
+        cands = [p for p in by_cat.get(cat, []) if p.get('id') not in used_ids]
+        if not cands:
+            continue
+        # Hash recipe slug + cat for a stable, distinct pick per bundle slot.
+        h = hashlib.md5(f"{recipe['slug']}-{cat}".encode()).hexdigest()
+        idx = int(h, 16) % len(cands)
+        pick = cands[idx]
+        picks.append(pick)
+        used_ids.add(pick.get('id'))
+    return picks
+
+
+def _all_bundles_with_picks(all_products):
+    out = []
+    for r in BUNDLE_RECIPES:
+        picks = _bundle_products(r, all_products)
+        if len(picks) >= 2:
+            total = sum(float(p.get('price_numeric') or 0) for p in picks)
+            out.append({**r, 'products': picks, 'count': len(picks), 'total': total})
+    return out
+
+
+@app.route('/bundle/<slug>')
+def bundle(slug):
+    recipe = next((r for r in BUNDLE_RECIPES if r['slug'] == slug), None)
+    if not recipe:
+        return redirect(url_for('shop'))
+    items = _bundle_products(recipe, get_products())
+    total = sum(float(p.get('price_numeric') or 0) for p in items)
+    return render_template('bundle.html',
+        bundle=recipe,
+        products=items,
+        total=total,
+        categories=get_categories())
 
 
 @app.route('/shop')

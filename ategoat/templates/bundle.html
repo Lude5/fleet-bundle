@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ bundle.name }} — Outfit bundle | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.bundle-page-header {
+    max-width: 1200px; margin: 0 auto;
+    padding: 56px 24px 28px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 36px;
+}
+.bundle-eyebrow {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: inline-flex; align-items: center; gap: 12px;
+}
+.bundle-eyebrow .sep { opacity: 0.4; }
+.bundle-eyebrow .accent { color: var(--accent); font-weight: 700; }
+.bundle-page-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(38px, 6vw, 72px); font-weight: 500;
+    line-height: 1; letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 16px;
+}
+.bundle-page-header h1 .italic {
+    font-style: italic; font-weight: 400;
+    color: var(--accent);
+    font-family: var(--font-display);
+}
+.bundle-page-header .tagline {
+    font-family: var(--font-display); font-size: 19px; font-style: italic;
+    color: var(--text-secondary);
+    max-width: 600px;
+    line-height: 1.45;
+    margin-bottom: 24px;
+}
+.bundle-back {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 1px solid var(--text);
+    padding-bottom: 4px;
+}
+.bundle-back:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+.bundle-section {
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 24px 64px;
+}
+.bundle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 40px 20px;
+}
+@media (max-width: 768px) {
+    .bundle-grid { grid-template-columns: repeat(2, 1fr); gap: 24px 12px; }
+    .bundle-page-header { padding: 36px 18px 22px; }
+    .bundle-section { padding: 0 18px 48px; }
+}
+
+.bundle-product-cat {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.bundle-total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+    gap: 18px; flex-wrap: wrap;
+}
+.bundle-total-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted);
+}
+.bundle-total-amount {
+    font-family: var(--font-display); font-size: clamp(28px, 4vw, 44px);
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.015em;
+}
+
+.bundle-cta-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 28px;
+}
+
+.bundle-empty {
+    text-align: center;
+    padding: 100px 24px;
+    font-family: var(--font-display); font-size: 22px; font-style: italic;
+    color: var(--text-muted);
+}
+{% endblock %}
+
+{% block content %}
+<header class="bundle-page-header reveal in">
+    <div class="bundle-eyebrow">
+        <span>Outfit Bundle</span>
+        <span class="sep">·</span>
+        <span><span class="accent">{{ products|length }}</span> pieces</span>
+        <span class="sep">·</span>
+        <span>${{ '%.2f' % total }} total</span>
+    </div>
+    <h1>{{ bundle.name }}<span class="italic">.</span></h1>
+    <p class="tagline">{{ bundle.tagline }}</p>
+    <a href="/shop" class="bundle-back">← Back to the edit</a>
+</header>
+
+<section class="bundle-section">
+    {% if products %}
+    <div class="bundle-grid">
+        {% for p in products %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card reveal" onclick="trackClick('affiliate','bundle','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="bundle-product-cat">{{ p.category|capitalize }}</div>
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Open on {{ site.agent_name }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="bundle-total">
+        <span class="bundle-total-label">Bundle total · {{ products|length }} pieces</span>
+        <span class="bundle-total-amount">${{ '%.2f' % total }}</span>
+    </div>
+
+    <div class="bundle-cta-row">
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','bundle','','')">Sign up · ${{ site.coupon_amount }} credit</a>
+        <a href="/shop" class="btn btn-outline">Browse all entries</a>
+    </div>
+    {% else %}
+    <div class="bundle-empty">This bundle is being re-set. Try another for now.</div>
+    {% endif %}
+</section>
+{% endblock %}
