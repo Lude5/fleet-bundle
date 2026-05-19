@@ -1,349 +1,157 @@
 {% extends "base.html" %}
-{% block title %}{{ site.name }} — {{ site.agent_name }} Finds, Outfits & ${{ site.coupon_amount }} Coupons{% endblock %}
+{% block title %}{{ site.name }} — Best {{ site.agent_name }} Products, Spreadsheet Finds & ${{ site.coupon_amount }} Coupons{% endblock %}
 
 {% block extra_css %}
-/* ============================================================
-   HERO — two-line serif italic headline (doppel "Discover more / Pay less" pattern)
-   ============================================================ */
-.hero {
-    padding: 120px 24px 80px;
-    max-width: 1280px;
-    margin: 0 auto;
-    text-align: center;
-    position: relative;
+.hero-combined { position: relative; overflow: hidden; height: 100vh; max-height: 1100px; min-height: 650px; }
+.hero-bg-ticker { position: absolute; inset: 0; z-index: 0; display: flex; gap: 16px; padding: 0 16px; align-items: flex-start; justify-content: center; }
+.hero-bg-col { flex: 1; max-width: 380px; height: 100%; overflow: hidden; }
+.hero-bg-scroll { display: flex; flex-direction: column; gap: 14px; animation: bgTick 80s linear infinite; }
+.hero-bg-col:nth-child(2) .hero-bg-scroll { animation-duration: 95s; animation-direction: reverse; }
+.hero-bg-col:nth-child(3) .hero-bg-scroll { animation-duration: 70s; }
+@keyframes bgTick { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+.hero-bg-card { border-radius: 16px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-subtle); }
+.hero-bg-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: var(--surface-2); }
+.hero-bg-card-info { padding: 12px 14px; }
+.hero-bg-card-name { font-family: var(--font-display); font-size: 13px; text-transform: uppercase; line-height: 1.1; margin-bottom: 4px; }
+.hero-bg-card-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent); }
+.hero-overlay {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+        linear-gradient(to right, rgba(11,11,11,1) 0%, rgba(11,11,11,0.8) 18%, rgba(11,11,11,0.45) 40%, rgba(11,11,11,0.4) 50%, rgba(11,11,11,0.45) 60%, rgba(11,11,11,0.8) 82%, rgba(11,11,11,1) 100%),
+        linear-gradient(to bottom, rgba(11,11,11,0.9) 0%, rgba(11,11,11,0.45) 30%, rgba(11,11,11,0.35) 50%, rgba(11,11,11,0.45) 70%, rgba(11,11,11,1) 100%);
 }
-.hero-eyebrow {
-    font-family: var(--font-body);
-    font-size: 12px; font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.18em;
-    margin-bottom: 24px;
-    animation: fadeUp 0.6s ease 0.05s both;
-}
-.hero h1 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: clamp(56px, 11vw, 132px);
-    line-height: 0.94;
-    letter-spacing: -0.03em;
-    color: var(--text);
-    margin-bottom: 28px;
-    animation: fadeUp 0.7s ease 0.15s both;
-}
-.hero h1 .line-2 {
-    display: block;
-    font-style: italic;
-    color: var(--accent-text);
-    letter-spacing: -0.04em;
-}
-.hero-sub {
-    font-family: var(--font-body);
-    font-size: 17px;
-    color: var(--text-secondary);
-    max-width: 520px;
-    margin: 0 auto 36px;
-    line-height: 1.55;
-    animation: fadeUp 0.7s ease 0.25s both;
-}
-.hero-actions {
-    display: flex; gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeUp 0.7s ease 0.35s both;
-}
-.hero-search {
-    max-width: 560px; margin: 0 auto 32px;
-    display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    animation: fadeUp 0.7s ease 0.3s both;
-}
-.hero-search:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-dim);
-}
-.hero-search input {
-    flex: 1;
-    border: none; outline: none;
-    padding: 16px 22px;
-    font-family: var(--font-body);
-    font-size: 14px; font-weight: 500;
-    background: transparent;
-    color: var(--text);
-}
-.hero-search input::placeholder { color: var(--text-muted); }
-.hero-search button {
-    padding: 0 22px;
-    background: var(--text); color: var(--bg);
-    border: none; cursor: pointer;
-    font-family: var(--font-body); font-size: 13px; font-weight: 600;
-    transition: background 0.15s ease;
-}
-.hero-search button:hover { background: var(--accent); color: var(--accent-on); }
+.hero-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 0 24px; }
+.hero-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; animation: fadeUp 0.5s ease 0.1s both; }
+.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 4px 40px rgba(0,0,0,0.5); }
+.hero-title .accent { color: var(--accent); }
+.hero-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 16px rgba(0,0,0,0.4); }
+.hero-cta-row { display: flex; gap: 12px; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; justify-content: center; }
+.hero-signup { padding: 16px 32px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: var(--radius-sm); transition: all 0.2s; text-decoration: none; }
+.hero-signup:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); }
+.hero-scroll { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 48px; animation: fadeUp 0.5s ease 0.5s both; }
 
-@media (max-width: 768px) {
-    .hero { padding: 96px 16px 56px; }
-    .hero-sub { font-size: 15px; }
-}
-
-/* ============================================================
-   BRAND STRIP — italic marquee
-   ============================================================ */
-.brand-strip {
-    border-top: 1px solid var(--border-subtle);
-    border-bottom: 1px solid var(--border-subtle);
-    padding: 24px 0;
-    overflow: hidden;
-    background: var(--surface);
-}
-.brand-strip-track {
-    display: flex; gap: 64px;
-    animation: marquee 40s linear infinite;
-    white-space: nowrap;
-}
-.brand-strip-item {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 26px;
-    color: var(--text-muted);
-    letter-spacing: -0.01em;
-    flex-shrink: 0;
-}
-@keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-/* ============================================================
-   CONVEYOR (latest finds rail)
-   ============================================================ */
-.conveyor-section {
-    padding: 56px 0;
-    overflow: hidden;
-}
-.conveyor-wrap { overflow: hidden; position: relative; padding: 0 24px; }
-.conveyor-track {
-    display: flex; gap: 16px;
-    width: max-content;
-    cursor: grab;
-    user-select: none;
-}
+.conveyor-section { padding: 48px 0; }
+.conveyor-wrap { overflow: hidden; position: relative; }
+.conveyor-track { display: flex; gap: 16px; width: max-content; cursor: grab; user-select: none; }
 .conveyor-track:active { cursor: grabbing; }
-.conveyor-fade-l, .conveyor-fade-r {
-    position: absolute; top: 0; bottom: 0;
-    width: 80px; z-index: 5;
-    pointer-events: none;
-}
+.conveyor-fade-l, .conveyor-fade-r { position: absolute; top: 0; bottom: 0; width: 100px; z-index: 5; pointer-events: none; }
 .conveyor-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
 .conveyor-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
-.conv-btn {
-    position: absolute; top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    color: var(--text);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s ease;
-    box-shadow: var(--shadow-sm);
-}
-.conv-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
-.conv-btn-l { left: 32px; }
-.conv-btn-r { right: 32px; }
+.conv-btn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.conv-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.conv-btn-l { left: 12px; }
+.conv-btn-r { right: 12px; }
 .conveyor-track .product-card { flex: 0 0 220px; }
 
+.cat-tabs { display: flex; gap: 0; justify-content: center; padding: 0 24px; border-bottom: 1px solid var(--border-subtle); overflow-x: auto; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 18px; white-space: nowrap; border-bottom: 2px solid transparent; }
+.cat-tab:hover { color: var(--text-secondary); }
+.cat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.mid-cta { background: var(--accent); padding: 20px 24px; text-align: center; overflow: hidden; }
+.mid-cta a { display: block; font-family: var(--font-display); font-size: 20px; text-transform: uppercase; color: #fff; letter-spacing: 2px; line-height: 1.2; word-break: break-word; }
+.mid-cta span { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.8); display: block; margin-top: 4px; letter-spacing: 1px; line-height: 1.4; word-break: break-word; }
+
+/* Outfit bundles — kai-style cards */
+.bundle-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.bundle-card { display: block; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; color: inherit; text-decoration: none; transition: all 0.2s ease; }
+.bundle-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); text-decoration: none; }
+.bundle-card-imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-subtle); aspect-ratio: 1; }
+.bundle-card-imgs img { width: 100%; height: 100%; object-fit: cover; background: var(--surface-2); display: block; }
+.bundle-card-body { padding: 14px 16px; }
+.bundle-card-name { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; margin-bottom: 8px; color: var(--text); }
+.bundle-card-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+.bundle-card-count { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.bundle-card-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent); }
+
 @media (max-width: 768px) {
-    .conv-btn { display: none; }
+    .hero-combined { min-height: 550px; }
+    .hero-bg-col:nth-child(3) { display: none; }
+    .hero-cta-row { flex-direction: column; align-items: center; }
     .conveyor-track .product-card { flex: 0 0 170px; }
-}
-
-/* ============================================================
-   SPLIT CTA section
-   ============================================================ */
-.split-cta {
-    padding: 96px 24px;
-    max-width: 1280px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: center;
-}
-.split-cta-text h2 {
-    font-family: var(--font-display);
-    font-size: clamp(36px, 5vw, 56px);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    margin-bottom: 16px;
-    color: var(--text);
-}
-.split-cta-text h2 .italic { font-style: italic; color: var(--accent-text); }
-.split-cta-text p {
-    color: var(--text-secondary);
-    font-size: 15px; line-height: 1.6;
-    margin-bottom: 24px;
-    max-width: 480px;
-}
-.split-cta-imgs {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-.split-cta-imgs img {
-    width: 100%; aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    outline: 1px solid var(--border-subtle); outline-offset: -1px;
-}
-.split-cta-imgs img:nth-child(2),
-.split-cta-imgs img:nth-child(3) { transform: translateY(20px); }
-
-@media (max-width: 900px) {
-    .split-cta { grid-template-columns: 1fr; padding: 64px 16px; gap: 32px; }
-    .split-cta-imgs img:nth-child(2),
-    .split-cta-imgs img:nth-child(3) { transform: none; }
-}
-
-/* ============================================================
-   SEO COPY BLOCK
-   ============================================================ */
-.seo-block {
-    padding: 48px 24px 64px;
-    max-width: 720px; margin: 0 auto;
-}
-.seo-block h2 {
-    font-family: var(--font-display);
-    font-size: 32px; font-weight: 400;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-    line-height: 1.05;
-    color: var(--text);
-}
-.seo-block h2 .italic { font-style: italic; color: var(--accent-text); }
-.seo-block p {
-    color: var(--text-secondary);
-    font-size: 14px; line-height: 1.75;
-    margin-bottom: 14px;
+    .cat-tabs { padding: 0 16px; }
+    .cat-tab { padding: 12px 14px; font-size: 10px; }
+    .mid-cta { padding: 16px 14px; }
+    .mid-cta a { font-size: 15px; letter-spacing: 1px; }
+    .mid-cta span { font-size: 10px; letter-spacing: 0.6px; }
 }
 {% endblock %}
 
 {% block content %}
-<section class="hero">
-    <p class="hero-eyebrow">{{ site.product_count_label }} curated finds · refined daily</p>
-    <h1>
-        Find your fit.
-        <span class="line-2">Pay less.</span>
-    </h1>
-    <p class="hero-sub">{{ site.name }} is your editorial sheet of {{ site.agent_name }} finds — curated outfits, trusted sellers, and the lowest prices, organized like a magazine.</p>
-    <form class="hero-search" action="/shop" method="get" role="search">
-        <input type="text" name="q" placeholder="Search shoes, hoodies, sellers…" aria-label="Search products">
-        <button type="submit">Search</button>
-    </form>
-    <div class="hero-actions">
-        <a href="/shop" class="btn btn-outline">Browse all finds</a>
-        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','hero','','')">Sign up · ${{ site.coupon_amount }} coupon</a>
+<section class="hero-combined">
+    {% if products and hero_products %}
+    {% set col1 = hero_products[:8] %}
+    {% set col2 = hero_products[8:16] if hero_products|length > 8 else hero_products[:8] %}
+    {% set col3 = hero_products[16:24] if hero_products|length > 16 else hero_products[:8] %}
+    <div class="hero-bg-ticker">
+        {% for col in [col1, col2, col3] %}
+        <div class="hero-bg-col">
+            <div class="hero-bg-scroll">
+                {% for p in col %}<div class="hero-bg-card"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"><div class="hero-bg-card-info"><div class="hero-bg-card-name">{{ p.name }}</div><div class="hero-bg-card-price">${{ p.price }}</div></div></div>{% endfor %}
+                {% for p in col %}<div class="hero-bg-card"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"><div class="hero-bg-card-info"><div class="hero-bg-card-name">{{ p.name }}</div><div class="hero-bg-card-price">${{ p.price }}</div></div></div>{% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <p class="hero-label">Your Personal Locker</p>
+        <h1 class="hero-title">The Best<br><span class="accent">{{ site.agent_name }}</span><br>Finds</h1>
+        <p class="hero-sub">{{ site.product_count_label }} handpicked products. Lowest prices. ${{ site.coupon_amount }} in welcome coupons.</p>
+        <div class="hero-cta-row">
+            <a href="/shop" class="btn btn-outline">Browse Products</a>
+            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="hero-signup" onclick="trackClick('signup','hero','','')">Sign Up — ${{ site.coupon_amount }} Coupon</a>
+        </div>
+        <p class="hero-scroll">Scroll Down</p>
     </div>
 </section>
-
-<div class="brand-strip" aria-hidden="true">
-    <div class="brand-strip-track">
-        <span class="brand-strip-item">Curated</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Refined</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Trusted sellers</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Outfits</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Daily drops</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Lowest prices</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Curated</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Refined</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Trusted sellers</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Outfits</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Daily drops</span>
-        <span class="brand-strip-item">·</span>
-        <span class="brand-strip-item">Lowest prices</span>
-        <span class="brand-strip-item">·</span>
-    </div>
-</div>
 
 {% if conveyor %}
-<section class="conveyor-section reveal">
-    <div class="section" style="padding: 0 24px 24px;">
-        <div class="sec-header">
-            <h2 class="sec-title">Latest <span class="italic">drops</span></h2>
-            <a href="/shop" class="sec-link">View all <span class="arrow">→</span></a>
-        </div>
+<div class="conveyor-section reveal">
+    <div class="section" style="padding-bottom:16px;padding-top:0;">
+        <div class="sec-header"><h2 class="sec-title">Latest Drops</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
     </div>
     <div class="conveyor-wrap">
-        <div class="conveyor-fade-l"></div>
-        <div class="conveyor-fade-r"></div>
-        <button class="conv-btn conv-btn-l" onclick="scrollConv(-1)" aria-label="Scroll left">&#8249;</button>
-        <button class="conv-btn conv-btn-r" onclick="scrollConv(1)" aria-label="Scroll right">&#8250;</button>
+        <div class="conveyor-fade-l"></div><div class="conveyor-fade-r"></div>
+        <button class="conv-btn conv-btn-l" onclick="scrollConv(-1)">&#8249;</button>
+        <button class="conv-btn conv-btn-r" onclick="scrollConv(1)">&#8250;</button>
         <div class="conveyor-track" id="conv">
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
-                <div class="product-card-img-wrap">
-                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-                </div>
-                <div class="product-card-body">
-                    <div class="product-card-name">{{ p.name }}</div>
-                    <div class="product-card-row">
-                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                        <span class="product-card-buy">Buy →</span>
-                    </div>
-                </div>
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                <div class="product-card-img-wrap"><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
             </a>
             {% endfor %}
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}">
-                <div class="product-card-img-wrap">
-                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-                </div>
-                <div class="product-card-body">
-                    <div class="product-card-name">{{ p.name }}</div>
-                    <div class="product-card-row">
-                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                        <span class="product-card-buy">Buy →</span>
-                    </div>
-                </div>
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card">
+                <div class="product-card-img-wrap"><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
             </a>
             {% endfor %}
         </div>
     </div>
-</section>
+</div>
 {% endif %}
 
+<div class="mid-cta reveal">
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
+        <span>Sign Up to {{ site.agent_name }} — Get ${{ site.coupon_amount }} in Coupons</span>
+        <span>Lowest shipping rates guaranteed.</span>
+    </a>
+</div>
+
 {% if bundles %}
-<section class="section reveal">
-    <div class="sec-header">
-        <h2 class="sec-title">Outfit <span class="italic">bundles</span></h2>
-    </div>
+<div class="section reveal">
+    <div class="sec-header"><h2 class="sec-title">Outfit Bundles</h2></div>
     <div class="bundle-row">
         {% for b in bundles %}
         <a href="/bundle/{{ b.slug }}" class="bundle-card">
             <div class="bundle-card-imgs">
-                {% for p in b.products[:4] %}
-                <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-                {% endfor %}
+                {% for p in b.products[:4] %}<img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">{% endfor %}
             </div>
-            <div>
+            <div class="bundle-card-body">
                 <div class="bundle-card-name">{{ b.name }}</div>
                 <div class="bundle-card-row">
                     <span class="bundle-card-count">{{ b.count }} pieces</span>
@@ -353,144 +161,71 @@
         </a>
         {% endfor %}
     </div>
-</section>
+</div>
 {% endif %}
 
-<a class="mid-cta reveal" href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
-    <span class="big">${{ site.coupon_amount }} <span class="italic">in welcome coupons</span></span>
-    <span class="small">Sign up to {{ site.agent_name }} — lowest shipping rates guaranteed</span>
-</a>
+<div class="cat-tabs reveal">
+    <a href="/shop" class="cat-tab active">All</a>
+    {% for cat in categories %}
+    <a href="/shop?category={{ cat.slug }}" class="cat-tab">{{ cat.name }}</a>
+    {% endfor %}
+</div>
 
 {% if products %}
 {% set featured = products[:8] %}
-<section class="section reveal">
-    <div class="sec-header">
-        <h2 class="sec-title">Best <span class="italic">selling</span></h2>
-        <a href="/shop" class="sec-link">View all <span class="arrow">→</span></a>
-    </div>
+<div class="section reveal">
+    <div class="sec-header"><h2 class="sec-title">Best Selling</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
     <div class="product-grid">
         {% for p in featured %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap">
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-                {% if loop.index <= 3 %}
-                <span class="product-card-badge">Top {{ loop.index }}</span>
-                {% endif %}
-                {% set vstart = (loop.index0 + 1) * 2 % (products|length) %}
-                {% if products|length > vstart + 2 %}
-                <span class="variant-pill">
-                    <span class="stack">
-                        <div style="background-image: url('{{ products[vstart].image }}')"></div>
-                        <div style="background-image: url('{{ products[vstart + 1].image }}')"></div>
-                    </span>
-                    +{{ ((loop.index0 * 3 + 7) % 19) + 4 }}
-                </span>
-                {% endif %}
+                <span class="product-card-badge">Best Selling</span>
             </div>
-            <div class="product-card-body">
-                <div class="product-card-name">{{ p.name }}</div>
-                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
-                <div class="product-card-row">
-                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                    <span class="product-card-buy">Buy →</span>
-                </div>
-            </div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
         </a>
         {% endfor %}
     </div>
-</section>
+</div>
 
 {% for cat in categories %}
 {% set cp = products|selectattr('category', 'equalto', cat.slug)|list %}
-{% if cp and cat.slug != 'trending' and cat.slug != 'outfits' %}
-<hr class="divider">
-<section class="section reveal" style="padding-top: 48px; padding-bottom: 48px;">
-    <div class="sec-header">
-        <h2 class="sec-title">{{ cat.name }}</h2>
-        <a href="/shop?category={{ cat.slug }}" class="sec-link">All {{ cat.name|lower }} ({{ cp|length }}) <span class="arrow">→</span></a>
-    </div>
+{% if cp and cat.slug != 'trending' %}
+<hr class="divider" style="max-width:1200px;margin:0 auto;">
+<div class="section reveal" style="padding-top:40px;padding-bottom:40px;">
+    <div class="sec-header"><h2 class="sec-title">{{ cat.name }}</h2><a href="/shop?category={{ cat.slug }}" class="sec-link">View All ({{ cp|length }}) &rarr;</a></div>
     <div class="product-grid">
         {% for p in cp[:4] %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
-            <div class="product-card-img-wrap">
-                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-            </div>
-            <div class="product-card-body">
-                <div class="product-card-name">{{ p.name }}</div>
-                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
-                <div class="product-card-row">
-                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                    <span class="product-card-buy">Buy →</span>
-                </div>
-            </div>
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap"><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
         </a>
         {% endfor %}
     </div>
-</section>
+</div>
 {% endif %}
 {% endfor %}
 {% endif %}
 
-<hr class="divider">
+<hr class="divider" style="max-width:1200px;margin:0 auto;">
 <div class="stat-row reveal">
-    <div class="stat">
-        <div class="stat-num"><span data-count="{{ products|length if products else 100 }}" data-suffix="+">0+</span></div>
-        <div class="stat-label">Curated finds</div>
-    </div>
-    <div class="stat">
-        <div class="stat-num"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></div>
-        <div class="stat-label">In coupons</div>
-    </div>
-    <div class="stat">
-        <div class="stat-num"><span class="italic">{{ categories|length if categories else 8 }}</span></div>
-        <div class="stat-label">Categories</div>
-    </div>
+    <div class="stat"><div class="stat-num" data-count="100" data-suffix="+">0</div><div class="stat-label">Products</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">$0</div><div class="stat-label">In Coupons</div></div>
+    <div class="stat"><div class="stat-num" data-count="10">0</div><div class="stat-label">Categories</div></div>
 </div>
 
-{% if products and products|length >= 4 %}
-<section class="split-cta reveal">
-    <div class="split-cta-text">
-        <h2>Sheets of finds, <span class="italic">refined</span> by hand.</h2>
-        <p>Every piece on {{ site.name }} is hand-picked from trusted Weidian, Taobao, and 1688 sellers. No bot drops. No noise. Just curated outfits ready to ship — with the lowest {{ site.agent_name }} shipping rates and ${{ site.coupon_amount }} in welcome coupons.</p>
-        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','split-cta','','')">Sign up · ${{ site.coupon_amount }} coupon</a>
-    </div>
-    <div class="split-cta-imgs">
-        {% for p in products[:4] %}
-        <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-{% if site.discord_url %}
-<section class="discord-cta reveal">
-    <div class="discord-cta-text">
-        <h3>Join our <span class="italic">Discord</span></h3>
-        <p>Real-time drops, batch alerts, fit checks, and a community of {{ site.agent_name }} buyers. Free to join.</p>
-    </div>
-    <a href="{{ site.discord_url }}" target="_blank" rel="noopener" class="btn" onclick="trackClick('social','discord-cta','','')">Open Discord →</a>
-</section>
-{% else %}
-<section class="discord-cta reveal">
-    <div class="discord-cta-text">
-        <h3>${{ site.coupon_amount }} <span class="italic">in coupons</span></h3>
-        <p>Sign up to {{ site.agent_name }} and unlock welcome coupons + the lowest international shipping rates available.</p>
-    </div>
-    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn" onclick="trackClick('signup','discord-cta','','')">Claim coupons →</a>
-</section>
-{% endif %}
-
 <section class="cta-section reveal">
-    <p class="section-eyebrow">Limited time</p>
-    <h2>${{ site.coupon_amount }} <span class="italic">in welcome coupons</span></h2>
-    <p>Sign up to {{ site.agent_name }} through {{ site.name }} and unlock exclusive coupons plus the lowest international shipping rates.</p>
-    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','cta','','')">Claim ${{ site.coupon_amount }} coupon</a>
+    <div class="cta-glow"></div>
+    <p class="section-label" style="position:relative;">Limited Time</p>
+    <h2>${{ site.coupon_amount }} in Welcome Coupons</h2>
+    <p>Sign up to {{ site.agent_name }} and get exclusive coupons and the lowest shipping rates.</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','cta','','')">Claim Your ${{ site.coupon_amount }} Coupon</a>
 </section>
 
-<section class="seo-block reveal">
-    <h2>The {{ site.agent_name }} <span class="italic">finds sheet</span> for serious buyers</h2>
-    <p>{{ site.name }} curates {{ site.agent_name }} finds the way an editor builds a magazine: every piece picked, every seller vetted, every outfit considered. We pull from trusted Weidian, Taobao, and 1688 sellers and organize the inventory like a sheet — by category, by silhouette, by what actually goes together.</p>
-    <p>Use our free link converter to switch from any other shopping agent directly to {{ site.agent_name }} in one click. Sign up through {{ site.name }} to unlock ${{ site.coupon_amount }} in welcome coupons and the platform's lowest shipping rates.</p>
+<section class="section reveal" style="padding-top:32px;padding-bottom:48px;max-width:800px;">
+    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;">The Best {{ site.agent_name }} Spreadsheet & Finds</h2>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;">{{ site.name }} is the #1 {{ site.agent_name }} finds website with curated products from trusted Weidian, Taobao, and 1688 sellers. Whether you're looking for {{ site.agent_name }} shoes, hoodies, shirts, jackets, accessories, or tech — our spreadsheet has everything organized.</p>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;">Use our free link converter to switch from any shopping agent directly to {{ site.agent_name }}. Sign up with our exclusive link to get ${{ site.coupon_amount }} in welcome coupons.</p>
 </section>
 {% endblock %}
 
