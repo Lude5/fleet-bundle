@@ -54,14 +54,48 @@ try:
     init_db()
     check_auto_backup()
 
-    if not get_products():
-        products_file = os.path.join(os.path.dirname(__file__), 'static', 'products.json')
-        if os.path.exists(products_file):
+    # Always seed/refresh from static/products.json when its hash changes.
+    # This keeps the DB in sync with whatever was last committed without
+    # losing user-added products between identical deploys.
+    import hashlib
+    products_file = os.path.join(os.path.dirname(__file__), 'static', 'products.json')
+    if os.path.exists(products_file):
+        with open(products_file, 'rb') as _bf:
+            json_hash = hashlib.md5(_bf.read()).hexdigest()
+        marker_path = os.path.join(DATA_DIR, '.products_hash')
+        seeded_hash = ''
+        if os.path.exists(marker_path):
+            try:
+                seeded_hash = open(marker_path, 'r', encoding='utf-8').read().strip()
+            except Exception:
+                seeded_hash = ''
+        if json_hash != seeded_hash:
+            # Wipe + re-seed. INSERT OR REPLACE on its own would leave stale
+            # rows that aren't in the new json — wipe makes this idempotent.
+            try:
+                try:
+                    from .database import get_db as _get_db
+                except ImportError:
+                    from database import get_db as _get_db
+                _c = _get_db()
+                _c.execute('DELETE FROM products')
+                _c.commit()
+                _c.close()
+            except Exception as _e:
+                print(f"Wipe warning: {_e}")
             with open(products_file, 'r', encoding='utf-8') as _f:
                 _products = json.load(_f)
             add_products_bulk(_products)
-            print(f"Loaded {len(_products)} products")
+            try:
+                with open(marker_path, 'w', encoding='utf-8') as _mf:
+                    _mf.write(json_hash)
+            except Exception as _e:
+                print(f"Marker write warning: {_e}")
+            print(f"Re-seeded {len(_products)} products (hash {json_hash[:8]})")
+        else:
+            print(f"Seed up to date ({get_products() and len(get_products()) or 0} products, hash {json_hash[:8]})")
 
+    if not get_categories():
         CATS = [
             {'slug': 'trending', 'name': 'Trending', 'sort_order': 0},
             {'slug': 'shoes', 'name': 'Shoes', 'sort_order': 1},
