@@ -565,6 +565,7 @@ def api_product(pid):
     # Enrich missing fields from what we can derive:
     #  - seller: parse from the embedded seller URL host (Weidian/Taobao/1688)
     #  - batch:  pull out a [XX BATCH] tag baked into many product names
+    #  - weight: per-category estimate when no shipping weight is set
     import re
     raw_url = _unwrap_agent_url(p.get('url', ''))
     derived_seller = p.get('seller') or ''
@@ -577,7 +578,27 @@ def api_product(pid):
         m = re.search(r'\[([A-Z]{1,4})\s*BATCH\]', p.get('name', ''), re.I)
         if m:
             derived_batch = m.group(1).upper() + ' Batch'
-    derived_weight = p.get('weight') or ''
+
+    # Per-category shipping-weight estimates (grams, packed). Pulled from typical
+    # repping community benchmarks — close enough for shipping-cost ballparks.
+    WEIGHT_ESTIMATES = {
+        'shoes':       '900g',
+        'shirts':      '230g',
+        'hoodies':     '650g',
+        'pants':       '550g',
+        'jackets':     '900g',
+        'accessories': '180g',
+        'bags':        '700g',
+        'tech':        '400g',
+        'womens':      '320g',
+        'trending':    '450g',
+    }
+    derived_weight = (p.get('weight') or '').strip()
+    weight_is_estimate = False
+    if not derived_weight:
+        derived_weight = WEIGHT_ESTIMATES.get(p.get('category') or '', '450g')
+        weight_is_estimate = True
+
     derived_sales = p.get('sales') or 0
     return jsonify({
         'id': p['id'],
@@ -591,6 +612,7 @@ def api_product(pid):
         'retail_price': p.get('retail_price', ''),
         'tags': p.get('tags', ''),
         'weight': derived_weight,
+        'weight_estimate': weight_is_estimate,
         'quality': p.get('quality', ''),
         'sales': derived_sales,
         'go_url': f'/go/{pid}',

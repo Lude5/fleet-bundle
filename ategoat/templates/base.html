@@ -272,8 +272,21 @@
             transform: translateY(-1px);
         }
         .agent-picker-item .arrow { font-size: 14px; opacity: 0.6; }
-        .agent-picker-item.default { border-color: var(--accent); }
-        .agent-picker-item.default::after { content: 'Default'; font-size: 8px; padding: 2px 6px; background: var(--accent); color: #fff; border-radius: 3px; letter-spacing: 1px; margin-left: 8px; }
+        .agent-picker-item.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+        .agent-picker-item.selected::after { content: '✓'; font-size: 14px; margin-left: 10px; }
+        .agent-picker-buy-wrap { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: none; }
+        .agent-picker-buy-wrap.active { display: block; }
+        .agent-picker-buy {
+            display: block; text-align: center;
+            padding: 14px 22px;
+            background: var(--accent); color: #fff;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            border: none; border-radius: var(--radius-sm);
+            cursor: pointer; text-decoration: none;
+            transition: background 0.15s ease;
+        }
+        .agent-picker-buy:hover { background: var(--accent-hover); }
         .agent-picker-empty {
             grid-column: 1 / -1;
             text-align: center; padding: 24px;
@@ -505,7 +518,7 @@
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
-                        <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy with</a>
+                        <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy</a>
                         <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose another agent" title="Open with another agent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
                             <span>Change Agent</span>
@@ -547,7 +560,10 @@
             <div class="agent-picker-list" id="agentPickerList">
                 <div class="agent-picker-empty">Loading...</div>
             </div>
-            <p class="agent-picker-foot">All links use your saved affiliate code where supported.</p>
+            <div class="agent-picker-buy-wrap" id="agentPickerBuyWrap">
+                <a class="agent-picker-buy" id="agentPickerBuyBtn" href="#" target="_blank" rel="noopener">Buy</a>
+            </div>
+            <p class="agent-picker-foot">Pick an agent, then hit Buy.</p>
         </div>
     </div>
 
@@ -656,17 +672,22 @@
         }
 
         // ============================================================
-        // Agent picker — opens a modal listing every agent for a product.
-        // Triggered by the small ⇄ button on each product card.
+        // Agent picker — pick first, then Buy.
+        // Click an agent → it gets selected (highlighted), the Buy bar
+        // at the bottom is enabled, and if the product-detail modal is
+        // open we also wire its Buy button to the same URL.
         // ============================================================
-        var DEFAULT_AGENT = '{{ site.agent_name }}';
+        var _pickerPid = null;
         window.openAgentPicker = function(ev, pid) {
             if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+            _pickerPid = pid;
             var overlay = document.getElementById('agentPicker');
             var list = document.getElementById('agentPickerList');
             var name = document.getElementById('agentPickerName');
+            var buyWrap = document.getElementById('agentPickerBuyWrap');
             list.innerHTML = '<div class="agent-picker-empty">Loading agents...</div>';
             name.textContent = 'Choose an agent';
+            buyWrap.classList.remove('active');
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
             fetch('/api/agents/' + encodeURIComponent(pid))
@@ -679,18 +700,46 @@
                     }
                     var html = '';
                     d.agents.forEach(function(a){
-                        var isDefault = (DEFAULT_AGENT && a.name.toLowerCase() === DEFAULT_AGENT.toLowerCase());
-                        html += '<a class="agent-picker-item' + (isDefault ? ' default' : '') +
-                                '" href="' + a.url + '" target="_blank" rel="noopener"' +
-                                ' onclick="trackClick(\'affiliate\',\'agent_pick_' + a.key + '\',\'' + pid + '\',\'\',\'\')">' +
-                                '<span>' + a.name + '</span>' +
-                                '<span class="arrow">→</span></a>';
+                        html += '<button type="button" class="agent-picker-item"'
+                             +  ' data-key="' + a.key + '"'
+                             +  ' data-name="' + a.name.replace(/"/g, '&quot;') + '"'
+                             +  ' data-url="' + a.url.replace(/"/g, '&quot;') + '"'
+                             +  ' onclick="selectAgent(this)">'
+                             +  '<span>' + a.name + '</span>'
+                             +  '</button>';
                     });
                     list.innerHTML = html;
                 })
                 .catch(function(){
                     list.innerHTML = '<div class="agent-picker-empty">Failed to load agents.</div>';
                 });
+        };
+        window.selectAgent = function(btn) {
+            var key = btn.dataset.key;
+            var name = btn.dataset.name;
+            var url = btn.dataset.url;
+            // Mark selected — clear others
+            var items = document.querySelectorAll('#agentPickerList .agent-picker-item');
+            items.forEach(function(i){ i.classList.remove('selected'); });
+            btn.classList.add('selected');
+            // Enable the picker's Buy bar
+            var buyWrap = document.getElementById('agentPickerBuyWrap');
+            var buyBtn = document.getElementById('agentPickerBuyBtn');
+            buyBtn.href = url;
+            buyBtn.textContent = 'Buy on ' + name;
+            buyBtn.onclick = function() {
+                trackClick('affiliate','agent_pick_' + key, _pickerPid || '', '', '');
+                // Let the link follow through to the agent. Close picker after a tick.
+                setTimeout(closeAgentPicker, 100);
+            };
+            buyWrap.classList.add('active');
+            // If the product-detail modal is open, also re-wire its Buy button
+            // so the user can close the picker and click Buy there.
+            var pdBuy = document.getElementById('pdBuyBtn');
+            if (pdBuy && document.getElementById('pdModal').classList.contains('active')) {
+                pdBuy.href = url;
+                pdBuy.textContent = 'Buy on ' + name;
+            }
         };
         window.closeAgentPicker = function() {
             document.getElementById('agentPicker').classList.remove('active');
@@ -741,7 +790,9 @@
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
                     document.getElementById('pdSeller').textContent = data.seller || 'Unknown';
                     document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
-                    document.getElementById('pdWeight').textContent = data.weight || 'See seller';
+                    var weightStr = data.weight || 'See seller';
+                    if (data.weight_estimate) weightStr = '~' + weightStr + ' (est.)';
+                    document.getElementById('pdWeight').textContent = weightStr;
                     document.getElementById('pdSales').textContent = (data.sales && data.sales > 0) ? data.sales : 'Trending';
 
                     // Remember pid so the change-agent button on this modal knows
@@ -750,7 +801,8 @@
 
                     var buy = document.getElementById('pdBuyBtn');
                     buy.href = data.go_url;
-                    buy.textContent = 'Buy with';
+                    buy.textContent = 'Buy';
+                    buy.dataset.defaultHref = data.go_url; // remember default in case user picks an agent then resets
                     buy.onclick = function() { trackClick('affiliate','buy', data.id, data.category, data.name); };
 
                     // Badges

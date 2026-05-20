@@ -59,16 +59,11 @@
     transition: border-color 0.15s ease;
 }
 .agent-row:hover { border-color: var(--border); }
-.agent-row.default { border-color: var(--accent); }
+.agent-row.selected { border-color: var(--accent); }
 .agent-row-name {
     font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     color: var(--text); text-transform: uppercase; letter-spacing: 1.5px;
     display: inline-flex; align-items: center; gap: 8px;
-}
-.agent-row.default .agent-row-name::after {
-    content: 'Default'; font-size: 8px; padding: 2px 6px;
-    background: var(--accent); color: #fff; border-radius: 3px;
-    letter-spacing: 1px; font-weight: 700;
 }
 .agent-row-copy {
     padding: 8px 14px; background: var(--surface-2); color: var(--text-muted);
@@ -176,7 +171,7 @@ function convertLink() {
             var html = '';
             ordered.forEach(function(a, i){
                 var isSelected = (a.key === selectedKey);
-                html += '<div class="agent-row' + (isSelected ? ' default' : '') + '">'
+                html += '<div class="agent-row' + (isSelected ? ' selected' : '') + '">'
                      +   '<span class="agent-row-name">' + a.name + '</span>'
                      +   '<button type="button" class="agent-row-copy" data-url="' + a.url.replace(/"/g, '&quot;') + '" onclick="copyAgentUrl(this)">Copy</button>'
                      +   '<a class="agent-row-open" href="' + a.url + '" target="_blank" rel="noopener" '
