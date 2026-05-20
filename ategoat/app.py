@@ -355,13 +355,27 @@ def affiliate_redirect(product_id):
     except Exception:
         pass
     url = product.get('url', '')
-    if url:
-        from urllib.parse import quote
+    if not url:
+        return redirect(url_for('shop'))
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote
+    agent_domain = (SITE_CONFIG.get('agent_domain') or '').lower()
+    parsed = urlparse(url)
+    target_host = (parsed.netloc or '').lower()
+    affcode = SITE_CONFIG.get('affiliate_code') or ''
+    # If the stored URL is already an agent URL (e.g. the spreadsheet shipped
+    # kakobuy.com/item/details?url=...), just swap in our own affcode —
+    # don't re-wrap it (which used to send KakoBuy a self-referential nested URL).
+    if agent_domain and agent_domain in target_host:
+        q = parse_qsl(parsed.query, keep_blank_values=True)
+        if affcode:
+            q = [(k, v) for k, v in q if k != 'affcode']
+            q.append(('affcode', affcode))
+        agent_url = urlunparse(parsed._replace(query=urlencode(q)))
+    else:
         agent_url = f"{SITE_CONFIG['agent_product_url']}?url={quote(url)}"
-        if SITE_CONFIG['affiliate_code']:
-            agent_url += f"&affcode={SITE_CONFIG['affiliate_code']}"
-        return redirect(agent_url)
-    return redirect(url_for('shop'))
+        if affcode:
+            agent_url += f"&affcode={affcode}"
+    return redirect(agent_url)
 
 
 # --- API ---
