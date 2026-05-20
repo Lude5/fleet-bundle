@@ -889,7 +889,7 @@
                     buy.textContent = 'Buy';
                     delete buy.dataset.agentKey;
                     delete buy.dataset.agentName;
-                    buy.dataset.rawUrl = data.url || '';
+                    buy.dataset.rawUrl = data.raw_url || data.agent_url || '';
                     buy.dataset.pid = data.id;
                     // Reset the Choose-Agent button label and clear any prior pickprompt.
                     var lbl = document.getElementById('pdAgentBtnLabel');

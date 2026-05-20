@@ -670,6 +670,8 @@ def api_product(pid):
         'quality': p.get('quality', ''),
         'sales': derived_sales,
         'go_url': f'/go/{pid}',
+        'raw_url': raw_url,
+        'agent_url': p.get('url', ''),
         'variants': [
             {
                 'id': v['id'],
