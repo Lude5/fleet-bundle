@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ site.name }} — Best {{ site.agent_name }} Products, Spreadsheet Finds & ${{ site.coupon_amount }} Coupons{% endblock %}
+{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}
 
 {% block extra_css %}
 .hero-combined { position: relative; overflow: hidden; height: 100vh; max-height: 1100px; min-height: 650px; }
@@ -97,12 +97,12 @@
     {% endif %}
     <div class="hero-overlay"></div>
     <div class="hero-content">
-        <p class="hero-label">Your Personal Locker</p>
-        <h1 class="hero-title">The Best<br><span class="accent">{{ site.agent_name }}</span><br>Finds</h1>
-        <p class="hero-sub">{{ site.product_count_label }} handpicked products. Lowest prices. ${{ site.coupon_amount }} in welcome coupons.</p>
+        <p class="hero-label">The Open Catalogue</p>
+        <h1 class="hero-title">Every<br><span class="accent">Find.</span><br>Anywhere.</h1>
+        <p class="hero-sub">{{ site.product_count_label }} curated products. Open every listing with the agent you trust — KakoBuy, JoyaGoo, CNFans, Sugargoo, Oopbuy, AllChinaBuy, Mulebuy, Hoobuy, or ACBuy.</p>
         <div class="hero-cta-row">
-            <a href="/shop" class="btn btn-outline">Browse Products</a>
-            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="hero-signup" onclick="trackClick('signup','hero','','')">Sign Up — ${{ site.coupon_amount }} Coupon</a>
+            <a href="/shop" class="btn btn-outline">Browse Catalogue</a>
+            <a href="/link-converter" class="hero-signup" onclick="trackClick('tool','hero_converter','','')">Switch Any Agent →</a>
         </div>
         <p class="hero-scroll">Scroll Down</p>
     </div>
@@ -121,13 +121,13 @@
             {% for p in conveyor %}
             <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
             </a>
             {% endfor %}
             {% for p in conveyor %}
             <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
             </a>
             {% endfor %}
         </div>
@@ -137,7 +137,7 @@
 
 <div class="mid-cta reveal">
     <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
-        <span>Sign Up to {{ site.agent_name }} — Get ${{ site.coupon_amount }} in Coupons</span>
+        <span>Sign Up to Any Agent — Get ${{ site.coupon_amount }}+ in Welcome Credit</span>
         <span>Lowest shipping rates guaranteed.</span>
     </a>
 </div>
@@ -182,7 +182,7 @@
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 <span class="product-card-badge">Best Selling</span>
             </div>
-            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
         </a>
         {% endfor %}
     </div>
@@ -198,7 +198,7 @@
         {% for p in cp[:4] %}
         <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy on {{ site.agent_name }}</span></div></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
         </a>
         {% endfor %}
     </div>
@@ -218,14 +218,14 @@
     <div class="cta-glow"></div>
     <p class="section-label" style="position:relative;">Limited Time</p>
     <h2>${{ site.coupon_amount }} in Welcome Coupons</h2>
-    <p>Sign up to {{ site.agent_name }} and get exclusive coupons and the lowest shipping rates.</p>
+    <p>Most agents offer a welcome credit when you sign up via a referral link. Use any agent — choose the one with the best rates.</p>
     <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','cta','','')">Claim Your ${{ site.coupon_amount }} Coupon</a>
 </section>
 
 <section class="section reveal" style="padding-top:32px;padding-bottom:48px;max-width:800px;">
-    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;">The Best {{ site.agent_name }} Spreadsheet & Finds</h2>
-    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;">{{ site.name }} is the #1 {{ site.agent_name }} finds website with curated products from trusted Weidian, Taobao, and 1688 sellers. Whether you're looking for {{ site.agent_name }} shoes, hoodies, shirts, jackets, accessories, or tech — our spreadsheet has everything organized.</p>
-    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;">Use our free link converter to switch from any shopping agent directly to {{ site.agent_name }}. Sign up with our exclusive link to get ${{ site.coupon_amount }} in welcome coupons.</p>
+    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;">The Open Catalogue — Any Agent, Any Time</h2>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;">{{ site.name }} is an agent-neutral catalogue of curated finds from trusted Weidian, Taobao, and 1688 sellers. Every listing — shoes, hoodies, shirts, jackets, accessories, tech, womens — can be opened on the shopping agent of your choice: KakoBuy, JoyaGoo, CNFans, Sugargoo, Oopbuy, AllChinaBuy, Mulebuy, Hoobuy, or ACBuy.</p>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;">Use our free link converter to switch any shopping-agent product link to the agent you actually use. No lock-in, no preferred partner — pick whichever agent has the best rates or shipping for you today.</p>
 </section>
 {% endblock %}
 

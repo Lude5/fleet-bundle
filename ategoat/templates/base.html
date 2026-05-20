@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>{% block title %}{{ site.name }} — Best {{ site.agent_name }} Finds & ${{ site.coupon_amount }} Coupons{% endblock %}</title>
-    <meta name="description" content="{{ site.name }} — Your #1 source for {{ site.agent_name }} products, spreadsheet finds, and ${{ site.coupon_amount }} in welcome coupons.">
-    <meta name="keywords" content="{{ site.agent_name|lower }}, {{ site.name|lower }}, {{ site.agent_name|lower }} products, {{ site.agent_name|lower }} spreadsheet, {{ site.agent_name|lower }} finds, {{ site.agent_name|lower }} coupons, rep finds, replica clothing, weidian finds, taobao finds">
+    <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
+    <meta name="description" content="{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, JoyaGoo, CNFans, Sugargoo, Oopbuy, AllChinaBuy, Mulebuy, Hoobuy, or ACBuy.">
+    <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, kakobuy, joyagoo, cnfans, sugargoo, oopbuy, allchinabuy, mulebuy, hoobuy, acbuy">
     <link rel="canonical" href="https://{{ site.domain }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ site.name }}">
-    <meta property="og:title" content="{{ site.name }} — Best {{ site.agent_name }} Finds & ${{ site.coupon_amount }} Coupons">
-    <meta property="og:description" content="Browse curated {{ site.agent_name }} products with the lowest prices and ${{ site.coupon_amount }} in welcome coupons.">
+    <meta property="og:title" content="{{ site.name }} — Curated Finds, Open on Any Agent">
+    <meta property="og:description" content="Curated finds, agent-neutral. Open every listing with the shopping agent you trust.">
     <meta property="og:url" content="https://{{ site.domain }}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -487,7 +487,7 @@
         <div class="footer-top">
             <div>
                 <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--accent);">{{ site.name_part2 }}</span></div>
-                <p class="footer-desc">Your source for the best {{ site.agent_name }} finds. Curated daily.</p>
+                <p class="footer-desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
             </div>
             <div class="footer-col">
                 <h4>Categories</h4>
@@ -572,7 +572,7 @@
             <button class="popup-close" onclick="closePopup()">&times;</button>
             <p class="popup-label">Exclusive Offer</p>
             <h2>${{ site.coupon_amount }} IN COUPONS</h2>
-            <p>Sign up to {{ site.agent_name }} today and unlock up to ${{ site.coupon_amount }} in welcome coupons.</p>
+            <p>Most shopping agents give first-time users up to ${{ site.coupon_amount }} in welcome credit. Pick the one with the best rates for you.</p>
             <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','popup','','')">Claim ${{ site.coupon_amount }} Coupon</a>
             <p class="popup-dismiss" onclick="closePopup()">Maybe later</p>
         </div>
@@ -722,24 +722,42 @@
             var items = document.querySelectorAll('#agentPickerList .agent-picker-item');
             items.forEach(function(i){ i.classList.remove('selected'); });
             btn.classList.add('selected');
-            // Enable the picker's Buy bar
+            var pdModal = document.getElementById('pdModal');
+            var modalOpen = pdModal && pdModal.classList.contains('active');
             var buyWrap = document.getElementById('agentPickerBuyWrap');
-            var buyBtn = document.getElementById('agentPickerBuyBtn');
-            buyBtn.href = url;
-            buyBtn.textContent = 'Buy on ' + name;
-            buyBtn.onclick = function() {
-                trackClick('affiliate','agent_pick_' + key, _pickerPid || '', '', '');
-                // Let the link follow through to the agent. Close picker after a tick.
-                setTimeout(closeAgentPicker, 100);
-            };
-            buyWrap.classList.add('active');
-            // If the product-detail modal is open, also re-wire its Buy button
-            // so the user can close the picker and click Buy there.
-            var pdBuy = document.getElementById('pdBuyBtn');
-            if (pdBuy && document.getElementById('pdModal').classList.contains('active')) {
+            var confirmBtn = document.getElementById('agentPickerBuyBtn');
+            if (modalOpen) {
+                // Confirm flow — Confirm just locks in the selection + closes
+                // the picker. The product-modal's Buy button is what fires
+                // the actual outbound click.
+                confirmBtn.textContent = 'Confirm';
+                confirmBtn.removeAttribute('href');
+                confirmBtn.removeAttribute('target');
+                confirmBtn.onclick = function(ev) {
+                    if (ev) { ev.preventDefault(); }
+                    trackClick('select','agent_pick_' + key, _pickerPid || '', '', '');
+                    closeAgentPicker();
+                };
+                var pdBuy = document.getElementById('pdBuyBtn');
                 pdBuy.href = url;
-                pdBuy.textContent = 'Buy on ' + name;
+                pdBuy.target = '_blank';
+                pdBuy.rel = 'noopener';
+                pdBuy.textContent = 'Buy';
+                pdBuy.dataset.agentKey = key;
+                pdBuy.dataset.agentName = name;
+            } else {
+                // No modal context (picker opened from a card) — the bottom
+                // bar acts as the Buy button itself.
+                confirmBtn.textContent = 'Buy on ' + name;
+                confirmBtn.href = url;
+                confirmBtn.target = '_blank';
+                confirmBtn.rel = 'noopener';
+                confirmBtn.onclick = function() {
+                    trackClick('affiliate','agent_pick_' + key, _pickerPid || '', '', '');
+                    setTimeout(closeAgentPicker, 100);
+                };
             }
+            buyWrap.classList.add('active');
         };
         window.closeAgentPicker = function() {
             document.getElementById('agentPicker').classList.remove('active');
