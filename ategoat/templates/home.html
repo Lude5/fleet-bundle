@@ -28,7 +28,96 @@
 .hero-cta-row { display: flex; gap: 12px; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; justify-content: center; }
 .hero-signup { padding: 16px 32px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: var(--radius-sm); transition: all 0.2s; text-decoration: none; }
 .hero-signup:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); }
-.hero-scroll { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 48px; animation: fadeUp 0.5s ease 0.5s both; }
+
+/* Hero search */
+.hero-search {
+    position: relative; display: flex; align-items: center; gap: 0;
+    width: 100%; max-width: 540px; margin: 0 auto;
+    background: rgba(20,20,20,0.85); backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px; padding: 6px 6px 6px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    animation: fadeUp 0.5s ease 0.4s both;
+}
+.hero-search:focus-within { border-color: var(--accent); box-shadow: 0 12px 32px var(--accent-dim); }
+.hero-search-icon { color: var(--text-muted); flex-shrink: 0; }
+.hero-search input {
+    flex: 1; min-width: 0;
+    padding: 14px 14px; background: transparent; border: none; outline: none;
+    color: var(--text);
+    font-family: var(--font-body); font-size: 14px;
+}
+.hero-search input::placeholder { color: var(--text-muted); }
+.hero-search-go {
+    padding: 12px 24px; background: var(--accent); color: #fff;
+    border: none; border-radius: 999px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    transition: background 0.15s ease; flex-shrink: 0;
+}
+.hero-search-go:hover { background: var(--accent-hover); }
+.hero-search-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+    max-height: 60vh; overflow-y: auto;
+    z-index: 50; text-align: left;
+}
+.hero-search-dropdown.active { display: block; }
+.hero-search-suggestion {
+    display: grid; grid-template-columns: 48px 1fr auto; gap: 12px;
+    padding: 10px 14px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+    color: inherit; text-decoration: none;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+.hero-search-suggestion:last-child { border-bottom: none; }
+.hero-search-suggestion:hover, .hero-search-suggestion.active { background: var(--surface-2); }
+.hero-search-suggestion img {
+    width: 48px; height: 48px; object-fit: cover; border-radius: 8px;
+    background: var(--surface-2);
+}
+.hero-search-sug-text { min-width: 0; }
+.hero-search-sug-name {
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-search-sug-cat {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-top: 2px;
+}
+.hero-search-sug-price {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--accent);
+}
+.hero-search-empty {
+    padding: 24px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted);
+    text-align: center; text-transform: uppercase; letter-spacing: 2px;
+}
+.hero-search-allbtn {
+    display: block; text-align: center;
+    padding: 12px 14px;
+    background: var(--accent-dim); color: var(--accent);
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    border-top: 1px solid var(--border-subtle);
+    text-decoration: none;
+}
+.hero-search-allbtn:hover { background: var(--accent); color: #fff; }
+.hero-browse-btn {
+    margin: 18px auto 0;
+    display: inline-flex;
+    animation: fadeUp 0.5s ease 0.5s both;
+}
+.hero-scroll { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 36px; animation: fadeUp 0.5s ease 0.6s both; }
 
 .conveyor-section { padding: 48px 0; }
 .conveyor-wrap { overflow: hidden; position: relative; }
@@ -100,10 +189,15 @@
         <p class="hero-label">The Open Catalogue</p>
         <h1 class="hero-title">Every<br><span class="accent">Find.</span><br>Anywhere.</h1>
         <p class="hero-sub">{{ site.product_count_label }} curated products. Open every listing with the agent you trust — KakoBuy, JoyaGoo, CNFans, Sugargoo, Oopbuy, AllChinaBuy, Mulebuy, Hoobuy, or ACBuy.</p>
-        <div class="hero-cta-row">
-            <a href="/shop" class="btn btn-outline">Browse Catalogue</a>
-            <a href="/link-converter" class="hero-signup" onclick="trackClick('tool','hero_converter','','')">Switch Any Agent →</a>
-        </div>
+        <form class="hero-search" id="heroSearchForm" action="/shop" method="get" role="search" autocomplete="off" onsubmit="trackClick('search','hero_submit','','','')">
+            <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" name="q" id="heroSearch" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off">
+            <button type="submit" class="hero-search-go">Search</button>
+            <div class="hero-search-dropdown" id="heroSearchDropdown" role="listbox"></div>
+        </form>
+        <a href="/shop" class="btn btn-outline hero-browse-btn">Browse Catalogue</a>
         <p class="hero-scroll">Scroll Down</p>
     </div>
 </section>
@@ -240,4 +334,88 @@ function scrollConv(dir) {
     if (target >= h) target -= h;
     convEl._convPos.target = target;
 }
+
+// ============================================================
+// Hero search — debounced live autocomplete from /api/search
+// ============================================================
+(function() {
+    var input = document.getElementById('heroSearch');
+    var dd = document.getElementById('heroSearchDropdown');
+    var form = document.getElementById('heroSearchForm');
+    if (!input || !dd || !form) return;
+    var timer = null;
+    var lastQuery = '';
+    var activeIdx = -1;
+    var results = [];
+
+    function close() { dd.classList.remove('active'); dd.innerHTML = ''; activeIdx = -1; }
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+    }
+    function render() {
+        if (!results.length) {
+            dd.innerHTML = '<div class="hero-search-empty">No matches</div>';
+            dd.classList.add('active');
+            return;
+        }
+        var q = encodeURIComponent(input.value.trim());
+        var html = results.map(function(r, i){
+            return '<a class="hero-search-suggestion' + (i === activeIdx ? ' active' : '') + '"'
+                 + ' href="/shop?q=' + q + '" data-pid="' + r.id + '" onclick="window.location.href=\'/shop?q=' + q + '\';return false;">'
+                 + (r.image ? '<img src="' + escapeHtml(r.image) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="" />')
+                 + '<div class="hero-search-sug-text">'
+                 +   '<div class="hero-search-sug-name">' + escapeHtml(r.name) + '</div>'
+                 +   '<div class="hero-search-sug-cat">' + escapeHtml(r.category || '') + '</div>'
+                 + '</div>'
+                 + '<div class="hero-search-sug-price">$' + escapeHtml(r.price) + '</div>'
+                 + '</a>';
+        }).join('');
+        html += '<a class="hero-search-allbtn" href="/shop?q=' + q + '">See all results →</a>';
+        dd.innerHTML = html;
+        dd.classList.add('active');
+        // Wire clicks to navigate properly (target /shop?q=…). Suggestion items
+        // could be enhanced to open the product modal directly, but for the
+        // hero we keep it simple — always send the user to the shop.
+    }
+    function runSearch(q) {
+        if (q.length < 2) { close(); return; }
+        if (q === lastQuery) return;
+        lastQuery = q;
+        fetch('/api/search?q=' + encodeURIComponent(q) + '&limit=8')
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                if ((input.value || '').trim() !== q) return; // stale
+                results = d.results || [];
+                activeIdx = -1;
+                render();
+            })
+            .catch(close);
+    }
+    input.addEventListener('input', function(){
+        clearTimeout(timer);
+        var v = input.value.trim();
+        if (!v) { close(); return; }
+        timer = setTimeout(function(){ runSearch(v); }, 180);
+    });
+    input.addEventListener('focus', function(){
+        if (results.length && input.value.trim()) dd.classList.add('active');
+    });
+    input.addEventListener('keydown', function(e){
+        if (!dd.classList.contains('active') || !results.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, results.length - 1);
+            render();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, -1);
+            render();
+        } else if (e.key === 'Escape') {
+            close();
+        }
+    });
+    document.addEventListener('click', function(e){
+        if (!form.contains(e.target)) close();
+    });
+})();
 {% endblock %}

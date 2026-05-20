@@ -505,6 +505,27 @@ def affiliate_redirect(product_id):
 
 # --- API ---
 
+@app.route('/api/search')
+def api_search():
+    """Live search for the hero autocomplete. Returns lightweight rows."""
+    q = (request.args.get('q') or '').strip()
+    limit = min(int(request.args.get('limit', 8) or 8), 20)
+    if len(q) < 2:
+        return jsonify({'results': []})
+    rows = search_products(q)[:limit]
+    out = []
+    for r in rows:
+        out.append({
+            'id': r.get('id'),
+            'name': r.get('name'),
+            'price': r.get('price'),
+            'image': r.get('image'),
+            'category': r.get('category'),
+            'seller': r.get('seller', ''),
+        })
+    return jsonify({'q': q, 'count': len(out), 'results': out})
+
+
 @app.route('/api/qc/<pid>')
 def api_qc(pid):
     """Best-effort QC-photo fetch from ategoat.com.
