@@ -505,8 +505,8 @@
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
                         <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy on {{ site.agent_name }}</a>
-                        <button type="button" class="pd-copy" id="pdCopyBtn" onclick="copyProductLink()" aria-label="Copy link">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose another agent" title="Open with another agent">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
                         </button>
                     </div>
                 </div>
@@ -737,10 +737,14 @@
                     var priceEl = document.getElementById('pdPrice');
                     priceEl.textContent = '$' + data.price;
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
-                    document.getElementById('pdSeller').textContent = data.seller || '—';
-                    document.getElementById('pdBatch').textContent = data.batch || '—';
-                    document.getElementById('pdWeight').textContent = data.weight || '—';
-                    document.getElementById('pdSales').textContent = data.sales ? data.sales : '—';
+                    document.getElementById('pdSeller').textContent = data.seller || 'Unknown';
+                    document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
+                    document.getElementById('pdWeight').textContent = data.weight || 'See seller';
+                    document.getElementById('pdSales').textContent = (data.sales && data.sales > 0) ? data.sales : 'Trending';
+
+                    // Remember pid so the change-agent button on this modal knows
+                    // which product to look up.
+                    document.getElementById('pdModal').dataset.pid = data.id;
 
                     var buy = document.getElementById('pdBuyBtn');
                     buy.href = data.go_url;

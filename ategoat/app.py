@@ -562,6 +562,23 @@ def api_product(pid):
             qc_photos = json.loads(p['qc_photos'])
         except (ValueError, TypeError):
             qc_photos = []
+    # Enrich missing fields from what we can derive:
+    #  - seller: parse from the embedded seller URL host (Weidian/Taobao/1688)
+    #  - batch:  pull out a [XX BATCH] tag baked into many product names
+    import re
+    raw_url = _unwrap_agent_url(p.get('url', ''))
+    derived_seller = p.get('seller') or ''
+    if not derived_seller and raw_url:
+        if 'weidian.com' in raw_url.lower(): derived_seller = 'Weidian'
+        elif 'taobao.com' in raw_url.lower() or 'tmall.com' in raw_url.lower(): derived_seller = 'Taobao'
+        elif '1688.com' in raw_url.lower(): derived_seller = '1688'
+    derived_batch = p.get('batch') or ''
+    if not derived_batch:
+        m = re.search(r'\[([A-Z]{1,4})\s*BATCH\]', p.get('name', ''), re.I)
+        if m:
+            derived_batch = m.group(1).upper() + ' Batch'
+    derived_weight = p.get('weight') or ''
+    derived_sales = p.get('sales') or 0
     return jsonify({
         'id': p['id'],
         'name': p['name'],
@@ -569,13 +586,13 @@ def api_product(pid):
         'price_numeric': p.get('price_numeric', 0),
         'image': p['image'],
         'category': p.get('category', ''),
-        'seller': p.get('seller', ''),
-        'batch': p.get('batch', ''),
+        'seller': derived_seller,
+        'batch': derived_batch,
         'retail_price': p.get('retail_price', ''),
         'tags': p.get('tags', ''),
-        'weight': p.get('weight', ''),
+        'weight': derived_weight,
         'quality': p.get('quality', ''),
-        'sales': p.get('sales', 0),
+        'sales': derived_sales,
         'go_url': f'/go/{pid}',
         'variants': [
             {
