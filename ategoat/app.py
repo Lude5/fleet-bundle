@@ -638,16 +638,42 @@ def api_product(pid):
         except (ValueError, TypeError):
             qc_photos = []
     # Enrich missing fields from what we can derive:
-    #  - seller: parse from the embedded seller URL host (Weidian/Taobao/1688)
+    #  - seller: a real Weidian shop ID when we can dig it out of the image
+    #    URL (geilicdn embeds it as pcitem<shopId>-...). The catch-all is
+    #    the marketplace name (Weidian / Taobao / 1688) when we can't pin
+    #    a specific shop.
     #  - batch:  pull out a [XX BATCH] tag baked into many product names
     #  - weight: per-category estimate when no shipping weight is set
     import re
     raw_url = _unwrap_agent_url(p.get('url', ''))
+    img_url = p.get('image', '') or ''
+    # Try to extract a Weidian shop ID. Geilicdn images encode it as the
+    # number after one of several known prefixes (pcitem / open / item /
+    # pccover), e.g. pcitem1809160355-..., open1807578469-1234478995-...
+    shop_id = None
+    sm = re.search(r'geilicdn\.com/(?:pcitem|open|pccover|item|si)(\d{6,})', img_url)
+    if sm:
+        shop_id = sm.group(1)
+    # The shop subdomain pattern shopNNN.v.weidian.com is more reliable when
+    # the saved URL exposes it.
+    if not shop_id:
+        sm2 = re.search(r'shop(\d+)\.v\.weidian', raw_url)
+        if sm2:
+            shop_id = sm2.group(1)
+
     derived_seller = p.get('seller') or ''
-    if not derived_seller and raw_url:
-        if 'weidian.com' in raw_url.lower(): derived_seller = 'Weidian'
-        elif 'taobao.com' in raw_url.lower() or 'tmall.com' in raw_url.lower(): derived_seller = 'Taobao'
-        elif '1688.com' in raw_url.lower(): derived_seller = '1688'
+    seller_url = ''
+    marketplace = ''
+    if 'weidian.com' in raw_url.lower(): marketplace = 'Weidian'
+    elif 'taobao.com' in raw_url.lower() or 'tmall.com' in raw_url.lower(): marketplace = 'Taobao'
+    elif '1688.com' in raw_url.lower(): marketplace = '1688'
+
+    if not derived_seller:
+        if shop_id and marketplace == 'Weidian':
+            derived_seller = f'Weidian shop #{shop_id}'
+            seller_url = f'https://shop{shop_id}.v.weidian.com/'
+        elif marketplace:
+            derived_seller = f'{marketplace} marketplace'
     derived_batch = p.get('batch') or ''
     if not derived_batch:
         m = re.search(r'\[([A-Z]{1,4})\s*BATCH\]', p.get('name', ''), re.I)
@@ -683,6 +709,8 @@ def api_product(pid):
         'image': p['image'],
         'category': p.get('category', ''),
         'seller': derived_seller,
+        'seller_url': seller_url,
+        'marketplace': marketplace,
         'batch': derived_batch,
         'retail_price': p.get('retail_price', ''),
         'tags': p.get('tags', ''),

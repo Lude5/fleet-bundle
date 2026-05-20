@@ -932,7 +932,12 @@
                     var priceEl = document.getElementById('pdPrice');
                     priceEl.textContent = '$' + data.price;
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
-                    document.getElementById('pdSeller').textContent = data.seller || 'Unknown';
+                    var sellerEl = document.getElementById('pdSeller');
+                    if (data.seller_url) {
+                        sellerEl.innerHTML = '<a href="' + data.seller_url + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">' + (data.seller || 'Unknown') + '</a>';
+                    } else {
+                        sellerEl.textContent = data.seller || 'Unknown';
+                    }
                     document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
                     document.getElementById('pdWeight').textContent = data.weight || '—';
                     var salesCell = document.getElementById('pdSales');
