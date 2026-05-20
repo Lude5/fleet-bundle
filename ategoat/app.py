@@ -115,6 +115,131 @@ except Exception as e:
     print(f"DB init warning: {e}")
 
 
+# ============================================================
+# Shopping agents — generate per-agent buy URLs for any product
+# ============================================================
+def _parse_item_url(url):
+    """Return (platform, item_id) for a raw seller URL, or (None, None)."""
+    import re
+    if not url:
+        return (None, None)
+    m = re.search(r'weidian\.com/item\.html\?[^"\s]*itemID=(\d+)', url, re.I)
+    if m: return ('weidian', m.group(1))
+    m = re.search(r'taobao\.com/item\.htm\?[^"\s]*id=(\d+)', url, re.I)
+    if m: return ('taobao', m.group(1))
+    m = re.search(r'1688\.com/offer/(\d+)\.html', url, re.I)
+    if m: return ('1688', m.group(1))
+    return (None, None)
+
+
+def _unwrap_agent_url(url):
+    """If url is an agent wrapper (kakobuy?url=..., joyagoo?url=..., etc.)
+    return the inner seller URL, else return as-is."""
+    from urllib.parse import urlparse, parse_qs, unquote
+    if not url:
+        return ''
+    try:
+        p = urlparse(url)
+        qs = parse_qs(p.query)
+        for key in ('url', 'productUrl', 'product_url'):
+            if key in qs and qs[key]:
+                return unquote(qs[key][0])
+    except Exception:
+        pass
+    return url
+
+
+# Each agent has a builder function (raw_url, item_id, platform, affcode) -> url
+# Builders return None when they can't construct a URL (e.g. agents that need
+# an item_id we couldn't parse).
+def _b_kakobuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.kakobuy.com/item/details?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_joyagoo(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.joyagoo.com/index/item/index.html?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_sugargoo(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.sugargoo.com/index/item/index.html?url={quote(url, safe="")}'
+    if code: out += f'&shareCode={code}'
+    return out
+
+def _b_allchinabuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.allchinabuy.com/en/page/buy/?from=search-input&url={quote(url, safe="")}'
+    if code: out += f'&partnercode={code}'
+    return out
+
+def _b_cnfans(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://cnfans.com/product?shop_type={platform}&id={item_id}'
+    if code: out += f'&ref={code}'
+    return out
+
+def _b_mulebuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://mulebuy.com/product/?shop_type={platform}&id={item_id}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_hoobuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    plat_map = {'weidian': '0', 'taobao': '1', '1688': '2'}
+    plat_num = plat_map.get(platform)
+    if plat_num is None: return None
+    out = f'https://hoobuy.com/product/{plat_num}/{item_id}'
+    if code: out += f'?utm_source=share&utm_medium={code}'
+    return out
+
+def _b_oopbuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://oopbuy.com/product/{platform}/{item_id}'
+    if code: out += f'?inviteCode={code}'
+    return out
+
+def _b_acbuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://acbuy.com/product?source={platform}&id={item_id}'
+    if code: out += f'&u={code}'
+    return out
+
+AGENTS = [
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo},
+    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy},
+    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy},
+    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy},
+]
+
+
+def _agents_for_url(seller_url, affcode=''):
+    """Build a list of {key, name, url} agent options for a raw seller URL."""
+    platform, item_id = _parse_item_url(seller_url)
+    out = []
+    for a in AGENTS:
+        try:
+            built = a['build'](seller_url, item_id, platform, affcode)
+        except Exception:
+            built = None
+        if built:
+            out.append({'key': a['key'], 'name': a['name'], 'url': built})
+    return out
+
+
 def is_admin():
     return session.get('admin_logged_in', False)
 
@@ -379,6 +504,44 @@ def affiliate_redirect(product_id):
 
 
 # --- API ---
+
+@app.route('/api/agents/<pid>')
+def api_agents(pid):
+    """Return per-agent buy URLs for a single product (used by card picker)."""
+    p = get_product(pid)
+    if not p:
+        return jsonify({'error': 'not found'}), 404
+    raw = _unwrap_agent_url(p.get('url', ''))
+    affcode = SITE_CONFIG.get('affiliate_code', '')
+    agents = _agents_for_url(raw, affcode)
+    platform, item_id = _parse_item_url(raw)
+    return jsonify({
+        'product_id': pid,
+        'product_name': p.get('name', ''),
+        'platform': platform,
+        'item_id': item_id,
+        'default_agent': SITE_CONFIG.get('agent_name', ''),
+        'agents': agents,
+    })
+
+
+@app.route('/api/agents/from-url')
+def api_agents_from_url():
+    """Build agent URLs from any pasted seller URL. ?url=<raw_or_wrapper>"""
+    url = (request.args.get('url') or '').strip()
+    if not url:
+        return jsonify({'agents': [], 'platform': None, 'item_id': None})
+    raw = _unwrap_agent_url(url)
+    affcode = SITE_CONFIG.get('affiliate_code', '')
+    agents = _agents_for_url(raw, affcode)
+    platform, item_id = _parse_item_url(raw)
+    return jsonify({
+        'platform': platform,
+        'item_id': item_id,
+        'raw_url': raw,
+        'agents': agents,
+    })
+
 
 @app.route('/api/product/<pid>')
 def api_product(pid):
