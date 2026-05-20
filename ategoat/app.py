@@ -505,6 +505,60 @@ def affiliate_redirect(product_id):
 
 # --- API ---
 
+@app.route('/api/qc/<pid>')
+def api_qc(pid):
+    """Best-effort QC-photo fetch from ategoat.com.
+
+    Matches the product by name (cleaned) against ategoat's catalogue,
+    then calls /qc/list for the best match. Returns an empty list if no
+    match is found or anything errors. Cached in-memory per pid for the
+    process lifetime to avoid hammering ategoat.
+    """
+    p = get_product(pid)
+    if not p:
+        return jsonify({'photos': []})
+    cache = api_qc._cache
+    if pid in cache:
+        return jsonify({'photos': cache[pid]})
+    import re as _re
+    import requests as _r
+    name = p.get('name') or ''
+    # Strip the "123、" prefix + "[XX BATCH]" suffix so the search term is cleaner.
+    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
+    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
+    photos = []
+    try:
+        # Search ategoat catalogue by name
+        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                   params={'name': clean, 'limit': 5},
+                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                   timeout=8)
+        sd = s.json()
+        items = (sd.get('data') or {}).get('items') or []
+        # Prefer the exact-image match if our image matches, else first hit
+        our_img = (p.get('image') or '').split('?')[0]
+        match = None
+        for it in items:
+            if our_img and our_img in (it.get('image') or ''):
+                match = it; break
+        if not match and items:
+            match = items[0]
+        if match:
+            aid = match.get('id')
+            q = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/qc/list',
+                       params={'product_id': aid, 'limit': 30},
+                       headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                       timeout=8)
+            qd = q.json()
+            qitems = (qd.get('data') or {}).get('items') or []
+            photos = [it.get('image') or it.get('url') for it in qitems if it.get('image') or it.get('url')]
+    except Exception:
+        photos = []
+    cache[pid] = photos
+    return jsonify({'photos': photos})
+api_qc._cache = {}
+
+
 @app.route('/api/agents/<pid>')
 def api_agents(pid):
     """Return per-agent buy URLs for a single product (used by card picker)."""

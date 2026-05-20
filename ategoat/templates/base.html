@@ -344,6 +344,19 @@
         .pd-copy svg { flex-shrink: 0; }
         .pd-copy:hover { border-color: var(--accent); color: var(--accent); }
         .pd-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .pd-raw-copy {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 10px; padding: 8px 12px;
+            background: transparent; border: 1px solid var(--border-subtle);
+            color: var(--text-muted); border-radius: 8px; cursor: pointer;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all .15s ease;
+        }
+        .pd-raw-copy:hover { color: var(--text); border-color: var(--border); }
+        .pd-raw-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .pd-agent-pickprompt { display: none; padding: 10px 14px; margin-top: 10px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .pd-agent-pickprompt.active { display: block; }
 
         .pd-side { display: flex; flex-direction: column; gap: 18px; }
         .pd-source { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
@@ -518,12 +531,17 @@
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
-                        <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy</a>
-                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose another agent" title="Open with another agent">
+                        <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
+                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-                            <span>Change Agent</span>
+                            <span id="pdAgentBtnLabel">Choose Agent</span>
                         </button>
                     </div>
+                    <div class="pd-agent-pickprompt" id="pdAgentPickWarn">Pick an agent first ↑</div>
+                    <button type="button" id="pdRawCopy" onclick="copyRawSellerUrl()" class="pd-raw-copy" title="Copy raw seller link (no agent)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span id="pdRawCopyLabel">Copy raw seller link</span>
+                    </button>
                 </div>
                 <div class="pd-side">
                     <span class="pd-source"><span class="src-dot"></span><span id="pdCategory">CATEGORY</span></span>
@@ -727,10 +745,10 @@
             var buyWrap = document.getElementById('agentPickerBuyWrap');
             var confirmBtn = document.getElementById('agentPickerBuyBtn');
             if (modalOpen) {
-                // Confirm flow — Confirm just locks in the selection + closes
-                // the picker. The product-modal's Buy button is what fires
-                // the actual outbound click.
-                confirmBtn.textContent = 'Confirm';
+                // Confirm flow — picker tells the user what they've selected;
+                // hitting Confirm just locks it in and closes the picker. The
+                // product-modal's Buy button is what fires the outbound click.
+                confirmBtn.textContent = "You've selected " + name + " — Confirm";
                 confirmBtn.removeAttribute('href');
                 confirmBtn.removeAttribute('target');
                 confirmBtn.onclick = function(ev) {
@@ -742,13 +760,17 @@
                 pdBuy.href = url;
                 pdBuy.target = '_blank';
                 pdBuy.rel = 'noopener';
-                pdBuy.textContent = 'Buy';
+                pdBuy.textContent = 'Buy on ' + name;
                 pdBuy.dataset.agentKey = key;
                 pdBuy.dataset.agentName = name;
+                var lbl = document.getElementById('pdAgentBtnLabel');
+                if (lbl) lbl.textContent = name + ' ✓';
+                var warn = document.getElementById('pdAgentPickWarn');
+                if (warn) warn.classList.remove('active');
             } else {
-                // No modal context (picker opened from a card) — the bottom
-                // bar acts as the Buy button itself.
-                confirmBtn.textContent = 'Buy on ' + name;
+                // No modal context (picker opened from a card) — bottom bar
+                // becomes the buy itself, no separate confirm step.
+                confirmBtn.textContent = "You've selected " + name + " — Buy";
                 confirmBtn.href = url;
                 confirmBtn.target = '_blank';
                 confirmBtn.rel = 'noopener';
@@ -758,6 +780,45 @@
                 };
             }
             buyWrap.classList.add('active');
+        };
+        // Buy on the product modal: refuse to open until an agent is picked.
+        window.handleBuyClick = function(ev) {
+            var buy = document.getElementById('pdBuyBtn');
+            if (!buy.dataset.agentKey) {
+                ev.preventDefault();
+                // Pulse the warning, then open the picker so the user can pick.
+                var warn = document.getElementById('pdAgentPickWarn');
+                if (warn) {
+                    warn.classList.add('active');
+                    setTimeout(function(){ warn.classList.remove('active'); }, 4000);
+                }
+                openAgentPicker(ev, document.getElementById('pdModal').dataset.pid);
+                return false;
+            }
+            trackClick('affiliate','buy', buy.dataset.pid, '', '');
+            return true;
+        };
+        // Copy the raw seller URL (no agent wrap, no affcode).
+        window.copyRawSellerUrl = function() {
+            var buy = document.getElementById('pdBuyBtn');
+            var url = buy && buy.dataset.rawUrl ? buy.dataset.rawUrl : '';
+            // Strip agent wrappers if present
+            try {
+                var u = new URL(url);
+                var inner = u.searchParams.get('url') || u.searchParams.get('productUrl') || u.searchParams.get('product_url');
+                if (inner) url = decodeURIComponent(inner);
+            } catch (e) {}
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(function(){
+                var btn = document.getElementById('pdRawCopy');
+                var lbl = document.getElementById('pdRawCopyLabel');
+                btn.classList.add('copied');
+                if (lbl) lbl.textContent = 'Copied seller link';
+                setTimeout(function(){
+                    btn.classList.remove('copied');
+                    if (lbl) lbl.textContent = 'Copy raw seller link';
+                }, 1800);
+            });
         };
         window.closeAgentPicker = function() {
             document.getElementById('agentPicker').classList.remove('active');
@@ -808,20 +869,33 @@
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
                     document.getElementById('pdSeller').textContent = data.seller || 'Unknown';
                     document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
-                    var weightStr = data.weight || 'See seller';
-                    if (data.weight_estimate) weightStr = '~' + weightStr + ' (est.)';
-                    document.getElementById('pdWeight').textContent = weightStr;
-                    document.getElementById('pdSales').textContent = (data.sales && data.sales > 0) ? data.sales : 'Trending';
+                    document.getElementById('pdWeight').textContent = data.weight || '—';
+                    var salesCell = document.getElementById('pdSales');
+                    var salesParent = salesCell.closest('.pd-meta-cell');
+                    if (data.sales && data.sales > 0) {
+                        salesCell.textContent = data.sales + ' sold';
+                        if (salesParent) salesParent.style.display = '';
+                    } else if (salesParent) {
+                        salesParent.style.display = 'none';
+                    }
 
                     // Remember pid so the change-agent button on this modal knows
                     // which product to look up.
                     document.getElementById('pdModal').dataset.pid = data.id;
 
                     var buy = document.getElementById('pdBuyBtn');
-                    buy.href = data.go_url;
+                    buy.removeAttribute('href');            // no agent picked yet → button must prompt
+                    buy.removeAttribute('target');
                     buy.textContent = 'Buy';
-                    buy.dataset.defaultHref = data.go_url; // remember default in case user picks an agent then resets
-                    buy.onclick = function() { trackClick('affiliate','buy', data.id, data.category, data.name); };
+                    delete buy.dataset.agentKey;
+                    delete buy.dataset.agentName;
+                    buy.dataset.rawUrl = data.url || '';
+                    buy.dataset.pid = data.id;
+                    // Reset the Choose-Agent button label and clear any prior pickprompt.
+                    var lbl = document.getElementById('pdAgentBtnLabel');
+                    if (lbl) lbl.textContent = 'Choose Agent';
+                    var pickWarn = document.getElementById('pdAgentPickWarn');
+                    if (pickWarn) pickWarn.classList.remove('active');
 
                     // Badges
                     var badges = document.getElementById('pdBadges');
@@ -865,16 +939,24 @@
                         vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">Only one version</div>';
                     }
 
-                    // QC photos (stubbed for now — wires to Kakobuy QC API later)
+                    // QC photos — async fetch on modal open.
                     var qc = document.getElementById('pdQc');
-                    qc.className = (data.qc_photos && data.qc_photos.length) ? 'pd-qc' : '';
-                    if (data.qc_photos && data.qc_photos.length) {
-                        qc.innerHTML = data.qc_photos.map(function(url) {
-                            return '<img src="' + url + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';
-                        }).join('');
-                    } else {
-                        qc.innerHTML = '<div class="pd-qc-empty">QC photos coming soon</div>';
-                    }
+                    qc.className = '';
+                    qc.innerHTML = '<div class="pd-qc-empty">Looking for QC photos…</div>';
+                    fetch('/api/qc/' + encodeURIComponent(data.id))
+                        .then(function(r){ return r.json(); })
+                        .then(function(qd){
+                            var photos = (qd && qd.photos) || [];
+                            if (photos.length) {
+                                qc.className = 'pd-qc';
+                                qc.innerHTML = photos.map(function(u){
+                                    return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';
+                                }).join('');
+                            } else {
+                                qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
+                            }
+                        })
+                        .catch(function(){ qc.innerHTML = '<div class="pd-qc-empty">Couldn\'t load QC photos.</div>'; });
 
                     if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
                     document.getElementById('pdModal').classList.add('active');
