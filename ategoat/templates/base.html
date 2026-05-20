@@ -748,7 +748,7 @@
                 // Confirm flow — picker tells the user what they've selected;
                 // hitting Confirm just locks it in and closes the picker. The
                 // product-modal's Buy button is what fires the outbound click.
-                confirmBtn.textContent = "You've selected " + name + " — Confirm";
+                confirmBtn.textContent = "Confirm";
                 confirmBtn.removeAttribute('href');
                 confirmBtn.removeAttribute('target');
                 confirmBtn.onclick = function(ev) {
@@ -770,7 +770,7 @@
             } else {
                 // No modal context (picker opened from a card) — bottom bar
                 // becomes the buy itself, no separate confirm step.
-                confirmBtn.textContent = "You've selected " + name + " — Buy";
+                confirmBtn.textContent = "Buy";
                 confirmBtn.href = url;
                 confirmBtn.target = '_blank';
                 confirmBtn.rel = 'noopener';
