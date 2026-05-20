@@ -5,6 +5,34 @@
 .converter { max-width: 640px; margin: 0 auto; padding: 120px 24px 80px; }
 .converter h1 { font-family: var(--font-display); font-size: 36px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
 .converter-sub { text-align: center; color: var(--text-secondary); font-size: 13px; margin-bottom: 32px; }
+
+.converter-agent { margin-bottom: 14px; }
+.converter-agent label {
+    display: block;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.converter-agent select {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; outline: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+                      linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    background-position: calc(100% - 22px) center, calc(100% - 16px) center;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+.converter-agent select:focus { border-color: var(--accent); }
+
 .converter-input { display: flex; gap: 8px; margin-bottom: 24px; }
 .converter-input input { flex: 1; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none; font-family: var(--font-body); }
 .converter-input input:focus { border-color: var(--border); }
@@ -71,7 +99,23 @@
 {% block content %}
 <div class="converter">
     <h1>Link Converter</h1>
-    <p class="converter-sub">Paste any agent link, Weidian, Taobao, or 1688 URL — get it opened on every supported agent.</p>
+    <p class="converter-sub">Pick an agent, paste any Weidian/Taobao/1688 or other-agent link, hit Convert.</p>
+
+    <div class="converter-agent">
+        <label for="targetAgent">Open with</label>
+        <select id="targetAgent">
+            <option value="kakobuy">KakoBuy (default)</option>
+            <option value="joyagoo">JoyaGoo</option>
+            <option value="cnfans">CNFans</option>
+            <option value="sugargoo">Sugargoo</option>
+            <option value="oopbuy">Oopbuy</option>
+            <option value="allchinabuy">AllChinaBuy</option>
+            <option value="mulebuy">Mulebuy</option>
+            <option value="hoobuy">Hoobuy</option>
+            <option value="acbuy">ACBuy</option>
+        </select>
+    </div>
+
     <div class="converter-input">
         <input type="text" id="linkInput" placeholder="Paste a Weidian, Taobao, 1688, or any agent product link...">
         <button onclick="convertLink()">Convert</button>
@@ -122,10 +166,17 @@ function convertLink() {
                 + ' &nbsp;·&nbsp; Item ID: <span class="accent">' + itemId + '</span>'
                 + (d.raw_url ? '<span class="raw">' + d.raw_url + '</span>' : '');
 
+            // Pull the user-selected target agent to the top of the list.
+            var selectedKey = (document.getElementById('targetAgent') || {}).value || 'kakobuy';
+            var ordered = d.agents.slice().sort(function(a, b){
+                if (a.key === selectedKey) return -1;
+                if (b.key === selectedKey) return 1;
+                return 0;
+            });
             var html = '';
-            d.agents.forEach(function(a, i){
-                var isDefault = (DEFAULT_AGENT_NAME && a.name.toLowerCase() === DEFAULT_AGENT_NAME.toLowerCase());
-                html += '<div class="agent-row' + (isDefault ? ' default' : '') + '">'
+            ordered.forEach(function(a, i){
+                var isSelected = (a.key === selectedKey);
+                html += '<div class="agent-row' + (isSelected ? ' default' : '') + '">'
                      +   '<span class="agent-row-name">' + a.name + '</span>'
                      +   '<button type="button" class="agent-row-copy" data-url="' + a.url.replace(/"/g, '&quot;') + '" onclick="copyAgentUrl(this)">Copy</button>'
                      +   '<a class="agent-row-open" href="' + a.url + '" target="_blank" rel="noopener" '

@@ -325,9 +325,10 @@
         .pd-img-wrap { background: var(--surface-2); border-radius: var(--radius); overflow: hidden; aspect-ratio: 1; position: relative; }
         .pd-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .2s; }
         .pd-buy-row { display: flex; gap: 8px; margin-top: 16px; }
-        .pd-buy { flex: 1; display: inline-flex; align-items: center; justify-content: center; padding: 16px; background: #fff; color: #000; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; transition: all .15s; text-decoration: none; }
+        .pd-buy { flex: 1 1 50%; min-width: 0; display: inline-flex; align-items: center; justify-content: center; padding: 16px; background: #fff; color: #000; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; transition: all .15s; text-decoration: none; white-space: nowrap; }
         .pd-buy:hover { background: var(--accent); color: #fff; }
-        .pd-copy { width: 50px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text); border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .15s; }
+        .pd-copy { flex: 1 1 50%; min-width: 0; padding: 16px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text); border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .15s; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+        .pd-copy svg { flex-shrink: 0; }
         .pd-copy:hover { border-color: var(--accent); color: var(--accent); }
         .pd-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
 
@@ -504,9 +505,10 @@
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
-                        <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy on {{ site.agent_name }}</a>
+                        <a id="pdBuyBtn" class="pd-buy" href="#" target="_blank" rel="noopener">Buy with</a>
                         <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose another agent" title="Open with another agent">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            <span>Change Agent</span>
                         </button>
                     </div>
                 </div>
@@ -748,7 +750,7 @@
 
                     var buy = document.getElementById('pdBuyBtn');
                     buy.href = data.go_url;
-                    buy.textContent = 'Buy on ' + SITE_AGENT;
+                    buy.textContent = 'Buy with';
                     buy.onclick = function() { trackClick('affiliate','buy', data.id, data.category, data.name); };
 
                     // Badges
