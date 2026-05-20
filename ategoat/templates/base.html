@@ -355,8 +355,24 @@
         }
         .pd-raw-copy:hover { color: var(--text); border-color: var(--border); }
         .pd-raw-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .pd-agent-pickprompt { display: none; padding: 10px 14px; margin-top: 10px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .pd-agent-pickprompt.active { display: block; }
+        .pd-agent-pickprompt {
+            display: none; align-items: center; gap: 8px;
+            padding: 12px 14px; margin-top: 10px;
+            background: rgba(239,68,68,0.12); border: 1px solid #ef4444;
+            border-radius: 8px; color: #ef4444;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .pd-agent-pickprompt.active { display: inline-flex; animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
+        .pd-agent-pickprompt::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+        @keyframes pdShake {
+            0%, 100% { transform: translateX(0); }
+            12%, 60% { transform: translateX(-6px); }
+            24%, 72% { transform: translateX(6px); }
+            36%, 84% { transform: translateX(-3px); }
+            48%, 96% { transform: translateX(3px); }
+        }
+        .pd-agent-btn-shake { animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
 
         .pd-side { display: flex; flex-direction: column; gap: 18px; }
         .pd-source { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
@@ -782,43 +798,92 @@
             buyWrap.classList.add('active');
         };
         // Buy on the product modal: refuse to open until an agent is picked.
+        // Show a clear error + shake the Choose Agent button. Do NOT auto-open
+        // the picker — let the user read the error then click Choose Agent.
         window.handleBuyClick = function(ev) {
             var buy = document.getElementById('pdBuyBtn');
             if (!buy.dataset.agentKey) {
                 ev.preventDefault();
-                // Pulse the warning, then open the picker so the user can pick.
                 var warn = document.getElementById('pdAgentPickWarn');
                 if (warn) {
+                    warn.textContent = 'Select an agent first';
+                    warn.classList.remove('active');
+                    // re-trigger animation
+                    void warn.offsetWidth;
                     warn.classList.add('active');
-                    setTimeout(function(){ warn.classList.remove('active'); }, 4000);
                 }
-                openAgentPicker(ev, document.getElementById('pdModal').dataset.pid);
+                var chooser = document.getElementById('pdAgentBtn');
+                if (chooser) {
+                    chooser.classList.remove('pd-agent-btn-shake');
+                    void chooser.offsetWidth;
+                    chooser.classList.add('pd-agent-btn-shake');
+                    setTimeout(function(){ chooser.classList.remove('pd-agent-btn-shake'); }, 600);
+                }
                 return false;
             }
             trackClick('affiliate','buy', buy.dataset.pid, '', '');
             return true;
         };
         // Copy the raw seller URL (no agent wrap, no affcode).
+        // Resilient: tries Clipboard API, falls back to a hidden textarea +
+        // execCommand('copy') for older browsers / insecure contexts.
         window.copyRawSellerUrl = function() {
             var buy = document.getElementById('pdBuyBtn');
-            var url = buy && buy.dataset.rawUrl ? buy.dataset.rawUrl : '';
-            // Strip agent wrappers if present
+            var url = '';
+            if (buy && buy.dataset.rawUrl) url = buy.dataset.rawUrl;
+            // Belt-and-braces: if rawUrl is missing, fall back to the href and unwrap.
+            if (!url && buy && buy.href) url = buy.href;
             try {
-                var u = new URL(url);
-                var inner = u.searchParams.get('url') || u.searchParams.get('productUrl') || u.searchParams.get('product_url');
-                if (inner) url = decodeURIComponent(inner);
+                if (url) {
+                    var u = new URL(url, window.location.origin);
+                    var inner = u.searchParams.get('url') || u.searchParams.get('productUrl') || u.searchParams.get('product_url');
+                    if (inner) url = decodeURIComponent(inner);
+                }
             } catch (e) {}
-            if (!url) return;
-            navigator.clipboard.writeText(url).then(function(){
-                var btn = document.getElementById('pdRawCopy');
-                var lbl = document.getElementById('pdRawCopyLabel');
-                btn.classList.add('copied');
-                if (lbl) lbl.textContent = 'Copied seller link';
+            var btn = document.getElementById('pdRawCopy');
+            var lbl = document.getElementById('pdRawCopyLabel');
+            function showStatus(text, isErr) {
+                if (!lbl) return;
+                lbl.textContent = text;
+                btn.classList.toggle('copied', !isErr);
+                btn.style.borderColor = isErr ? '#ef4444' : '';
+                btn.style.color = isErr ? '#ef4444' : '';
                 setTimeout(function(){
-                    btn.classList.remove('copied');
                     if (lbl) lbl.textContent = 'Copy raw seller link';
+                    btn.classList.remove('copied');
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
                 }, 1800);
-            });
+            }
+            if (!url) {
+                showStatus('No link to copy', true);
+                return;
+            }
+            function fallbackCopy() {
+                try {
+                    var ta = document.createElement('textarea');
+                    ta.value = url;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.top = '0'; ta.style.left = '0';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus(); ta.select();
+                    var ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showStatus(ok ? 'Copied seller link' : 'Copy blocked — long-press to copy: ' + url, !ok);
+                } catch (e) {
+                    showStatus('Copy failed', true);
+                }
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(
+                    function(){ showStatus('Copied seller link'); },
+                    function(){ fallbackCopy(); }
+                );
+            } else {
+                fallbackCopy();
+            }
         };
         window.closeAgentPicker = function() {
             document.getElementById('agentPicker').classList.remove('active');
