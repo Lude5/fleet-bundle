@@ -21,6 +21,9 @@ CLIENTS = ROOT.parent                         # clients/
 SITES_FILE = ROOT / 'sites.json'
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
+# Keep the login alive for a day so we don't have to re-enter the password
+# every time the browser closes.
+app.permanent_session_lifetime = timedelta(days=1)
 
 # Secret key must survive auto-reloads, or every code change kicks you out.
 # Persist a generated one to a local file the first time we run.
@@ -190,6 +193,7 @@ def login():
     error = None
     if request.method == 'POST':
         if request.form.get('password') == MASTER_PASSWORD:
+            session.permanent = True  # honour the 1-day permanent_session_lifetime
             session['master_admin'] = True
             return redirect(url_for('dashboard'))
         error = 'Wrong password'
