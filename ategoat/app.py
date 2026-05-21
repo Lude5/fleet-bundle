@@ -627,6 +627,86 @@ def api_images(pid):
 api_images._cache = {}
 
 
+@app.route('/api/variants/<pid>')
+def api_variants(pid):
+    """Best-effort: name-match our product against ategoat's catalogue, fetch
+    its product page HTML, and extract the SKU/variant list. Cached in-memory.
+
+    Returns {variants: [{title, price, stock, image_url}], images: [...]}
+    Images are also pulled from the same page so this doubles as an image
+    fallback for products that didn't get a Weidian gallery.
+    """
+    p = get_product(pid)
+    if not p:
+        return jsonify({'variants': [], 'images': []})
+    cache = api_variants._cache
+    if pid in cache:
+        return jsonify(cache[pid])
+    import re as _re
+    import requests as _r
+    import json as _json
+    name = p.get('name') or ''
+    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
+    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
+    result = {'variants': [], 'images': []}
+    try:
+        # Find the ategoat product ID by name search
+        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                   params={'name': clean, 'limit': 5},
+                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                   timeout=8)
+        items = ((s.json() or {}).get('data') or {}).get('items') or []
+        our_img = (p.get('image') or '').split('?')[0]
+        match = None
+        for it in items:
+            if our_img and our_img in (it.get('image') or ''):
+                match = it; break
+        if not match and items:
+            match = items[0]
+        if match:
+            aid = match.get('id')
+            # Fetch the HTML product page and extract the SKU JSON
+            r = _r.get(f'https://www.ategoat.com/product/{aid}',
+                       headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'},
+                       timeout=10)
+            if r.status_code == 200:
+                html = r.text
+                m = _re.search(r'currentProductSkuItems\s*=\s*(\[.*?\]);', html, _re.S)
+                if m:
+                    try:
+                        skus = _json.loads(m.group(1))
+                        # Compact for the wire — only the fields we render
+                        result['variants'] = [
+                            {
+                                'title': s.get('title') or '',
+                                'price': s.get('price'),
+                                'stock': s.get('stock', 0),
+                                'image': s.get('image_url') or '',
+                            }
+                            for s in skus[:30]
+                        ]
+                    except Exception:
+                        pass
+                # Also pull any product images out of the HTML — useful when
+                # the Weidian scrape failed for this product.
+                img_re = _re.compile(r'https?://(?:si|sd)\.geilicdn\.com/[a-zA-Z0-9_/.\-]+\.(?:jpg|jpeg|png|webp)', _re.I)
+                imgs_raw = img_re.findall(html)
+                imgs = []
+                seen = set()
+                for u in imgs_raw:
+                    if any(skip in u for skip in ('hz_img_', 'icon-', '/avatar', 'login_', 'wd_logo', 'common-')):
+                        continue
+                    if u in seen: continue
+                    seen.add(u); imgs.append(u)
+                    if len(imgs) >= 12: break
+                result['images'] = imgs
+    except Exception:
+        pass
+    cache[pid] = result
+    return jsonify(result)
+api_variants._cache = {}
+
+
 @app.route('/api/qc/<pid>')
 def api_qc(pid):
     """Best-effort QC-photo fetch from ategoat.com.
@@ -822,6 +902,7 @@ def api_product(pid):
         'go_url': f'/go/{pid}',
         'raw_url': raw_url,
         'agent_url': p.get('url', ''),
+        'images': p.get('images') or [],
         'variants': [
             {
                 'id': v['id'],
