@@ -696,7 +696,7 @@
                     <div class="pd-meta">
                         <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val" id="pdWeight">—</div></div>
                         <div class="pd-meta-cell"><div class="lbl">Sales</div><div class="val" id="pdSales">—</div></div>
-                        <div class="pd-meta-cell"><div class="lbl">Seller</div><div class="val" id="pdSeller">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl">Listing</div><div class="val" id="pdSeller">—</div></div>
                         <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val" id="pdBatch">—</div></div>
                     </div>
                     <div>
@@ -1170,11 +1170,19 @@
                     var priceEl = document.getElementById('pdPrice');
                     priceEl.textContent = '$' + data.price;
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
+                    // "Listing" field — verified-badge style. Real seller
+                    // shop name when we have one (geilicdn image), otherwise
+                    // just a verified check (the listing exists, has an
+                    // agent-resolvable URL, made it through curation).
                     var sellerEl = document.getElementById('pdSeller');
                     if (data.seller_url) {
-                        sellerEl.innerHTML = '<a href="' + data.seller_url + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">' + (data.seller || 'Unknown') + '</a>';
+                        sellerEl.innerHTML = '<a href="' + data.seller_url + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">'
+                                           + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
+                                           + (data.seller || 'Shop on Weidian') + '</a>';
                     } else {
-                        sellerEl.textContent = data.seller || 'Unknown';
+                        sellerEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;">'
+                                           + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
+                                           + 'Verified</span>';
                     }
                     document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
                     document.getElementById('pdWeight').textContent = data.weight || '—';
