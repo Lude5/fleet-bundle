@@ -235,23 +235,23 @@ def _b_usfans(url, _id, _plat, code):
     return out
 
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488'},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444'},
-    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316'},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899'},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e'},
-    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6'},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7'},
-    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b'},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6'},
-    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4'},
-    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6'},
-    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com'},
+    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com'},
+    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com'},
+    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com'},
 ]
 
 
 def _agents_for_url(seller_url, affcode=''):
-    """Build a list of {key, name, url, color, letter} agent options."""
+    """Build a list of {key, name, url, color, letter, logo} agent options."""
     platform, item_id = _parse_item_url(seller_url)
     out = []
     for a in AGENTS:
@@ -260,12 +260,18 @@ def _agents_for_url(seller_url, affcode=''):
         except Exception:
             built = None
         if built:
+            domain = a.get('domain', '')
             out.append({
                 'key': a['key'],
                 'name': a['name'],
                 'url': built,
                 'color': a.get('color', '#444444'),
                 'letter': a['name'][0].upper(),
+                # Google's favicon service serves brand-icon-quality logos for
+                # most domains. Falls back gracefully on the frontend if it
+                # fails to load.
+                'logo': f'https://www.google.com/s2/favicons?domain={domain}&sz=64' if domain else '',
+                'domain': domain,
             })
     return out
 

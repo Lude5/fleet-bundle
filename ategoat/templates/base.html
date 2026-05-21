@@ -273,10 +273,13 @@
         }
         .agent-picker-item .logo {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+            width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
             color: #fff; font-family: var(--font-mono); font-size: 13px;
             font-weight: 800; letter-spacing: 0;
+            background: #fff; overflow: hidden;
         }
+        .agent-picker-item .logo img { width: 100%; height: 100%; object-fit: contain; }
+        .agent-picker-item .logo.letter { color: #fff; }
         .agent-picker-item .name { flex: 1; }
         .agent-picker-item:hover {
             background: var(--accent);
@@ -788,12 +791,18 @@
                     var html = '';
                     d.agents.forEach(function(a){
                         var sel = (saved && saved.key === a.key) ? ' selected' : '';
+                        // Real favicon if available, fall back to a colored letter circle.
+                        var letter = (a.letter || a.name[0]).toUpperCase();
+                        var bg = a.color || '#444';
+                        var logoHtml = a.logo
+                            ? '<span class="logo"><img src="' + a.logo + '" alt="' + a.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=&quot;' + letter + '&quot;;this.parentNode.classList.add(&quot;letter&quot;);this.parentNode.style.background=&quot;' + bg + '&quot;;"></span>'
+                            : '<span class="logo letter" style="background:' + bg + '">' + letter + '</span>';
                         html += '<button type="button" class="agent-picker-item' + sel + '"'
                              +  ' data-key="' + a.key + '"'
                              +  ' data-name="' + a.name.replace(/"/g, '&quot;') + '"'
                              +  ' data-url="' + a.url.replace(/"/g, '&quot;') + '"'
                              +  ' onclick="selectAgent(this)">'
-                             +  '<span class="logo" style="background:' + (a.color || '#444') + '">' + (a.letter || a.name[0]) + '</span>'
+                             +  logoHtml
                              +  '<span class="name">' + a.name + '</span>'
                              +  '</button>';
                     });
