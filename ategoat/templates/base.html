@@ -1270,7 +1270,17 @@
                         var cls = 'pd-thumb' + (active ? ' active' : '') + (badge ? ' ' + badge : '');
                         return '<button type="button" class="' + cls + '" onclick="swapMainImg(this, \'' + safe + '\')"><img src="' + url + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
                     }
-                    thumbs.innerHTML = galleryImgs.map(function(u, i){ return thumbHTML(u, i === 0, ''); }).join('');
+                    // Hide the thumb strip when only one image exists — a single
+                    // useless thumb is worse than no strip. Also kept hidden on
+                    // load even if a variant fetch later appends thumbs, the
+                    // append step un-hides it.
+                    if (galleryImgs.length > 1) {
+                        thumbs.style.display = '';
+                        thumbs.innerHTML = galleryImgs.map(function(u, i){ return thumbHTML(u, i === 0, ''); }).join('');
+                    } else {
+                        thumbs.style.display = 'none';
+                        thumbs.innerHTML = '';
+                    }
 
                     // Lazy variants — fetch SKU list from ategoat by name match.
                     var variantsBox = document.getElementById('pdVariants');
@@ -1304,7 +1314,14 @@
                                 extraImgs.forEach(function(u){
                                     if (u && existing.indexOf(u) === -1) { added += thumbHTML(u, false, ''); existing.push(u); }
                                 });
-                                if (added) thumbs.insertAdjacentHTML('beforeend', added);
+                                if (added) {
+                                    if (!thumbs.children.length) {
+                                        // Re-seed with the main image too so the first thumb is the hero
+                                        thumbs.innerHTML = thumbHTML(data.image, true, '');
+                                    }
+                                    thumbs.insertAdjacentHTML('beforeend', added);
+                                    thumbs.style.display = '';
+                                }
                             })
                             .catch(function(){
                                 variantsBox.innerHTML = '<div class="pd-qc-empty">No variants available</div>';
@@ -1330,7 +1347,11 @@
                                     var safe = u.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                                     html += '<button type="button" class="pd-thumb qc" onclick="swapMainImg(this, \'' + safe + '\')"><img src="' + u + '" alt="QC" loading="lazy" referrerpolicy="no-referrer"></button>';
                                 });
+                                if (!thumbs.children.length) {
+                                    thumbs.innerHTML = thumbHTML(data.image, true, '');
+                                }
                                 thumbs.insertAdjacentHTML('beforeend', html);
+                                thumbs.style.display = '';
                             } else {
                                 qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
                             }
