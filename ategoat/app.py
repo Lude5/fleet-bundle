@@ -235,19 +235,34 @@ def _b_usfans(url, _id, _plat, code):
     return out
 
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com'},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com'},
-    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com'},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com'},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com'},
-    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com'},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com'},
-    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com'},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com'},
-    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com'},
-    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com'},
-    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register?affcode=bswes'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register?affcode=bswes'},
+    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com',      'signup': 'https://cnfans.com/register?ref=bswes'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'signup': 'https://www.sugargoo.com/index/user/register?cooperate=bswes'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=bswes'},
+    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com', 'signup': 'https://www.allchinabuy.com/en/page/login?partnercode=bswes'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'signup': 'https://mulebuy.com/register?affcode=bswes'},
+    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com',      'signup': 'https://hoobuy.com/register?utm_source=bswes'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'signup': 'https://acbuy.com/register?u=bswes'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'signup': 'https://www.litbuy.com/register?affcode=bswes'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://www.hipobuy.com/register?affcode=bswes'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'signup': 'https://www.usfans.com/register?affcode=bswes'},
 ]
+
+
+@app.route('/api/signup-agents')
+def api_signup_agents():
+    """Returns the full agent list with signup URLs for the welcome popup."""
+    return jsonify({
+        'agents': [{
+            'key': a['key'],
+            'name': a['name'],
+            'color': a['color'],
+            'domain': a['domain'],
+            'signup_url': a.get('signup', ''),
+            'logo': f'https://www.google.com/s2/favicons?domain={a["domain"]}&sz=64',
+        } for a in AGENTS]
+    })
 
 
 def _agents_for_url(seller_url, affcode=''):

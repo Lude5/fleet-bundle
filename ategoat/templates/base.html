@@ -365,6 +365,80 @@
         .popup .btn { width: 100%; justify-content: center; }
         .popup-dismiss { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 16px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
 
+        /* Welcome popup — agent picker w/ KakoBuy featured */
+        .popup.signup-popup { max-width: 520px; padding: 28px 24px; text-align: left; }
+        .popup-headline { text-align: center; margin-bottom: 18px; }
+        .popup-headline .eyebrow {
+            display: inline-block; font-family: var(--font-mono); font-size: 10px;
+            letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .popup-headline h2 {
+            font-family: var(--font-display); font-size: clamp(24px, 4vw, 32px);
+            text-transform: uppercase; line-height: 1; margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .popup-headline h2 .accent { color: var(--accent); }
+        .popup-headline p { font-size: 13px; color: var(--text-secondary); margin: 0; }
+        .signup-featured {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            background: var(--accent);
+            border-radius: 12px;
+            text-decoration: none; color: #fff;
+            position: relative;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .signup-featured:hover { transform: translateY(-1px); box-shadow: 0 10px 30px var(--accent-dim); text-decoration: none; }
+        .signup-featured .logo {
+            width: 40px; height: 40px; border-radius: 8px;
+            background: #fff; display: inline-flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .signup-featured .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+        .signup-featured .meta { flex: 1; min-width: 0; }
+        .signup-featured .meta .ttl { font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1; }
+        .signup-featured .meta .sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.85); margin-top: 4px; }
+        .signup-featured .badge {
+            position: absolute; top: -8px; right: 14px;
+            background: #fff; color: var(--accent);
+            font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 4px;
+        }
+        .signup-featured .go-arrow { font-size: 22px; opacity: 0.8; }
+        .signup-other-label {
+            font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 14px 0 8px;
+            text-align: center;
+        }
+        .signup-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+        }
+        @media (max-width: 460px) { .signup-grid { grid-template-columns: 1fr; } }
+        .signup-other {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+            transition: all 0.15s ease;
+        }
+        .signup-other:hover { border-color: var(--border); transform: translateY(-1px); text-decoration: none; }
+        .signup-other .logo {
+            width: 22px; height: 22px; border-radius: 4px;
+            background: #fff; display: inline-flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .signup-other .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+
         /* Product detail modal */
         .pd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 400; display: none; align-items: center; justify-content: center; padding: 24px; }
         .pd-overlay.active { display: flex; }
@@ -640,12 +714,16 @@
     </div>
 
     <div class="popup-overlay" id="popup">
-        <div class="popup">
+        <div class="popup signup-popup">
             <button class="popup-close" onclick="closePopup()">&times;</button>
-            <p class="popup-label">Exclusive Offer</p>
-            <h2>${{ site.coupon_amount }} IN COUPONS</h2>
-            <p>Most shopping agents give first-time users up to ${{ site.coupon_amount }} in welcome credit. Pick the one with the best rates for you.</p>
-            <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','popup','','')">Claim ${{ site.coupon_amount }} Coupon</a>
+            <div class="popup-headline">
+                <span class="eyebrow">Welcome</span>
+                <h2>Shipping Coupons <span class="accent">$50&ndash;$500</span></h2>
+                <p>Sign up to your agent of choice — claim your welcome credit.</p>
+            </div>
+            <div id="signupAgentList">
+                <!-- featured + other agents injected by JS -->
+            </div>
             <p class="popup-dismiss" onclick="closePopup()">Maybe later</p>
         </div>
     </div>
@@ -663,6 +741,37 @@
 
     <script>
         function closePopup() { document.getElementById('popup').classList.remove('active'); try { sessionStorage.setItem('pp','1'); } catch(e){} }
+
+        // Populate the signup popup with agents. KakoBuy is featured at top
+        // (big card, "Best Option" badge), the rest are listed below.
+        (function loadSignupAgents() {
+            var wrap = document.getElementById('signupAgentList');
+            if (!wrap) return;
+            fetch('/api/signup-agents').then(function(r){ return r.json(); }).then(function(d){
+                var agents = (d && d.agents) || [];
+                if (!agents.length) return;
+                var featured = agents.filter(function(a){ return a.key === 'kakobuy'; })[0] || agents[0];
+                var others = agents.filter(function(a){ return a.key !== featured.key; });
+                function safe(s){ return String(s).replace(/"/g, '&quot;'); }
+                var html = '<a class="signup-featured" href="' + safe(featured.signup_url) + '" target="_blank" rel="noopener" onclick="trackClick(\'signup\',\'popup_featured_' + featured.key + '\',\'\',\'\',\'\')">'
+                         +   '<span class="badge">Best Option</span>'
+                         +   '<span class="logo"><img src="' + safe(featured.logo) + '" alt="' + safe(featured.name) + '" referrerpolicy="no-referrer"></span>'
+                         +   '<span class="meta"><span class="ttl">' + safe(featured.name) + '</span><span class="sub">Up to $400 in credit</span></span>'
+                         +   '<span class="go-arrow">→</span>'
+                         + '</a>'
+                         + '<p class="signup-other-label">Or choose another agent</p>'
+                         + '<div class="signup-grid">';
+                others.forEach(function(a){
+                    html += '<a class="signup-other" href="' + safe(a.signup_url) + '" target="_blank" rel="noopener" onclick="trackClick(\'signup\',\'popup_other_' + a.key + '\',\'\',\'\',\'\')">'
+                          +   '<span class="logo"><img src="' + safe(a.logo) + '" alt="' + safe(a.name) + '" referrerpolicy="no-referrer"></span>'
+                          +   '<span>' + safe(a.name) + '</span>'
+                          + '</a>';
+                });
+                html += '</div>';
+                wrap.innerHTML = html;
+            }).catch(function(){});
+        })();
+
         // Signup popup — 2s after load, but suppressed on internal navigation after dismissal (rep.tools pattern)
         (function() {
             try {
