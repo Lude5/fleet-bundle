@@ -675,16 +675,30 @@ def api_variants(pid):
                 if m:
                     try:
                         skus = _json.loads(m.group(1))
-                        # Compact for the wire — only the fields we render
-                        result['variants'] = [
-                            {
-                                'title': s.get('title') or '',
+                        # Dedupe to one SKU per unique image (i.e. per colour/
+                        # style) — strip out per-size duplicates so the user
+                        # sees one button per actual variant, not a button per
+                        # size that all look identical.
+                        seen_imgs = set()
+                        deduped = []
+                        for s in skus:
+                            img = s.get('image_url') or ''
+                            if not img or img in seen_imgs:
+                                continue
+                            seen_imgs.add(img)
+                            # Strip the trailing ";SIZE" off the title so the
+                            # label reads as a colour/style code only.
+                            t = str(s.get('title') or '')
+                            t_clean = t.split(';')[0].strip() if ';' in t else t
+                            deduped.append({
+                                'title': t_clean or t,
                                 'price': s.get('price'),
                                 'stock': s.get('stock', 0),
-                                'image': s.get('image_url') or '',
-                            }
-                            for s in skus[:30]
-                        ]
+                                'image': img,
+                            })
+                            if len(deduped) >= 30:
+                                break
+                        result['variants'] = deduped
                     except Exception:
                         pass
                 # Also pull any product images out of the HTML — useful when
