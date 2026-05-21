@@ -158,6 +158,27 @@
         .hero-bg-card img { aspect-ratio: 4/5; object-fit: contain !important; padding: 4px; background: #ffffff; }
         /* Product detail modal image */
         #pdMainImage { background: #ffffff; object-fit: contain !important; padding: 12px; }
+        .pd-thumbs {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 6px; margin-top: 8px;
+        }
+        .pd-thumb {
+            aspect-ratio: 1; background: #ffffff;
+            border: 2px solid var(--border-subtle); border-radius: 8px;
+            overflow: hidden; cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+        }
+        .pd-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+        .pd-thumb:hover { border-color: var(--border); transform: translateY(-1px); }
+        .pd-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .pd-thumb.qc::after {
+            content: 'QC'; position: absolute; top: 2px; right: 2px;
+            background: var(--accent); color: #fff; font-family: var(--font-mono);
+            font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .pd-thumb { position: relative; }
         .product-card-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; }
         .product-card-body { padding: 16px; }
         .product-card-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -562,6 +583,7 @@
             <div class="pd-body">
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
+                    <div class="pd-thumbs" id="pdThumbs"></div>
                     <div class="pd-buy-row">
                         <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
                         <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
@@ -720,6 +742,16 @@
                 if(el==='popup'||el==='cta'||el==='hero'||el==='mid-cta'||t==='signup'){fbq('track','Lead',{content_name:'{{ site.agent_name }} Signup'});}
             }
         }
+
+        // Swap the main product image when a thumbnail is clicked.
+        window.swapMainImg = function(thumbBtn, url) {
+            if (!url) return;
+            var img = document.getElementById('pdMainImage');
+            if (img) img.src = url;
+            var thumbs = document.querySelectorAll('#pdThumbs .pd-thumb');
+            thumbs.forEach(function(t){ t.classList.remove('active'); });
+            if (thumbBtn) thumbBtn.classList.add('active');
+        };
 
         // ============================================================
         // Saved-agent helpers — remember the user's preferred agent so
@@ -1082,6 +1114,11 @@
                         vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">Only one version</div>';
                     }
 
+                    // Thumb strip starts with just the main image; QC photos
+                    // get appended once they load.
+                    var thumbs = document.getElementById('pdThumbs');
+                    thumbs.innerHTML = '<button type="button" class="pd-thumb active" onclick="swapMainImg(this, \'' + (data.image || '').replace(/'/g, "\\'") + '\')"><img src="' + (data.image || '') + '" alt="" referrerpolicy="no-referrer"></button>';
+
                     // QC photos — async fetch on modal open.
                     var qc = document.getElementById('pdQc');
                     qc.className = '';
@@ -1095,6 +1132,13 @@
                                 qc.innerHTML = photos.map(function(u){
                                     return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';
                                 }).join('');
+                                // Append QC thumbs to the gallery
+                                var html = '';
+                                photos.forEach(function(u){
+                                    var safe = u.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                                    html += '<button type="button" class="pd-thumb qc" onclick="swapMainImg(this, \'' + safe + '\')"><img src="' + u + '" alt="QC" loading="lazy" referrerpolicy="no-referrer"></button>';
+                                });
+                                thumbs.insertAdjacentHTML('beforeend', html);
                             } else {
                                 qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
                             }
