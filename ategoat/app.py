@@ -562,6 +562,55 @@ def api_search():
     return jsonify({'q': q, 'count': len(out), 'results': out})
 
 
+@app.route('/api/images/<pid>')
+def api_images(pid):
+    """Scrape the gallery for a product from its Weidian item page.
+
+    Weidian's HTML embeds a JSON blob with full-resolution
+    pcitem<shopId>-<hash>_<W>_<H>.jpg URLs. We pull all of them out and
+    return as a list. Cached in-memory per pid.
+    """
+    p = get_product(pid)
+    if not p:
+        return jsonify({'images': []})
+    cache = api_images._cache
+    if pid in cache:
+        return jsonify({'images': cache[pid], 'cached': True})
+    import re as _re
+    import requests as _r
+    raw = _unwrap_agent_url(p.get('url', ''))
+    images = []
+    # Always include the primary image we already have
+    primary = p.get('image') or ''
+    if primary:
+        images.append(primary)
+    weidian_id_m = _re.search(r'itemID=(\d+)', raw, _re.I)
+    if weidian_id_m:
+        wid = weidian_id_m.group(1)
+        try:
+            r = _r.get(f'https://weidian.com/item.html?itemID={wid}',
+                       headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36'},
+                       timeout=8)
+            html = r.text
+            # Extract all pcitem<...>_W_H.{jpg,png,webp} URLs (full-res gallery shots)
+            pattern = _re.compile(r'https?://si\.geilicdn\.com/pcitem\d+-[a-f0-9]+_\d+_\d+\.(?:jpg|jpeg|png|webp)', _re.I)
+            for m in pattern.findall(html):
+                u = m.strip()
+                if u not in images:
+                    images.append(u)
+        except Exception:
+            pass
+    # Dedupe while preserving order; cap at 12
+    seen, dedup = set(), []
+    for u in images:
+        if u and u not in seen:
+            seen.add(u); dedup.append(u)
+    dedup = dedup[:12]
+    cache[pid] = dedup
+    return jsonify({'images': dedup, 'cached': False})
+api_images._cache = {}
+
+
 @app.route('/api/qc/<pid>')
 def api_qc(pid):
     """Best-effort QC-photo fetch from ategoat.com.
