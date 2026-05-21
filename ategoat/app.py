@@ -437,6 +437,11 @@ def shop():
         page=page, total_pages=total_pages, total=total)
 
 
+@app.route('/agents')
+def agents_page():
+    return render_template('agents.html', agents=AGENTS)
+
+
 @app.route('/link-converter')
 def link_converter():
     return render_template('link_converter.html')
