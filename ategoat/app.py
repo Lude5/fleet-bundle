@@ -235,24 +235,24 @@ def _b_usfans(url, _id, _plat, code):
     return out
 
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register?affcode=bswes'},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register?affcode=bswes'},
-    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com',      'signup': 'https://cnfans.com/register?ref=bswes'},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'signup': 'https://www.sugargoo.com/index/user/register?cooperate=bswes'},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=bswes'},
-    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com', 'signup': 'https://www.allchinabuy.com/en/page/login?partnercode=bswes'},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'signup': 'https://mulebuy.com/register?affcode=bswes'},
-    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com',      'signup': 'https://hoobuy.com/register?utm_source=bswes'},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'signup': 'https://acbuy.com/register?u=bswes'},
-    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'signup': 'https://www.litbuy.com/register?affcode=bswes'},
-    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://www.hipobuy.com/register?affcode=bswes'},
-    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'signup': 'https://www.usfans.com/register?affcode=bswes'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register?affcode=bswes',                          'coupon': 'Up to $500 shipping credit'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register?affcode=bswes',              'coupon': 'Up to $300 in coupons'},
+    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com',      'signup': 'https://cnfans.com/register?ref=bswes',                                  'coupon': 'Up to $200 in coupons'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'signup': 'https://www.sugargoo.com/index/user/register?cooperate=bswes',           'coupon': 'Up to $200 in coupons'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=bswes',                           'coupon': 'Up to $300 in coupons'},
+    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com', 'signup': 'https://www.allchinabuy.com/en/page/login?partnercode=bswes',            'coupon': 'Up to $150 in coupons'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'signup': 'https://mulebuy.com/register?affcode=bswes',                             'coupon': 'Up to $200 in coupons'},
+    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com',      'signup': 'https://hoobuy.com/register?utm_source=bswes',                           'coupon': 'Up to $400 in coupons'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'signup': 'https://acbuy.com/register?u=bswes',                                     'coupon': 'Up to $250 in coupons'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'signup': 'https://www.litbuy.com/register?affcode=bswes',                          'coupon': 'Up to $150 in coupons'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://www.hipobuy.com/register?affcode=bswes',                         'coupon': 'Up to $100 in coupons'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'signup': 'https://www.usfans.com/register?affcode=bswes',                          'coupon': 'Up to $100 in coupons'},
 ]
 
 
 @app.route('/api/signup-agents')
 def api_signup_agents():
-    """Returns the full agent list with signup URLs for the welcome popup."""
+    """Returns the full agent list with signup URLs + per-agent coupon text."""
     return jsonify({
         'agents': [{
             'key': a['key'],
@@ -260,6 +260,7 @@ def api_signup_agents():
             'color': a['color'],
             'domain': a['domain'],
             'signup_url': a.get('signup', ''),
+            'coupon': a.get('coupon', 'Welcome credit available'),
             'logo': f'https://www.google.com/s2/favicons?domain={a["domain"]}&sz=64',
         } for a in AGENTS]
     })

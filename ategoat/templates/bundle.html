@@ -125,7 +125,7 @@
                 <div class="product-card-name">{{ p.name }}</div>
                 <div class="product-card-row">
                     <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                    <span class="product-card-buy">Buy on {{ site.agent_name }}</span>
+                    <span class="product-card-buy">Buy</span>
                 </div>
             </div>
         </a>
@@ -138,7 +138,7 @@
     </div>
 
     <div class="bundle-cta-row">
-        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','bundle','','')">Sign Up — ${{ site.coupon_amount }} Coupon</a>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','bundle','','')">Sign Up — Coupons $50–$500</a>
         <a href="/shop" class="btn btn-outline">Browse All Products</a>
     </div>
     {% else %}
