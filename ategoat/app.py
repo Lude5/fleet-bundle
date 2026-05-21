@@ -213,21 +213,45 @@ def _b_acbuy(_url, item_id, platform, code):
     if code: out += f'&u={code}'
     return out
 
+def _b_litbuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.litbuy.com/transmit?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_hipobuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.hipobuy.com/order/buy?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_usfans(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.usfans.com/product/buy?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo},
-    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy},
-    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy},
-    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444'},
+    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e'},
+    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7'},
+    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626'},
 ]
 
 
 def _agents_for_url(seller_url, affcode=''):
-    """Build a list of {key, name, url} agent options for a raw seller URL."""
+    """Build a list of {key, name, url, color, letter} agent options."""
     platform, item_id = _parse_item_url(seller_url)
     out = []
     for a in AGENTS:
@@ -236,7 +260,13 @@ def _agents_for_url(seller_url, affcode=''):
         except Exception:
             built = None
         if built:
-            out.append({'key': a['key'], 'name': a['name'], 'url': built})
+            out.append({
+                'key': a['key'],
+                'name': a['name'],
+                'url': built,
+                'color': a.get('color', '#444444'),
+                'letter': a['name'][0].upper(),
+            })
     return out
 
 

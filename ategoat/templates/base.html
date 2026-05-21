@@ -150,9 +150,14 @@
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
         .product-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); overflow: hidden; transition: all 0.3s; display: block; color: inherit; text-decoration: none; }
         .product-card:hover { border-color: var(--border); transform: translateY(-4px); box-shadow: 0 12px 40px var(--accent-dim); }
-        .product-card-img-wrap { overflow: hidden; position: relative; background: var(--surface-2); }
-        .product-card-img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform 0.5s ease; }
+        .product-card-img-wrap { overflow: hidden; position: relative; background: #ffffff; aspect-ratio: 1; }
+        .product-card-img { width: 100%; height: 100%; object-fit: contain; padding: 8px; transition: transform 0.5s ease; }
         .product-card:hover .product-card-img { transform: scale(1.05); }
+        /* Hero ticker keeps cover-fit so the masthead background stays full-bleed */
+        .hero-bg-card { background: #ffffff !important; }
+        .hero-bg-card img { aspect-ratio: 4/5; object-fit: contain !important; padding: 4px; background: #ffffff; }
+        /* Product detail modal image */
+        #pdMainImage { background: #ffffff; object-fit: contain !important; padding: 12px; }
         .product-card-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; }
         .product-card-body { padding: 16px; }
         .product-card-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -252,8 +257,8 @@
         }
         @media (max-width: 480px) { .agent-picker-list { grid-template-columns: 1fr; } }
         .agent-picker-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px;
             background: var(--surface-2);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
@@ -264,7 +269,15 @@
             text-decoration: none;
             transition: all 0.15s ease;
             cursor: pointer;
+            text-align: left;
         }
+        .agent-picker-item .logo {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+            color: #fff; font-family: var(--font-mono); font-size: 13px;
+            font-weight: 800; letter-spacing: 0;
+        }
+        .agent-picker-item .name { flex: 1; }
         .agent-picker-item:hover {
             background: var(--accent);
             color: #fff;
@@ -706,6 +719,45 @@
         }
 
         // ============================================================
+        // Saved-agent helpers — remember the user's preferred agent so
+        // they don't have to pick every single time.
+        // ============================================================
+        window.getSavedAgent = function() {
+            try {
+                var v = localStorage.getItem('ategoat_agent');
+                if (!v) return null;
+                var p = JSON.parse(v);
+                return (p && p.key && p.name) ? p : null;
+            } catch (e) { return null; }
+        };
+        window.saveAgent = function(key, name) {
+            try { localStorage.setItem('ategoat_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
+        };
+        // Apply the saved agent to a freshly-opened product modal: hit
+        // /api/agents/<pid>, find the user's preferred entry, and wire
+        // the Buy button to it so they can click Buy immediately.
+        window.applySavedAgentToBuy = function(pid) {
+            var saved = getSavedAgent();
+            if (!saved) return;
+            fetch('/api/agents/' + encodeURIComponent(pid))
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    var match = (d.agents || []).filter(function(a){ return a.key === saved.key; })[0];
+                    if (!match) return;
+                    var pdBuy = document.getElementById('pdBuyBtn');
+                    if (!pdBuy) return;
+                    pdBuy.href = match.url;
+                    pdBuy.target = '_blank';
+                    pdBuy.rel = 'noopener';
+                    pdBuy.textContent = 'Buy on ' + match.name;
+                    pdBuy.dataset.agentKey = match.key;
+                    pdBuy.dataset.agentName = match.name;
+                    var lbl = document.getElementById('pdAgentBtnLabel');
+                    if (lbl) lbl.textContent = match.name + ' ✓';
+                });
+        };
+
+        // ============================================================
         // Agent picker — pick first, then Buy.
         // Click an agent → it gets selected (highlighted), the Buy bar
         // at the bottom is enabled, and if the product-detail modal is
@@ -732,17 +784,25 @@
                         list.innerHTML = '<div class="agent-picker-empty">No agents available for this product.</div>';
                         return;
                     }
+                    var saved = getSavedAgent();
                     var html = '';
                     d.agents.forEach(function(a){
-                        html += '<button type="button" class="agent-picker-item"'
+                        var sel = (saved && saved.key === a.key) ? ' selected' : '';
+                        html += '<button type="button" class="agent-picker-item' + sel + '"'
                              +  ' data-key="' + a.key + '"'
                              +  ' data-name="' + a.name.replace(/"/g, '&quot;') + '"'
                              +  ' data-url="' + a.url.replace(/"/g, '&quot;') + '"'
                              +  ' onclick="selectAgent(this)">'
-                             +  '<span>' + a.name + '</span>'
+                             +  '<span class="logo" style="background:' + (a.color || '#444') + '">' + (a.letter || a.name[0]) + '</span>'
+                             +  '<span class="name">' + a.name + '</span>'
                              +  '</button>';
                     });
                     list.innerHTML = html;
+                    // If user already has a preferred agent, pre-arm Confirm with it
+                    if (saved) {
+                        var preselected = list.querySelector('.agent-picker-item.selected');
+                        if (preselected) selectAgent(preselected);
+                    }
                 })
                 .catch(function(){
                     list.innerHTML = '<div class="agent-picker-empty">Failed to load agents.</div>';
@@ -752,6 +812,7 @@
             var key = btn.dataset.key;
             var name = btn.dataset.name;
             var url = btn.dataset.url;
+            saveAgent(key, name);  // persist for next visit
             // Mark selected — clear others
             var items = document.querySelectorAll('#agentPickerList .agent-picker-item');
             items.forEach(function(i){ i.classList.remove('selected'); });
@@ -966,6 +1027,9 @@
                     if (lbl) lbl.textContent = 'Choose Agent';
                     var pickWarn = document.getElementById('pdAgentPickWarn');
                     if (pickWarn) pickWarn.classList.remove('active');
+                    // If the user already picked an agent in a previous session,
+                    // pre-wire Buy so they don't have to choose every time.
+                    applySavedAgentToBuy(data.id);
 
                     // Badges
                     var badges = document.getElementById('pdBadges');
