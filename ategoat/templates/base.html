@@ -1170,20 +1170,12 @@
                     var priceEl = document.getElementById('pdPrice');
                     priceEl.textContent = '$' + data.price;
                     priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
-                    // "Listing" field — verified-badge style. Real seller
-                    // shop name when we have one (geilicdn image), otherwise
-                    // just a verified check (the listing exists, has an
-                    // agent-resolvable URL, made it through curation).
-                    var sellerEl = document.getElementById('pdSeller');
-                    if (data.seller_url) {
-                        sellerEl.innerHTML = '<a href="' + data.seller_url + '" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">'
-                                           + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
-                                           + (data.seller || 'Shop on Weidian') + '</a>';
-                    } else {
-                        sellerEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;">'
-                                           + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
-                                           + 'Verified</span>';
-                    }
+                    // "Listing" field — verified-badge only. No shop name,
+                    // no marketplace string. Just the green check.
+                    document.getElementById('pdSeller').innerHTML =
+                        '<span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;">'
+                        + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
+                        + 'Verified</span>';
                     document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
                     document.getElementById('pdWeight').textContent = data.weight || '—';
                     var salesCell = document.getElementById('pdSales');
