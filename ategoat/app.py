@@ -410,8 +410,14 @@ def shop():
 
     if q:
         all_products = search_products(q)
-        if category:
+        if category == 'trending':
+            all_products = [p for p in all_products if 'trending' in (p.get('tags') or '').split()]
+        elif category:
             all_products = [p for p in all_products if p.get('category') == category]
+    elif category == 'trending':
+        # Trending is now a tag, not a category — products can be in shoes/shirts/etc
+        # and also tagged trending so they appear here.
+        all_products = [p for p in get_products() if 'trending' in (p.get('tags') or '').split()]
     else:
         all_products = get_products(category if category else None)
 
