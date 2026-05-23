@@ -340,6 +340,46 @@ def add_category(slug, name, icon='', description='', sort_order=0):
     conn.close()
 
 
+def update_category(old_slug, updates):
+    """Update a category's name/icon/sort_order, and optionally rename its slug
+    (which also rewrites every product currently in that category)."""
+    conn = get_db()
+    new_slug = (updates.get('slug') or old_slug).strip().lower()
+    fields, values = [], []
+    if 'slug' in updates and new_slug != old_slug:
+        fields.append('slug = ?'); values.append(new_slug)
+    for k in ('name', 'icon', 'description'):
+        if k in updates:
+            fields.append(f'{k} = ?'); values.append(updates[k])
+    if 'sort_order' in updates:
+        fields.append('sort_order = ?'); values.append(int(updates['sort_order'] or 0))
+    if fields:
+        values.append(old_slug)
+        conn.execute(f'UPDATE categories SET {", ".join(fields)} WHERE slug = ?', tuple(values))
+    if new_slug != old_slug:
+        conn.execute('UPDATE products SET category = ? WHERE category = ?', (new_slug, old_slug))
+    conn.commit()
+    conn.close()
+    return new_slug
+
+
+def delete_category(slug, reassign_to=''):
+    """Delete a category. Products in it get reassigned to reassign_to
+    (default empty string = uncategorized)."""
+    conn = get_db()
+    conn.execute('UPDATE products SET category = ? WHERE category = ?', (reassign_to, slug))
+    conn.execute('DELETE FROM categories WHERE slug = ?', (slug,))
+    conn.commit()
+    conn.close()
+
+
+def count_products_in_category(slug):
+    conn = get_db()
+    row = conn.execute('SELECT COUNT(*) AS n FROM products WHERE category = ?', (slug,)).fetchone()
+    conn.close()
+    return int(row['n']) if row else 0
+
+
 def record_click(data):
     conn = get_db()
     conn.execute('''

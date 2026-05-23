@@ -43,6 +43,11 @@
 .product-table .price-cell { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent); }
 .product-table .seller-cell { color: var(--text-muted); font-size: 12px; }
 .product-table .cat-pill { display: inline-block; padding: 3px 10px; background: var(--surface-2); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+.product-table .cat-select { width: 100%; min-width: 130px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all .15s; }
+.product-table .cat-select:hover { border-color: var(--border); }
+.product-table .cat-select:focus { border-color: var(--accent); outline: none; }
+.product-table .cat-select.saving { opacity: 0.55; }
+.product-table .cat-select.saved { border-color: #22c55e; }
 
 .drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 0 4px; user-select: none; line-height: 1; }
 .drag-handle:active { cursor: grabbing; }
@@ -81,6 +86,16 @@
 .edit-preview { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; background: var(--surface-2); margin-bottom: 18px; display: none; }
 
 .empty-table { padding: 60px 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+
+/* Category manager list rows */
+.cat-manager-list { display: flex; flex-direction: column; gap: 8px; }
+.cat-manager-list .cat-row { display: grid; grid-template-columns: minmax(140px, 1.4fr) minmax(120px, 1fr) 80px 110px auto auto; gap: 8px; align-items: center; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; }
+.cat-manager-list .cat-row .input { padding: 8px 10px; font-size: 12px; }
+.cat-manager-list .cat-row .cat-count { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+@media (max-width: 768px) {
+    .cat-manager-list .cat-row { grid-template-columns: 1fr 1fr; }
+    .cat-manager-list .cat-row .cat-count { grid-column: 1 / -1; text-align: left; }
+}
 
 /* === Comfort view: product grid === */
 .padmin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
@@ -239,6 +254,12 @@
 
     <!-- TAB: Categories -->
     <div class="tab-panel" id="tab-cat">
+        <p class="help-line" data-i18n="cat_manager_help">Rename or delete an existing category, or add a new one. Renaming a slug automatically rewrites every product currently in that category. Deleting a category leaves its products uncategorized.</p>
+
+        <h3 style="font-family:var(--font-display);font-size:14px;text-transform:uppercase;letter-spacing:1.5px;margin:18px 0 10px;" data-i18n="existing_categories">Existing categories</h3>
+        <div id="catManagerList" class="cat-manager-list"><div class="loading-block">Click this tab to load categories…</div></div>
+
+        <h3 style="font-family:var(--font-display);font-size:14px;text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 10px;" data-i18n="add_new_category">Add a new category</h3>
         <div class="form-grid">
             <div class="field">
                 <label data-i18n="cat_slug">Slug *</label>
@@ -344,7 +365,14 @@
                         {{ p.name }}
                         {% if p.tags %}<span class="tags-line">{{ p.tags }}</span>{% endif %}
                     </td>
-                    <td><span class="cat-pill">{{ p.category or '—' }}</span></td>
+                    <td>
+                        <select class="cat-select" onchange="quickSetCategory(this, '{{ p.id }}')">
+                            <option value="" {% if not p.category %}selected{% endif %}>— uncategorized —</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.slug }}" {% if p.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
                     <td class="price-cell">${{ p.price }}</td>
                     <td class="seller-cell">{{ p.seller or '—' }}</td>
                     <td>
@@ -489,6 +517,7 @@
 function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + name); });
+    if (name === 'cat') loadCategoryManager();
 }
 
 // === EDIT ===
@@ -539,7 +568,7 @@ async function saveEdit() {
                 var img = cells[3].querySelector('img');
                 if (img) { img.src = data.image; img.style.display = ''; }
                 cells[4].childNodes[0].textContent = data.name + ' ';
-                var catPill = cells[5].querySelector('.cat-pill'); if (catPill) catPill.textContent = data.category || '—';
+                var catSel = cells[5].querySelector('.cat-select'); if (catSel) catSel.value = data.category || '';
                 cells[6].textContent = '$' + data.price;
                 cells[7].textContent = data.seller || '—';
             }
@@ -774,6 +803,95 @@ async function bulkFeature(featured) {
     showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
 }
 
+// === INLINE CATEGORY QUICK-SET ===
+async function quickSetCategory(sel, pid) {
+    var cat = sel.value;
+    sel.classList.add('saving');
+    sel.classList.remove('saved');
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: cat })
+        });
+        var json = await res.json();
+        sel.classList.remove('saving');
+        if (!json.ok) {
+            showToast(json.error || t('failed'), 'error');
+            return;
+        }
+        var tr = sel.closest('tr'); if (tr) tr.dataset.cat = cat;
+        sel.classList.add('saved');
+        setTimeout(function(){ sel.classList.remove('saved'); }, 1200);
+    } catch(e) {
+        sel.classList.remove('saving');
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+// === CATEGORY MANAGEMENT (list / rename / delete) ===
+async function loadCategoryManager() {
+    var box = document.getElementById('catManagerList');
+    if (!box) return;
+    box.innerHTML = '<div class="loading-block">' + t('loading') + '…</div>';
+    try {
+        var res = await fetch('/admin/categories');
+        var json = await res.json();
+        var cats = (json.categories || []).slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
+        if (!cats.length) {
+            box.innerHTML = '<div class="empty-table">' + t('no_categories_yet') + '</div>';
+            return;
+        }
+        box.innerHTML = cats.map(function(c){
+            return '<div class="cat-row" data-slug="' + c.slug + '">'
+                + '<input class="input cat-name" value="' + escapeAttr(c.name) + '" placeholder="Name">'
+                + '<input class="input cat-slug" value="' + escapeAttr(c.slug) + '" placeholder="slug">'
+                + '<input class="input cat-order" type="number" value="' + (c.sort_order||0) + '" title="Sort order">'
+                + '<span class="cat-count">' + c.product_count + ' ' + t('products_word') + '</span>'
+                + '<button type="button" class="btn btn-secondary btn-xs" onclick="saveCategoryRow(this)">Save</button>'
+                + '<button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>'
+                + '</div>';
+        }).join('');
+    } catch(e) {
+        box.innerHTML = '<div class="empty-table">Failed to load categories</div>';
+    }
+}
+function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
+
+async function saveCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var oldSlug = row.dataset.slug;
+    var data = {
+        name: row.querySelector('.cat-name').value.trim(),
+        slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
+        sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
+    };
+    if (!data.name || !data.slug) return showToast(t('slug_name_required'), 'error');
+    var res = await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    showToast(t('saved'), 'success');
+    setTimeout(function(){ location.reload(); }, 600);
+}
+
+async function deleteCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var slug = row.dataset.slug;
+    var count = parseInt((row.querySelector('.cat-count').textContent || '0')) || 0;
+    var msg = count > 0
+        ? t('delete_category_with_products', { slug: slug, n: count })
+        : t('delete_category_confirm', { slug: slug });
+    if (!confirm(msg)) return;
+    var res = await fetch('/admin/categories/delete/' + encodeURIComponent(slug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ reassign_to: '' })
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    showToast(t('category_deleted'), 'success');
+    setTimeout(function(){ location.reload(); }, 600);
+}
+
 // === BULK MOVE ===
 async function bulkMoveCategory() {
     var ids = selectedIds();
@@ -788,7 +906,7 @@ async function bulkMoveCategory() {
         var tr = document.querySelector('tr[data-id="' + id + '"]');
         if (!tr) return;
         tr.dataset.cat = cat;
-        var pill = tr.querySelector('.cat-pill'); if (pill) pill.textContent = cat;
+        var sel = tr.querySelector('.cat-select'); if (sel) sel.value = cat;
     });
     clearSelection();
     showToast(t('moved_to', { n: ids.length, cat: cat }), 'success');

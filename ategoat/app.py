@@ -41,6 +41,7 @@ try:
         from .database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
+            update_category, delete_category, count_products_in_category,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants
         )
@@ -48,6 +49,7 @@ try:
         from database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
+            update_category, delete_category, count_products_in_category,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants
         )
@@ -1321,6 +1323,49 @@ def admin_add_category():
         return jsonify({'error': 'Slug and name required'}), 400
     add_category(data['slug'], data['name'], data.get('icon', ''), data.get('description', ''), data.get('sort_order', 0))
     return jsonify({'ok': True})
+
+
+@app.route('/admin/categories')
+def admin_list_categories():
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    cats = get_categories()
+    for c in cats:
+        c['product_count'] = count_products_in_category(c['slug'])
+    return jsonify({'categories': cats})
+
+
+@app.route('/admin/categories/update/<slug>', methods=['POST'])
+def admin_update_category(slug):
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    new_slug = update_category(slug, data)
+    return jsonify({'ok': True, 'slug': new_slug})
+
+
+@app.route('/admin/categories/delete/<slug>', methods=['POST'])
+def admin_delete_category(slug):
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    reassign_to = (data.get('reassign_to') or '').strip()
+    delete_category(slug, reassign_to)
+    return jsonify({'ok': True})
+
+
+@app.route('/admin/products/set-category', methods=['POST'])
+def admin_set_one_category():
+    """Quick-set a single product's category from the table dropdown."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    category = (data.get('category') or '').strip()
+    if not pid:
+        return jsonify({'error': 'Product id required'}), 400
+    update_product(pid, {'category': category})
+    return jsonify({'ok': True, 'id': pid, 'category': category})
 
 
 @app.route('/admin/backup', methods=['POST'])
