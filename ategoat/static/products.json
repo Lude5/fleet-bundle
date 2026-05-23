@@ -44,7 +44,7 @@
   },
   {
     "id": "p311da714",
-    "name": "Jordan 4 — $36.92",
+    "name": "Jordan 4",
     "category": "shoes",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -160,7 +160,7 @@
   },
   {
     "id": "pc137937a",
-    "name": "Nike Air Max Plus — Style 2",
+    "name": "Nike Air Max Plus",
     "category": "shoes",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -293,7 +293,7 @@
   },
   {
     "id": "p5c726b5b",
-    "name": "New Balance 9060 — $58.15",
+    "name": "New Balance 9060",
     "category": "trending",
     "price": "58.15",
     "price_numeric": 58.15,
@@ -513,7 +513,7 @@
   },
   {
     "id": "p7ce75ddd",
-    "name": "Adidas Campus — $37.69",
+    "name": "Adidas Campus",
     "category": "trending",
     "price": "37.69",
     "price_numeric": 37.69,
@@ -540,7 +540,7 @@
   },
   {
     "id": "p4212c0fa",
-    "name": "Nike Air Max Plus — Style 1",
+    "name": "Nike Air Max Plus",
     "category": "shoes",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -599,7 +599,7 @@
   },
   {
     "id": "p0b97ca54",
-    "name": "LV Sneakers — $72.00",
+    "name": "LV Sneakers",
     "category": "trending",
     "price": "72.00",
     "price_numeric": 72.0,
@@ -615,7 +615,7 @@
   },
   {
     "id": "pef5ae7ad",
-    "name": "Bape Shoes — $40.00",
+    "name": "Bape Shoes",
     "category": "trending",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -728,7 +728,7 @@
   },
   {
     "id": "p40ad95a2",
-    "name": "Alexander McQueen Shoes — $74.92",
+    "name": "Alexander McQueen Shoes",
     "category": "shoes",
     "price": "74.92",
     "price_numeric": 74.92,
@@ -819,7 +819,7 @@
   },
   {
     "id": "p43afd94f",
-    "name": "Crocs Slippers — $11.54",
+    "name": "Crocs Slippers",
     "category": "trending",
     "price": "11.54",
     "price_numeric": 11.54,
@@ -835,7 +835,7 @@
   },
   {
     "id": "pc732c793",
-    "name": "Jordan 1 Low — $36.92",
+    "name": "Jordan 1 Low",
     "category": "shoes",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -867,7 +867,7 @@
   },
   {
     "id": "pde90294c",
-    "name": "Dior B22 — $59.38",
+    "name": "Dior B22",
     "category": "trending",
     "price": "59.38",
     "price_numeric": 59.38,
@@ -894,7 +894,7 @@
   },
   {
     "id": "p1d7e253a",
-    "name": "Loro Piana Shoes — $53.85",
+    "name": "Loro Piana Shoes",
     "category": "trending",
     "price": "53.85",
     "price_numeric": 53.85,
@@ -910,7 +910,7 @@
   },
   {
     "id": "p96df2d42",
-    "name": "LV Sneakers — $84.62",
+    "name": "LV Sneakers",
     "category": "trending",
     "price": "84.62",
     "price_numeric": 84.62,
@@ -996,7 +996,7 @@
   },
   {
     "id": "pb719a716",
-    "name": "Nike Slippers — $16.92",
+    "name": "Nike Slippers",
     "category": "trending",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -1241,7 +1241,7 @@
   },
   {
     "id": "p9e3a96ba",
-    "name": "Maison Minara Yasuhiro Shoes — Style 2",
+    "name": "Maison Minara Yasuhiro Shoes",
     "category": "trending",
     "price": "69.23",
     "price_numeric": 69.23,
@@ -1316,7 +1316,7 @@
   },
   {
     "id": "p13f08808",
-    "name": "Golden Goose Low — $58.46",
+    "name": "Golden Goose Low",
     "category": "trending",
     "price": "58.46",
     "price_numeric": 58.46,
@@ -1445,7 +1445,7 @@
   },
   {
     "id": "p9f473860",
-    "name": "Ralph Lauren Polo — Style 1",
+    "name": "Ralph Lauren Polo",
     "category": "shirts",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -1461,7 +1461,7 @@
   },
   {
     "id": "pa4c653a3",
-    "name": "Ralph Lauren Tee — $13.08",
+    "name": "Ralph Lauren Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -1488,7 +1488,7 @@
   },
   {
     "id": "p85c5d512",
-    "name": "Under Armour Tee — Style 10",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -1504,7 +1504,7 @@
   },
   {
     "id": "pa10c037c",
-    "name": "Gallery Dept Tee — Style 1",
+    "name": "Gallery Dept Tee",
     "category": "shirts",
     "price": "11.69",
     "price_numeric": 11.69,
@@ -1520,7 +1520,7 @@
   },
   {
     "id": "pcc07d7be",
-    "name": "Stussy Tee — Style 1",
+    "name": "Stussy Tee",
     "category": "shirts",
     "price": "11.69",
     "price_numeric": 11.69,
@@ -1536,7 +1536,7 @@
   },
   {
     "id": "pcf783865",
-    "name": "Ralph Lauren Polo — Style 3",
+    "name": "Ralph Lauren Polo",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -1552,7 +1552,7 @@
   },
   {
     "id": "pfb0dd3a1",
-    "name": "Corteiz Tee — Style 36",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "14.31",
     "price_numeric": 14.31,
@@ -1568,7 +1568,7 @@
   },
   {
     "id": "pbc78687f",
-    "name": "Ami Tee — $16.15",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -1584,7 +1584,7 @@
   },
   {
     "id": "p2aff920d",
-    "name": "Essentials Tee — $13.85",
+    "name": "Essentials Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -1611,7 +1611,7 @@
   },
   {
     "id": "p3d05634d",
-    "name": "Football Jersey — Style 1",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "3.08",
     "price_numeric": 3.08,
@@ -1638,7 +1638,7 @@
   },
   {
     "id": "pb07c2d33",
-    "name": "Ami Tee — $14.92",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "14.92",
     "price_numeric": 14.92,
@@ -1654,7 +1654,7 @@
   },
   {
     "id": "p45c95633",
-    "name": "Stussy Tee — Style 4",
+    "name": "Stussy Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -1702,7 +1702,7 @@
   },
   {
     "id": "p572f9ff1",
-    "name": "Casablanca Tee — Style 3",
+    "name": "Casablanca Tee",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -1718,7 +1718,7 @@
   },
   {
     "id": "p78ddaf2f",
-    "name": "Burberry Tee — $23.08",
+    "name": "Burberry Tee",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -1734,7 +1734,7 @@
   },
   {
     "id": "p862e1753",
-    "name": "Denim Tears Tee — Style 2",
+    "name": "Denim Tears Tee",
     "category": "shirts",
     "price": "16.00",
     "price_numeric": 16.0,
@@ -1766,7 +1766,7 @@
   },
   {
     "id": "p1947928a",
-    "name": "Chrome Hearts Tee — $16.00",
+    "name": "Chrome Hearts Tee",
     "category": "shirts",
     "price": "16.00",
     "price_numeric": 16.0,
@@ -1782,7 +1782,7 @@
   },
   {
     "id": "p35549756",
-    "name": "Corteiz Tee — Style 37",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -1798,7 +1798,7 @@
   },
   {
     "id": "p5c2d5f96",
-    "name": "Maison Margiela Tee — $17.69",
+    "name": "Maison Margiela Tee",
     "category": "shirts",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -1814,7 +1814,7 @@
   },
   {
     "id": "pac64e81c",
-    "name": "Represent Tee — $17.69",
+    "name": "Represent Tee",
     "category": "shirts",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -1830,7 +1830,7 @@
   },
   {
     "id": "pf876a6d1",
-    "name": "Ralph Lauren Polo — Style 4",
+    "name": "Ralph Lauren Polo",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -1857,7 +1857,7 @@
   },
   {
     "id": "pe2dd91d4",
-    "name": "Casablanca Tee — Style 4",
+    "name": "Casablanca Tee",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -1926,7 +1926,7 @@
   },
   {
     "id": "pfdfd1ba3",
-    "name": "Off White  Tee — $16.92",
+    "name": "Off White  Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -1942,7 +1942,7 @@
   },
   {
     "id": "p35a25407",
-    "name": "Stussy Tee — Style 3",
+    "name": "Stussy Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -1969,7 +1969,7 @@
   },
   {
     "id": "p043ddca4",
-    "name": "Palm Angels Tee — $14.62",
+    "name": "Palm Angels Tee",
     "category": "shirts",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -2001,7 +2001,7 @@
   },
   {
     "id": "pf209cb2e",
-    "name": "Burberry Tee — $27.69",
+    "name": "Burberry Tee",
     "category": "shirts",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -2028,7 +2028,7 @@
   },
   {
     "id": "p7e11774b",
-    "name": "Ralph Lauren Tee — $21.85",
+    "name": "Ralph Lauren Tee",
     "category": "shirts",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -2054,7 +2054,7 @@
   },
   {
     "id": "pb4694934",
-    "name": "Off White  Tee — $17.23",
+    "name": "Off White  Tee",
     "category": "shirts",
     "price": "17.23",
     "price_numeric": 17.23,
@@ -2086,7 +2086,7 @@
   },
   {
     "id": "p1bfa8602",
-    "name": "Louis Vuitton Tee — Style 1",
+    "name": "Louis Vuitton Tee",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -2102,7 +2102,7 @@
   },
   {
     "id": "pd0d6de00",
-    "name": "Under Armour Tee — Style 9",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "10.00",
     "price_numeric": 10.0,
@@ -2118,7 +2118,7 @@
   },
   {
     "id": "p149b4283",
-    "name": "Dior Tee — $28.15",
+    "name": "Dior Tee",
     "category": "shirts",
     "price": "28.15",
     "price_numeric": 28.15,
@@ -2145,7 +2145,7 @@
   },
   {
     "id": "p31b8067c",
-    "name": "Casablanca Tee — Style 1",
+    "name": "Casablanca Tee",
     "category": "shirts",
     "price": "13.54",
     "price_numeric": 13.54,
@@ -2188,7 +2188,7 @@
   },
   {
     "id": "pf526f58f",
-    "name": "Casablanca Tee — Style 2",
+    "name": "Casablanca Tee",
     "category": "shirts",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -2204,7 +2204,7 @@
   },
   {
     "id": "p225557b5",
-    "name": "Spider Tee — $14.62",
+    "name": "Spider Tee",
     "category": "shirts",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -2247,7 +2247,7 @@
   },
   {
     "id": "pabdf7357",
-    "name": "Dsquared2  Tee — $16.92",
+    "name": "Dsquared2  Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -2263,7 +2263,7 @@
   },
   {
     "id": "p42484a8d",
-    "name": "Under Armour Tee — Style 8",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "10.00",
     "price_numeric": 10.0,
@@ -2295,7 +2295,7 @@
   },
   {
     "id": "p868a0cef",
-    "name": "Hellstar Tee — Style 2",
+    "name": "Hellstar Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -2311,7 +2311,7 @@
   },
   {
     "id": "pe6a2c583",
-    "name": "Chrome Hearts Tee — $21.85",
+    "name": "Chrome Hearts Tee",
     "category": "shirts",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -2354,7 +2354,7 @@
   },
   {
     "id": "pe2abf20c",
-    "name": "Corteiz Vest — $20.46",
+    "name": "Corteiz Vest",
     "category": "jackets",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -2370,7 +2370,7 @@
   },
   {
     "id": "pc8723532",
-    "name": "Louis Vuitton Tee — Style 2",
+    "name": "Louis Vuitton Tee",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -2386,7 +2386,7 @@
   },
   {
     "id": "p970cc511",
-    "name": "Represent Tee — $15.54",
+    "name": "Represent Tee",
     "category": "shirts",
     "price": "15.54",
     "price_numeric": 15.54,
@@ -2429,7 +2429,7 @@
   },
   {
     "id": "p557f738f",
-    "name": "Balenciaga Tee — Style 3",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "20.00",
     "price_numeric": 20.0,
@@ -2461,7 +2461,7 @@
   },
   {
     "id": "p1914e768",
-    "name": "Prada Tee — $30.77",
+    "name": "Prada Tee",
     "category": "shirts",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -2477,7 +2477,7 @@
   },
   {
     "id": "p80321046",
-    "name": "Burberry Tee — $30.77",
+    "name": "Burberry Tee",
     "category": "shirts",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -2504,7 +2504,7 @@
   },
   {
     "id": "p922b5e36",
-    "name": "Stone Island Polo — $15.38",
+    "name": "Stone Island Polo",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -2520,7 +2520,7 @@
   },
   {
     "id": "p28ee39bd",
-    "name": "Hellstar Tee — Style 3",
+    "name": "Hellstar Tee",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -2536,7 +2536,7 @@
   },
   {
     "id": "p0785312c",
-    "name": "Maison Margiela Tee — $16.15",
+    "name": "Maison Margiela Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -2552,7 +2552,7 @@
   },
   {
     "id": "p05f3442d",
-    "name": "Gucci Polo — $26.15",
+    "name": "Gucci Polo",
     "category": "shirts",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -2568,7 +2568,7 @@
   },
   {
     "id": "p1578987f",
-    "name": "Hellstar Tee — Style 1",
+    "name": "Hellstar Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -2584,7 +2584,7 @@
   },
   {
     "id": "p4ebbd8a8",
-    "name": "Dior Tee — $22.31",
+    "name": "Dior Tee",
     "category": "shirts",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -2600,7 +2600,7 @@
   },
   {
     "id": "p1bde114d",
-    "name": "Amiri Tee — $16.92",
+    "name": "Amiri Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -2627,7 +2627,7 @@
   },
   {
     "id": "pce6ca299",
-    "name": "Gallery Dept Tee — Style 3",
+    "name": "Gallery Dept Tee",
     "category": "shirts",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -2654,7 +2654,7 @@
   },
   {
     "id": "pc2723ee6",
-    "name": "Stone Island Tee — $13.85",
+    "name": "Stone Island Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -2670,7 +2670,7 @@
   },
   {
     "id": "p29527d13",
-    "name": "Nike Tee — Style 7",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.62",
     "price_numeric": 8.62,
@@ -2713,7 +2713,7 @@
   },
   {
     "id": "p74d23242",
-    "name": "Under Armour Tee — Style 2",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -2740,7 +2740,7 @@
   },
   {
     "id": "p9342b420",
-    "name": "Football Jersey — Style 11",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -2767,7 +2767,7 @@
   },
   {
     "id": "pbee222be",
-    "name": "Amiri Tee — $13.08",
+    "name": "Amiri Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -2783,7 +2783,7 @@
   },
   {
     "id": "pcf6e9f07",
-    "name": "Ami Shirt — $20.00",
+    "name": "Ami Shirt",
     "category": "shirts",
     "price": "20.00",
     "price_numeric": 20.0,
@@ -2799,7 +2799,7 @@
   },
   {
     "id": "pc97d6c0f",
-    "name": "Essentials Tee — $10.46",
+    "name": "Essentials Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -2842,7 +2842,7 @@
   },
   {
     "id": "p40b7fcfc",
-    "name": "Bape  Tee — Style 5",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -2896,7 +2896,7 @@
   },
   {
     "id": "p5c100ab4",
-    "name": "Spider Tee — $18.00",
+    "name": "Spider Tee",
     "category": "shirts",
     "price": "18.00",
     "price_numeric": 18.0,
@@ -2912,7 +2912,7 @@
   },
   {
     "id": "pfd050ce5",
-    "name": "Bape  Tee — Style 8",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -2928,7 +2928,7 @@
   },
   {
     "id": "p5ba6967b",
-    "name": "Essentials Shorts — $16.00",
+    "name": "Essentials Shorts",
     "category": "pants",
     "price": "16.00",
     "price_numeric": 16.0,
@@ -2944,7 +2944,7 @@
   },
   {
     "id": "pd44365d6",
-    "name": "Ralph Lauren Shorts — $21.85",
+    "name": "Ralph Lauren Shorts",
     "category": "pants",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -2960,7 +2960,7 @@
   },
   {
     "id": "pb04c1039",
-    "name": "Ralph Lauren Shorts — $15.38",
+    "name": "Ralph Lauren Shorts",
     "category": "pants",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -2976,7 +2976,7 @@
   },
   {
     "id": "p325853ff",
-    "name": "Corteiz Shorts — $20.00",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "20.00",
     "price_numeric": 20.0,
@@ -2992,7 +2992,7 @@
   },
   {
     "id": "p7879f054",
-    "name": "Denim Tears Shorts — $20.77",
+    "name": "Denim Tears Shorts",
     "category": "pants",
     "price": "20.77",
     "price_numeric": 20.77,
@@ -3008,7 +3008,7 @@
   },
   {
     "id": "p433c2972",
-    "name": "Burberry Shorts — $30.77",
+    "name": "Burberry Shorts",
     "category": "pants",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -3050,7 +3050,7 @@
   },
   {
     "id": "p11bf0cad",
-    "name": "Ami Shorts — $18.31",
+    "name": "Ami Shorts",
     "category": "pants",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -3066,7 +3066,7 @@
   },
   {
     "id": "p9b3c7dc7",
-    "name": "Corteiz Shorts — $20.77",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "20.77",
     "price_numeric": 20.77,
@@ -3082,7 +3082,7 @@
   },
   {
     "id": "pdbcb3015",
-    "name": "Nike Shorts — Style 6",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "13.54",
     "price_numeric": 13.54,
@@ -3098,7 +3098,7 @@
   },
   {
     "id": "p2f95781e",
-    "name": "Burberry Shorts — $31.85",
+    "name": "Burberry Shorts",
     "category": "pants",
     "price": "31.85",
     "price_numeric": 31.85,
@@ -3130,7 +3130,7 @@
   },
   {
     "id": "pc41ab0cb",
-    "name": "Nike Shorts — Style 8",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -3146,7 +3146,7 @@
   },
   {
     "id": "p1a710925",
-    "name": "Palm Angel Shorts — $13.85",
+    "name": "Palm Angel Shorts",
     "category": "pants",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -3162,7 +3162,7 @@
   },
   {
     "id": "p388fa8e4",
-    "name": "Moncler Shorts — $16.92",
+    "name": "Moncler Shorts",
     "category": "pants",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -3178,7 +3178,7 @@
   },
   {
     "id": "p5293f4ea",
-    "name": "Ami Shorts — $22.31",
+    "name": "Ami Shorts",
     "category": "pants",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -3264,7 +3264,7 @@
   },
   {
     "id": "p0fae4951",
-    "name": "Ralph Lauren Shorts — $8.00",
+    "name": "Ralph Lauren Shorts",
     "category": "pants",
     "price": "8.00",
     "price_numeric": 8.0,
@@ -3288,7 +3288,7 @@
   },
   {
     "id": "p49113bd9",
-    "name": "Corteiz Shorts — $27.69",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -3304,7 +3304,7 @@
   },
   {
     "id": "p443fd758",
-    "name": "Under Armour  Shorts — $9.23",
+    "name": "Under Armour  Shorts",
     "category": "pants",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -3320,7 +3320,7 @@
   },
   {
     "id": "p048d9505",
-    "name": "Dior Shorts — Style 1",
+    "name": "Dior Shorts",
     "category": "pants",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -3336,7 +3336,7 @@
   },
   {
     "id": "p5c120810",
-    "name": "Palm Angel Shorts — $20.15",
+    "name": "Palm Angel Shorts",
     "category": "pants",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -3363,7 +3363,7 @@
   },
   {
     "id": "p3cc0e2c6",
-    "name": "Moncler Shorts — $14.15",
+    "name": "Moncler Shorts",
     "category": "pants",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -3379,7 +3379,7 @@
   },
   {
     "id": "pc8744ef6",
-    "name": "Burberry Shorts — $15.38",
+    "name": "Burberry Shorts",
     "category": "pants",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -3406,7 +3406,7 @@
   },
   {
     "id": "pcf70539e",
-    "name": "Burberry Shorts — $21.23",
+    "name": "Burberry Shorts",
     "category": "pants",
     "price": "21.23",
     "price_numeric": 21.23,
@@ -3448,7 +3448,7 @@
   },
   {
     "id": "p5dc90138",
-    "name": "Essentials Shorts — $17.69",
+    "name": "Essentials Shorts",
     "category": "pants",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -3475,7 +3475,7 @@
   },
   {
     "id": "p782c5960",
-    "name": "Essentials Shorts — $16.15",
+    "name": "Essentials Shorts",
     "category": "pants",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -3491,7 +3491,7 @@
   },
   {
     "id": "pa252f3ab",
-    "name": "CP Shorts — Style 2",
+    "name": "CP Shorts",
     "category": "pants",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -3549,7 +3549,7 @@
   },
   {
     "id": "pc82aa0bc",
-    "name": "Dior Shorts — Style 2",
+    "name": "Dior Shorts",
     "category": "pants",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -3576,7 +3576,7 @@
   },
   {
     "id": "p0426fa2a",
-    "name": "Dior Shorts — Style 4",
+    "name": "Dior Shorts",
     "category": "pants",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -3592,7 +3592,7 @@
   },
   {
     "id": "p3d6524e5",
-    "name": "Gallery Dept Shorts — $22.31",
+    "name": "Gallery Dept Shorts",
     "category": "pants",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -3624,7 +3624,7 @@
   },
   {
     "id": "p1efe8569",
-    "name": "Gallery Dept Shorts — $19.23",
+    "name": "Gallery Dept Shorts",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -3679,7 +3679,7 @@
   },
   {
     "id": "p440bd146",
-    "name": "Corteiz Shorts — $17.08",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -3755,7 +3755,7 @@
   },
   {
     "id": "pd8437a16",
-    "name": "Dior Shorts — Style 3",
+    "name": "Dior Shorts",
     "category": "pants",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -3782,7 +3782,7 @@
   },
   {
     "id": "pc43960bd",
-    "name": "Corteiz Shorts — $19.23",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -3809,7 +3809,7 @@
   },
   {
     "id": "pbc4dc8c5",
-    "name": "Under Armour  Shorts — $10.00",
+    "name": "Under Armour  Shorts",
     "category": "pants",
     "price": "10.00",
     "price_numeric": 10.0,
@@ -3876,7 +3876,7 @@
   },
   {
     "id": "p7976b376",
-    "name": "Nike Shorts — Style 5",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "12.77",
     "price_numeric": 12.77,
@@ -3903,7 +3903,7 @@
   },
   {
     "id": "p16766849",
-    "name": "Nike Set — Style 1",
+    "name": "Nike Set",
     "category": "trending",
     "price": "8.46",
     "price_numeric": 8.46,
@@ -3946,7 +3946,7 @@
   },
   {
     "id": "pf6ed4cf9",
-    "name": "Trapstar Set — $29.54",
+    "name": "Trapstar Set",
     "category": "trending",
     "price": "29.54",
     "price_numeric": 29.54,
@@ -4019,7 +4019,7 @@
   },
   {
     "id": "p08d4e31d",
-    "name": "Nike Set — Style 9",
+    "name": "Nike Set",
     "category": "trending",
     "price": "42.31",
     "price_numeric": 42.31,
@@ -4035,7 +4035,7 @@
   },
   {
     "id": "p633bbd43",
-    "name": "Nike Set — Style 15",
+    "name": "Nike Set",
     "category": "trending",
     "price": "56.15",
     "price_numeric": 56.15,
@@ -4051,7 +4051,7 @@
   },
   {
     "id": "paad9ca59",
-    "name": "Essentials Set — Style 5",
+    "name": "Essentials Set",
     "category": "trending",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -4067,7 +4067,7 @@
   },
   {
     "id": "pb06210d9",
-    "name": "Corteiz Shorts — $25.69",
+    "name": "Corteiz Shorts",
     "category": "pants",
     "price": "25.69",
     "price_numeric": 25.69,
@@ -4083,7 +4083,7 @@
   },
   {
     "id": "p19f87d54",
-    "name": "Trapstar Set — $43.08",
+    "name": "Trapstar Set",
     "category": "trending",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -4099,7 +4099,7 @@
   },
   {
     "id": "p95b2b1ce",
-    "name": "Nike Set — Style 7",
+    "name": "Nike Set",
     "category": "trending",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -4131,7 +4131,7 @@
   },
   {
     "id": "p495cfd0c",
-    "name": "Nike Set — Style 11",
+    "name": "Nike Set",
     "category": "trending",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -4147,7 +4147,7 @@
   },
   {
     "id": "pe318f7f0",
-    "name": "Essentials Set — Style 6",
+    "name": "Essentials Set",
     "category": "trending",
     "price": "38.46",
     "price_numeric": 38.46,
@@ -4179,7 +4179,7 @@
   },
   {
     "id": "peb005014",
-    "name": "Nike Set — Style 14",
+    "name": "Nike Set",
     "category": "trending",
     "price": "54.92",
     "price_numeric": 54.92,
@@ -4195,7 +4195,7 @@
   },
   {
     "id": "pcd17a345",
-    "name": "Nike Set — Style 12",
+    "name": "Nike Set",
     "category": "trending",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -4227,7 +4227,7 @@
   },
   {
     "id": "p312e07c3",
-    "name": "Nike Set — Style 10",
+    "name": "Nike Set",
     "category": "trending",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -4243,7 +4243,7 @@
   },
   {
     "id": "p98e5cb00",
-    "name": "Nike Set — Style 13",
+    "name": "Nike Set",
     "category": "trending",
     "price": "53.69",
     "price_numeric": 53.69,
@@ -4259,7 +4259,7 @@
   },
   {
     "id": "pad3094ae",
-    "name": "Nike Set — Style 8",
+    "name": "Nike Set",
     "category": "trending",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -4291,7 +4291,7 @@
   },
   {
     "id": "p65371b05",
-    "name": "Spider  Hoodie — $28.46",
+    "name": "Spider  Hoodie",
     "category": "hoodies",
     "price": "28.46",
     "price_numeric": 28.46,
@@ -4318,7 +4318,7 @@
   },
   {
     "id": "p25fe480a",
-    "name": "Ralph Lauren Hoodie — Style 8",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -4334,7 +4334,7 @@
   },
   {
     "id": "pa6055211",
-    "name": "Stone Island Hoodie — $21.54",
+    "name": "Stone Island Hoodie",
     "category": "hoodies",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -4377,7 +4377,7 @@
   },
   {
     "id": "p8eb66701",
-    "name": "Stone Island Hoodie — $13.54",
+    "name": "Stone Island Hoodie",
     "category": "hoodies",
     "price": "13.54",
     "price_numeric": 13.54,
@@ -4393,7 +4393,7 @@
   },
   {
     "id": "p2fcd6c30",
-    "name": "Ralph Lauren Hoodie — Style 6",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -4420,7 +4420,7 @@
   },
   {
     "id": "p294892b1",
-    "name": "Chrome Hearts  Hoodie — $34.62",
+    "name": "Chrome Hearts  Hoodie",
     "category": "hoodies",
     "price": "34.62",
     "price_numeric": 34.62,
@@ -4479,7 +4479,7 @@
   },
   {
     "id": "p6ffbe524",
-    "name": "Ralph Lauren Hoodie — Style 5",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -4522,7 +4522,7 @@
   },
   {
     "id": "p67f74155",
-    "name": "Stone Island Hoodie — $24.62",
+    "name": "Stone Island Hoodie",
     "category": "hoodies",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -4554,7 +4554,7 @@
   },
   {
     "id": "p180a9d68",
-    "name": "Chrome Hearts\nLong Tee — $30.77",
+    "name": "Chrome Hearts\nLong Tee",
     "category": "shirts",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -4570,7 +4570,7 @@
   },
   {
     "id": "p658110ee",
-    "name": "Spider  Hoodie — $23.08",
+    "name": "Spider  Hoodie",
     "category": "hoodies",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -4656,7 +4656,7 @@
   },
   {
     "id": "p2e71b6f2",
-    "name": "Chrome Hearts\nLong Tee — $15.69",
+    "name": "Chrome Hearts\nLong Tee",
     "category": "shirts",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -4683,7 +4683,7 @@
   },
   {
     "id": "p07ebdab1",
-    "name": "Chrome Hearts  Hoodie — $30.77",
+    "name": "Chrome Hearts  Hoodie",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -4726,7 +4726,7 @@
   },
   {
     "id": "p1689e940",
-    "name": "Stussy Hoodie — Style 10",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "33.08",
     "price_numeric": 33.08,
@@ -4769,7 +4769,7 @@
   },
   {
     "id": "p0b89883e",
-    "name": "Amiri Hoodie — $33.85",
+    "name": "Amiri Hoodie",
     "category": "hoodies",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -4785,7 +4785,7 @@
   },
   {
     "id": "p33ac47d6",
-    "name": "Moncler Hoodie — $33.85",
+    "name": "Moncler Hoodie",
     "category": "hoodies",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -4801,7 +4801,7 @@
   },
   {
     "id": "pd3380f1c",
-    "name": "Denim Tears Hoodie — $27.69",
+    "name": "Denim Tears Hoodie",
     "category": "hoodies",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -4817,7 +4817,7 @@
   },
   {
     "id": "p5f087a0e",
-    "name": "Burberry Hoodie — $17.08",
+    "name": "Burberry Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -4833,7 +4833,7 @@
   },
   {
     "id": "pe54192c8",
-    "name": "Prada Hoodie — $28.46",
+    "name": "Prada Hoodie",
     "category": "hoodies",
     "price": "28.46",
     "price_numeric": 28.46,
@@ -4876,7 +4876,7 @@
   },
   {
     "id": "p9bec5b1c",
-    "name": "Dsquared2 Hoodie — $30.77",
+    "name": "Dsquared2 Hoodie",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -4892,7 +4892,7 @@
   },
   {
     "id": "p8c780d5b",
-    "name": "Stussy Hoodie — Style 11",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "35.38",
     "price_numeric": 35.38,
@@ -4935,7 +4935,7 @@
   },
   {
     "id": "pcde2b0a2",
-    "name": "Bape Hoodie — Style 4",
+    "name": "Bape Hoodie",
     "category": "hoodies",
     "price": "23.38",
     "price_numeric": 23.38,
@@ -4962,7 +4962,7 @@
   },
   {
     "id": "p9fb4eca7",
-    "name": "Gallery Dept Hoodie — $25.38",
+    "name": "Gallery Dept Hoodie",
     "category": "hoodies",
     "price": "25.38",
     "price_numeric": 25.38,
@@ -5021,7 +5021,7 @@
   },
   {
     "id": "pc96e9f87",
-    "name": "Syna World Hoodie — $26.15",
+    "name": "Syna World Hoodie",
     "category": "hoodies",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -5037,7 +5037,7 @@
   },
   {
     "id": "p317a2ac5",
-    "name": "LV Hoodie — $31.54",
+    "name": "LV Hoodie",
     "category": "hoodies",
     "price": "31.54",
     "price_numeric": 31.54,
@@ -5064,7 +5064,7 @@
   },
   {
     "id": "pb00558dc",
-    "name": "Gallery Dept Hoodie — $32.31",
+    "name": "Gallery Dept Hoodie",
     "category": "hoodies",
     "price": "32.31",
     "price_numeric": 32.31,
@@ -5080,7 +5080,7 @@
   },
   {
     "id": "pd94cc062",
-    "name": "Mertra Hoodie — $29.54",
+    "name": "Mertra Hoodie",
     "category": "hoodies",
     "price": "29.54",
     "price_numeric": 29.54,
@@ -5098,7 +5098,7 @@
   },
   {
     "id": "p751e07a4",
-    "name": "Corteiz Hoodie — Style 10",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "26.92",
     "price_numeric": 26.92,
@@ -5125,7 +5125,7 @@
   },
   {
     "id": "p3ea58b38",
-    "name": "Syna World Hoodie — $15.38",
+    "name": "Syna World Hoodie",
     "category": "hoodies",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -5152,7 +5152,7 @@
   },
   {
     "id": "pfb722e1d",
-    "name": "Ralph Lauren Hoodie — Style 7",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -5168,7 +5168,7 @@
   },
   {
     "id": "pbd5af4fa",
-    "name": "Essentials Pants — $20.00",
+    "name": "Essentials Pants",
     "category": "pants",
     "price": "20.00",
     "price_numeric": 20.0,
@@ -5184,7 +5184,7 @@
   },
   {
     "id": "p3a529e96",
-    "name": "Essentials Pants — $17.69",
+    "name": "Essentials Pants",
     "category": "pants",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -5200,7 +5200,7 @@
   },
   {
     "id": "pbe09a258",
-    "name": "Amiri Jeans — $35.85",
+    "name": "Amiri Jeans",
     "category": "pants",
     "price": "35.85",
     "price_numeric": 35.85,
@@ -5259,7 +5259,7 @@
   },
   {
     "id": "p8923b06a",
-    "name": "Stone Island Jeans — $27.69",
+    "name": "Stone Island Jeans",
     "category": "pants",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -5284,7 +5284,7 @@
   },
   {
     "id": "pbb5dc3da",
-    "name": "Nike Pants — $21.85",
+    "name": "Nike Pants",
     "category": "pants",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -5316,7 +5316,7 @@
   },
   {
     "id": "pb094aace",
-    "name": "Spider Pants — $20.46",
+    "name": "Spider Pants",
     "category": "pants",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -5348,7 +5348,7 @@
   },
   {
     "id": "p9b717223",
-    "name": "Chrome Hearts Jeans — $40.00",
+    "name": "Chrome Hearts Jeans",
     "category": "pants",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -5391,7 +5391,7 @@
   },
   {
     "id": "p39d1581d",
-    "name": "Chrome Hearts Pants — $33.85",
+    "name": "Chrome Hearts Pants",
     "category": "pants",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -5407,7 +5407,7 @@
   },
   {
     "id": "p65de77ff",
-    "name": "Derschutze Jeans — $29.54",
+    "name": "Derschutze Jeans",
     "category": "pants",
     "price": "29.54",
     "price_numeric": 29.54,
@@ -5439,7 +5439,7 @@
   },
   {
     "id": "p9fa9b89d",
-    "name": "Stone Island Jeans — $30.77",
+    "name": "Stone Island Jeans",
     "category": "pants",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -5491,7 +5491,7 @@
   },
   {
     "id": "p99786c40",
-    "name": "Under Armour Pants — Style 2",
+    "name": "Under Armour Pants",
     "category": "pants",
     "price": "10.15",
     "price_numeric": 10.15,
@@ -5507,7 +5507,7 @@
   },
   {
     "id": "p51efe5b9",
-    "name": "Amiri Jeans — $40.00",
+    "name": "Amiri Jeans",
     "category": "pants",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -5550,7 +5550,7 @@
   },
   {
     "id": "p3d4b070a",
-    "name": "Under Armour Pants — Style 1",
+    "name": "Under Armour Pants",
     "category": "pants",
     "price": "10.15",
     "price_numeric": 10.15,
@@ -5593,7 +5593,7 @@
   },
   {
     "id": "p04f0d3ac",
-    "name": "Nike Pants — $33.85",
+    "name": "Nike Pants",
     "category": "pants",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -5609,7 +5609,7 @@
   },
   {
     "id": "p5cadcb54",
-    "name": "Stone Island Pants — $23.08",
+    "name": "Stone Island Pants",
     "category": "pants",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -5670,7 +5670,7 @@
   },
   {
     "id": "p500e8832",
-    "name": "Stone Island Pants — $20.92",
+    "name": "Stone Island Pants",
     "category": "pants",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -5686,7 +5686,7 @@
   },
   {
     "id": "pb733648f",
-    "name": "Mertra Pants — $24.92",
+    "name": "Mertra Pants",
     "category": "pants",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -5702,7 +5702,7 @@
   },
   {
     "id": "p4827bf8d",
-    "name": "Corteiz Jacket — $46.15",
+    "name": "Corteiz Jacket",
     "category": "jackets",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -5750,7 +5750,7 @@
   },
   {
     "id": "p19782689",
-    "name": "Corteiz Jacket — $24.62",
+    "name": "Corteiz Jacket",
     "category": "jackets",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -5782,7 +5782,7 @@
   },
   {
     "id": "p5f2338d3",
-    "name": "Trapstar Jacket — $38.46",
+    "name": "Trapstar Jacket",
     "category": "jackets",
     "price": "38.46",
     "price_numeric": 38.46,
@@ -5884,7 +5884,7 @@
   },
   {
     "id": "p2185d53a",
-    "name": "Canada Goose Quilted Jacket — $57.54",
+    "name": "Canada Goose Quilted Jacket",
     "category": "jackets",
     "price": "57.54",
     "price_numeric": 57.54,
@@ -5900,7 +5900,7 @@
   },
   {
     "id": "p7e76db89",
-    "name": "Canada Goose Quilted Jacket — $56.31",
+    "name": "Canada Goose Quilted Jacket",
     "category": "jackets",
     "price": "56.31",
     "price_numeric": 56.31,
@@ -5927,7 +5927,7 @@
   },
   {
     "id": "p3d83716f",
-    "name": "Stone Island Quilted Jacket — $44.62",
+    "name": "Stone Island Quilted Jacket",
     "category": "jackets",
     "price": "44.62",
     "price_numeric": 44.62,
@@ -5943,7 +5943,7 @@
   },
   {
     "id": "pf7c31cab",
-    "name": "Moncler Quilted Jacket — Style 6",
+    "name": "Moncler Quilted Jacket",
     "category": "jackets",
     "price": "57.54",
     "price_numeric": 57.54,
@@ -5970,7 +5970,7 @@
   },
   {
     "id": "p7a97f813",
-    "name": "Trapstar Quilted Jacket — $73.85",
+    "name": "Trapstar Quilted Jacket",
     "category": "jackets",
     "price": "73.85",
     "price_numeric": 73.85,
@@ -5986,7 +5986,7 @@
   },
   {
     "id": "p0349e400",
-    "name": "Moncler Quilted Jacket — Style 3",
+    "name": "Moncler Quilted Jacket",
     "category": "jackets",
     "price": "47.08",
     "price_numeric": 47.08,
@@ -6013,7 +6013,7 @@
   },
   {
     "id": "p93bedf7f",
-    "name": "The North Face Vest — $22.31",
+    "name": "The North Face Vest",
     "category": "jackets",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -6029,7 +6029,7 @@
   },
   {
     "id": "pa5766394",
-    "name": "Ralph Lauren Vest — $22.31",
+    "name": "Ralph Lauren Vest",
     "category": "jackets",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -6072,7 +6072,7 @@
   },
   {
     "id": "p3c9d9629",
-    "name": "The North Face Down Jacket — $58.46",
+    "name": "The North Face Down Jacket",
     "category": "jackets",
     "price": "58.46",
     "price_numeric": 58.46,
@@ -6104,7 +6104,7 @@
   },
   {
     "id": "pffa24538",
-    "name": "Burberry Down Jacket — $102.62",
+    "name": "Burberry Down Jacket",
     "category": "jackets",
     "price": "102.62",
     "price_numeric": 102.62,
@@ -6136,7 +6136,7 @@
   },
   {
     "id": "p4517000f",
-    "name": "Burberry Down Jacket — $86.31",
+    "name": "Burberry Down Jacket",
     "category": "jackets",
     "price": "86.31",
     "price_numeric": 86.31,
@@ -6163,7 +6163,7 @@
   },
   {
     "id": "pa5672e47",
-    "name": "Moncler Down Jacket — Style 5",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -6206,7 +6206,7 @@
   },
   {
     "id": "pff30514c",
-    "name": "Moncler Down Jacket — Style 3",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -6222,7 +6222,7 @@
   },
   {
     "id": "p869bc124",
-    "name": "Canada Goose Vest — $43.08",
+    "name": "Canada Goose Vest",
     "category": "jackets",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -6238,7 +6238,7 @@
   },
   {
     "id": "pde5cc286",
-    "name": "Ralph Lauren Vest — $61.54",
+    "name": "Ralph Lauren Vest",
     "category": "jackets",
     "price": "61.54",
     "price_numeric": 61.54,
@@ -6483,7 +6483,7 @@
   },
   {
     "id": "p144ef07d",
-    "name": "Hermes Belt — $12.31",
+    "name": "Hermes Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -6558,7 +6558,7 @@
   },
   {
     "id": "pfdcf778d",
-    "name": "Stone Island Hat — $7.54",
+    "name": "Stone Island Hat",
     "category": "accessories",
     "price": "7.54",
     "price_numeric": 7.54,
@@ -6665,7 +6665,7 @@
   },
   {
     "id": "pb258cc84",
-    "name": "Dior Belt — $12.31",
+    "name": "Dior Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -6799,7 +6799,7 @@
   },
   {
     "id": "p07bbe97a",
-    "name": "Goyard Bag — $14.46",
+    "name": "Goyard Bag",
     "category": "bags",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -6831,7 +6831,7 @@
   },
   {
     "id": "p472a7914",
-    "name": "Jacquemus Bag — $16.92",
+    "name": "Jacquemus Bag",
     "category": "bags",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -6901,7 +6901,7 @@
   },
   {
     "id": "pa7172746",
-    "name": "Stone Island Hat — $5.38",
+    "name": "Stone Island Hat",
     "category": "accessories",
     "price": "5.38",
     "price_numeric": 5.38,
@@ -7019,7 +7019,7 @@
   },
   {
     "id": "pe29caf39",
-    "name": "Mlb Hat — $9.69",
+    "name": "Mlb Hat",
     "category": "accessories",
     "price": "9.69",
     "price_numeric": 9.69,
@@ -7051,7 +7051,7 @@
   },
   {
     "id": "p7decf3a3",
-    "name": "Mlb Hat — $9.54",
+    "name": "Mlb Hat",
     "category": "accessories",
     "price": "9.54",
     "price_numeric": 9.54,
@@ -7121,7 +7121,7 @@
   },
   {
     "id": "p462c3d36",
-    "name": "Guess Bag — Style 1",
+    "name": "Guess Bag",
     "category": "bags",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -7148,7 +7148,7 @@
   },
   {
     "id": "p1f18a02a",
-    "name": "Gucci Bag — $16.77",
+    "name": "Gucci Bag",
     "category": "bags",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -7208,7 +7208,7 @@
   },
   {
     "id": "p207e03c2",
-    "name": "Louis Vuitton Bag — Style 1",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -7272,7 +7272,7 @@
   },
   {
     "id": "p4eacdb2c",
-    "name": "Supreme Bag — $11.54",
+    "name": "Supreme Bag",
     "category": "bags",
     "price": "11.54",
     "price_numeric": 11.54,
@@ -7288,7 +7288,7 @@
   },
   {
     "id": "p0c752634",
-    "name": "Gucci Bag — $16.46",
+    "name": "Gucci Bag",
     "category": "bags",
     "price": "16.46",
     "price_numeric": 16.46,
@@ -7320,7 +7320,7 @@
   },
   {
     "id": "p6ee56001",
-    "name": "Louis Vuitton Bag — Style 8",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -7336,7 +7336,7 @@
   },
   {
     "id": "p13a863ae",
-    "name": "Goyard Bag — $9.23",
+    "name": "Goyard Bag",
     "category": "bags",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -7363,7 +7363,7 @@
   },
   {
     "id": "p268ea3c2",
-    "name": "Ray Ban SunGlasses — Style 2",
+    "name": "Ray Ban SunGlasses",
     "category": "trending",
     "price": "13.54",
     "price_numeric": 13.54,
@@ -7460,7 +7460,7 @@
   },
   {
     "id": "p2f9a939b",
-    "name": "Chanel Belt — $15.08",
+    "name": "Chanel Belt",
     "category": "accessories",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -7541,7 +7541,7 @@
   },
   {
     "id": "p268da812",
-    "name": "Mertra Shorts — $23.54",
+    "name": "Mertra Shorts",
     "category": "pants",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -7557,7 +7557,7 @@
   },
   {
     "id": "p3f2e5fa2",
-    "name": "Spider Shorts — $27.54",
+    "name": "Spider Shorts",
     "category": "pants",
     "price": "27.54",
     "price_numeric": 27.54,
@@ -7584,7 +7584,7 @@
   },
   {
     "id": "p0833fcf2",
-    "name": "Spider Pants — $22.31",
+    "name": "Spider Pants",
     "category": "pants",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -7600,7 +7600,7 @@
   },
   {
     "id": "p7e689c8d",
-    "name": "Corteiz Tee — Style 17",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7616,7 +7616,7 @@
   },
   {
     "id": "p47991f5b",
-    "name": "Corteiz Tee — Style 13",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7632,7 +7632,7 @@
   },
   {
     "id": "pd240eea4",
-    "name": "Corteiz Tee — Style 31",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7648,7 +7648,7 @@
   },
   {
     "id": "pdd267604",
-    "name": "Corteiz Tee — Style 33",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7664,7 +7664,7 @@
   },
   {
     "id": "pc1258b6d",
-    "name": "Corteiz Tee — Style 30",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7680,7 +7680,7 @@
   },
   {
     "id": "p3f85ed58",
-    "name": "Corteiz Tee — Style 12",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7696,7 +7696,7 @@
   },
   {
     "id": "p0364fd9e",
-    "name": "Corteiz Tee — Style 1",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7712,7 +7712,7 @@
   },
   {
     "id": "pf5d69b49",
-    "name": "Corteiz Tee — Style 35",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7739,7 +7739,7 @@
   },
   {
     "id": "p9f8bbfcf",
-    "name": "Corteiz Tee — Style 25",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7755,7 +7755,7 @@
   },
   {
     "id": "p188dda65",
-    "name": "Corteiz Tee — Style 6",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7771,7 +7771,7 @@
   },
   {
     "id": "p5c5f9645",
-    "name": "Corteiz Tee — Style 15",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7787,7 +7787,7 @@
   },
   {
     "id": "p9e5c91ff",
-    "name": "Corteiz Tee — Style 24",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7803,7 +7803,7 @@
   },
   {
     "id": "pb741c829",
-    "name": "Corteiz Tee — Style 28",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -7819,7 +7819,7 @@
   },
   {
     "id": "p4b7d3dd1",
-    "name": "Corteiz Tee — Style 38",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -7846,7 +7846,7 @@
   },
   {
     "id": "p71a98f21",
-    "name": "Louis Vuitton Trainer — Style 1",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -7862,7 +7862,7 @@
   },
   {
     "id": "p5386e6dc",
-    "name": "Ami Shirt — $11.85",
+    "name": "Ami Shirt",
     "category": "shirts",
     "price": "11.85",
     "price_numeric": 11.85,
@@ -7878,7 +7878,7 @@
   },
   {
     "id": "p3277fb5e",
-    "name": "Ashley William Tee — Style 2",
+    "name": "Ashley William Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -7910,7 +7910,7 @@
   },
   {
     "id": "pa92433b7",
-    "name": "Alo Set — $36.31",
+    "name": "Alo Set",
     "category": "trending",
     "price": "36.31",
     "price_numeric": 36.31,
@@ -7937,7 +7937,7 @@
   },
   {
     "id": "p4149d5e4",
-    "name": "Supreme Mask — Style 1",
+    "name": "Supreme Mask",
     "category": "trending",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -8139,7 +8139,7 @@
   },
   {
     "id": "ped65b56a",
-    "name": "Air Jordan 4 — $70.62",
+    "name": "Air Jordan 4",
     "category": "shoes",
     "price": "70.62",
     "price_numeric": 70.62,
@@ -8155,7 +8155,7 @@
   },
   {
     "id": "p08804216",
-    "name": "Air Jordan 4 — $34.00",
+    "name": "Air Jordan 4",
     "category": "shoes",
     "price": "34.00",
     "price_numeric": 34.0,
@@ -8171,7 +8171,7 @@
   },
   {
     "id": "p4a9a5ec5",
-    "name": "Air Jordan 4 — $83.69",
+    "name": "Air Jordan 4",
     "category": "shoes",
     "price": "83.69",
     "price_numeric": 83.69,
@@ -8347,7 +8347,7 @@
   },
   {
     "id": "pa33f8864",
-    "name": "Nike Air Force 1 Low — $28.15",
+    "name": "Nike Air Force 1 Low",
     "category": "shoes",
     "price": "28.15",
     "price_numeric": 28.15,
@@ -8374,7 +8374,7 @@
   },
   {
     "id": "p19ed8294",
-    "name": "Nike Air Force 1 Low — $31.38",
+    "name": "Nike Air Force 1 Low",
     "category": "shoes",
     "price": "31.38",
     "price_numeric": 31.38,
@@ -8390,7 +8390,7 @@
   },
   {
     "id": "p463c7ff6",
-    "name": "Nike Air Force 1 Low — $17.85",
+    "name": "Nike Air Force 1 Low",
     "category": "shoes",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -8557,7 +8557,7 @@
   },
   {
     "id": "p45058436",
-    "name": "Nike Air Max 97 — $52.31",
+    "name": "Nike Air Max 97",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -8573,7 +8573,7 @@
   },
   {
     "id": "p7e333ba9",
-    "name": "Nike Air Max 97 — $60.15",
+    "name": "Nike Air Max 97",
     "category": "shoes",
     "price": "60.15",
     "price_numeric": 60.15,
@@ -8707,7 +8707,7 @@
   },
   {
     "id": "pde827bc9",
-    "name": "Nike Shox TL — $34.00",
+    "name": "Nike Shox TL",
     "category": "trending",
     "price": "34.00",
     "price_numeric": 34.0,
@@ -9062,7 +9062,7 @@
   },
   {
     "id": "p2da53909",
-    "name": "Adidas Spezial — $26.15",
+    "name": "Adidas Spezial",
     "category": "trending",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -9148,7 +9148,7 @@
   },
   {
     "id": "p565e1091",
-    "name": "Adidas Originals Yeezy Boost 350 V2 — $96.77",
+    "name": "Adidas Originals Yeezy Boost 350 V2",
     "category": "shoes",
     "price": "96.77",
     "price_numeric": 96.77,
@@ -9164,7 +9164,7 @@
   },
   {
     "id": "p4b5fe07a",
-    "name": "Adidas Originals Yeezy Boost 350 V2 — $31.38",
+    "name": "Adidas Originals Yeezy Boost 350 V2",
     "category": "shoes",
     "price": "31.38",
     "price_numeric": 31.38,
@@ -9223,7 +9223,7 @@
   },
   {
     "id": "pd10339d5",
-    "name": "Adidas Slippers — $26.15",
+    "name": "Adidas Slippers",
     "category": "trending",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -9255,7 +9255,7 @@
   },
   {
     "id": "p075c9089",
-    "name": "Louis Vuitton Skate — Style 1",
+    "name": "Louis Vuitton Skate",
     "category": "trending",
     "price": "104.62",
     "price_numeric": 104.62,
@@ -9282,7 +9282,7 @@
   },
   {
     "id": "pa88a8b50",
-    "name": "Louis Vuitton Skate — Style 2",
+    "name": "Louis Vuitton Skate",
     "category": "trending",
     "price": "104.62",
     "price_numeric": 104.62,
@@ -9298,7 +9298,7 @@
   },
   {
     "id": "p1a57b369",
-    "name": "Louis Vuitton Trainer — Style 3",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "94.15",
     "price_numeric": 94.15,
@@ -9314,7 +9314,7 @@
   },
   {
     "id": "p0a89c884",
-    "name": "Louis Vuitton Trainer — Style 7",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "130.77",
     "price_numeric": 130.77,
@@ -9330,7 +9330,7 @@
   },
   {
     "id": "peb7a6f62",
-    "name": "Louis Vuitton Trainer — Style 5",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "104.62",
     "price_numeric": 104.62,
@@ -9346,7 +9346,7 @@
   },
   {
     "id": "pb5705891",
-    "name": "Louis Vuitton Trainer — Style 4",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "94.15",
     "price_numeric": 94.15,
@@ -9362,7 +9362,7 @@
   },
   {
     "id": "p81300fff",
-    "name": "Louis Vuitton Trainer — Style 2",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -9378,7 +9378,7 @@
   },
   {
     "id": "p92c222eb",
-    "name": "Louis Vuitton Trainer — Style 6",
+    "name": "Louis Vuitton Trainer",
     "category": "shoes",
     "price": "125.54",
     "price_numeric": 125.54,
@@ -9576,7 +9576,7 @@
   },
   {
     "id": "pf18b7ff6",
-    "name": "Dior B22 — $39.23",
+    "name": "Dior B22",
     "category": "trending",
     "price": "39.23",
     "price_numeric": 39.23,
@@ -9887,7 +9887,7 @@
   },
   {
     "id": "p48fd6e26",
-    "name": "New Balance 9060 — $52.31",
+    "name": "New Balance 9060",
     "category": "trending",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -9914,7 +9914,7 @@
   },
   {
     "id": "p931c5421",
-    "name": "Balenciaga 3XL — $60.15",
+    "name": "Balenciaga 3XL",
     "category": "trending",
     "price": "60.15",
     "price_numeric": 60.15,
@@ -10068,7 +10068,7 @@
   },
   {
     "id": "p926783f9",
-    "name": "Prada — Style 3",
+    "name": "Prada",
     "category": "trending",
     "price": "104.62",
     "price_numeric": 104.62,
@@ -10138,7 +10138,7 @@
   },
   {
     "id": "p489b0f06",
-    "name": "Prada — Style 2",
+    "name": "Prada",
     "category": "trending",
     "price": "104.62",
     "price_numeric": 104.62,
@@ -11292,7 +11292,7 @@
   },
   {
     "id": "p2fd061b9",
-    "name": "Miu Miu — $65.38",
+    "name": "Miu Miu",
     "category": "trending",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -11324,7 +11324,7 @@
   },
   {
     "id": "p9d75336a",
-    "name": "Timberland — $62.77",
+    "name": "Timberland",
     "category": "trending",
     "price": "62.77",
     "price_numeric": 62.77,
@@ -11402,7 +11402,7 @@
   },
   {
     "id": "pf13c8309",
-    "name": "Timberland — $91.54",
+    "name": "Timberland",
     "category": "trending",
     "price": "91.54",
     "price_numeric": 91.54,
@@ -11493,7 +11493,7 @@
   },
   {
     "id": "p4e8e7a8c",
-    "name": "UGG — $65.38",
+    "name": "UGG",
     "category": "trending",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -11520,7 +11520,7 @@
   },
   {
     "id": "pcfd383f9",
-    "name": "UGG — $70.62",
+    "name": "UGG",
     "category": "trending",
     "price": "70.62",
     "price_numeric": 70.62,
@@ -11563,7 +11563,7 @@
   },
   {
     "id": "p052fde89",
-    "name": "UGG Women's Tazzlita Slipper — $83.69",
+    "name": "UGG Women's Tazzlita Slipper",
     "category": "shoes",
     "price": "83.69",
     "price_numeric": 83.69,
@@ -11588,7 +11588,7 @@
   },
   {
     "id": "p6e470c5e",
-    "name": "UGG Women's Tazzlita Slipper — $52.31",
+    "name": "UGG Women's Tazzlita Slipper",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -11647,7 +11647,7 @@
   },
   {
     "id": "p3506c487",
-    "name": "UGG — $49.69",
+    "name": "UGG",
     "category": "trending",
     "price": "49.69",
     "price_numeric": 49.69,
@@ -11695,7 +11695,7 @@
   },
   {
     "id": "p44f64a7b",
-    "name": "CDG Play Tee — Style 2",
+    "name": "CDG Play Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -11711,7 +11711,7 @@
   },
   {
     "id": "p5dffdad4",
-    "name": "CDG Play Tee — Style 3",
+    "name": "CDG Play Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -11727,7 +11727,7 @@
   },
   {
     "id": "p2a3c188e",
-    "name": "ASSC Tee — Style 1",
+    "name": "ASSC Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -11786,7 +11786,7 @@
   },
   {
     "id": "pf20f9b56",
-    "name": "Essentials Set — Style 4",
+    "name": "Essentials Set",
     "category": "trending",
     "price": "25.08",
     "price_numeric": 25.08,
@@ -11802,7 +11802,7 @@
   },
   {
     "id": "p06e87224",
-    "name": "Essentials Set — Style 1",
+    "name": "Essentials Set",
     "category": "trending",
     "price": "25.08",
     "price_numeric": 25.08,
@@ -11818,7 +11818,7 @@
   },
   {
     "id": "p75c695bf",
-    "name": "Adidas Tee — Style 1",
+    "name": "Adidas Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -11834,7 +11834,7 @@
   },
   {
     "id": "p594d1a17",
-    "name": "Adidas Tee — Style 4",
+    "name": "Adidas Tee",
     "category": "shirts",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -11866,7 +11866,7 @@
   },
   {
     "id": "pe1e41b86",
-    "name": "Adidas Shorts — $15.23",
+    "name": "Adidas Shorts",
     "category": "pants",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -11887,7 +11887,7 @@
   },
   {
     "id": "p84653f83",
-    "name": "Alo Tee — Style 1",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -11903,7 +11903,7 @@
   },
   {
     "id": "pf8bfb208",
-    "name": "Alo Tee — Style 4",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -11962,7 +11962,7 @@
   },
   {
     "id": "pb7f63857",
-    "name": "Under Armour Tee — Style 3",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -11978,7 +11978,7 @@
   },
   {
     "id": "pe66750a8",
-    "name": "Under Armour Tee — Style 4",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -12005,7 +12005,7 @@
   },
   {
     "id": "pe5dd43ed",
-    "name": "Under Armour Vest — Style 2",
+    "name": "Under Armour Vest",
     "category": "jackets",
     "price": "7.85",
     "price_numeric": 7.85,
@@ -12021,7 +12021,7 @@
   },
   {
     "id": "pef998bd7",
-    "name": "Under Armour Shorts — Style 2",
+    "name": "Under Armour Shorts",
     "category": "pants",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -12037,7 +12037,7 @@
   },
   {
     "id": "p1d5bcd67",
-    "name": "Under Armour Shorts — Style 3",
+    "name": "Under Armour Shorts",
     "category": "pants",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -12064,7 +12064,7 @@
   },
   {
     "id": "pe1669263",
-    "name": "Nike Tee — Style 4",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -12091,7 +12091,7 @@
   },
   {
     "id": "pf6dc63b0",
-    "name": "Nike Tee — Style 5",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -12107,7 +12107,7 @@
   },
   {
     "id": "pc8693eac",
-    "name": "Nike Tee — Style 3",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -12123,7 +12123,7 @@
   },
   {
     "id": "p7f83b6c8",
-    "name": "Nike Shorts — Style 2",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "9.38",
     "price_numeric": 9.38,
@@ -12139,7 +12139,7 @@
   },
   {
     "id": "pe7281ab5",
-    "name": "Nike Shorts — Style 4",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "10.00",
     "price_numeric": 10.0,
@@ -12155,7 +12155,7 @@
   },
   {
     "id": "p710cf608",
-    "name": "Nike Shorts — Style 7",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -12182,7 +12182,7 @@
   },
   {
     "id": "pa4fe238f",
-    "name": "Nike Set — Style 6",
+    "name": "Nike Set",
     "category": "trending",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -12209,7 +12209,7 @@
   },
   {
     "id": "pc4e2bd10",
-    "name": "Nike Pants — $19.69",
+    "name": "Nike Pants",
     "category": "pants",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -12236,7 +12236,7 @@
   },
   {
     "id": "pa0a0a41f",
-    "name": "Alo Set — $23.54",
+    "name": "Alo Set",
     "category": "trending",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -12252,7 +12252,7 @@
   },
   {
     "id": "pfdb0200e",
-    "name": "Acne Studios Jeans — $34.00",
+    "name": "Acne Studios Jeans",
     "category": "pants",
     "price": "34.00",
     "price_numeric": 34.0,
@@ -12268,7 +12268,7 @@
   },
   {
     "id": "p43c83809",
-    "name": "Stone Island Shirt — $32.77",
+    "name": "Stone Island Shirt",
     "category": "shirts",
     "price": "32.77",
     "price_numeric": 32.77,
@@ -12284,7 +12284,7 @@
   },
   {
     "id": "pda81cf97",
-    "name": "Corteiz Tee — Style 32",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12300,7 +12300,7 @@
   },
   {
     "id": "p84a553b0",
-    "name": "Corteiz Tee — Style 19",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12316,7 +12316,7 @@
   },
   {
     "id": "p352cd421",
-    "name": "Corteiz Tee — Style 11",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12332,7 +12332,7 @@
   },
   {
     "id": "padd1242e",
-    "name": "Corteiz Tee — Style 27",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12348,7 +12348,7 @@
   },
   {
     "id": "p97b9dad6",
-    "name": "Corteiz Tee — Style 23",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12364,7 +12364,7 @@
   },
   {
     "id": "p125488ca",
-    "name": "Corteiz Tee — Style 3",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12380,7 +12380,7 @@
   },
   {
     "id": "p2f33ff9a",
-    "name": "Corteiz Tee — Style 10",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12396,7 +12396,7 @@
   },
   {
     "id": "p66fee9fc",
-    "name": "Corteiz Tee — Style 16",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -12412,7 +12412,7 @@
   },
   {
     "id": "pa0330236",
-    "name": "Corteiz Tee — Style 39",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "57.69",
     "price_numeric": 57.69,
@@ -12439,7 +12439,7 @@
   },
   {
     "id": "p7fc2d64b",
-    "name": "Maison Margiela Tee — $11.85",
+    "name": "Maison Margiela Tee",
     "category": "shirts",
     "price": "11.85",
     "price_numeric": 11.85,
@@ -12466,7 +12466,7 @@
   },
   {
     "id": "pb8e15000",
-    "name": "Ami Tee — $11.85",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "11.85",
     "price_numeric": 11.85,
@@ -12482,7 +12482,7 @@
   },
   {
     "id": "p29b30f06",
-    "name": "Ami Tee — $12.62",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "12.62",
     "price_numeric": 12.62,
@@ -12509,7 +12509,7 @@
   },
   {
     "id": "pf6f2c844",
-    "name": "Mertra Tee — Style 3",
+    "name": "Mertra Tee",
     "category": "shirts",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -12525,7 +12525,7 @@
   },
   {
     "id": "p83ae08e8",
-    "name": "Mertra Tee — Style 4",
+    "name": "Mertra Tee",
     "category": "shirts",
     "price": "33.69",
     "price_numeric": 33.69,
@@ -12541,7 +12541,7 @@
   },
   {
     "id": "p4c0dceb6",
-    "name": "Mertra Shorts — $40.62",
+    "name": "Mertra Shorts",
     "category": "pants",
     "price": "40.62",
     "price_numeric": 40.62,
@@ -12557,7 +12557,7 @@
   },
   {
     "id": "p98d79c77",
-    "name": "Mertra Pants — $54.92",
+    "name": "Mertra Pants",
     "category": "pants",
     "price": "54.92",
     "price_numeric": 54.92,
@@ -12598,7 +12598,7 @@
   },
   {
     "id": "pc840b346",
-    "name": "Derschutze Tee — Style 4",
+    "name": "Derschutze Tee",
     "category": "shirts",
     "price": "35.38",
     "price_numeric": 35.38,
@@ -12614,7 +12614,7 @@
   },
   {
     "id": "p732ea236",
-    "name": "Derschutze Tee — Style 3",
+    "name": "Derschutze Tee",
     "category": "shirts",
     "price": "31.38",
     "price_numeric": 31.38,
@@ -12689,7 +12689,7 @@
   },
   {
     "id": "p45e2e3f8",
-    "name": "Derschutze Sweater — Style 2",
+    "name": "Derschutze Sweater",
     "category": "hoodies",
     "price": "51.08",
     "price_numeric": 51.08,
@@ -12881,7 +12881,7 @@
   },
   {
     "id": "p9d4ed272",
-    "name": "LV Sneakers — $78.46",
+    "name": "LV Sneakers",
     "category": "shoes",
     "price": "78.46",
     "price_numeric": 78.46,
@@ -12956,7 +12956,7 @@
   },
   {
     "id": "pee2aef95",
-    "name": "LV Shoes — Style 5",
+    "name": "LV Shoes",
     "category": "shoes",
     "price": "94.92",
     "price_numeric": 94.92,
@@ -12983,7 +12983,7 @@
   },
   {
     "id": "pc7d400b6",
-    "name": "LV Shoes — Style 4",
+    "name": "LV Shoes",
     "category": "shoes",
     "price": "58.46",
     "price_numeric": 58.46,
@@ -12999,7 +12999,7 @@
   },
   {
     "id": "pdb1b347f",
-    "name": "LV Shoes — Style 3",
+    "name": "LV Shoes",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -13015,7 +13015,7 @@
   },
   {
     "id": "pc4d20108",
-    "name": "LV Shoes — Style 2",
+    "name": "LV Shoes",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -13133,7 +13133,7 @@
   },
   {
     "id": "p7c319152",
-    "name": "LV Slippers — $43.08",
+    "name": "LV Slippers",
     "category": "shoes",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -13160,7 +13160,7 @@
   },
   {
     "id": "p1cc3cfc5",
-    "name": "LV Slippers — $26.15",
+    "name": "LV Slippers",
     "category": "shoes",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -13278,7 +13278,7 @@
   },
   {
     "id": "pd4b44c3f",
-    "name": "Nike Shox TL — $43.08",
+    "name": "Nike Shox TL",
     "category": "shoes",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -13353,7 +13353,7 @@
   },
   {
     "id": "p110a1b50",
-    "name": "Nike Slippers — $10.77",
+    "name": "Nike Slippers",
     "category": "shoes",
     "price": "10.77",
     "price_numeric": 10.77,
@@ -13385,7 +13385,7 @@
   },
   {
     "id": "peb48e308",
-    "name": "Dior Shoes — $48.92",
+    "name": "Dior Shoes",
     "category": "shoes",
     "price": "48.92",
     "price_numeric": 48.92,
@@ -13412,7 +13412,7 @@
   },
   {
     "id": "pd8aa9e47",
-    "name": "Dior Shoes — $44.46",
+    "name": "Dior Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -13439,7 +13439,7 @@
   },
   {
     "id": "pa0f1b23b",
-    "name": "Dior Shoes — $47.08",
+    "name": "Dior Shoes",
     "category": "shoes",
     "price": "47.08",
     "price_numeric": 47.08,
@@ -13487,7 +13487,7 @@
   },
   {
     "id": "p3da018c3",
-    "name": "Dior Slippers — $46.15",
+    "name": "Dior Slippers",
     "category": "shoes",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -13509,7 +13509,7 @@
   },
   {
     "id": "p84b45d43",
-    "name": "Dior Slippers — $23.54",
+    "name": "Dior Slippers",
     "category": "shoes",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -13637,7 +13637,7 @@
   },
   {
     "id": "p6525ea51",
-    "name": "Gucci Shoes — $54.31",
+    "name": "Gucci Shoes",
     "category": "shoes",
     "price": "54.31",
     "price_numeric": 54.31,
@@ -13653,7 +13653,7 @@
   },
   {
     "id": "p02c8e8f6",
-    "name": "Gucci Shoes — $61.54",
+    "name": "Gucci Shoes",
     "category": "shoes",
     "price": "61.54",
     "price_numeric": 61.54,
@@ -13669,7 +13669,7 @@
   },
   {
     "id": "p801f037b",
-    "name": "Gucci Shoes — $58.46",
+    "name": "Gucci Shoes",
     "category": "shoes",
     "price": "58.46",
     "price_numeric": 58.46,
@@ -13696,7 +13696,7 @@
   },
   {
     "id": "p1b58bb2d",
-    "name": "Gucci Shoes — $44.46",
+    "name": "Gucci Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -13712,7 +13712,7 @@
   },
   {
     "id": "p20bfc707",
-    "name": "Gucci Shoes — $49.69",
+    "name": "Gucci Shoes",
     "category": "shoes",
     "price": "49.69",
     "price_numeric": 49.69,
@@ -13728,7 +13728,7 @@
   },
   {
     "id": "pba1c4949",
-    "name": "Gucci Slippers — $29.23",
+    "name": "Gucci Slippers",
     "category": "shoes",
     "price": "29.23",
     "price_numeric": 29.23,
@@ -13744,7 +13744,7 @@
   },
   {
     "id": "p207b8fe4",
-    "name": "Gucci Slippers — $23.54",
+    "name": "Gucci Slippers",
     "category": "shoes",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -13857,7 +13857,7 @@
   },
   {
     "id": "p8c1e35dd",
-    "name": "Prada Shoes — Style 3",
+    "name": "Prada Shoes",
     "category": "shoes",
     "price": "69.23",
     "price_numeric": 69.23,
@@ -13884,7 +13884,7 @@
   },
   {
     "id": "pa2168bb4",
-    "name": "Prada Shoes — Style 1",
+    "name": "Prada Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -13900,7 +13900,7 @@
   },
   {
     "id": "pd37ee598",
-    "name": "Prada Shoes — Style 2",
+    "name": "Prada Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -13975,7 +13975,7 @@
   },
   {
     "id": "pb6f3f453",
-    "name": "Burberry Shoes — $51.23",
+    "name": "Burberry Shoes",
     "category": "shoes",
     "price": "51.23",
     "price_numeric": 51.23,
@@ -13991,7 +13991,7 @@
   },
   {
     "id": "p7bb6c84c",
-    "name": "Burberry Shoes — $47.08",
+    "name": "Burberry Shoes",
     "category": "shoes",
     "price": "47.08",
     "price_numeric": 47.08,
@@ -14055,7 +14055,7 @@
   },
   {
     "id": "p4a695ac2",
-    "name": "Balenciaga 3XL — $76.15",
+    "name": "Balenciaga 3XL",
     "category": "shoes",
     "price": "76.15",
     "price_numeric": 76.15,
@@ -14157,7 +14157,7 @@
   },
   {
     "id": "pffb130f0",
-    "name": "Alexander McQueen Shoes — $60.00",
+    "name": "Alexander McQueen Shoes",
     "category": "shoes",
     "price": "60.00",
     "price_numeric": 60.0,
@@ -14184,7 +14184,7 @@
   },
   {
     "id": "pea74121b",
-    "name": "Valentino Shoes — $61.08",
+    "name": "Valentino Shoes",
     "category": "shoes",
     "price": "61.08",
     "price_numeric": 61.08,
@@ -14200,7 +14200,7 @@
   },
   {
     "id": "pc478d138",
-    "name": "Valentino Shoes — $50.77",
+    "name": "Valentino Shoes",
     "category": "shoes",
     "price": "50.77",
     "price_numeric": 50.77,
@@ -14216,7 +14216,7 @@
   },
   {
     "id": "p0a40e088",
-    "name": "Valentino Shoes — $65.38",
+    "name": "Valentino Shoes",
     "category": "shoes",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -14259,7 +14259,7 @@
   },
   {
     "id": "p9724fe22",
-    "name": "Dolce＆Gabbana — $46.15",
+    "name": "Dolce＆Gabbana",
     "category": "shoes",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -14286,7 +14286,7 @@
   },
   {
     "id": "pcb6a4c05",
-    "name": "Dolce＆Gabbana — $55.38",
+    "name": "Dolce＆Gabbana",
     "category": "shoes",
     "price": "55.38",
     "price_numeric": 55.38,
@@ -14302,7 +14302,7 @@
   },
   {
     "id": "p4acc3297",
-    "name": "Dolce＆Gabbana — $41.85",
+    "name": "Dolce＆Gabbana",
     "category": "shoes",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -14366,7 +14366,7 @@
   },
   {
     "id": "pe5989cc8",
-    "name": "Loro Piana Shoes — $43.08",
+    "name": "Loro Piana Shoes",
     "category": "shoes",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -14393,7 +14393,7 @@
   },
   {
     "id": "p2894b2ea",
-    "name": "Loro Piana Shoes — $44.46",
+    "name": "Loro Piana Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -14489,7 +14489,7 @@
   },
   {
     "id": "p444aab23",
-    "name": "Chanel Shoes — $69.23",
+    "name": "Chanel Shoes",
     "category": "shoes",
     "price": "69.23",
     "price_numeric": 69.23,
@@ -14513,7 +14513,7 @@
   },
   {
     "id": "pb6042bf0",
-    "name": "Chanel Shoes — $84.62",
+    "name": "Chanel Shoes",
     "category": "shoes",
     "price": "84.62",
     "price_numeric": 84.62,
@@ -14545,7 +14545,7 @@
   },
   {
     "id": "p431d4577",
-    "name": "Bape Shoes — $58.46",
+    "name": "Bape Shoes",
     "category": "shoes",
     "price": "58.46",
     "price_numeric": 58.46,
@@ -14561,7 +14561,7 @@
   },
   {
     "id": "p518a52e3",
-    "name": "Hermes Shoes — Style 1",
+    "name": "Hermes Shoes",
     "category": "shoes",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -14577,7 +14577,7 @@
   },
   {
     "id": "p6c074613",
-    "name": "Hermes Shoes — Style 3",
+    "name": "Hermes Shoes",
     "category": "shoes",
     "price": "49.23",
     "price_numeric": 49.23,
@@ -14593,7 +14593,7 @@
   },
   {
     "id": "p22c2157c",
-    "name": "Hermes Shoes — Style 2",
+    "name": "Hermes Shoes",
     "category": "shoes",
     "price": "49.23",
     "price_numeric": 49.23,
@@ -14609,7 +14609,7 @@
   },
   {
     "id": "p7dc7a82e",
-    "name": "Hermes Shoes — Style 4",
+    "name": "Hermes Shoes",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -14663,7 +14663,7 @@
   },
   {
     "id": "p3897d993",
-    "name": "Hermes Slippers — $52.62",
+    "name": "Hermes Slippers",
     "category": "shoes",
     "price": "52.62",
     "price_numeric": 52.62,
@@ -14679,7 +14679,7 @@
   },
   {
     "id": "p4070d277",
-    "name": "Hermes Slippers — $28.77",
+    "name": "Hermes Slippers",
     "category": "shoes",
     "price": "28.77",
     "price_numeric": 28.77,
@@ -14706,7 +14706,7 @@
   },
   {
     "id": "p3ef16a55",
-    "name": "Amiri Shoes — Style 3",
+    "name": "Amiri Shoes",
     "category": "shoes",
     "price": "70.77",
     "price_numeric": 70.77,
@@ -14733,7 +14733,7 @@
   },
   {
     "id": "p9c5f96a3",
-    "name": "Amiri Shoes — Style 1",
+    "name": "Amiri Shoes",
     "category": "shoes",
     "price": "68.00",
     "price_numeric": 68.0,
@@ -14749,7 +14749,7 @@
   },
   {
     "id": "pf69d0ccd",
-    "name": "Amiri Shoes — Style 2",
+    "name": "Amiri Shoes",
     "category": "shoes",
     "price": "68.00",
     "price_numeric": 68.0,
@@ -14788,7 +14788,7 @@
   },
   {
     "id": "p53290fd0",
-    "name": "Givenchy Shoes — $43.08",
+    "name": "Givenchy Shoes",
     "category": "shoes",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -14815,7 +14815,7 @@
   },
   {
     "id": "pba0da53f",
-    "name": "Givenchy Shoes — $41.85",
+    "name": "Givenchy Shoes",
     "category": "shoes",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -14842,7 +14842,7 @@
   },
   {
     "id": "pb634de9d",
-    "name": "Crocs Slippers — $20.46",
+    "name": "Crocs Slippers",
     "category": "shoes",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -14874,7 +14874,7 @@
   },
   {
     "id": "pc2d31492",
-    "name": "Timberland Shoes — $92.31",
+    "name": "Timberland Shoes",
     "category": "shoes",
     "price": "92.31",
     "price_numeric": 92.31,
@@ -14890,7 +14890,7 @@
   },
   {
     "id": "p335bd4d4",
-    "name": "Timberland Shoes — $60.15",
+    "name": "Timberland Shoes",
     "category": "shoes",
     "price": "60.15",
     "price_numeric": 60.15,
@@ -14906,7 +14906,7 @@
   },
   {
     "id": "p7f0af503",
-    "name": "Timberland Shoes — $69.38",
+    "name": "Timberland Shoes",
     "category": "shoes",
     "price": "69.38",
     "price_numeric": 69.38,
@@ -14922,7 +14922,7 @@
   },
   {
     "id": "p5691388a",
-    "name": "Timberland Shoes — $72.00",
+    "name": "Timberland Shoes",
     "category": "shoes",
     "price": "72.00",
     "price_numeric": 72.0,
@@ -14981,7 +14981,7 @@
   },
   {
     "id": "p5fe3f8b2",
-    "name": "Fendi Shoes — $76.92",
+    "name": "Fendi Shoes",
     "category": "shoes",
     "price": "76.92",
     "price_numeric": 76.92,
@@ -15008,7 +15008,7 @@
   },
   {
     "id": "pa21ff7ca",
-    "name": "Fendi Shoes — $44.46",
+    "name": "Fendi Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -15024,7 +15024,7 @@
   },
   {
     "id": "p9d909599",
-    "name": "Fendi Shoes — $52.31",
+    "name": "Fendi Shoes",
     "category": "shoes",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -15124,7 +15124,7 @@
   },
   {
     "id": "p364043d4",
-    "name": "Maison Minara Yasuhiro Shoes — Style 1",
+    "name": "Maison Minara Yasuhiro Shoes",
     "category": "shoes",
     "price": "69.23",
     "price_numeric": 69.23,
@@ -15156,7 +15156,7 @@
   },
   {
     "id": "pbea4ccc8",
-    "name": "Boss Shoes — $47.08",
+    "name": "Boss Shoes",
     "category": "shoes",
     "price": "47.08",
     "price_numeric": 47.08,
@@ -15172,7 +15172,7 @@
   },
   {
     "id": "p58a4bd3b",
-    "name": "Boss Shoes — $49.69",
+    "name": "Boss Shoes",
     "category": "shoes",
     "price": "49.69",
     "price_numeric": 49.69,
@@ -15188,7 +15188,7 @@
   },
   {
     "id": "p74f1883b",
-    "name": "Boss Shoes — $57.54",
+    "name": "Boss Shoes",
     "category": "shoes",
     "price": "57.54",
     "price_numeric": 57.54,
@@ -15327,7 +15327,7 @@
   },
   {
     "id": "p456f2b62",
-    "name": "Armani Shoes — $44.46",
+    "name": "Armani Shoes",
     "category": "shoes",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -15343,7 +15343,7 @@
   },
   {
     "id": "pd01b2288",
-    "name": "Armani Shoes — $49.69",
+    "name": "Armani Shoes",
     "category": "shoes",
     "price": "49.69",
     "price_numeric": 49.69,
@@ -15426,7 +15426,7 @@
   },
   {
     "id": "p522a340b",
-    "name": "Ami Tee — $18.46",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -15453,7 +15453,7 @@
   },
   {
     "id": "p5df83dd4",
-    "name": "Ami Tee — $12.77",
+    "name": "Ami Tee",
     "category": "shirts",
     "price": "12.77",
     "price_numeric": 12.77,
@@ -15480,7 +15480,7 @@
   },
   {
     "id": "p7cf97000",
-    "name": "Ralph Lauren Polo — Style 6",
+    "name": "Ralph Lauren Polo",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -15523,7 +15523,7 @@
   },
   {
     "id": "p894dee2b",
-    "name": "Stone Island Tee — $16.15",
+    "name": "Stone Island Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -15550,7 +15550,7 @@
   },
   {
     "id": "pc8ca531c",
-    "name": "Stone Island Tee — $15.23",
+    "name": "Stone Island Tee",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -15566,7 +15566,7 @@
   },
   {
     "id": "p57e3f635",
-    "name": "Stone Island Tee — $15.38",
+    "name": "Stone Island Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -15582,7 +15582,7 @@
   },
   {
     "id": "p2085c916",
-    "name": "Stone Island Polo — $16.92",
+    "name": "Stone Island Polo",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -15625,7 +15625,7 @@
   },
   {
     "id": "pbe588fcc",
-    "name": "Lv Tee — Style 2",
+    "name": "Lv Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -15641,7 +15641,7 @@
   },
   {
     "id": "p7fc007e6",
-    "name": "Lv Tee — Style 3",
+    "name": "Lv Tee",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -15668,7 +15668,7 @@
   },
   {
     "id": "p3715bc66",
-    "name": "Lv Tee — Style 1",
+    "name": "Lv Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -15684,7 +15684,7 @@
   },
   {
     "id": "p02733d0d",
-    "name": "Chrome Hearts Tee — $20.46",
+    "name": "Chrome Hearts Tee",
     "category": "shirts",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -15711,7 +15711,7 @@
   },
   {
     "id": "pee5d4e98",
-    "name": "Chrome Hearts Tee — $17.85",
+    "name": "Chrome Hearts Tee",
     "category": "shirts",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -15727,7 +15727,7 @@
   },
   {
     "id": "p2d815f9b",
-    "name": "Corteiz Vest — $20.00",
+    "name": "Corteiz Vest",
     "category": "jackets",
     "price": "20.00",
     "price_numeric": 20.0,
@@ -15743,7 +15743,7 @@
   },
   {
     "id": "p8e2493ae",
-    "name": "Corteiz Tee — Style 20",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15770,7 +15770,7 @@
   },
   {
     "id": "p18be4f28",
-    "name": "Corteiz Tee — Style 7",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15797,7 +15797,7 @@
   },
   {
     "id": "p15e3b57a",
-    "name": "Corteiz Tee — Style 4",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15813,7 +15813,7 @@
   },
   {
     "id": "pb8808f9b",
-    "name": "Corteiz Tee — Style 29",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15829,7 +15829,7 @@
   },
   {
     "id": "p80b5e085",
-    "name": "Corteiz Tee — Style 18",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15856,7 +15856,7 @@
   },
   {
     "id": "p1fae9ca9",
-    "name": "Corteiz Tee — Style 8",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15883,7 +15883,7 @@
   },
   {
     "id": "p966ad4d1",
-    "name": "Corteiz Tee — Style 22",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15899,7 +15899,7 @@
   },
   {
     "id": "p27aebbc3",
-    "name": "Corteiz Tee — Style 9",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15915,7 +15915,7 @@
   },
   {
     "id": "p56a6c460",
-    "name": "Corteiz Tee — Style 14",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15942,7 +15942,7 @@
   },
   {
     "id": "pebcbe532",
-    "name": "Corteiz Tee — Style 34",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15958,7 +15958,7 @@
   },
   {
     "id": "p17e41313",
-    "name": "Corteiz Tee — Style 5",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -15974,7 +15974,7 @@
   },
   {
     "id": "p0bd9ffba",
-    "name": "Corteiz Tee — Style 2",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -16001,7 +16001,7 @@
   },
   {
     "id": "p90f088a5",
-    "name": "Corteiz Tee — Style 21",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -16028,7 +16028,7 @@
   },
   {
     "id": "paad23965",
-    "name": "Corteiz Tee — Style 26",
+    "name": "Corteiz Tee",
     "category": "shirts",
     "price": "10.46",
     "price_numeric": 10.46,
@@ -16044,7 +16044,7 @@
   },
   {
     "id": "pe63323c4",
-    "name": "Dior Tee — $18.46",
+    "name": "Dior Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -16060,7 +16060,7 @@
   },
   {
     "id": "p55e81c7e",
-    "name": "Gallery Dept Tee — Style 6",
+    "name": "Gallery Dept Tee",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -16087,7 +16087,7 @@
   },
   {
     "id": "p349c98a9",
-    "name": "Gallery Dept Tee — Style 4",
+    "name": "Gallery Dept Tee",
     "category": "shirts",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -16103,7 +16103,7 @@
   },
   {
     "id": "pfb7304ad",
-    "name": "Gallery Dept Tee — Style 2",
+    "name": "Gallery Dept Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -16119,7 +16119,7 @@
   },
   {
     "id": "p48beee43",
-    "name": "Prada Tee — $33.38",
+    "name": "Prada Tee",
     "category": "shirts",
     "price": "33.38",
     "price_numeric": 33.38,
@@ -16151,7 +16151,7 @@
   },
   {
     "id": "p4b26a31c",
-    "name": "Stussy Tee — Style 2",
+    "name": "Stussy Tee",
     "category": "shirts",
     "price": "14.92",
     "price_numeric": 14.92,
@@ -16167,7 +16167,7 @@
   },
   {
     "id": "p807aaed5",
-    "name": "Balenciaga Tee — Style 4",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -16183,7 +16183,7 @@
   },
   {
     "id": "p95db559d",
-    "name": "Balenciaga Tee — Style 6",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "26.92",
     "price_numeric": 26.92,
@@ -16210,7 +16210,7 @@
   },
   {
     "id": "p6e75fcc2",
-    "name": "Balenciaga Tee — Style 5",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "26.92",
     "price_numeric": 26.92,
@@ -16226,7 +16226,7 @@
   },
   {
     "id": "p2247f9d8",
-    "name": "Balenciaga Tee — Style 1",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -16242,7 +16242,7 @@
   },
   {
     "id": "p2b24e175",
-    "name": "Balenciaga Tee — Style 2",
+    "name": "Balenciaga Tee",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -16269,7 +16269,7 @@
   },
   {
     "id": "p94fff437",
-    "name": "Gucci Tee — Style 4",
+    "name": "Gucci Tee",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -16285,7 +16285,7 @@
   },
   {
     "id": "pc3819888",
-    "name": "Gucci Tee — Style 2",
+    "name": "Gucci Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -16312,7 +16312,7 @@
   },
   {
     "id": "pde470a73",
-    "name": "Gucci Tee — Style 3",
+    "name": "Gucci Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -16328,7 +16328,7 @@
   },
   {
     "id": "p927d8dfa",
-    "name": "Gucci Tee — Style 1",
+    "name": "Gucci Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -16355,7 +16355,7 @@
   },
   {
     "id": "p87de2264",
-    "name": "Gucci Polo — $30.77",
+    "name": "Gucci Polo",
     "category": "shirts",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -16371,7 +16371,7 @@
   },
   {
     "id": "p5ad5c19a",
-    "name": "Spider Shorts — $21.54",
+    "name": "Spider Shorts",
     "category": "pants",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -16398,7 +16398,7 @@
   },
   {
     "id": "p9245d259",
-    "name": "Burberry Shorts — $23.08",
+    "name": "Burberry Shorts",
     "category": "pants",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -16425,7 +16425,7 @@
   },
   {
     "id": "p2a3c62a6",
-    "name": "Trapstar Tee — Style 1",
+    "name": "Trapstar Tee",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -16441,7 +16441,7 @@
   },
   {
     "id": "pebd624b2",
-    "name": "Trapstar Tee — Style 2",
+    "name": "Trapstar Tee",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -16457,7 +16457,7 @@
   },
   {
     "id": "p024c9d0a",
-    "name": "Essentials Tee — $21.38",
+    "name": "Essentials Tee",
     "category": "shirts",
     "price": "21.38",
     "price_numeric": 21.38,
@@ -16473,7 +16473,7 @@
   },
   {
     "id": "p6b4eae47",
-    "name": "Essentials Set — Style 2",
+    "name": "Essentials Set",
     "category": "shirts",
     "price": "25.08",
     "price_numeric": 25.08,
@@ -16489,7 +16489,7 @@
   },
   {
     "id": "p6fcd020e",
-    "name": "Essentials Set — Style 3",
+    "name": "Essentials Set",
     "category": "shirts",
     "price": "25.08",
     "price_numeric": 25.08,
@@ -16505,7 +16505,7 @@
   },
   {
     "id": "p00f7ebda",
-    "name": "Dsquared2  Tee — $20.46",
+    "name": "Dsquared2  Tee",
     "category": "shirts",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -16553,7 +16553,7 @@
   },
   {
     "id": "p304a596a",
-    "name": "Denim Tears Tee — Style 1",
+    "name": "Denim Tears Tee",
     "category": "shirts",
     "price": "16.00",
     "price_numeric": 16.0,
@@ -16569,7 +16569,7 @@
   },
   {
     "id": "p2a4d01b2",
-    "name": "Denim Tears Shorts — $20.46",
+    "name": "Denim Tears Shorts",
     "category": "pants",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -16585,7 +16585,7 @@
   },
   {
     "id": "pad5fe7ec",
-    "name": "PP Tee — $21.54",
+    "name": "PP Tee",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -16601,7 +16601,7 @@
   },
   {
     "id": "pe5bb440c",
-    "name": "PP Tee — $19.54",
+    "name": "PP Tee",
     "category": "shirts",
     "price": "19.54",
     "price_numeric": 19.54,
@@ -16617,7 +16617,7 @@
   },
   {
     "id": "p1071541c",
-    "name": "Palm Angels Tee — $16.77",
+    "name": "Palm Angels Tee",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -16644,7 +16644,7 @@
   },
   {
     "id": "pf87a606f",
-    "name": "Moncler Tee — $22.31",
+    "name": "Moncler Tee",
     "category": "shirts",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -16660,7 +16660,7 @@
   },
   {
     "id": "p4f063720",
-    "name": "Moncler Polo — $42.31",
+    "name": "Moncler Polo",
     "category": "shirts",
     "price": "42.31",
     "price_numeric": 42.31,
@@ -16676,7 +16676,7 @@
   },
   {
     "id": "p0b695929",
-    "name": "Moncler Polo — $23.08",
+    "name": "Moncler Polo",
     "category": "shirts",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -16692,7 +16692,7 @@
   },
   {
     "id": "pdd0fcfa3",
-    "name": "Moncler Shorts — $21.23",
+    "name": "Moncler Shorts",
     "category": "pants",
     "price": "21.23",
     "price_numeric": 21.23,
@@ -16735,7 +16735,7 @@
   },
   {
     "id": "p049a9e67",
-    "name": "Amiri Tee — $16.15",
+    "name": "Amiri Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -16762,7 +16762,7 @@
   },
   {
     "id": "pd3a64201",
-    "name": "Amiri Tee — $13.38",
+    "name": "Amiri Tee",
     "category": "shirts",
     "price": "13.38",
     "price_numeric": 13.38,
@@ -16805,7 +16805,7 @@
   },
   {
     "id": "pefa11d65",
-    "name": "Bape  Tee — Style 7",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -16821,7 +16821,7 @@
   },
   {
     "id": "pd2c77f17",
-    "name": "Bape  Tee — Style 6",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -16837,7 +16837,7 @@
   },
   {
     "id": "p9cbf8ea9",
-    "name": "Bape  Tee — Style 4",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -16864,7 +16864,7 @@
   },
   {
     "id": "p7ccb2694",
-    "name": "Bape  Tee — Style 3",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -16880,7 +16880,7 @@
   },
   {
     "id": "p069253a9",
-    "name": "Bape  Tee — Style 2",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -16907,7 +16907,7 @@
   },
   {
     "id": "p68fea474",
-    "name": "Bape  Tee — Style 1",
+    "name": "Bape  Tee",
     "category": "shirts",
     "price": "11.69",
     "price_numeric": 11.69,
@@ -16955,7 +16955,7 @@
   },
   {
     "id": "pf99e8b2c",
-    "name": "Maison Margiela Tee — $13.85",
+    "name": "Maison Margiela Tee",
     "category": "shirts",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -17009,7 +17009,7 @@
   },
   {
     "id": "p3d329004",
-    "name": "Under Armour Tee — Style 6",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.62",
     "price_numeric": 8.62,
@@ -17025,7 +17025,7 @@
   },
   {
     "id": "p2749e0ed",
-    "name": "Under Armour Tee — Style 7",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "9.38",
     "price_numeric": 9.38,
@@ -17041,7 +17041,7 @@
   },
   {
     "id": "p1db4978f",
-    "name": "Under Armour Tee — Style 1",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17057,7 +17057,7 @@
   },
   {
     "id": "peaa89033",
-    "name": "Under Armour Tee — Style 5",
+    "name": "Under Armour Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17073,7 +17073,7 @@
   },
   {
     "id": "p577605e5",
-    "name": "Under Armour Vest — Style 1",
+    "name": "Under Armour Vest",
     "category": "jackets",
     "price": "7.85",
     "price_numeric": 7.85,
@@ -17089,7 +17089,7 @@
   },
   {
     "id": "pbfaa8b91",
-    "name": "Under Armour  Shorts — $8.15",
+    "name": "Under Armour  Shorts",
     "category": "pants",
     "price": "8.15",
     "price_numeric": 8.15,
@@ -17105,7 +17105,7 @@
   },
   {
     "id": "p217cb282",
-    "name": "Under Armour Shorts — Style 1",
+    "name": "Under Armour Shorts",
     "category": "pants",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -17186,7 +17186,7 @@
   },
   {
     "id": "p10782fb3",
-    "name": "Nike Tee — Style 8",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -17213,7 +17213,7 @@
   },
   {
     "id": "pfdfa687a",
-    "name": "Nike Tee — Style 6",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17229,7 +17229,7 @@
   },
   {
     "id": "p8adce50f",
-    "name": "Nike Tee — Style 1",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17256,7 +17256,7 @@
   },
   {
     "id": "p99cd928c",
-    "name": "Nike Tee — Style 2",
+    "name": "Nike Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17272,7 +17272,7 @@
   },
   {
     "id": "pbcda1fcb",
-    "name": "Nike Shorts — Style 3",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "9.38",
     "price_numeric": 9.38,
@@ -17288,7 +17288,7 @@
   },
   {
     "id": "p87400776",
-    "name": "Nike Shorts — Style 1",
+    "name": "Nike Shorts",
     "category": "pants",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -17304,7 +17304,7 @@
   },
   {
     "id": "p291e58df",
-    "name": "Nike Set — Style 4",
+    "name": "Nike Set",
     "category": "shirts",
     "price": "21.54",
     "price_numeric": 21.54,
@@ -17331,7 +17331,7 @@
   },
   {
     "id": "p29a5b02f",
-    "name": "Nike Set — Style 2",
+    "name": "Nike Set",
     "category": "shirts",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -17347,7 +17347,7 @@
   },
   {
     "id": "pd2407e27",
-    "name": "Adidas Armour Tee — $10.15",
+    "name": "Adidas Armour Tee",
     "category": "shirts",
     "price": "10.15",
     "price_numeric": 10.15,
@@ -17363,7 +17363,7 @@
   },
   {
     "id": "p19040a7e",
-    "name": "Adidas Armour Tee — $18.46",
+    "name": "Adidas Armour Tee",
     "category": "shirts",
     "price": "18.46",
     "price_numeric": 18.46,
@@ -17379,7 +17379,7 @@
   },
   {
     "id": "pdf6da694",
-    "name": "Adidas Tee — Style 3",
+    "name": "Adidas Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17405,7 +17405,7 @@
   },
   {
     "id": "p8bf2ea08",
-    "name": "Adidas Tee — Style 2",
+    "name": "Adidas Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17421,7 +17421,7 @@
   },
   {
     "id": "p06d1ec68",
-    "name": "Adidas Shorts — $24.62",
+    "name": "Adidas Shorts",
     "category": "pants",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -17469,7 +17469,7 @@
   },
   {
     "id": "p3127001c",
-    "name": "CDG Play Tee — Style 1",
+    "name": "CDG Play Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -17501,7 +17501,7 @@
   },
   {
     "id": "p477bff31",
-    "name": "Supreme Tee — Style 3",
+    "name": "Supreme Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -17517,7 +17517,7 @@
   },
   {
     "id": "p1fbf20f3",
-    "name": "Supreme Tee — Style 2",
+    "name": "Supreme Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -17544,7 +17544,7 @@
   },
   {
     "id": "p13e7113f",
-    "name": "Supreme Tee — Style 1",
+    "name": "Supreme Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -17560,7 +17560,7 @@
   },
   {
     "id": "p6037a495",
-    "name": "Supreme Tee — Style 4",
+    "name": "Supreme Tee",
     "category": "shirts",
     "price": "15.38",
     "price_numeric": 15.38,
@@ -17576,7 +17576,7 @@
   },
   {
     "id": "p28ab7276",
-    "name": "Mertra Tee — Style 1",
+    "name": "Mertra Tee",
     "category": "shirts",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -17592,7 +17592,7 @@
   },
   {
     "id": "p57d1fe68",
-    "name": "Mertra Tee — Style 2",
+    "name": "Mertra Tee",
     "category": "shirts",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -17608,7 +17608,7 @@
   },
   {
     "id": "p88e0d991",
-    "name": "Mertra Shorts — $35.38",
+    "name": "Mertra Shorts",
     "category": "pants",
     "price": "35.38",
     "price_numeric": 35.38,
@@ -17624,7 +17624,7 @@
   },
   {
     "id": "p9bdd9daf",
-    "name": "Alo Tee — Style 2",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17651,7 +17651,7 @@
   },
   {
     "id": "pd94e6baa",
-    "name": "Alo Tee — Style 3",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "8.31",
     "price_numeric": 8.31,
@@ -17891,7 +17891,7 @@
   },
   {
     "id": "p45261875",
-    "name": "Derschutze Tee — Style 1",
+    "name": "Derschutze Tee",
     "category": "shirts",
     "price": "30.15",
     "price_numeric": 30.15,
@@ -17907,7 +17907,7 @@
   },
   {
     "id": "p45da0ed0",
-    "name": "Derschutze Tee — Style 2",
+    "name": "Derschutze Tee",
     "category": "shirts",
     "price": "30.15",
     "price_numeric": 30.15,
@@ -17966,7 +17966,7 @@
   },
   {
     "id": "p818a48ba",
-    "name": "ASSC Tee — Style 2",
+    "name": "ASSC Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -17982,7 +17982,7 @@
   },
   {
     "id": "pe5cea730",
-    "name": "ASSC Tee — Style 3",
+    "name": "ASSC Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -17998,7 +17998,7 @@
   },
   {
     "id": "p11a69c6f",
-    "name": "Ashley William Tee — Style 1",
+    "name": "Ashley William Tee",
     "category": "shirts",
     "price": "11.85",
     "price_numeric": 11.85,
@@ -18014,7 +18014,7 @@
   },
   {
     "id": "p3b4123d9",
-    "name": "Ashley William Tee — Style 3",
+    "name": "Ashley William Tee",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -18046,7 +18046,7 @@
   },
   {
     "id": "p16e7bf14",
-    "name": "2026 FIFA World Cup Spain Training shirt Fan version — Style 1",
+    "name": "2026 FIFA World Cup Spain Training shirt Fan version",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -18096,7 +18096,7 @@
   },
   {
     "id": "p32cdca1e",
-    "name": "2026 FIFA World Cup Spain Training shirt Fan version — Style 2",
+    "name": "2026 FIFA World Cup Spain Training shirt Fan version",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -18283,7 +18283,7 @@
   },
   {
     "id": "pda81d29b",
-    "name": "2425 Spain Training clothes suit Short sleeve Fan version — Style 2",
+    "name": "2425 Spain Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -18487,7 +18487,7 @@
   },
   {
     "id": "p2b9b2927",
-    "name": "2425 Spain Training clothes suit vest Fan version — Style 1",
+    "name": "2425 Spain Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -18503,7 +18503,7 @@
   },
   {
     "id": "pd13be45d",
-    "name": "2425 Spain Training clothes suit vest Fan version — Style 2",
+    "name": "2425 Spain Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -18519,7 +18519,7 @@
   },
   {
     "id": "p3a89ad83",
-    "name": "2425 Spain Training clothes suit Short sleeve Fan version — Style 1",
+    "name": "2425 Spain Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -18543,7 +18543,7 @@
   },
   {
     "id": "pf139b554",
-    "name": "2425 Spain Training clothes suit Short sleeve Fan version — Style 3",
+    "name": "2425 Spain Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -18749,7 +18749,7 @@
   },
   {
     "id": "p7bd4f034",
-    "name": "2526 season France Half zip training suit set — Style 3",
+    "name": "2526 season France Half zip training suit set",
     "category": "shirts",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -18765,7 +18765,7 @@
   },
   {
     "id": "p1be8df4e",
-    "name": "2526 season France Half zip training suit set — Style 1",
+    "name": "2526 season France Half zip training suit set",
     "category": "shirts",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -18781,7 +18781,7 @@
   },
   {
     "id": "p3bbc6f3e",
-    "name": "2526 season France Half zip training suit set — Style 2",
+    "name": "2526 season France Half zip training suit set",
     "category": "shirts",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -18808,7 +18808,7 @@
   },
   {
     "id": "pc5c1c8bf",
-    "name": "2526 season France Training clothes suit Short sleeve Fan version — Style 1",
+    "name": "2526 season France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -18833,7 +18833,7 @@
   },
   {
     "id": "pcff266b8",
-    "name": "2526 season France Training clothes suit Short sleeve Fan version — Style 2",
+    "name": "2526 season France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -19094,7 +19094,7 @@
   },
   {
     "id": "p81c675b0",
-    "name": "2425 France Wear on both sides windbreaker — Style 2",
+    "name": "2425 France Wear on both sides windbreaker",
     "category": "jackets",
     "price": "28.92",
     "price_numeric": 28.92,
@@ -19110,7 +19110,7 @@
   },
   {
     "id": "p55de60b1",
-    "name": "2425 France Wear on both sides windbreaker — Style 1",
+    "name": "2425 France Wear on both sides windbreaker",
     "category": "jackets",
     "price": "28.92",
     "price_numeric": 28.92,
@@ -19192,7 +19192,7 @@
   },
   {
     "id": "p57eb3e7d",
-    "name": "2425 France Training clothes suit Short sleeve Fan version — Style 1",
+    "name": "2425 France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19208,7 +19208,7 @@
   },
   {
     "id": "p6b143337",
-    "name": "2425 France Training clothes suit vest Fan version — Style 2",
+    "name": "2425 France Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19224,7 +19224,7 @@
   },
   {
     "id": "pcc7b0c47",
-    "name": "2425 France Training clothes suit vest Fan version — Style 4",
+    "name": "2425 France Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19245,7 +19245,7 @@
   },
   {
     "id": "p6cd854f2",
-    "name": "2425 France Training clothes suit Short sleeve Fan version — Style 2",
+    "name": "2425 France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19261,7 +19261,7 @@
   },
   {
     "id": "p96eec6ae",
-    "name": "2425 France Training clothes suit Short sleeve Fan version — Style 4",
+    "name": "2425 France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19284,7 +19284,7 @@
   },
   {
     "id": "p02eb4afd",
-    "name": "2425 France Training clothes suit vest Fan version — Style 1",
+    "name": "2425 France Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19300,7 +19300,7 @@
   },
   {
     "id": "p78c03fef",
-    "name": "2425 France Training clothes suit vest Fan version — Style 3",
+    "name": "2425 France Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19316,7 +19316,7 @@
   },
   {
     "id": "p73db63d2",
-    "name": "2425 France Training clothes suit Short sleeve Fan version — Style 3",
+    "name": "2425 France Training clothes suit Short sleeve Fan version",
     "category": "pants",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -19522,7 +19522,7 @@
   },
   {
     "id": "p61d7eba1",
-    "name": "2526 season Brazil Jesus Training clothes suit vest Fan version — Style 1",
+    "name": "2526 season Brazil Jesus Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -19549,7 +19549,7 @@
   },
   {
     "id": "pdfacf5be",
-    "name": "2526 season Brazil Jesus Training clothes suit vest Fan version — Style 2",
+    "name": "2526 season Brazil Jesus Training clothes suit vest Fan version",
     "category": "jackets",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -20208,7 +20208,7 @@
   },
   {
     "id": "p16d5ac0a",
-    "name": "1998 season Germany away retro Fan version — Style 1",
+    "name": "1998 season Germany away retro Fan version",
     "category": "shirts",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -20301,7 +20301,7 @@
   },
   {
     "id": "pd9c11696",
-    "name": "1998 season Germany away retro Fan version — Style 3",
+    "name": "1998 season Germany away retro Fan version",
     "category": "shirts",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -20337,7 +20337,7 @@
   },
   {
     "id": "p8991111c",
-    "name": "1998 season Germany away retro Fan version — Style 2",
+    "name": "1998 season Germany away retro Fan version",
     "category": "shirts",
     "price": "15.08",
     "price_numeric": 15.08,
@@ -20551,7 +20551,7 @@
   },
   {
     "id": "p66cb3ff6",
-    "name": "2025 Portugal Tribute to Eusebio Special Edition Fan version — Style 2",
+    "name": "2025 Portugal Tribute to Eusebio Special Edition Fan version",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -20567,7 +20567,7 @@
   },
   {
     "id": "p3aa624fa",
-    "name": "2025 Portugal Tribute to Eusebio Special Edition Fan version — Style 1",
+    "name": "2025 Portugal Tribute to Eusebio Special Edition Fan version",
     "category": "shirts",
     "price": "13.08",
     "price_numeric": 13.08,
@@ -22791,7 +22791,7 @@
   },
   {
     "id": "pe1b8e843",
-    "name": "Portugal Special Edition Jersey Player Version — Style 2",
+    "name": "Portugal Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -22897,7 +22897,7 @@
   },
   {
     "id": "pe6d02420",
-    "name": "Real Madrid Special Edition Jersey Player Version — Style 2",
+    "name": "Real Madrid Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -22929,7 +22929,7 @@
   },
   {
     "id": "p7dcbc090",
-    "name": "Portugal Special Edition Jersey Player Version — Style 1",
+    "name": "Portugal Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -22961,7 +22961,7 @@
   },
   {
     "id": "p6eb5983f",
-    "name": "Japanese Special Edition Jersey Player Version — Style 2",
+    "name": "Japanese Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -22986,7 +22986,7 @@
   },
   {
     "id": "p24307071",
-    "name": "Japanese Special Edition Jersey Player Version — Style 1",
+    "name": "Japanese Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -23027,7 +23027,7 @@
   },
   {
     "id": "p1d910dbb",
-    "name": "Real Madrid Special Edition Jersey Player Version — Style 1",
+    "name": "Real Madrid Special Edition Jersey Player Version",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -23107,7 +23107,7 @@
   },
   {
     "id": "p69693e55",
-    "name": "Football Jersey — Style 8",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "13.69",
     "price_numeric": 13.69,
@@ -23134,7 +23134,7 @@
   },
   {
     "id": "p6f052117",
-    "name": "Football Jersey — Style 2",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "7.54",
     "price_numeric": 7.54,
@@ -23161,7 +23161,7 @@
   },
   {
     "id": "p1a63244b",
-    "name": "Football Jersey — Style 4",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "8.92",
     "price_numeric": 8.92,
@@ -23188,7 +23188,7 @@
   },
   {
     "id": "p12073980",
-    "name": "Football Jersey — Style 9",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -23215,7 +23215,7 @@
   },
   {
     "id": "pd5dc0fd2",
-    "name": "Football Jersey — Style 5",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "10.00",
     "price_numeric": 10.0,
@@ -23231,7 +23231,7 @@
   },
   {
     "id": "pde38e001",
-    "name": "Football Jersey — Style 7",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "10.92",
     "price_numeric": 10.92,
@@ -23247,7 +23247,7 @@
   },
   {
     "id": "pbe225f2d",
-    "name": "Football Jersey — Style 3",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "8.62",
     "price_numeric": 8.62,
@@ -23274,7 +23274,7 @@
   },
   {
     "id": "p50acb369",
-    "name": "Football Jersey — Style 10",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -23290,7 +23290,7 @@
   },
   {
     "id": "pe3674fa8",
-    "name": "Football Jersey — Style 12",
+    "name": "Football Jersey",
     "category": "shirts",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -23515,7 +23515,7 @@
   },
   {
     "id": "p7566593c",
-    "name": "LV Belt — Style 3",
+    "name": "LV Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -23531,7 +23531,7 @@
   },
   {
     "id": "pe630d3f5",
-    "name": "LV Belt — Style 4",
+    "name": "LV Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -23558,7 +23558,7 @@
   },
   {
     "id": "p3ade35cd",
-    "name": "LV Belt — Style 2",
+    "name": "LV Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -23574,7 +23574,7 @@
   },
   {
     "id": "p1b9059b4",
-    "name": "LV Belt — Style 1",
+    "name": "LV Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -23601,7 +23601,7 @@
   },
   {
     "id": "pcd8c9413",
-    "name": "Chanel Belt — $12.31",
+    "name": "Chanel Belt",
     "category": "accessories",
     "price": "12.31",
     "price_numeric": 12.31,
@@ -23660,7 +23660,7 @@
   },
   {
     "id": "p156fad89",
-    "name": "LV Scarf — $16.62",
+    "name": "LV Scarf",
     "category": "accessories",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -23676,7 +23676,7 @@
   },
   {
     "id": "pe6580b06",
-    "name": "LV Scarf — $9.23",
+    "name": "LV Scarf",
     "category": "accessories",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -23775,7 +23775,7 @@
   },
   {
     "id": "pc87de8e8",
-    "name": "Louis Vuitton Bag — Style 10",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -23791,7 +23791,7 @@
   },
   {
     "id": "p4bd15286",
-    "name": "Louis Vuitton Bag — Style 6",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -23807,7 +23807,7 @@
   },
   {
     "id": "p72914117",
-    "name": "Louis Vuitton Bag — Style 3",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -23823,7 +23823,7 @@
   },
   {
     "id": "p470b612a",
-    "name": "Louis Vuitton Bag — Style 4",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -23847,7 +23847,7 @@
   },
   {
     "id": "p938c26c7",
-    "name": "Louis Vuitton Bag — Style 9",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -23863,7 +23863,7 @@
   },
   {
     "id": "p6e874b5d",
-    "name": "Louis Vuitton Bag — Style 11",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -23879,7 +23879,7 @@
   },
   {
     "id": "pdca13297",
-    "name": "Louis Vuitton Bag — Style 5",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -23895,7 +23895,7 @@
   },
   {
     "id": "p2ec04e4d",
-    "name": "Louis Vuitton Bag — Style 7",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -23911,7 +23911,7 @@
   },
   {
     "id": "p00d8c012",
-    "name": "Louis Vuitton Bag — Style 2",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -23935,7 +23935,7 @@
   },
   {
     "id": "pd4c082ea",
-    "name": "Louis Vuitton Bag — Style 12",
+    "name": "Louis Vuitton Bag",
     "category": "bags",
     "price": "53.85",
     "price_numeric": 53.85,
@@ -23951,7 +23951,7 @@
   },
   {
     "id": "p58791084",
-    "name": "Gucci Bag — $41.54",
+    "name": "Gucci Bag",
     "category": "bags",
     "price": "41.54",
     "price_numeric": 41.54,
@@ -23967,7 +23967,7 @@
   },
   {
     "id": "p04bf0644",
-    "name": "Gucci Bag — $55.38",
+    "name": "Gucci Bag",
     "category": "bags",
     "price": "55.38",
     "price_numeric": 55.38,
@@ -23983,7 +23983,7 @@
   },
   {
     "id": "p5ff7e3f7",
-    "name": "Prada Bag — $36.92",
+    "name": "Prada Bag",
     "category": "bags",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -23999,7 +23999,7 @@
   },
   {
     "id": "p8e32259d",
-    "name": "Jacquemus Bag — $44.92",
+    "name": "Jacquemus Bag",
     "category": "bags",
     "price": "44.92",
     "price_numeric": 44.92,
@@ -24015,7 +24015,7 @@
   },
   {
     "id": "p444cfeaf",
-    "name": "Supreme Bag — $11.69",
+    "name": "Supreme Bag",
     "category": "bags",
     "price": "11.69",
     "price_numeric": 11.69,
@@ -24064,7 +24064,7 @@
   },
   {
     "id": "p4d9726d7",
-    "name": "Goyard Bag — $55.38",
+    "name": "Goyard Bag",
     "category": "bags",
     "price": "55.38",
     "price_numeric": 55.38,
@@ -24091,7 +24091,7 @@
   },
   {
     "id": "p98bb9713",
-    "name": "Goyard Bag — $94.92",
+    "name": "Goyard Bag",
     "category": "bags",
     "price": "94.92",
     "price_numeric": 94.92,
@@ -24107,7 +24107,7 @@
   },
   {
     "id": "p507ab627",
-    "name": "Goyard Bag — $14.62",
+    "name": "Goyard Bag",
     "category": "bags",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -24235,7 +24235,7 @@
   },
   {
     "id": "pb63b301b",
-    "name": "Guess Bag — Style 2",
+    "name": "Guess Bag",
     "category": "bags",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -24353,7 +24353,7 @@
   },
   {
     "id": "p02c59897",
-    "name": "Ray Ban SunGlasses — Style 1",
+    "name": "Ray Ban SunGlasses",
     "category": "accessories",
     "price": "13.54",
     "price_numeric": 13.54,
@@ -24716,7 +24716,7 @@
   },
   {
     "id": "pbc925d45",
-    "name": "Gucci Tie — Style 1",
+    "name": "Gucci Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24732,7 +24732,7 @@
   },
   {
     "id": "pc6c414e1",
-    "name": "Gucci Tie — Style 2",
+    "name": "Gucci Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24748,7 +24748,7 @@
   },
   {
     "id": "pdc3cf4ed",
-    "name": "Gucci Tie — Style 3",
+    "name": "Gucci Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24764,7 +24764,7 @@
   },
   {
     "id": "p140bef7d",
-    "name": "Louis Vuitton Tie — Style 1",
+    "name": "Louis Vuitton Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24780,7 +24780,7 @@
   },
   {
     "id": "p32e2a716",
-    "name": "Louis Vuitton Tie — Style 2",
+    "name": "Louis Vuitton Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24796,7 +24796,7 @@
   },
   {
     "id": "pe0c8301d",
-    "name": "Louis Vuitton Tie — Style 3",
+    "name": "Louis Vuitton Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24823,7 +24823,7 @@
   },
   {
     "id": "pc8f552b5",
-    "name": "Hermes Tie — Style 3",
+    "name": "Hermes Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24839,7 +24839,7 @@
   },
   {
     "id": "pd1b76a9a",
-    "name": "Hermes Tie — Style 4",
+    "name": "Hermes Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24855,7 +24855,7 @@
   },
   {
     "id": "pb5e10e19",
-    "name": "Hermes Tie — Style 2",
+    "name": "Hermes Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24882,7 +24882,7 @@
   },
   {
     "id": "pb3100c38",
-    "name": "Hermes Tie — Style 1",
+    "name": "Hermes Tie",
     "category": "accessories",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -24898,7 +24898,7 @@
   },
   {
     "id": "p2a092e3e",
-    "name": "Hermes Tie — Style 5",
+    "name": "Hermes Tie",
     "category": "accessories",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -25208,7 +25208,7 @@
   },
   {
     "id": "p7c5c5ac9",
-    "name": "Supreme Mask — Style 2",
+    "name": "Supreme Mask",
     "category": "accessories",
     "price": "9.23",
     "price_numeric": 9.23,
@@ -25590,7 +25590,7 @@
   },
   {
     "id": "p1e2ca907",
-    "name": "Tissot — $73.23",
+    "name": "Tissot",
     "category": "tech",
     "price": "73.23",
     "price_numeric": 73.23,
@@ -25617,7 +25617,7 @@
   },
   {
     "id": "pb65aab7e",
-    "name": "Tissot — $68.00",
+    "name": "Tissot",
     "category": "tech",
     "price": "68.00",
     "price_numeric": 68.0,
@@ -25665,7 +25665,7 @@
   },
   {
     "id": "pd9b82730",
-    "name": "Rolex — Style 2",
+    "name": "Rolex",
     "category": "tech",
     "price": "49.23",
     "price_numeric": 49.23,
@@ -25681,7 +25681,7 @@
   },
   {
     "id": "pc8973704",
-    "name": "Rolex — Style 1",
+    "name": "Rolex",
     "category": "tech",
     "price": "49.23",
     "price_numeric": 49.23,
@@ -25697,7 +25697,7 @@
   },
   {
     "id": "p0b4cf2ac",
-    "name": "Rolex — Style 4",
+    "name": "Rolex",
     "category": "tech",
     "price": "117.69",
     "price_numeric": 117.69,
@@ -25724,7 +25724,7 @@
   },
   {
     "id": "p62aee4a0",
-    "name": "Rolex — Style 3",
+    "name": "Rolex",
     "category": "tech",
     "price": "96.77",
     "price_numeric": 96.77,
@@ -25815,7 +25815,7 @@
   },
   {
     "id": "p705e4f30",
-    "name": "Omega — $62.77",
+    "name": "Omega",
     "category": "tech",
     "price": "62.77",
     "price_numeric": 62.77,
@@ -25831,7 +25831,7 @@
   },
   {
     "id": "pab067c43",
-    "name": "Omega — $73.23",
+    "name": "Omega",
     "category": "tech",
     "price": "73.23",
     "price_numeric": 73.23,
@@ -26363,7 +26363,7 @@
   },
   {
     "id": "p876e289f",
-    "name": "Ami Sweater — $23.08",
+    "name": "Ami Sweater",
     "category": "hoodies",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -26379,7 +26379,7 @@
   },
   {
     "id": "p8fa27c68",
-    "name": "Ralph Lauren\nSweater — $29.08",
+    "name": "Ralph Lauren\nSweater",
     "category": "hoodies",
     "price": "29.08",
     "price_numeric": 29.08,
@@ -26572,7 +26572,7 @@
   },
   {
     "id": "p65e326f6",
-    "name": "YSL\nHigh Heels — $81.54",
+    "name": "YSL\nHigh Heels",
     "category": "womens",
     "price": "81.54",
     "price_numeric": 81.54,
@@ -26706,7 +26706,7 @@
   },
   {
     "id": "pe546994d",
-    "name": "Ugg Boots — $56.92",
+    "name": "Ugg Boots",
     "category": "womens",
     "price": "56.92",
     "price_numeric": 56.92,
@@ -26733,7 +26733,7 @@
   },
   {
     "id": "pd1c1793e",
-    "name": "Ugg Boots — $53.85",
+    "name": "Ugg Boots",
     "category": "womens",
     "price": "53.85",
     "price_numeric": 53.85,
@@ -26749,7 +26749,7 @@
   },
   {
     "id": "pb54d6635",
-    "name": "Valentino\nHigh Heels — $81.54",
+    "name": "Valentino\nHigh Heels",
     "category": "womens",
     "price": "81.54",
     "price_numeric": 81.54,
@@ -26813,7 +26813,7 @@
   },
   {
     "id": "p9949ecbe",
-    "name": "Valentino\nHigh Heels — $76.92",
+    "name": "Valentino\nHigh Heels",
     "category": "womens",
     "price": "76.92",
     "price_numeric": 76.92,
@@ -26829,7 +26829,7 @@
   },
   {
     "id": "p0f6077d8",
-    "name": "YSL\nHigh Heels — $76.92",
+    "name": "YSL\nHigh Heels",
     "category": "womens",
     "price": "76.92",
     "price_numeric": 76.92,
@@ -26929,7 +26929,7 @@
   },
   {
     "id": "pbdee223c",
-    "name": "Adidas Campus — $24.62",
+    "name": "Adidas Campus",
     "category": "womens",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -27031,7 +27031,7 @@
   },
   {
     "id": "p3137ba4a",
-    "name": "Miu Miu — $32.31",
+    "name": "Miu Miu",
     "category": "womens",
     "price": "32.31",
     "price_numeric": 32.31,
@@ -27234,7 +27234,7 @@
   },
   {
     "id": "p89bbc965",
-    "name": "LV Shoes — Style 1",
+    "name": "LV Shoes",
     "category": "womens",
     "price": "39.23",
     "price_numeric": 39.23,
@@ -27277,7 +27277,7 @@
   },
   {
     "id": "p301c468c",
-    "name": "Hermes Slippers — $44.31",
+    "name": "Hermes Slippers",
     "category": "womens",
     "price": "44.31",
     "price_numeric": 44.31,
@@ -27578,7 +27578,7 @@
   },
   {
     "id": "p18b91d28",
-    "name": "Louis Vuitton\nSweater — $38.62",
+    "name": "Louis Vuitton\nSweater",
     "category": "hoodies",
     "price": "38.62",
     "price_numeric": 38.62,
@@ -27594,7 +27594,7 @@
   },
   {
     "id": "pd361e2a7",
-    "name": "Louis Vuitton\nSweater — $61.54",
+    "name": "Louis Vuitton\nSweater",
     "category": "hoodies",
     "price": "61.54",
     "price_numeric": 61.54,
@@ -27613,7 +27613,7 @@
   },
   {
     "id": "pbfa87ace",
-    "name": "Zara Sweater — $16.92",
+    "name": "Zara Sweater",
     "category": "hoodies",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -27640,7 +27640,7 @@
   },
   {
     "id": "p30afd633",
-    "name": "Zara Sweater — $18.00",
+    "name": "Zara Sweater",
     "category": "hoodies",
     "price": "18.00",
     "price_numeric": 18.0,
@@ -27711,7 +27711,7 @@
   },
   {
     "id": "p6c59eb5d",
-    "name": "Ralph Lauren\nSweater — $30.62",
+    "name": "Ralph Lauren\nSweater",
     "category": "hoodies",
     "price": "30.62",
     "price_numeric": 30.62,
@@ -27835,7 +27835,7 @@
   },
   {
     "id": "pc5c4303b",
-    "name": "Polo Ralph Lauren\nShirt — $30.62",
+    "name": "Polo Ralph Lauren\nShirt",
     "category": "shirts",
     "price": "30.62",
     "price_numeric": 30.62,
@@ -27851,7 +27851,7 @@
   },
   {
     "id": "p9ba043c7",
-    "name": "Polo Ralph Lauren\nShirt — $22.92",
+    "name": "Polo Ralph Lauren\nShirt",
     "category": "shirts",
     "price": "22.92",
     "price_numeric": 22.92,
@@ -27867,7 +27867,7 @@
   },
   {
     "id": "p8b2b4ea8",
-    "name": "Ralph Lauren\nPolo Shirt — $27.69",
+    "name": "Ralph Lauren\nPolo Shirt",
     "category": "shirts",
     "price": "27.69",
     "price_numeric": 27.69,
@@ -27883,7 +27883,7 @@
   },
   {
     "id": "p048a6614",
-    "name": "Ralph Lauren\nPolo Shirt — $27.54",
+    "name": "Ralph Lauren\nPolo Shirt",
     "category": "shirts",
     "price": "27.54",
     "price_numeric": 27.54,
@@ -27908,7 +27908,7 @@
   },
   {
     "id": "p80199dbd",
-    "name": "Ralph Lauren\nPolo Shirt — $22.92",
+    "name": "Ralph Lauren\nPolo Shirt",
     "category": "shirts",
     "price": "22.92",
     "price_numeric": 22.92,
@@ -28116,7 +28116,7 @@
   },
   {
     "id": "p109e3cf6",
-    "name": "Skims Dress — Style 2",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -28132,7 +28132,7 @@
   },
   {
     "id": "p75b2ebd5",
-    "name": "Skims Dress — Style 1",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "18.15",
     "price_numeric": 18.15,
@@ -28154,7 +28154,7 @@
   },
   {
     "id": "pdd96d2b5",
-    "name": "Skims Dress — Style 6",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "43.08",
     "price_numeric": 43.08,
@@ -28170,7 +28170,7 @@
   },
   {
     "id": "pe9d9369f",
-    "name": "Skims Dress — Style 4",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -28192,7 +28192,7 @@
   },
   {
     "id": "pdf3c052d",
-    "name": "Skims Dress — Style 3",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -28213,7 +28213,7 @@
   },
   {
     "id": "pcb1dab4f",
-    "name": "Skims Dress — Style 5",
+    "name": "Skims Dress",
     "category": "womens",
     "price": "23.23",
     "price_numeric": 23.23,
@@ -28288,7 +28288,7 @@
   },
   {
     "id": "p1a6d4205",
-    "name": "Hollowed-out backless halter top — $10.77",
+    "name": "Hollowed-out backless halter top",
     "category": "shirts",
     "price": "10.77",
     "price_numeric": 10.77,
@@ -28490,7 +28490,7 @@
   },
   {
     "id": "p9c19cd97",
-    "name": "Hollowed-out backless halter top — $8.46",
+    "name": "Hollowed-out backless halter top",
     "category": "shirts",
     "price": "8.46",
     "price_numeric": 8.46,
@@ -28506,7 +28506,7 @@
   },
   {
     "id": "p42e873a0",
-    "name": "I.AM.GIA\ntop — $25.08",
+    "name": "I.AM.GIA\ntop",
     "category": "shirts",
     "price": "25.08",
     "price_numeric": 25.08,
@@ -28605,7 +28605,7 @@
   },
   {
     "id": "pe6e4c0eb",
-    "name": "I.AM.GIA\ntop — $24.31",
+    "name": "I.AM.GIA\ntop",
     "category": "shirts",
     "price": "24.31",
     "price_numeric": 24.31,
@@ -29534,7 +29534,7 @@
   },
   {
     "id": "pa9734a55",
-    "name": "Prada Bag — $52.46",
+    "name": "Prada Bag",
     "category": "bags",
     "price": "52.46",
     "price_numeric": 52.46,
@@ -29550,7 +29550,7 @@
   },
   {
     "id": "p667ba1cc",
-    "name": "Prada Bag — $72.15",
+    "name": "Prada Bag",
     "category": "bags",
     "price": "72.15",
     "price_numeric": 72.15,
@@ -29566,7 +29566,7 @@
   },
   {
     "id": "pa2027bd0",
-    "name": "Prada Bag — $88.62",
+    "name": "Prada Bag",
     "category": "bags",
     "price": "88.62",
     "price_numeric": 88.62,
@@ -29940,7 +29940,7 @@
   },
   {
     "id": "p98935c09",
-    "name": "Dior Belt — $61.54",
+    "name": "Dior Belt",
     "category": "accessories",
     "price": "61.54",
     "price_numeric": 61.54,
@@ -29967,7 +29967,7 @@
   },
   {
     "id": "p7d9a3bbd",
-    "name": "Hermes Belt — $44.62",
+    "name": "Hermes Belt",
     "category": "accessories",
     "price": "44.62",
     "price_numeric": 44.62,
@@ -30026,7 +30026,7 @@
   },
   {
     "id": "p2bb11a04",
-    "name": "Alo Pants — Style 16",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.08",
     "price_numeric": 19.08,
@@ -30042,7 +30042,7 @@
   },
   {
     "id": "pde7310a5",
-    "name": "Alo Set — $35.85",
+    "name": "Alo Set",
     "category": "womens",
     "price": "35.85",
     "price_numeric": 35.85,
@@ -30058,7 +30058,7 @@
   },
   {
     "id": "p7d3e3e55",
-    "name": "Alo Short — Style 10",
+    "name": "Alo Short",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -30085,7 +30085,7 @@
   },
   {
     "id": "p1f5c0706",
-    "name": "Alo Set — $27.54",
+    "name": "Alo Set",
     "category": "womens",
     "price": "27.54",
     "price_numeric": 27.54,
@@ -30101,7 +30101,7 @@
   },
   {
     "id": "pdecc0c7c",
-    "name": "Alo Hoodie — Style 8",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -30128,7 +30128,7 @@
   },
   {
     "id": "p65b6bfb6",
-    "name": "Alo Set — $42.31",
+    "name": "Alo Set",
     "category": "womens",
     "price": "42.31",
     "price_numeric": 42.31,
@@ -30155,7 +30155,7 @@
   },
   {
     "id": "p232a2b21",
-    "name": "Alo Hoodie — Style 2",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -30171,7 +30171,7 @@
   },
   {
     "id": "p1b2332c4",
-    "name": "Alo Hoodie — Style 11",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "21.23",
     "price_numeric": 21.23,
@@ -30187,7 +30187,7 @@
   },
   {
     "id": "p7ffb06c6",
-    "name": "Alo Bag — $16.62",
+    "name": "Alo Bag",
     "category": "bags",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -30203,7 +30203,7 @@
   },
   {
     "id": "pe90b28a3",
-    "name": "Alo Short — Style 7",
+    "name": "Alo Short",
     "category": "pants",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -30230,7 +30230,7 @@
   },
   {
     "id": "p529ef55f",
-    "name": "Alo Set — $40.92",
+    "name": "Alo Set",
     "category": "womens",
     "price": "40.92",
     "price_numeric": 40.92,
@@ -30246,7 +30246,7 @@
   },
   {
     "id": "pc3e13ba5",
-    "name": "Alo Hoodie — Style 16",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "25.69",
     "price_numeric": 25.69,
@@ -30262,7 +30262,7 @@
   },
   {
     "id": "pae23b8f3",
-    "name": "Alo Hoodie — Style 3",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "16.62",
     "price_numeric": 16.62,
@@ -30278,7 +30278,7 @@
   },
   {
     "id": "p90c6ed22",
-    "name": "Alo Pants — Style 11",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -30305,7 +30305,7 @@
   },
   {
     "id": "p7c90badb",
-    "name": "Alo Hoodie — Style 7",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -30332,7 +30332,7 @@
   },
   {
     "id": "p0e246abd",
-    "name": "Alo Hoodie — Style 6",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -30359,7 +30359,7 @@
   },
   {
     "id": "p33089458",
-    "name": "Alo Short — Style 4",
+    "name": "Alo Short",
     "category": "pants",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -30375,7 +30375,7 @@
   },
   {
     "id": "pb1d95711",
-    "name": "Alo Pants — Style 34",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -30402,7 +30402,7 @@
   },
   {
     "id": "pb79eeca1",
-    "name": "Alo Short — Style 12",
+    "name": "Alo Short",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -30429,7 +30429,7 @@
   },
   {
     "id": "p83453286",
-    "name": "Alo Pants — Style 1",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "17.23",
     "price_numeric": 17.23,
@@ -30456,7 +30456,7 @@
   },
   {
     "id": "pd8845a11",
-    "name": "Alo Pants — Style 31",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -30483,7 +30483,7 @@
   },
   {
     "id": "p922be360",
-    "name": "Alo Pants — Style 5",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -30499,7 +30499,7 @@
   },
   {
     "id": "p62fb5a49",
-    "name": "Alo Long Tee — Style 7",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "17.54",
     "price_numeric": 17.54,
@@ -30515,7 +30515,7 @@
   },
   {
     "id": "p94423680",
-    "name": "Alo Hoodie — Style 14",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "23.69",
     "price_numeric": 23.69,
@@ -30531,7 +30531,7 @@
   },
   {
     "id": "pe623022f",
-    "name": "Alo Tee — Style 9",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -30574,7 +30574,7 @@
   },
   {
     "id": "p5760d7e0",
-    "name": "Alo Pants — Style 2",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "17.54",
     "price_numeric": 17.54,
@@ -30601,7 +30601,7 @@
   },
   {
     "id": "p7b68f37e",
-    "name": "Alo Pants — Style 29",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -30633,7 +30633,7 @@
   },
   {
     "id": "p049d9d97",
-    "name": "Alo Pants — Style 4",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -30660,7 +30660,7 @@
   },
   {
     "id": "p137ebc0e",
-    "name": "Alo Pants — Style 21",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -30687,7 +30687,7 @@
   },
   {
     "id": "pa6eda0d0",
-    "name": "Alo Vest — Style 20",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -30714,7 +30714,7 @@
   },
   {
     "id": "pc692397f",
-    "name": "Alo Vest — Style 12",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -30730,7 +30730,7 @@
   },
   {
     "id": "p87189144",
-    "name": "Alo Coat — Style 2",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -30746,7 +30746,7 @@
   },
   {
     "id": "p5329a73e",
-    "name": "Alo Pants — Style 8",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -30762,7 +30762,7 @@
   },
   {
     "id": "p49f903b9",
-    "name": "Alo Pants — Style 18",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.08",
     "price_numeric": 19.08,
@@ -30789,7 +30789,7 @@
   },
   {
     "id": "p1d47d20a",
-    "name": "Alo Long Tee — Style 1",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -30816,7 +30816,7 @@
   },
   {
     "id": "p22945fff",
-    "name": "Alo Short — Style 1",
+    "name": "Alo Short",
     "category": "pants",
     "price": "12.00",
     "price_numeric": 12.0,
@@ -30843,7 +30843,7 @@
   },
   {
     "id": "p8c9947a1",
-    "name": "Alo Pants — Style 10",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -30859,7 +30859,7 @@
   },
   {
     "id": "p8db58796",
-    "name": "Alo Set — $14.92",
+    "name": "Alo Set",
     "category": "womens",
     "price": "14.92",
     "price_numeric": 14.92,
@@ -30875,7 +30875,7 @@
   },
   {
     "id": "p9a5f8b40",
-    "name": "Alo Pants — Style 25",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -30902,7 +30902,7 @@
   },
   {
     "id": "pe917bb51",
-    "name": "Alo Pants — Style 19",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.08",
     "price_numeric": 19.08,
@@ -30918,7 +30918,7 @@
   },
   {
     "id": "pd21c34e1",
-    "name": "Alo Bag — $16.15",
+    "name": "Alo Bag",
     "category": "bags",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -30934,7 +30934,7 @@
   },
   {
     "id": "p597f188c",
-    "name": "Alo Skirt — $16.15",
+    "name": "Alo Skirt",
     "category": "womens",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -30950,7 +30950,7 @@
   },
   {
     "id": "p882536b8",
-    "name": "Alo Short — Style 3",
+    "name": "Alo Short",
     "category": "pants",
     "price": "12.62",
     "price_numeric": 12.62,
@@ -30966,7 +30966,7 @@
   },
   {
     "id": "p596d461f",
-    "name": "Alo Coat — Style 7",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -31009,7 +31009,7 @@
   },
   {
     "id": "pbe24825a",
-    "name": "Alo Pants — Style 27",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.38",
     "price_numeric": 19.38,
@@ -31036,7 +31036,7 @@
   },
   {
     "id": "p539e6282",
-    "name": "Alo Pants — Style 23",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31063,7 +31063,7 @@
   },
   {
     "id": "p4dc60fe7",
-    "name": "Alo Pants — Style 12",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.77",
     "price_numeric": 18.77,
@@ -31090,7 +31090,7 @@
   },
   {
     "id": "p3968b249",
-    "name": "Alo Skirt — $14.77",
+    "name": "Alo Skirt",
     "category": "womens",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -31117,7 +31117,7 @@
   },
   {
     "id": "pd7f49c7d",
-    "name": "Alo Pants — Style 13",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.77",
     "price_numeric": 18.77,
@@ -31144,7 +31144,7 @@
   },
   {
     "id": "p99909929",
-    "name": "Alo Vest — Style 19",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "17.54",
     "price_numeric": 17.54,
@@ -31160,7 +31160,7 @@
   },
   {
     "id": "pa49950f4",
-    "name": "Alo Vest — Style 11",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -31187,7 +31187,7 @@
   },
   {
     "id": "p6f546f9d",
-    "name": "Alo Set — $20.62",
+    "name": "Alo Set",
     "category": "womens",
     "price": "20.62",
     "price_numeric": 20.62,
@@ -31214,7 +31214,7 @@
   },
   {
     "id": "p1b4bdb1d",
-    "name": "Alo Pants — Style 35",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -31230,7 +31230,7 @@
   },
   {
     "id": "p0d2b270b",
-    "name": "Alo Pants — Style 7",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -31246,7 +31246,7 @@
   },
   {
     "id": "p09700522",
-    "name": "Alo Long Tee — Style 2",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31262,7 +31262,7 @@
   },
   {
     "id": "pa944a58d",
-    "name": "Alo Long Tee — Style 9",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -31278,7 +31278,7 @@
   },
   {
     "id": "p6cb43d6b",
-    "name": "Alo Coat — Style 1",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -31294,7 +31294,7 @@
   },
   {
     "id": "p0e81ae2b",
-    "name": "Alo Pants — Style 20",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31321,7 +31321,7 @@
   },
   {
     "id": "pf0b535bc",
-    "name": "Alo Vest — Style 18",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31337,7 +31337,7 @@
   },
   {
     "id": "p337703c6",
-    "name": "Alo Long Tee — Style 8",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -31353,7 +31353,7 @@
   },
   {
     "id": "p4a9890ea",
-    "name": "Alo Vest — Style 13",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -31369,7 +31369,7 @@
   },
   {
     "id": "p4ba20c68",
-    "name": "Alo Short — Style 2",
+    "name": "Alo Short",
     "category": "pants",
     "price": "12.62",
     "price_numeric": 12.62,
@@ -31396,7 +31396,7 @@
   },
   {
     "id": "p020d1f38",
-    "name": "Alo Vest — Style 2",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "13.38",
     "price_numeric": 13.38,
@@ -31412,7 +31412,7 @@
   },
   {
     "id": "pd984c95f",
-    "name": "Alo Pants — Style 6",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -31428,7 +31428,7 @@
   },
   {
     "id": "pc7c7b7f2",
-    "name": "Alo Short — Style 13",
+    "name": "Alo Short",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31455,7 +31455,7 @@
   },
   {
     "id": "p14ec9d68",
-    "name": "Alo Pants — Style 14",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.92",
     "price_numeric": 18.92,
@@ -31471,7 +31471,7 @@
   },
   {
     "id": "pbbff0a54",
-    "name": "Alo Pants — Style 26",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31498,7 +31498,7 @@
   },
   {
     "id": "p8ebb88c3",
-    "name": "Alo Pants — Style 32",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "20.62",
     "price_numeric": 20.62,
@@ -31525,7 +31525,7 @@
   },
   {
     "id": "p085a4619",
-    "name": "Alo Long Tee — Style 6",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -31541,7 +31541,7 @@
   },
   {
     "id": "p934ceddd",
-    "name": "Alo Vest — Style 5",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -31568,7 +31568,7 @@
   },
   {
     "id": "p267ccccd",
-    "name": "Alo Pants — Style 22",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31595,7 +31595,7 @@
   },
   {
     "id": "p49d3d907",
-    "name": "Alo Coat — Style 3",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -31611,7 +31611,7 @@
   },
   {
     "id": "pd7ff4bd3",
-    "name": "Alo Coat — Style 4",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -31627,7 +31627,7 @@
   },
   {
     "id": "pcd13aa8e",
-    "name": "Alo Pants — Style 30",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "20.15",
     "price_numeric": 20.15,
@@ -31654,7 +31654,7 @@
   },
   {
     "id": "p1d76702b",
-    "name": "Alo Vest — Style 3",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "13.38",
     "price_numeric": 13.38,
@@ -31681,7 +31681,7 @@
   },
   {
     "id": "p40eba213",
-    "name": "Alo Pants — Style 17",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.08",
     "price_numeric": 19.08,
@@ -31708,7 +31708,7 @@
   },
   {
     "id": "pda93275c",
-    "name": "Alo Short — Style 8",
+    "name": "Alo Short",
     "category": "pants",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31724,7 +31724,7 @@
   },
   {
     "id": "p719da273",
-    "name": "Alo Pants — Style 24",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31740,7 +31740,7 @@
   },
   {
     "id": "p1ed2f5d1",
-    "name": "Alo Pants — Style 33",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -31756,7 +31756,7 @@
   },
   {
     "id": "pa1074204",
-    "name": "Alo Vest — Style 17",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31772,7 +31772,7 @@
   },
   {
     "id": "p4c52c247",
-    "name": "Alo Short — Style 6",
+    "name": "Alo Short",
     "category": "pants",
     "price": "14.77",
     "price_numeric": 14.77,
@@ -31799,7 +31799,7 @@
   },
   {
     "id": "pec769a8f",
-    "name": "Alo Hoodie — Style 5",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -31826,7 +31826,7 @@
   },
   {
     "id": "p6cfd4d26",
-    "name": "Alo Set — $14.31",
+    "name": "Alo Set",
     "category": "womens",
     "price": "14.31",
     "price_numeric": 14.31,
@@ -31842,7 +31842,7 @@
   },
   {
     "id": "p7cb68b40",
-    "name": "Alo Pants — Style 9",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -31869,7 +31869,7 @@
   },
   {
     "id": "pe454e325",
-    "name": "Alo Vest — Style 10",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -31923,7 +31923,7 @@
   },
   {
     "id": "p4afe93a5",
-    "name": "Alo Hoodie — Style 1",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31950,7 +31950,7 @@
   },
   {
     "id": "p59b58d79",
-    "name": "Alo Vest — Style 16",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -31966,7 +31966,7 @@
   },
   {
     "id": "pe9a01b54",
-    "name": "Alo Hoodie — Style 15",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "24.62",
     "price_numeric": 24.62,
@@ -32009,7 +32009,7 @@
   },
   {
     "id": "pc17efab0",
-    "name": "Alo Hoodie — Style 13",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "23.54",
     "price_numeric": 23.54,
@@ -32036,7 +32036,7 @@
   },
   {
     "id": "p3cc51406",
-    "name": "Alo Set — $26.31",
+    "name": "Alo Set",
     "category": "womens",
     "price": "26.31",
     "price_numeric": 26.31,
@@ -32063,7 +32063,7 @@
   },
   {
     "id": "p84c69d93",
-    "name": "Alo Vest — Style 9",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.62",
     "price_numeric": 14.62,
@@ -32079,7 +32079,7 @@
   },
   {
     "id": "p1bd9b4b5",
-    "name": "Alo Pants — Style 15",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.08",
     "price_numeric": 19.08,
@@ -32095,7 +32095,7 @@
   },
   {
     "id": "pd8275d51",
-    "name": "Alo Vest — Style 7",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -32111,7 +32111,7 @@
   },
   {
     "id": "p2c00663e",
-    "name": "Alo Short — Style 5",
+    "name": "Alo Short",
     "category": "pants",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -32127,7 +32127,7 @@
   },
   {
     "id": "pe9f6df94",
-    "name": "Alo Tee — Style 6",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -32154,7 +32154,7 @@
   },
   {
     "id": "p455a66a7",
-    "name": "Alo Tee — Style 7",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32170,7 +32170,7 @@
   },
   {
     "id": "pa1f6a98e",
-    "name": "Alo Hoodie — Style 18",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -32186,7 +32186,7 @@
   },
   {
     "id": "pe2cea7f4",
-    "name": "Alo Hoodie — Style 12",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -32202,7 +32202,7 @@
   },
   {
     "id": "p9969e30e",
-    "name": "Alo Hoodie — Style 10",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "20.77",
     "price_numeric": 20.77,
@@ -32218,7 +32218,7 @@
   },
   {
     "id": "pc3ad4e1b",
-    "name": "Alo Hoodie — Style 9",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "20.62",
     "price_numeric": 20.62,
@@ -32234,7 +32234,7 @@
   },
   {
     "id": "p3e22370d",
-    "name": "Alo Hoodie — Style 4",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "17.69",
     "price_numeric": 17.69,
@@ -32250,7 +32250,7 @@
   },
   {
     "id": "pc25329fe",
-    "name": "Alo Vest — Style 8",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -32277,7 +32277,7 @@
   },
   {
     "id": "pafa31837",
-    "name": "Alo Long Tee — Style 10",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -32304,7 +32304,7 @@
   },
   {
     "id": "p5e7a9a49",
-    "name": "Alo Pants — Style 28",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -32320,7 +32320,7 @@
   },
   {
     "id": "p8d93fda1",
-    "name": "Alo Short — Style 11",
+    "name": "Alo Short",
     "category": "pants",
     "price": "19.23",
     "price_numeric": 19.23,
@@ -32336,7 +32336,7 @@
   },
   {
     "id": "pf23b18e2",
-    "name": "Alo Tee — Style 5",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "13.38",
     "price_numeric": 13.38,
@@ -32352,7 +32352,7 @@
   },
   {
     "id": "p9eecfe3f",
-    "name": "Alo Vest — Style 4",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "13.85",
     "price_numeric": 13.85,
@@ -32368,7 +32368,7 @@
   },
   {
     "id": "p4c0a780d",
-    "name": "Alo Vest — Style 15",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32384,7 +32384,7 @@
   },
   {
     "id": "pe1ea2f16",
-    "name": "Alo Long Tee — Style 3",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32400,7 +32400,7 @@
   },
   {
     "id": "pbdfd5f9c",
-    "name": "Alo Tee — Style 8",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32416,7 +32416,7 @@
   },
   {
     "id": "p9adc3140",
-    "name": "Alo Coat — Style 5",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -32432,7 +32432,7 @@
   },
   {
     "id": "p829c52e0",
-    "name": "Alo Pants — Style 3",
+    "name": "Alo Pants",
     "category": "pants",
     "price": "17.54",
     "price_numeric": 17.54,
@@ -32448,7 +32448,7 @@
   },
   {
     "id": "p92d31f14",
-    "name": "Alo Short — Style 9",
+    "name": "Alo Short",
     "category": "pants",
     "price": "18.62",
     "price_numeric": 18.62,
@@ -32464,7 +32464,7 @@
   },
   {
     "id": "p639fec93",
-    "name": "Alo Long Tee — Style 5",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "16.31",
     "price_numeric": 16.31,
@@ -32491,7 +32491,7 @@
   },
   {
     "id": "pf39da6e8",
-    "name": "Alo Long Tee — Style 4",
+    "name": "Alo Long Tee",
     "category": "shirts",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32507,7 +32507,7 @@
   },
   {
     "id": "p1fddfd16",
-    "name": "Alo Vest — Style 14",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "16.15",
     "price_numeric": 16.15,
@@ -32534,7 +32534,7 @@
   },
   {
     "id": "p2ccc89da",
-    "name": "Alo Vest — Style 1",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "13.23",
     "price_numeric": 13.23,
@@ -32550,7 +32550,7 @@
   },
   {
     "id": "paf1935af",
-    "name": "Alo Coat — Style 6",
+    "name": "Alo Coat",
     "category": "jackets",
     "price": "23.69",
     "price_numeric": 23.69,
@@ -32566,7 +32566,7 @@
   },
   {
     "id": "pbfbe9d9e",
-    "name": "Alo Skirt — $13.38",
+    "name": "Alo Skirt",
     "category": "womens",
     "price": "13.38",
     "price_numeric": 13.38,
@@ -32582,7 +32582,7 @@
   },
   {
     "id": "pbf98d4f2",
-    "name": "Alo Hoodie — Style 17",
+    "name": "Alo Hoodie",
     "category": "hoodies",
     "price": "26.92",
     "price_numeric": 26.92,
@@ -32598,7 +32598,7 @@
   },
   {
     "id": "pc9edf486",
-    "name": "Alo Vest — Style 6",
+    "name": "Alo Vest",
     "category": "jackets",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -32625,7 +32625,7 @@
   },
   {
     "id": "pdce82f3f",
-    "name": "Alo Tee — Style 10",
+    "name": "Alo Tee",
     "category": "shirts",
     "price": "17.38",
     "price_numeric": 17.38,
@@ -32673,7 +32673,7 @@
   },
   {
     "id": "p6d95697f",
-    "name": "Lululemon Pants — $21.85",
+    "name": "Lululemon Pants",
     "category": "pants",
     "price": "21.85",
     "price_numeric": 21.85,
@@ -32689,7 +32689,7 @@
   },
   {
     "id": "pc5e05c5f",
-    "name": "Lululemon Pants — $36.92",
+    "name": "Lululemon Pants",
     "category": "pants",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -32753,7 +32753,7 @@
   },
   {
     "id": "pde6860b5",
-    "name": "Zara Dress — Style 19",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -32769,7 +32769,7 @@
   },
   {
     "id": "p6a6fdaec",
-    "name": "Zara Dress — Style 51",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "27.38",
     "price_numeric": 27.38,
@@ -32795,7 +32795,7 @@
   },
   {
     "id": "p59302e4f",
-    "name": "Zara Dress — Style 24",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -32821,7 +32821,7 @@
   },
   {
     "id": "p24644139",
-    "name": "Zara Dress — Style 17",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -32847,7 +32847,7 @@
   },
   {
     "id": "p09c7c911",
-    "name": "Zara Dress — Style 41",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -32863,7 +32863,7 @@
   },
   {
     "id": "pfbde0c4c",
-    "name": "Zara Dress — Style 53",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "30.15",
     "price_numeric": 30.15,
@@ -32889,7 +32889,7 @@
   },
   {
     "id": "pa9a38cfc",
-    "name": "Zara Dress — Style 55",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "32.62",
     "price_numeric": 32.62,
@@ -32905,7 +32905,7 @@
   },
   {
     "id": "pa6bad662",
-    "name": "Zara Dress — Style 25",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -32931,7 +32931,7 @@
   },
   {
     "id": "p51f8532f",
-    "name": "Zara Dress — Style 45",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -32947,7 +32947,7 @@
   },
   {
     "id": "p43ef737c",
-    "name": "Zara Dress — Style 18",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -32963,7 +32963,7 @@
   },
   {
     "id": "pda0afb15",
-    "name": "Zara Dress — Style 34",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -32979,7 +32979,7 @@
   },
   {
     "id": "p8b1003cc",
-    "name": "Zara Dress — Style 11",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33005,7 +33005,7 @@
   },
   {
     "id": "p0b5484f8",
-    "name": "Zara Dress — Style 50",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "27.38",
     "price_numeric": 27.38,
@@ -33031,7 +33031,7 @@
   },
   {
     "id": "p10b6be40",
-    "name": "Zara Dress — Style 29",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33047,7 +33047,7 @@
   },
   {
     "id": "p0a7593b7",
-    "name": "Zara Dress — Style 22",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -33063,7 +33063,7 @@
   },
   {
     "id": "pd934c0c8",
-    "name": "Zara Dress — Style 6",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -33079,7 +33079,7 @@
   },
   {
     "id": "pb18cedab",
-    "name": "Zara Dress — Style 14",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33095,7 +33095,7 @@
   },
   {
     "id": "pdd2219b5",
-    "name": "Zara Dress — Style 49",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "25.69",
     "price_numeric": 25.69,
@@ -33121,7 +33121,7 @@
   },
   {
     "id": "p21c0eb5a",
-    "name": "Zara Dress — Style 30",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33147,7 +33147,7 @@
   },
   {
     "id": "p8626b048",
-    "name": "Zara Dress — Style 48",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "25.69",
     "price_numeric": 25.69,
@@ -33163,7 +33163,7 @@
   },
   {
     "id": "p16bc8b14",
-    "name": "Zara Dress — Style 4",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -33179,7 +33179,7 @@
   },
   {
     "id": "pd2c48869",
-    "name": "Zara Dress — Style 33",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33205,7 +33205,7 @@
   },
   {
     "id": "p0966199d",
-    "name": "Zara Dress — Style 44",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -33221,7 +33221,7 @@
   },
   {
     "id": "pb03b100e",
-    "name": "Zara Dress — Style 13",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33237,7 +33237,7 @@
   },
   {
     "id": "pfa7503a6",
-    "name": "Zara Dress — Style 39",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -33253,7 +33253,7 @@
   },
   {
     "id": "p6219b15f",
-    "name": "Zara Dress — Style 47",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -33279,7 +33279,7 @@
   },
   {
     "id": "pfd41bb62",
-    "name": "Zara Dress — Style 3",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -33295,7 +33295,7 @@
   },
   {
     "id": "p61ec789e",
-    "name": "Zara Dress — Style 46",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -33321,7 +33321,7 @@
   },
   {
     "id": "p97e9e0b0",
-    "name": "Zara Dress — Style 40",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -33347,7 +33347,7 @@
   },
   {
     "id": "pe2700365",
-    "name": "Zara Dress — Style 38",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -33363,7 +33363,7 @@
   },
   {
     "id": "p3a0dbf0a",
-    "name": "Zara Dress — Style 42",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -33389,7 +33389,7 @@
   },
   {
     "id": "pf4455d4e",
-    "name": "Zara Dress — Style 20",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -33405,7 +33405,7 @@
   },
   {
     "id": "p8b176511",
-    "name": "Zara Dress — Style 37",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -33431,7 +33431,7 @@
   },
   {
     "id": "pda4e44b8",
-    "name": "Zara Dress — Style 27",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -33447,7 +33447,7 @@
   },
   {
     "id": "p3c651a4c",
-    "name": "Zara Dress — Style 23",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -33463,7 +33463,7 @@
   },
   {
     "id": "p64b7b39f",
-    "name": "Zara Dress — Style 52",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "28.31",
     "price_numeric": 28.31,
@@ -33479,7 +33479,7 @@
   },
   {
     "id": "p9a0b51f0",
-    "name": "Zara Dress — Style 31",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33495,7 +33495,7 @@
   },
   {
     "id": "pd1754f11",
-    "name": "Zara Dress — Style 26",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -33521,7 +33521,7 @@
   },
   {
     "id": "p0d763e6a",
-    "name": "Zara Dress — Style 16",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -33537,7 +33537,7 @@
   },
   {
     "id": "p7cbe9bbd",
-    "name": "Zara Dress — Style 10",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33563,7 +33563,7 @@
   },
   {
     "id": "pf3cfe445",
-    "name": "Zara Dress — Style 54",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "30.92",
     "price_numeric": 30.92,
@@ -33579,7 +33579,7 @@
   },
   {
     "id": "p204fb806",
-    "name": "Zara Dress — Style 35",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -33605,7 +33605,7 @@
   },
   {
     "id": "pa0284099",
-    "name": "Zara Dress — Style 12",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33621,7 +33621,7 @@
   },
   {
     "id": "pa06794ac",
-    "name": "Zara Dress — Style 56",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "35.38",
     "price_numeric": 35.38,
@@ -33637,7 +33637,7 @@
   },
   {
     "id": "p38d1752f",
-    "name": "Zara Dress — Style 7",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "15.69",
     "price_numeric": 15.69,
@@ -33653,7 +33653,7 @@
   },
   {
     "id": "pc0e48d0f",
-    "name": "Zara Dress — Style 1",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "12.62",
     "price_numeric": 12.62,
@@ -33669,7 +33669,7 @@
   },
   {
     "id": "pb75f7e05",
-    "name": "Zara Dress — Style 5",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -33695,7 +33695,7 @@
   },
   {
     "id": "p1c1dc701",
-    "name": "Zara Dress — Style 8",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33721,7 +33721,7 @@
   },
   {
     "id": "p08e8815c",
-    "name": "Zara Dress — Style 28",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33737,7 +33737,7 @@
   },
   {
     "id": "p3b069c02",
-    "name": "Zara Dress — Style 9",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33763,7 +33763,7 @@
   },
   {
     "id": "p078d1c82",
-    "name": "Zara Dress — Style 43",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -33789,7 +33789,7 @@
   },
   {
     "id": "pbd84325e",
-    "name": "Zara Dress — Style 15",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -33805,7 +33805,7 @@
   },
   {
     "id": "pf8c6da3f",
-    "name": "Zara Dress — Style 21",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -33831,7 +33831,7 @@
   },
   {
     "id": "pa3c24435",
-    "name": "Zara Dress — Style 32",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -33847,7 +33847,7 @@
   },
   {
     "id": "p7aff8caa",
-    "name": "Zara Dress — Style 36",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "22.15",
     "price_numeric": 22.15,
@@ -33873,7 +33873,7 @@
   },
   {
     "id": "p6e623316",
-    "name": "Zara Dress — Style 2",
+    "name": "Zara Dress",
     "category": "womens",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -33889,7 +33889,7 @@
   },
   {
     "id": "pae38326f",
-    "name": "Zara Suit — $28.77",
+    "name": "Zara Suit",
     "category": "womens",
     "price": "28.77",
     "price_numeric": 28.77,
@@ -33916,7 +33916,7 @@
   },
   {
     "id": "pbc80befa",
-    "name": "Zara Suit — $27.38",
+    "name": "Zara Suit",
     "category": "womens",
     "price": "27.38",
     "price_numeric": 27.38,
@@ -33932,7 +33932,7 @@
   },
   {
     "id": "p3ade403c",
-    "name": "Zara Short Coat — $35.38",
+    "name": "Zara Short Coat",
     "category": "pants",
     "price": "35.38",
     "price_numeric": 35.38,
@@ -33948,7 +33948,7 @@
   },
   {
     "id": "pbde748d2",
-    "name": "Zara Short Coat — $27.38",
+    "name": "Zara Short Coat",
     "category": "pants",
     "price": "27.38",
     "price_numeric": 27.38,
@@ -33964,7 +33964,7 @@
   },
   {
     "id": "pbfb70927",
-    "name": "Zara Short Coat — $19.69",
+    "name": "Zara Short Coat",
     "category": "pants",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -34032,7 +34032,7 @@
   },
   {
     "id": "p7eb49678",
-    "name": "Zara Waistcoat — $20.46",
+    "name": "Zara Waistcoat",
     "category": "womens",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -34059,7 +34059,7 @@
   },
   {
     "id": "p520b5ad9",
-    "name": "Zara Waistcoat — $24.92",
+    "name": "Zara Waistcoat",
     "category": "womens",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -34128,7 +34128,7 @@
   },
   {
     "id": "p49714abc",
-    "name": "Zara Shirt — Style 23",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -34144,7 +34144,7 @@
   },
   {
     "id": "p4ffceb69",
-    "name": "Zara Shirt — Style 3",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34166,7 +34166,7 @@
   },
   {
     "id": "p2f470f13",
-    "name": "Zara Shirt — Style 27",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34182,7 +34182,7 @@
   },
   {
     "id": "p98950e7a",
-    "name": "Zara Shirt — Style 6",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34198,7 +34198,7 @@
   },
   {
     "id": "p4155a27c",
-    "name": "Zara Shirt — Style 35",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -34214,7 +34214,7 @@
   },
   {
     "id": "pbf19f94e",
-    "name": "Zara Shirt — Style 37",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -34236,7 +34236,7 @@
   },
   {
     "id": "p3caec509",
-    "name": "Zara Shirt — Style 13",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34258,7 +34258,7 @@
   },
   {
     "id": "p519e9110",
-    "name": "Zara Shirt — Style 14",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34280,7 +34280,7 @@
   },
   {
     "id": "p564d0e8e",
-    "name": "Zara Shirt — Style 15",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34296,7 +34296,7 @@
   },
   {
     "id": "p16646e11",
-    "name": "Zara Shirt — Style 11",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34318,7 +34318,7 @@
   },
   {
     "id": "p20adc3c7",
-    "name": "Zara Shirt — Style 26",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34334,7 +34334,7 @@
   },
   {
     "id": "pdb645ff1",
-    "name": "Zara Shirt — Style 7",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34350,7 +34350,7 @@
   },
   {
     "id": "p89616091",
-    "name": "Zara Shirt — Style 29",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34366,7 +34366,7 @@
   },
   {
     "id": "pa02deb9d",
-    "name": "Zara Shirt — Style 30",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34382,7 +34382,7 @@
   },
   {
     "id": "p85465973",
-    "name": "Zara Shirt — Style 32",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -34398,7 +34398,7 @@
   },
   {
     "id": "p5ea3346c",
-    "name": "Zara Shirt — Style 4",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34414,7 +34414,7 @@
   },
   {
     "id": "pffc22cd6",
-    "name": "Zara Shirt — Style 10",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34430,7 +34430,7 @@
   },
   {
     "id": "p6bcd818f",
-    "name": "Zara Shirt — Style 16",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34446,7 +34446,7 @@
   },
   {
     "id": "pc956bce2",
-    "name": "Zara Shirt — Style 18",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34462,7 +34462,7 @@
   },
   {
     "id": "p3ba20581",
-    "name": "Zara Shirt — Style 12",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34484,7 +34484,7 @@
   },
   {
     "id": "pe3059f07",
-    "name": "Zara Shirt — Style 20",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34500,7 +34500,7 @@
   },
   {
     "id": "p4f4a7b9b",
-    "name": "Zara Shirt — Style 28",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34516,7 +34516,7 @@
   },
   {
     "id": "pd9e8fb68",
-    "name": "Zara Shirt — Style 33",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -34538,7 +34538,7 @@
   },
   {
     "id": "p6f55cf0b",
-    "name": "Zara Shirt — Style 5",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34554,7 +34554,7 @@
   },
   {
     "id": "pc28ff236",
-    "name": "Zara Shirt — Style 31",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.92",
     "price_numeric": 16.92,
@@ -34570,7 +34570,7 @@
   },
   {
     "id": "p192df523",
-    "name": "Zara Shirt — Style 34",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -34592,7 +34592,7 @@
   },
   {
     "id": "p0abeda77",
-    "name": "Zara Shirt — Style 21",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -34608,7 +34608,7 @@
   },
   {
     "id": "pde9f22fb",
-    "name": "Zara Shirt — Style 25",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -34630,7 +34630,7 @@
   },
   {
     "id": "p36cacd0e",
-    "name": "Zara Shirt — Style 1",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34646,7 +34646,7 @@
   },
   {
     "id": "p95a44bf5",
-    "name": "Zara Shirt — Style 24",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -34662,7 +34662,7 @@
   },
   {
     "id": "p38ffdab8",
-    "name": "Zara Shirt — Style 2",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34678,7 +34678,7 @@
   },
   {
     "id": "pccef90eb",
-    "name": "Zara Shirt — Style 19",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34694,7 +34694,7 @@
   },
   {
     "id": "pdfaa721f",
-    "name": "Zara Shirt — Style 36",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -34710,7 +34710,7 @@
   },
   {
     "id": "p18388ee3",
-    "name": "Zara Shirt — Style 22",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "16.77",
     "price_numeric": 16.77,
@@ -34726,7 +34726,7 @@
   },
   {
     "id": "pe57d3d2b",
-    "name": "Zara Shirt — Style 9",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34742,7 +34742,7 @@
   },
   {
     "id": "p83793b6d",
-    "name": "Zara Shirt — Style 17",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "15.23",
     "price_numeric": 15.23,
@@ -34758,7 +34758,7 @@
   },
   {
     "id": "pdf807f2f",
-    "name": "Zara Shirt — Style 8",
+    "name": "Zara Shirt",
     "category": "shirts",
     "price": "14.46",
     "price_numeric": 14.46,
@@ -34774,7 +34774,7 @@
   },
   {
     "id": "pf3a4a3ac",
-    "name": "Zara Tops — $25.69",
+    "name": "Zara Tops",
     "category": "womens",
     "price": "25.69",
     "price_numeric": 25.69,
@@ -34795,7 +34795,7 @@
   },
   {
     "id": "pd1a0e751",
-    "name": "Zara Tops — $19.69",
+    "name": "Zara Tops",
     "category": "womens",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -34811,7 +34811,7 @@
   },
   {
     "id": "pa5bdd60c",
-    "name": "Zara Tops — $17.85",
+    "name": "Zara Tops",
     "category": "womens",
     "price": "17.85",
     "price_numeric": 17.85,
@@ -34827,7 +34827,7 @@
   },
   {
     "id": "p9b1208f8",
-    "name": "Ami Sweater — $22.31",
+    "name": "Ami Sweater",
     "category": "hoodies",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -34843,7 +34843,7 @@
   },
   {
     "id": "p22fa4d1d",
-    "name": "Ami Shirt — $21.23",
+    "name": "Ami Shirt",
     "category": "shirts",
     "price": "21.23",
     "price_numeric": 21.23,
@@ -34859,7 +34859,7 @@
   },
   {
     "id": "pbac45cec",
-    "name": "Ralph Lauren Hoodie — Style 3",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -34886,7 +34886,7 @@
   },
   {
     "id": "p48350025",
-    "name": "Ralph Lauren Hoodie — Style 2",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -34913,7 +34913,7 @@
   },
   {
     "id": "p3fec809a",
-    "name": "Ralph Lauren Hoodie — Style 1",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -34929,7 +34929,7 @@
   },
   {
     "id": "p2bacde23",
-    "name": "Ralph Lauren Hoodie — Style 4",
+    "name": "Ralph Lauren Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -34956,7 +34956,7 @@
   },
   {
     "id": "p097f9b4e",
-    "name": "Ralph Lauren Sweater — $33.85",
+    "name": "Ralph Lauren Sweater",
     "category": "hoodies",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -34972,7 +34972,7 @@
   },
   {
     "id": "paea99753",
-    "name": "Ralph Lauren Sweater — $30.77",
+    "name": "Ralph Lauren Sweater",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -34988,7 +34988,7 @@
   },
   {
     "id": "p5ef128f2",
-    "name": "Stone Island Hoodie — $17.08",
+    "name": "Stone Island Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35004,7 +35004,7 @@
   },
   {
     "id": "p7fc63a69",
-    "name": "Stone Island Hoodie — $19.69",
+    "name": "Stone Island Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35052,7 +35052,7 @@
   },
   {
     "id": "p0328a312",
-    "name": "Stone Island Shirt — $20.46",
+    "name": "Stone Island Shirt",
     "category": "shirts",
     "price": "20.46",
     "price_numeric": 20.46,
@@ -35068,7 +35068,7 @@
   },
   {
     "id": "p6d433b64",
-    "name": "LV Hoodie — $20.92",
+    "name": "LV Hoodie",
     "category": "hoodies",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -35095,7 +35095,7 @@
   },
   {
     "id": "pbb0d4c1c",
-    "name": "LV Hoodie — $55.08",
+    "name": "LV Hoodie",
     "category": "hoodies",
     "price": "55.08",
     "price_numeric": 55.08,
@@ -35121,7 +35121,7 @@
   },
   {
     "id": "p7e1adf00",
-    "name": "LV Sweater — $38.46",
+    "name": "LV Sweater",
     "category": "hoodies",
     "price": "38.46",
     "price_numeric": 38.46,
@@ -35137,7 +35137,7 @@
   },
   {
     "id": "pcd3a248e",
-    "name": "LV Sweater — $41.85",
+    "name": "LV Sweater",
     "category": "hoodies",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -35205,7 +35205,7 @@
   },
   {
     "id": "p7527f6a2",
-    "name": "Chrome Hearts\nHoodie — $20.92",
+    "name": "Chrome Hearts\nHoodie",
     "category": "hoodies",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -35221,7 +35221,7 @@
   },
   {
     "id": "pc3468bab",
-    "name": "Chrome Hearts\nHoodie — $18.31",
+    "name": "Chrome Hearts\nHoodie",
     "category": "hoodies",
     "price": "18.31",
     "price_numeric": 18.31,
@@ -35237,7 +35237,7 @@
   },
   {
     "id": "p9f0349b7",
-    "name": "Chrome Hearts Jeans — $29.69",
+    "name": "Chrome Hearts Jeans",
     "category": "pants",
     "price": "29.69",
     "price_numeric": 29.69,
@@ -35264,7 +35264,7 @@
   },
   {
     "id": "p4b619721",
-    "name": "Corteiz Hoodie — Style 9",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "23.23",
     "price_numeric": 23.23,
@@ -35280,7 +35280,7 @@
   },
   {
     "id": "p760a33a0",
-    "name": "Corteiz Hoodie — Style 6",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35296,7 +35296,7 @@
   },
   {
     "id": "pdc310e1e",
-    "name": "Corteiz Hoodie — Style 7",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35323,7 +35323,7 @@
   },
   {
     "id": "p00195a97",
-    "name": "Corteiz Hoodie — Style 1",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35339,7 +35339,7 @@
   },
   {
     "id": "p81842458",
-    "name": "Corteiz Hoodie — Style 3",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35366,7 +35366,7 @@
   },
   {
     "id": "p9163cba1",
-    "name": "Corteiz Hoodie — Style 4",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35398,7 +35398,7 @@
   },
   {
     "id": "pe83ae782",
-    "name": "Corteiz Hoodie — Style 8",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35414,7 +35414,7 @@
   },
   {
     "id": "p5d58e1e5",
-    "name": "Corteiz Hoodie — Style 5",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35430,7 +35430,7 @@
   },
   {
     "id": "p585cffc6",
-    "name": "Corteiz Hoodie — Style 2",
+    "name": "Corteiz Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35446,7 +35446,7 @@
   },
   {
     "id": "p37e48f90",
-    "name": "Corteiz Set — $51.08",
+    "name": "Corteiz Set",
     "category": "hoodies",
     "price": "51.08",
     "price_numeric": 51.08,
@@ -35462,7 +35462,7 @@
   },
   {
     "id": "pe2d7f316",
-    "name": "Corteiz Set — $44.46",
+    "name": "Corteiz Set",
     "category": "hoodies",
     "price": "44.46",
     "price_numeric": 44.46,
@@ -35478,7 +35478,7 @@
   },
   {
     "id": "p9a6c2b9b",
-    "name": "Corteiz Pants — $24.92",
+    "name": "Corteiz Pants",
     "category": "pants",
     "price": "24.92",
     "price_numeric": 24.92,
@@ -35505,7 +35505,7 @@
   },
   {
     "id": "p6cd04230",
-    "name": "Corteiz Pants — $24.31",
+    "name": "Corteiz Pants",
     "category": "pants",
     "price": "24.31",
     "price_numeric": 24.31,
@@ -35521,7 +35521,7 @@
   },
   {
     "id": "pbe252b8d",
-    "name": "Dior Hoodie — $40.00",
+    "name": "Dior Hoodie",
     "category": "hoodies",
     "price": "40.00",
     "price_numeric": 40.0,
@@ -35537,7 +35537,7 @@
   },
   {
     "id": "pcacc4126",
-    "name": "Dior Hoodie — $17.08",
+    "name": "Dior Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35621,7 +35621,7 @@
   },
   {
     "id": "p2472d30f",
-    "name": "Prada Hoodie — $17.08",
+    "name": "Prada Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35637,7 +35637,7 @@
   },
   {
     "id": "p245101b3",
-    "name": "Stussy Hoodie — Style 6",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35653,7 +35653,7 @@
   },
   {
     "id": "pd85fa87a",
-    "name": "Stussy Hoodie — Style 5",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35669,7 +35669,7 @@
   },
   {
     "id": "p45843fda",
-    "name": "Stussy Hoodie — Style 3",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35696,7 +35696,7 @@
   },
   {
     "id": "p2195bea5",
-    "name": "Stussy Hoodie — Style 2",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35723,7 +35723,7 @@
   },
   {
     "id": "p149d2191",
-    "name": "Stussy Hoodie — Style 1",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35739,7 +35739,7 @@
   },
   {
     "id": "pcdeb8896",
-    "name": "Stussy Hoodie — Style 4",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35766,7 +35766,7 @@
   },
   {
     "id": "pf027422d",
-    "name": "Stussy Hoodie — Style 9",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35782,7 +35782,7 @@
   },
   {
     "id": "pba3a7140",
-    "name": "Stussy Hoodie — Style 8",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35809,7 +35809,7 @@
   },
   {
     "id": "p266ca5a3",
-    "name": "Stussy Hoodie — Style 7",
+    "name": "Stussy Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -35825,7 +35825,7 @@
   },
   {
     "id": "pd073c611",
-    "name": "Stussy Zipper Hoodie — Style 2",
+    "name": "Stussy Zipper Hoodie",
     "category": "hoodies",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -35852,7 +35852,7 @@
   },
   {
     "id": "p33bb9dcf",
-    "name": "Stussy Zipper Hoodie — Style 1",
+    "name": "Stussy Zipper Hoodie",
     "category": "hoodies",
     "price": "21.69",
     "price_numeric": 21.69,
@@ -35868,7 +35868,7 @@
   },
   {
     "id": "pf394c07b",
-    "name": "Balenciaga Hoodie — Style 4",
+    "name": "Balenciaga Hoodie",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -35884,7 +35884,7 @@
   },
   {
     "id": "p95a3379b",
-    "name": "Balenciaga Hoodie — Style 5",
+    "name": "Balenciaga Hoodie",
     "category": "hoodies",
     "price": "47.69",
     "price_numeric": 47.69,
@@ -35900,7 +35900,7 @@
   },
   {
     "id": "p4131d6d3",
-    "name": "Balenciaga Hoodie — Style 1",
+    "name": "Balenciaga Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35916,7 +35916,7 @@
   },
   {
     "id": "p46849e00",
-    "name": "Balenciaga Hoodie — Style 2",
+    "name": "Balenciaga Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -35943,7 +35943,7 @@
   },
   {
     "id": "pc4525b87",
-    "name": "Balenciaga Hoodie — Style 3",
+    "name": "Balenciaga Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -36013,7 +36013,7 @@
   },
   {
     "id": "p1254790d",
-    "name": "Gucci Hoodie — Style 3",
+    "name": "Gucci Hoodie",
     "category": "hoodies",
     "price": "28.46",
     "price_numeric": 28.46,
@@ -36029,7 +36029,7 @@
   },
   {
     "id": "p08d3071d",
-    "name": "Gucci Hoodie — Style 1",
+    "name": "Gucci Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -36045,7 +36045,7 @@
   },
   {
     "id": "p3fce66be",
-    "name": "Gucci Hoodie — Style 2",
+    "name": "Gucci Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -36116,7 +36116,7 @@
   },
   {
     "id": "p1d67b8ff",
-    "name": "Burberry Hoodie — $36.92",
+    "name": "Burberry Hoodie",
     "category": "hoodies",
     "price": "36.92",
     "price_numeric": 36.92,
@@ -36168,7 +36168,7 @@
   },
   {
     "id": "pc5cb3417",
-    "name": "Dsquared2 Hoodie — $33.85",
+    "name": "Dsquared2 Hoodie",
     "category": "hoodies",
     "price": "33.85",
     "price_numeric": 33.85,
@@ -36184,7 +36184,7 @@
   },
   {
     "id": "p8f34f77d",
-    "name": "Denim Tears Hoodie — $14.15",
+    "name": "Denim Tears Hoodie",
     "category": "hoodies",
     "price": "14.15",
     "price_numeric": 14.15,
@@ -36211,7 +36211,7 @@
   },
   {
     "id": "pbe3d794c",
-    "name": "Denim Tears Hoodie — $23.38",
+    "name": "Denim Tears Hoodie",
     "category": "hoodies",
     "price": "23.38",
     "price_numeric": 23.38,
@@ -36254,7 +36254,7 @@
   },
   {
     "id": "pd3b014d1",
-    "name": "Moncler Hoodie — $28.46",
+    "name": "Moncler Hoodie",
     "category": "hoodies",
     "price": "28.46",
     "price_numeric": 28.46,
@@ -36270,7 +36270,7 @@
   },
   {
     "id": "pa6b7aed7",
-    "name": "Moncler Hoodie — $30.77",
+    "name": "Moncler Hoodie",
     "category": "hoodies",
     "price": "30.77",
     "price_numeric": 30.77,
@@ -36340,7 +36340,7 @@
   },
   {
     "id": "pd8a1f5ca",
-    "name": "Amiri Hoodie — $22.31",
+    "name": "Amiri Hoodie",
     "category": "hoodies",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -36367,7 +36367,7 @@
   },
   {
     "id": "p4a3d81ec",
-    "name": "Amiri Hoodie — $17.08",
+    "name": "Amiri Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -36399,7 +36399,7 @@
   },
   {
     "id": "p0612aee8",
-    "name": "Amiri Jeans — $26.62",
+    "name": "Amiri Jeans",
     "category": "pants",
     "price": "26.62",
     "price_numeric": 26.62,
@@ -36415,7 +36415,7 @@
   },
   {
     "id": "pe4d64807",
-    "name": "Bape Hoodie — Style 2",
+    "name": "Bape Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -36431,7 +36431,7 @@
   },
   {
     "id": "pb7cbed79",
-    "name": "Bape Hoodie — Style 1",
+    "name": "Bape Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -36458,7 +36458,7 @@
   },
   {
     "id": "p0d05d4f3",
-    "name": "Bape Hoodie — Style 3",
+    "name": "Bape Hoodie",
     "category": "hoodies",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -36506,7 +36506,7 @@
   },
   {
     "id": "p6a6b694c",
-    "name": "Nike Set — Style 16",
+    "name": "Nike Set",
     "category": "hoodies",
     "price": "57.54",
     "price_numeric": 57.54,
@@ -36522,7 +36522,7 @@
   },
   {
     "id": "p5f482365",
-    "name": "Nike Set — Style 5",
+    "name": "Nike Set",
     "category": "hoodies",
     "price": "23.08",
     "price_numeric": 23.08,
@@ -36538,7 +36538,7 @@
   },
   {
     "id": "p351ef8c0",
-    "name": "Nike Set — Style 3",
+    "name": "Nike Set",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -36570,7 +36570,7 @@
   },
   {
     "id": "p47dc41b7",
-    "name": "Nike Pants — $11.85",
+    "name": "Nike Pants",
     "category": "pants",
     "price": "11.85",
     "price_numeric": 11.85,
@@ -36586,7 +36586,7 @@
   },
   {
     "id": "p316a6247",
-    "name": "Mertra Hoodie — $32.77",
+    "name": "Mertra Hoodie",
     "category": "hoodies",
     "price": "32.77",
     "price_numeric": 32.77,
@@ -36602,7 +36602,7 @@
   },
   {
     "id": "p657e83c1",
-    "name": "Mertra Pants — $20.92",
+    "name": "Mertra Pants",
     "category": "pants",
     "price": "20.92",
     "price_numeric": 20.92,
@@ -36775,7 +36775,7 @@
   },
   {
     "id": "p1f25cf37",
-    "name": "Lacoste Hoodie — $28.77",
+    "name": "Lacoste Hoodie",
     "category": "hoodies",
     "price": "28.77",
     "price_numeric": 28.77,
@@ -36791,7 +36791,7 @@
   },
   {
     "id": "pb2cd9689",
-    "name": "Lacoste Hoodie — $19.69",
+    "name": "Lacoste Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -36951,7 +36951,7 @@
   },
   {
     "id": "pddfa2865",
-    "name": "Under Armour Pants — Style 3",
+    "name": "Under Armour Pants",
     "category": "pants",
     "price": "12.62",
     "price_numeric": 12.62,
@@ -37158,7 +37158,7 @@
   },
   {
     "id": "p3cbc8803",
-    "name": "Maison Margiela Hoodie — Style 4",
+    "name": "Maison Margiela Hoodie",
     "category": "hoodies",
     "price": "26.15",
     "price_numeric": 26.15,
@@ -37174,7 +37174,7 @@
   },
   {
     "id": "pe1fdb6ad",
-    "name": "Maison Margiela Hoodie — Style 2",
+    "name": "Maison Margiela Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37226,7 +37226,7 @@
   },
   {
     "id": "pfa2c3f5c",
-    "name": "Maison Margiela Hoodie — Style 3",
+    "name": "Maison Margiela Hoodie",
     "category": "hoodies",
     "price": "22.31",
     "price_numeric": 22.31,
@@ -37242,7 +37242,7 @@
   },
   {
     "id": "pc8eb04fb",
-    "name": "Maison Margiela Hoodie — Style 1",
+    "name": "Maison Margiela Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37335,7 +37335,7 @@
   },
   {
     "id": "pe520c183",
-    "name": "Vlone Hoodie — Style 4",
+    "name": "Vlone Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37351,7 +37351,7 @@
   },
   {
     "id": "p218c3583",
-    "name": "Vlone Hoodie — Style 1",
+    "name": "Vlone Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37367,7 +37367,7 @@
   },
   {
     "id": "pa35daff1",
-    "name": "Vlone Hoodie — Style 2",
+    "name": "Vlone Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37383,7 +37383,7 @@
   },
   {
     "id": "pc46b3a22",
-    "name": "Vlone Hoodie — Style 3",
+    "name": "Vlone Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37481,7 +37481,7 @@
   },
   {
     "id": "pbcfe5041",
-    "name": "Supreme Hoodie — Style 7",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -37497,7 +37497,7 @@
   },
   {
     "id": "p113977f1",
-    "name": "Supreme Hoodie — Style 4",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -37513,7 +37513,7 @@
   },
   {
     "id": "pdf6291c7",
-    "name": "Supreme Hoodie — Style 3",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37540,7 +37540,7 @@
   },
   {
     "id": "p7c58eaee",
-    "name": "Supreme Hoodie — Style 6",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -37556,7 +37556,7 @@
   },
   {
     "id": "p7118c170",
-    "name": "Supreme Hoodie — Style 5",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "19.69",
     "price_numeric": 19.69,
@@ -37572,7 +37572,7 @@
   },
   {
     "id": "pb4f86f98",
-    "name": "Supreme Hoodie — Style 2",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37588,7 +37588,7 @@
   },
   {
     "id": "p5ff44141",
-    "name": "Supreme Hoodie — Style 1",
+    "name": "Supreme Hoodie",
     "category": "hoodies",
     "price": "17.08",
     "price_numeric": 17.08,
@@ -37631,7 +37631,7 @@
   },
   {
     "id": "pfe2f0ce1",
-    "name": "Derschutze Sweater — Style 3",
+    "name": "Derschutze Sweater",
     "category": "hoodies",
     "price": "54.92",
     "price_numeric": 54.92,
@@ -37655,7 +37655,7 @@
   },
   {
     "id": "p320c6bb8",
-    "name": "Derschutze Sweater — Style 1",
+    "name": "Derschutze Sweater",
     "category": "hoodies",
     "price": "51.08",
     "price_numeric": 51.08,
@@ -37679,7 +37679,7 @@
   },
   {
     "id": "p4f9c73d8",
-    "name": "Derschutze Jeans — $54.92",
+    "name": "Derschutze Jeans",
     "category": "pants",
     "price": "54.92",
     "price_numeric": 54.92,
@@ -37773,7 +37773,7 @@
   },
   {
     "id": "p68b22dd2",
-    "name": "Acne Studios Jeans — $27.54",
+    "name": "Acne Studios Jeans",
     "category": "pants",
     "price": "27.54",
     "price_numeric": 27.54,
@@ -37789,7 +37789,7 @@
   },
   {
     "id": "pe5ce6c6c",
-    "name": "Moncler Down Jacket — Style 2",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "52.31",
     "price_numeric": 52.31,
@@ -37816,7 +37816,7 @@
   },
   {
     "id": "p18a36461",
-    "name": "Moncler Down Jacket — Style 7",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "83.69",
     "price_numeric": 83.69,
@@ -37843,7 +37843,7 @@
   },
   {
     "id": "pd7739301",
-    "name": "Moncler Down Jacket — Style 14",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "136.00",
     "price_numeric": 136.0,
@@ -37859,7 +37859,7 @@
   },
   {
     "id": "p5910938e",
-    "name": "Moncler Down Jacket — Style 12",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "115.08",
     "price_numeric": 115.08,
@@ -37886,7 +37886,7 @@
   },
   {
     "id": "p73ff90c0",
-    "name": "Moncler Down Jacket — Style 10",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "88.92",
     "price_numeric": 88.92,
@@ -37913,7 +37913,7 @@
   },
   {
     "id": "p0a99ece1",
-    "name": "Moncler Down Jacket — Style 9",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "88.92",
     "price_numeric": 88.92,
@@ -37929,7 +37929,7 @@
   },
   {
     "id": "p9cdd2a03",
-    "name": "Moncler Down Jacket — Style 6",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "68.00",
     "price_numeric": 68.0,
@@ -37945,7 +37945,7 @@
   },
   {
     "id": "pa7f80d7e",
-    "name": "Moncler Down Jacket — Style 13",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "125.54",
     "price_numeric": 125.54,
@@ -37961,7 +37961,7 @@
   },
   {
     "id": "p7928487f",
-    "name": "Moncler Down Jacket — Style 4",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "65.38",
     "price_numeric": 65.38,
@@ -37977,7 +37977,7 @@
   },
   {
     "id": "pca61e602",
-    "name": "Moncler Down Jacket — Style 11",
+    "name": "Moncler Down Jacket",
     "category": "jackets",
     "price": "99.38",
     "price_numeric": 99.38,
@@ -38004,7 +38004,7 @@
   },
   {
     "id": "p3583facb",
-    "name": "Moncler Quilted Jacket — Style 4",
+    "name": "Moncler Quilted Jacket",
     "category": "jackets",
     "price": "56.31",
     "price_numeric": 56.31,
@@ -38020,7 +38020,7 @@
   },
   {
     "id": "p306a4fa2",
-    "name": "Moncler Quilted Jacket — Style 5",
+    "name": "Moncler Quilted Jacket",
     "category": "jackets",
     "price": "57.54",
     "price_numeric": 57.54,
@@ -38036,7 +38036,7 @@
   },
   {
     "id": "p170bdfae",
-    "name": "Moncler Quilted Jacket — Style 1",
+    "name": "Moncler Quilted Jacket",
     "category": "jackets",
     "price": "31.08",
     "price_numeric": 31.08,
@@ -38052,7 +38052,7 @@
   },
   {
     "id": "p88e522fa",
-    "name": "Moncler Vest — $45.85",
+    "name": "Moncler Vest",
     "category": "jackets",
     "price": "45.85",
     "price_numeric": 45.85,
@@ -38079,7 +38079,7 @@
   },
   {
     "id": "p66a2c6c7",
-    "name": "Moncler Vest — $68.00",
+    "name": "Moncler Vest",
     "category": "jackets",
     "price": "68.00",
     "price_numeric": 68.0,
@@ -38122,7 +38122,7 @@
   },
   {
     "id": "pdeb3c6aa",
-    "name": "Canada Goose Vest — $39.23",
+    "name": "Canada Goose Vest",
     "category": "jackets",
     "price": "39.23",
     "price_numeric": 39.23,
@@ -38170,7 +38170,7 @@
   },
   {
     "id": "pa68aeb8f",
-    "name": "Stone Island Quilted Jacket — $46.15",
+    "name": "Stone Island Quilted Jacket",
     "category": "jackets",
     "price": "46.15",
     "price_numeric": 46.15,
@@ -38218,7 +38218,7 @@
   },
   {
     "id": "pfa9a500c",
-    "name": "Prada Down Jacket — $76.92",
+    "name": "Prada Down Jacket",
     "category": "jackets",
     "price": "76.92",
     "price_numeric": 76.92,
@@ -38234,7 +38234,7 @@
   },
   {
     "id": "pa34cdd00",
-    "name": "Prada Down Jacket — $96.77",
+    "name": "Prada Down Jacket",
     "category": "jackets",
     "price": "96.77",
     "price_numeric": 96.77,
@@ -38407,7 +38407,7 @@
   },
   {
     "id": "pb1b2cb30",
-    "name": "Burberry Down Jacket — $94.15",
+    "name": "Burberry Down Jacket",
     "category": "jackets",
     "price": "94.15",
     "price_numeric": 94.15,
@@ -38439,7 +38439,7 @@
   },
   {
     "id": "pd79653f0",
-    "name": "Trapstar Quilted Jacket — $69.23",
+    "name": "Trapstar Quilted Jacket",
     "category": "jackets",
     "price": "69.23",
     "price_numeric": 69.23,
@@ -38455,7 +38455,7 @@
   },
   {
     "id": "p977b51a6",
-    "name": "Trapstar Quilted Jacket — $36.46",
+    "name": "Trapstar Quilted Jacket",
     "category": "jackets",
     "price": "36.46",
     "price_numeric": 36.46,
@@ -38471,7 +38471,7 @@
   },
   {
     "id": "pa8ab37a7",
-    "name": "Trapstar Jacket — $44.62",
+    "name": "Trapstar Jacket",
     "category": "jackets",
     "price": "44.62",
     "price_numeric": 44.62,
@@ -38705,7 +38705,7 @@
   },
   {
     "id": "p2c50708a",
-    "name": "The North Face Down Jacket — $51.23",
+    "name": "The North Face Down Jacket",
     "category": "jackets",
     "price": "51.23",
     "price_numeric": 51.23,
@@ -38721,7 +38721,7 @@
   },
   {
     "id": "p71bbd055",
-    "name": "The North Face Down Jacket — $120.31",
+    "name": "The North Face Down Jacket",
     "category": "jackets",
     "price": "120.31",
     "price_numeric": 120.31,
@@ -38737,7 +38737,7 @@
   },
   {
     "id": "p82b336fc",
-    "name": "The North Face Quilted Jacket — $41.85",
+    "name": "The North Face Quilted Jacket",
     "category": "jackets",
     "price": "41.85",
     "price_numeric": 41.85,
@@ -38753,7 +38753,7 @@
   },
   {
     "id": "p374493e3",
-    "name": "The North Face Vest — $23.54",
+    "name": "The North Face Vest",
     "category": "jackets",
     "price": "23.54",
     "price_numeric": 23.54,
