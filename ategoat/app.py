@@ -1374,6 +1374,38 @@ def admin_set_one_category():
     return jsonify({'ok': True, 'id': pid, 'category': category})
 
 
+@app.route('/admin/products/trending', methods=['POST'])
+def admin_trending():
+    """Add or remove the 'trending' tag for one or more products. Products with
+    the tag show up under /shop?category=trending in addition to their real
+    category."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') or []
+    if isinstance(ids, str):
+        ids = [ids]
+    trending = bool(data.get('trending', True))
+    if not ids:
+        return jsonify({'error': 'No product ids'}), 400
+    n = 0
+    for pid in ids:
+        p = get_product(pid)
+        if not p:
+            continue
+        tags = (p.get('tags') or '').split()
+        had = 'trending' in tags
+        if trending and not had:
+            tags.append('trending')
+        elif not trending and had:
+            tags = [t for t in tags if t != 'trending']
+        else:
+            continue
+        update_product(pid, {'tags': ' '.join(tags)})
+        n += 1
+    return jsonify({'ok': True, 'count': n, 'trending': trending})
+
+
 @app.route('/admin/backup', methods=['POST'])
 def admin_backup():
     if not is_admin():

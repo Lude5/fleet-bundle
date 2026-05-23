@@ -26,7 +26,7 @@
 .reorder-hint { display: none; padding: 14px 16px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--radius-sm); margin-bottom: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--warn); display: none; gap: 12px; align-items: center; flex-wrap: wrap; }
 .reorder-mode .reorder-hint { display: flex; }
 .reorder-mode tbody tr { cursor: grab; }
-.reorder-mode .product-cb, .reorder-mode .td-actions, .reorder-mode .star-btn { pointer-events: none; opacity: 0.35; }
+.reorder-mode .product-cb, .reorder-mode .td-actions, .reorder-mode .star-btn, .reorder-mode .trend-btn { pointer-events: none; opacity: 0.35; }
 
 /* Product table */
 .product-table th, .product-table td { padding: 12px 10px; }
@@ -55,6 +55,11 @@
 .star-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 4px 6px; line-height: 1; color: var(--text-muted); transition: color .15s, transform .15s; }
 .star-btn:hover { color: var(--warn); transform: scale(1.15); }
 .star-btn.active { color: var(--warn); }
+
+.trend-btn { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; line-height: 1; color: var(--text-muted); transition: color .15s, transform .15s; opacity: 0.45; filter: grayscale(100%); }
+.trend-btn:hover { transform: scale(1.15); opacity: 0.9; filter: grayscale(50%); }
+.trend-btn.active { opacity: 1; filter: none; }
+.product-table .col-trend { width: 38px; }
 
 .td-actions { display: flex; gap: 4px; }
 
@@ -317,6 +322,8 @@
         <button class="btn btn-primary btn-sm" onclick="bulkMoveCategory()" data-i18n="move">Move</button>
         <button class="btn btn-secondary btn-sm" onclick="bulkFeature(true)" data-i18n="pin">⭐ Pin</button>
         <button class="btn btn-secondary btn-sm" onclick="bulkFeature(false)" data-i18n="unpin">Unpin</button>
+        <button class="btn btn-secondary btn-sm" onclick="bulkTrending(true)">🔥 Trending</button>
+        <button class="btn btn-secondary btn-sm" onclick="bulkTrending(false)">Untrend</button>
         <button class="btn btn-danger btn-sm" onclick="deleteSelected()" data-i18n="delete">Delete</button>
         <button class="btn btn-ghost btn-sm" onclick="clearSelection()" style="margin-left:auto;" data-i18n="clear">Clear</button>
     </div>
@@ -337,6 +344,11 @@
             <option value="1" data-i18n="pinned_only">⭐ Pinned only</option>
             <option value="0" data-i18n="not_pinned">Not pinned</option>
         </select>
+        <select id="tableTrendingFilter" class="select" onchange="filterTable()">
+            <option value="">All (trending+not)</option>
+            <option value="1">🔥 Trending only</option>
+            <option value="0">Not trending</option>
+        </select>
     </div>
 
     <div class="table-wrap pro-only">
@@ -346,6 +358,7 @@
                     <th class="col-cb"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll()"></th>
                     <th class="col-handle"></th>
                     <th class="col-star"></th>
+                    <th class="col-trend" title="Trending">🔥</th>
                     <th class="col-thumb"></th>
                     <th data-i18n="th_name">Name</th>
                     <th data-i18n="th_category">Category</th>
@@ -356,10 +369,12 @@
             </thead>
             <tbody id="productTbody">
                 {% for p in products %}
-                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
+                {% set is_trending = 'trending' in (p.tags or '').split() %}
+                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}">
                     <td><input type="checkbox" class="product-cb" value="{{ p.id }}" onchange="updateBulkBar()"></td>
                     <td><span class="drag-handle" title="Drag to reorder">⋮⋮</span></td>
                     <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
+                    <td><button type="button" class="trend-btn {% if is_trending %}active{% endif %}" onclick="toggleTrending(this)" title="Mark as trending">🔥</button></td>
                     <td><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
                     <td class="name-cell">
                         {{ p.name }}
@@ -565,12 +580,12 @@ async function saveEdit() {
                 tr.dataset.cat = data.category;
                 tr.dataset.retail = data.retail_price;
                 var cells = tr.querySelectorAll('td');
-                var img = cells[3].querySelector('img');
+                var img = cells[4].querySelector('img');
                 if (img) { img.src = data.image; img.style.display = ''; }
-                cells[4].childNodes[0].textContent = data.name + ' ';
-                var catSel = cells[5].querySelector('.cat-select'); if (catSel) catSel.value = data.category || '';
-                cells[6].textContent = '$' + data.price;
-                cells[7].textContent = data.seller || '—';
+                cells[5].childNodes[0].textContent = data.name + ' ';
+                var catSel = cells[6].querySelector('.cat-select'); if (catSel) catSel.value = data.category || '';
+                cells[7].textContent = '$' + data.price;
+                cells[8].textContent = data.seller || '—';
             }
         } else { showToast(json.error || t('update_failed'), 'error'); }
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -588,15 +603,21 @@ function getMatchingRows() {
     var q = document.getElementById('tableSearch').value.toLowerCase();
     var cat = document.getElementById('tableCatFilter').value;
     var feat = document.getElementById('tableFeaturedFilter').value;
+    var trendEl = document.getElementById('tableTrendingFilter');
+    var trend = trendEl ? trendEl.value : '';
     return Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
         var name = (tr.dataset.name || '').toLowerCase();
         var seller = (tr.dataset.seller || '').toLowerCase();
         var tags = (tr.dataset.tags || '').toLowerCase();
         var rowCat = tr.dataset.cat || '';
         var rowFeat = tr.dataset.featured || '0';
+        var rowTrend = tr.dataset.trending || '0';
         if (q && !name.includes(q) && !seller.includes(q) && !tags.includes(q)) return false;
-        if (cat && rowCat !== cat) return false;
+        // "trending" in the category filter is a tag, not a category field
+        if (cat === 'trending') { if (rowTrend !== '1') return false; }
+        else if (cat && rowCat !== cat) return false;
         if (feat && rowFeat !== feat) return false;
+        if (trend && rowTrend !== trend) return false;
         return true;
     });
 }
@@ -801,6 +822,53 @@ async function bulkFeature(featured) {
         var s = tr.querySelector('.star-btn'); if (s) s.classList.toggle('active', featured);
     });
     showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
+}
+
+// === TRENDING TOGGLE (per-row + bulk) ===
+async function toggleTrending(btn) {
+    var tr = btn.closest('tr');
+    var pid = tr.dataset.id;
+    var willBe = !btn.classList.contains('active');
+    btn.classList.toggle('active', willBe);
+    tr.dataset.trending = willBe ? '1' : '0';
+    // Keep data-tags in sync so the search/filter logic stays accurate
+    var tagList = (tr.dataset.tags || '').split(/\s+/).filter(Boolean);
+    if (willBe && tagList.indexOf('trending') === -1) tagList.push('trending');
+    if (!willBe) tagList = tagList.filter(function(t){return t !== 'trending';});
+    tr.dataset.tags = tagList.join(' ');
+    var res = await fetch('/admin/products/trending', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ ids: [pid], trending: willBe })
+    });
+    var json = await res.json();
+    if (!json.ok) {
+        btn.classList.toggle('active', !willBe);
+        tr.dataset.trending = !willBe ? '1' : '0';
+        showToast(json.error || t('failed'), 'error');
+    } else {
+        showToast(willBe ? 'Marked trending' : 'Unmarked trending', 'success');
+    }
+}
+async function bulkTrending(trending) {
+    var ids = selectedIds();
+    if (!ids.length) return showToast(t('no_products_selected'), 'error');
+    var res = await fetch('/admin/products/trending', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ ids: ids, trending: trending })
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || t('failed'), 'error');
+    ids.forEach(function(id){
+        var tr = document.querySelector('tr[data-id="' + id + '"]');
+        if (!tr) return;
+        tr.dataset.trending = trending ? '1' : '0';
+        var btn = tr.querySelector('.trend-btn'); if (btn) btn.classList.toggle('active', trending);
+        var tagList = (tr.dataset.tags || '').split(/\s+/).filter(Boolean);
+        if (trending && tagList.indexOf('trending') === -1) tagList.push('trending');
+        if (!trending) tagList = tagList.filter(function(t){return t !== 'trending';});
+        tr.dataset.tags = tagList.join(' ');
+    });
+    showToast((trending ? 'Marked ' : 'Unmarked ') + ids.length + ' trending', 'success');
 }
 
 // === INLINE CATEGORY QUICK-SET ===
