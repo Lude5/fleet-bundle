@@ -77,8 +77,8 @@
 .hero-search-suggestion:last-child { border-bottom: none; }
 .hero-search-suggestion:hover, .hero-search-suggestion.active { background: var(--surface-2); }
 .hero-search-suggestion img {
-    width: 48px; height: 48px; object-fit: cover; border-radius: 8px;
-    background: var(--surface-2);
+    width: 48px; height: 48px; object-fit: contain; border-radius: 8px;
+    background: #ffffff; padding: 2px;
 }
 .hero-search-sug-text { min-width: 0; }
 .hero-search-sug-name {
@@ -147,7 +147,7 @@
 .bundle-card { display: block; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; color: inherit; text-decoration: none; transition: all 0.2s ease; }
 .bundle-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); text-decoration: none; }
 .bundle-card-imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-subtle); aspect-ratio: 1; }
-.bundle-card-imgs img { width: 100%; height: 100%; object-fit: cover; background: var(--surface-2); display: block; }
+.bundle-card-imgs img { width: 100%; height: 100%; object-fit: contain; background: #ffffff; display: block; padding: 4px; }
 .bundle-card-body { padding: 14px 16px; }
 .bundle-card-name { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; margin-bottom: 8px; color: var(--text); }
 .bundle-card-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
