@@ -180,31 +180,24 @@ def _b_allchinabuy(url, _id, _plat, code):
     if code: out += f'&partnercode={code}'
     return out
 
-def _b_cnfans(_url, item_id, platform, code):
-    if not item_id or not platform: return None
-    out = f'https://cnfans.com/product?shop_type={platform}&id={item_id}'
-    if code: out += f'&ref={code}'
-    return out
-
 def _b_mulebuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
     out = f'https://mulebuy.com/product/?shop_type={platform}&id={item_id}'
     if code: out += f'&affcode={code}'
     return out
 
-def _b_hoobuy(_url, item_id, platform, code):
-    if not item_id or not platform: return None
-    plat_map = {'weidian': '0', 'taobao': '1', '1688': '2'}
-    plat_num = plat_map.get(platform)
-    if plat_num is None: return None
-    out = f'https://hoobuy.com/product/{plat_num}/{item_id}'
-    if code: out += f'?utm_source=share&utm_medium={code}'
-    return out
-
 def _b_oopbuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
     out = f'https://oopbuy.com/product/{platform}/{item_id}'
     if code: out += f'?inviteCode={code}'
+    return out
+
+def _b_hubbuy(url, _id, _plat, code):
+    """HubBuy — successor to AllChinaBuy at hubbuycn.com."""
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.hubbuycn.com/order/buy/?from=search-input&url={quote(url, safe="")}'
+    if code: out += f'&partnercode={code}'
     return out
 
 def _b_acbuy(_url, item_id, platform, code):
@@ -243,11 +236,9 @@ AGENTS = [
     {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=KRLHFHSGL',          'coupon': 'Up to $300 in coupons'},
     {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://hipobuy.com/register?inviteCode=25RXG9B0E',         'coupon': 'Up to $100 in coupons'},
     {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register',               'coupon': 'Up to $300 in coupons'},
-    {'key': 'cnfans',      'name': 'CNFans',      'build': _b_cnfans,      'color': '#f97316', 'domain': 'cnfans.com',      'signup': 'https://cnfans.com/register',                              'coupon': 'Up to $200 in coupons'},
     {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'signup': 'https://www.sugargoo.com/index/user/register',              'coupon': 'Up to $200 in coupons'},
-    {'key': 'allchinabuy', 'name': 'AllChinaBuy', 'build': _b_allchinabuy, 'color': '#3b82f6', 'domain': 'allchinabuy.com', 'signup': 'https://www.allchinabuy.com/en/page/login',                 'coupon': 'Up to $150 in coupons'},
+    {'key': 'hubbuy',      'name': 'HubBuy',      'build': _b_hubbuy,      'color': '#3b82f6', 'domain': 'hubbuycn.com',    'signup': 'https://www.hubbuycn.com/register',                         'coupon': 'Up to $150 in coupons'},
     {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'signup': 'https://mulebuy.com/register',                             'coupon': 'Up to $200 in coupons'},
-    {'key': 'hoobuy',      'name': 'Hoobuy',      'build': _b_hoobuy,      'color': '#f59e0b', 'domain': 'hoobuy.com',      'signup': 'https://hoobuy.com/register',                              'coupon': 'Up to $400 in coupons'},
     {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'signup': 'https://acbuy.com/register',                               'coupon': 'Up to $250 in coupons'},
     {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'signup': 'https://www.litbuy.com/register',                          'coupon': 'Up to $150 in coupons'},
     {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'signup': 'https://www.usfans.com/register',                          'coupon': 'Up to $100 in coupons'},
