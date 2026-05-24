@@ -81,8 +81,23 @@
 }
 .agent-row-open:hover { background: var(--accent-hover); }
 
-.error-msg { display: none; text-align: center; color: var(--accent); font-family: var(--font-mono); font-size: 11px; margin-top: 16px; padding: 12px; background: var(--accent-dim); border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; }
-.error-msg.active { display: block; }
+.error-msg {
+    display: none; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px; padding: 12px 14px;
+    background: rgba(239,68,68,0.12); border: 1px solid #ef4444;
+    border-radius: 8px; color: #ef4444;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.error-msg::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+.error-msg.active { display: inline-flex; animation: lcShake 0.45s cubic-bezier(.36,.07,.19,.97); }
+@keyframes lcShake {
+    0%, 100% { transform: translateX(0); }
+    12%, 60% { transform: translateX(-6px); }
+    24%, 72% { transform: translateX(6px); }
+    36%, 84% { transform: translateX(-3px); }
+    48%, 96% { transform: translateX(3px); }
+}
 
 .supported { margin-top: 48px; text-align: center; }
 .supported h3 { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 3px; }
@@ -146,13 +161,18 @@ function convertLink() {
     var err = document.getElementById('errorMsg');
     result.classList.remove('active');
     err.classList.remove('active');
-    if (!input) return;
+    function flashError(msg) {
+        err.textContent = msg;
+        // Force a reflow so the shake animation re-triggers on repeat clicks
+        void err.offsetWidth;
+        err.classList.add('active');
+    }
+    if (!input) { flashError('Not a valid URL'); return; }
     fetch('/api/agents/from-url?url=' + encodeURIComponent(input))
         .then(function(r){ return r.json(); })
         .then(function(d){
             if (d.error || !d.agents || !d.agents.length) {
-                err.textContent = d.error || 'Not a valid URL';
-                err.classList.add('active');
+                flashError(d.error || 'Not a valid URL');
                 return;
             }
             var meta = document.getElementById('resultMeta');
@@ -190,8 +210,7 @@ function convertLink() {
             trackClick('tool','link_converter','','','convert');
         })
         .catch(function(){
-            err.textContent = 'Conversion failed. Try a different link.';
-            err.classList.add('active');
+            flashError('Conversion failed. Try a different link.');
         });
 }
 
