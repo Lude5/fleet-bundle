@@ -42,6 +42,7 @@ try:
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
             update_category, delete_category, count_products_in_category,
+            cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants
         )
@@ -50,6 +51,7 @@ try:
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
             update_category, delete_category, count_products_in_category,
+            cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants
         )
@@ -636,20 +638,17 @@ api_images._cache = {}
 
 
 def _find_ategoat_id(product):
-    """Look up the matching ategoat product ID for one of our products.
-
-    Strategy (most reliable first):
-      1) Extract the Weidian itemID from product['url'] (handles URL-encoded
-         %3D as well as plain =) and search ategoat's catalogue with that
-         itemID. ategoat indexes each Weidian listing by itemID inside its
-         `name` search, so this is a perfect 1:1 match when it works.
-      2) Fall back to name search + the strict matcher (image/token overlap)
-         for products that aren't on ategoat under their original itemID.
-    Returns None if no confident match.
-    """
+    """Look up the matching ategoat product ID. Cached on disk for 30 days
+    since the mapping is effectively permanent per product."""
+    pid = product.get('id') or ''
+    cache_key = f'aid:{pid}'
+    cached = cache_get(cache_key, max_age_seconds=30 * 24 * 3600)
+    if cached is not None:
+        return cached or None
     import re as _re
     import requests as _r
     url = product.get('url') or ''
+    found = None
     m = _re.search(r'itemID(?:%3D|=)(\d+)', url, _re.I)
     if m:
         wid = m.group(1)
@@ -657,28 +656,30 @@ def _find_ategoat_id(product):
             s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
                        params={'name': wid, 'limit': 5},
                        headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
-                       timeout=8)
+                       timeout=6)
             items = ((s.json() or {}).get('data') or {}).get('items') or []
             if items:
-                return items[0].get('id')
+                found = items[0].get('id')
         except Exception:
             pass
-    # Fallback: name-based search + strict matcher
-    name = product.get('name') or ''
-    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
-    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
-    if not clean:
-        return None
-    try:
-        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
-                   params={'name': clean, 'limit': 20},
-                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
-                   timeout=8)
-        items = ((s.json() or {}).get('data') or {}).get('items') or []
-        match = _strict_ategoat_match(product, items)
-        return match.get('id') if match else None
-    except Exception:
-        return None
+    if not found:
+        name = product.get('name') or ''
+        clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
+        clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
+        if clean:
+            try:
+                s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                           params={'name': clean, 'limit': 20},
+                           headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                           timeout=6)
+                items = ((s.json() or {}).get('data') or {}).get('items') or []
+                match = _strict_ategoat_match(product, items)
+                if match:
+                    found = match.get('id')
+            except Exception:
+                pass
+    cache_set(cache_key, found or '')
+    return found
 
 
 @app.route('/api/variants/<pid>')
@@ -691,9 +692,9 @@ def api_variants(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'variants': [], 'images': []})
-    cache = api_variants._cache
-    if pid in cache:
-        return jsonify(cache[pid])
+    cached = cache_get(f'variants:{pid}', max_age_seconds=7 * 24 * 3600)
+    if cached is not None:
+        return jsonify(cached)
     import re as _re
     import requests as _r
     import json as _json
@@ -752,9 +753,8 @@ def api_variants(pid):
                 result['images'] = imgs
     except Exception:
         pass
-    cache[pid] = result
+    cache_set(f'variants:{pid}', result)
     return jsonify(result)
-api_variants._cache = {}
 
 
 def _strict_ategoat_match(product, candidates):
@@ -826,9 +826,9 @@ def api_qc(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'photos': []})
-    cache = api_qc._cache
-    if pid in cache:
-        return jsonify({'photos': cache[pid]})
+    cached = cache_get(f'qc:{pid}', max_age_seconds=7 * 24 * 3600)
+    if cached is not None:
+        return jsonify({'photos': cached})
     import requests as _r
     photos = []
     try:
@@ -837,14 +837,13 @@ def api_qc(pid):
             q = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/qc/list',
                        params={'product_id': aid, 'limit': 30},
                        headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
-                       timeout=8)
+                       timeout=6)
             qitems = ((q.json() or {}).get('data') or {}).get('items') or []
             photos = [it.get('image') or it.get('url') for it in qitems if it.get('image') or it.get('url')]
     except Exception:
         photos = []
-    cache[pid] = photos
+    cache_set(f'qc:{pid}', photos)
     return jsonify({'photos': photos})
-api_qc._cache = {}
 
 
 @app.route('/api/agents/<pid>')
@@ -872,17 +871,34 @@ def api_agents_from_url():
     """Build agent URLs from any pasted seller URL. ?url=<raw_or_wrapper>"""
     url = (request.args.get('url') or '').strip()
     if not url:
-        return jsonify({'agents': [], 'platform': None, 'item_id': None})
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None})
+    # Reject obvious non-URLs early so the converter can show a clear message.
+    if not (url.startswith('http://') or url.startswith('https://')) and not _looks_like_seller_url(url):
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None})
     raw = _unwrap_agent_url(url)
+    platform, item_id = _parse_item_url(raw)
+    if not platform or not item_id:
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None, 'raw_url': raw})
     affcode = SITE_CONFIG.get('affiliate_code', '')
     agents = _agents_for_url(raw, affcode)
-    platform, item_id = _parse_item_url(raw)
     return jsonify({
         'platform': platform,
         'item_id': item_id,
         'raw_url': raw,
         'agents': agents,
     })
+
+
+def _looks_like_seller_url(s: str) -> bool:
+    """Loose check for a paste that might be a partial URL (e.g. user dropped
+    the scheme). Accept anything that mentions a known seller/agent domain."""
+    s = s.lower()
+    for d in ('weidian.', 'taobao.', '1688.', 'tmall.', 'kakobuy.', 'oopbuy.',
+              'sugargoo.', 'joyagoo.', 'allchinabuy.', 'hubbuycn.', 'mulebuy.',
+              'acbuy.', 'litbuy.', 'hipobuy.', 'hoobuy.', 'usfans.', 'cnfans.'):
+        if d in s:
+            return True
+    return False
 
 
 @app.route('/api/product/<pid>')

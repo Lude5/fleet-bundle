@@ -150,8 +150,8 @@ function convertLink() {
     fetch('/api/agents/from-url?url=' + encodeURIComponent(input))
         .then(function(r){ return r.json(); })
         .then(function(d){
-            if (!d.agents || !d.agents.length) {
-                err.textContent = 'Could not extract a product URL from that link.';
+            if (d.error || !d.agents || !d.agents.length) {
+                err.textContent = d.error || 'Not a valid URL';
                 err.classList.add('active');
                 return;
             }

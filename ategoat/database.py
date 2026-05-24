@@ -76,6 +76,12 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_clicks_category ON clicks(category);
         CREATE INDEX IF NOT EXISTS idx_clicks_page ON clicks(page);
         CREATE INDEX IF NOT EXISTS idx_clicks_element ON clicks(element_type);
+
+        CREATE TABLE IF NOT EXISTS api_cache (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     ''')
     # Migrations for older DBs
     for col, ddl in [
@@ -378,6 +384,41 @@ def count_products_in_category(slug):
     row = conn.execute('SELECT COUNT(*) AS n FROM products WHERE category = ?', (slug,)).fetchone()
     conn.close()
     return int(row['n']) if row else 0
+
+
+def cache_get(key, max_age_seconds=7 * 24 * 3600):
+    """Return the cached value (JSON-decoded) for `key`, or None if missing
+    or older than max_age_seconds."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT value, created_at FROM api_cache WHERE key = ?", (key,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        created = datetime.fromisoformat(row['created_at'])
+    except Exception:
+        try:
+            created = datetime.strptime(row['created_at'], '%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return None
+    if (datetime.now() - created).total_seconds() > max_age_seconds:
+        return None
+    try:
+        return json.loads(row['value'])
+    except Exception:
+        return None
+
+
+def cache_set(key, value):
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO api_cache (key, value, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+        (key, json.dumps(value, ensure_ascii=False))
+    )
+    conn.commit()
+    conn.close()
 
 
 def record_click(data):
