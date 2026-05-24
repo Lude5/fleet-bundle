@@ -635,14 +635,58 @@ def api_images(pid):
 api_images._cache = {}
 
 
+def _find_ategoat_id(product):
+    """Look up the matching ategoat product ID for one of our products.
+
+    Strategy (most reliable first):
+      1) Extract the Weidian itemID from product['url'] (handles URL-encoded
+         %3D as well as plain =) and search ategoat's catalogue with that
+         itemID. ategoat indexes each Weidian listing by itemID inside its
+         `name` search, so this is a perfect 1:1 match when it works.
+      2) Fall back to name search + the strict matcher (image/token overlap)
+         for products that aren't on ategoat under their original itemID.
+    Returns None if no confident match.
+    """
+    import re as _re
+    import requests as _r
+    url = product.get('url') or ''
+    m = _re.search(r'itemID(?:%3D|=)(\d+)', url, _re.I)
+    if m:
+        wid = m.group(1)
+        try:
+            s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                       params={'name': wid, 'limit': 5},
+                       headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                       timeout=8)
+            items = ((s.json() or {}).get('data') or {}).get('items') or []
+            if items:
+                return items[0].get('id')
+        except Exception:
+            pass
+    # Fallback: name-based search + strict matcher
+    name = product.get('name') or ''
+    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
+    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
+    if not clean:
+        return None
+    try:
+        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                   params={'name': clean, 'limit': 20},
+                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                   timeout=8)
+        items = ((s.json() or {}).get('data') or {}).get('items') or []
+        match = _strict_ategoat_match(product, items)
+        return match.get('id') if match else None
+    except Exception:
+        return None
+
+
 @app.route('/api/variants/<pid>')
 def api_variants(pid):
-    """Best-effort: name-match our product against ategoat's catalogue, fetch
-    its product page HTML, and extract the SKU/variant list. Cached in-memory.
+    """Look up the ategoat product page for this item, extract the SKU/variant
+    list + gallery images. Cached in-memory.
 
     Returns {variants: [{title, price, stock, image_url}], images: [...]}
-    Images are also pulled from the same page so this doubles as an image
-    fallback for products that didn't get a Weidian gallery.
     """
     p = get_product(pid)
     if not p:
@@ -653,21 +697,10 @@ def api_variants(pid):
     import re as _re
     import requests as _r
     import json as _json
-    name = p.get('name') or ''
-    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
-    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
     result = {'variants': [], 'images': []}
     try:
-        # Find the ategoat product ID by name search — use strict matcher so
-        # we never adopt variants/photos that belong to a different listing.
-        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
-                   params={'name': clean, 'limit': 20},
-                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
-                   timeout=8)
-        items = ((s.json() or {}).get('data') or {}).get('items') or []
-        match = _strict_ategoat_match(p, items)
-        if match:
-            aid = match.get('id')
+        aid = _find_ategoat_id(p)
+        if aid:
             # Fetch the HTML product page and extract the SKU JSON
             r = _r.get(f'https://www.ategoat.com/product/{aid}',
                        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'},
@@ -724,7 +757,6 @@ def api_variants(pid):
 api_variants._cache = {}
 
 
-@app.route('/api/qc/<pid>')
 def _strict_ategoat_match(product, candidates):
     """Pick an ategoat product that is *actually* the same item.
 
@@ -744,7 +776,7 @@ def _strict_ategoat_match(product, candidates):
     our_name = (product.get('name') or '').strip().lower()
     our_tokens = [t for t in _re.split(r'[^a-z0-9]+', our_name) if len(t) > 1]
     our_url = product.get('url') or ''
-    wid_m = _re.search(r'itemID=(\d+)', our_url, _re.I)
+    wid_m = _re.search(r'itemID(?:%3D|=)(\d+)', our_url, _re.I)
     our_wid = wid_m.group(1) if wid_m else ''
 
     # 1) Image-URL match
@@ -753,6 +785,14 @@ def _strict_ategoat_match(product, candidates):
             cand_img = (it.get('image') or '').split('?')[0]
             if cand_img and (our_img == cand_img or our_img in cand_img or cand_img in our_img):
                 return it
+
+    # 2) Weidian itemID present in any candidate URL field
+    if our_wid:
+        for it in candidates:
+            for k in ('source_url', 'url', 'original_url', 'goods_url', 'title'):
+                v = str(it.get(k) or '')
+                if our_wid in v:
+                    return it
 
     # 2) Token-overlap match — must clear the bar
     if our_tokens:
@@ -779,40 +819,26 @@ def _strict_ategoat_match(product, candidates):
     return None
 
 
+@app.route('/api/qc/<pid>')
 def api_qc(pid):
-    """QC-photo fetch from ategoat.com — strict matcher.
-
-    Returns an empty list when the match isn't confident enough so we don't
-    show QC photos that belong to a different product.
-    """
+    """QC-photo fetch from ategoat.com — uses itemID-first matcher so we never
+    show QC photos that belong to a different listing."""
     p = get_product(pid)
     if not p:
         return jsonify({'photos': []})
     cache = api_qc._cache
     if pid in cache:
         return jsonify({'photos': cache[pid]})
-    import re as _re
     import requests as _r
-    name = p.get('name') or ''
-    clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
-    clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
     photos = []
     try:
-        s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
-                   params={'name': clean, 'limit': 20},
-                   headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
-                   timeout=8)
-        sd = s.json()
-        items = (sd.get('data') or {}).get('items') or []
-        match = _strict_ategoat_match(p, items)
-        if match:
-            aid = match.get('id')
+        aid = _find_ategoat_id(p)
+        if aid:
             q = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/qc/list',
                        params={'product_id': aid, 'limit': 30},
                        headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
                        timeout=8)
-            qd = q.json()
-            qitems = (qd.get('data') or {}).get('items') or []
+            qitems = ((q.json() or {}).get('data') or {}).get('items') or []
             photos = [it.get('image') or it.get('url') for it in qitems if it.get('image') or it.get('url')]
     except Exception:
         photos = []
