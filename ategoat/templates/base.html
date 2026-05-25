@@ -214,11 +214,14 @@
         }
         .mobile-menu .mobile-menu-cta:hover .mm-cta-line1 { color: var(--accent); }
         .mobile-menu .mobile-menu-brand {
-            font-family: var(--font-display); font-size: 44px; letter-spacing: 2px; line-height: 1;
-            color: #fff; margin-bottom: 12px; text-transform: uppercase;
+            position: absolute; top: calc(env(safe-area-inset-top) + 56px);
+            left: 50%; transform: translateX(-50%);
+            font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; line-height: 1;
+            color: #fff; text-transform: uppercase;
+            pointer-events: none;
+            opacity: 1;
         }
         .mobile-menu .mobile-menu-brand .accent { color: var(--accent); }
-        .mobile-menu .mobile-menu-brand:hover { color: #fff; }
         .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
 
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; border-radius: var(--radius-sm); }
@@ -706,7 +709,7 @@
 
     <div class="mobile-menu" id="mob">
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
-        <a href="/" class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
+        <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
         <a href="/">Home</a>
         <a href="/shop">Shop</a>
         <a href="/link-converter">Converter</a>
