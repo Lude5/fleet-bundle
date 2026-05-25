@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
     <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
     <meta name="description" content="{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.">
@@ -72,7 +72,63 @@
         a { color: inherit; text-decoration: none; }
         img { max-width: 100%; display: block; }
 
-        .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: rgba(11,11,11,0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            min-height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: env(safe-area-inset-top) 24px 0;
+            background: rgba(11,11,11,0.9); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        /* Reusable recent-searches dropdown (used by any search input via
+           window.attachRecentSearches). */
+        .ategoat-rsdd {
+            display: none;
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            z-index: 1000;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+            max-height: 60vh; overflow-y: auto;
+            text-align: left;
+        }
+        .ategoat-rsdd.active { display: block; }
+        .ategoat-rsdd .rs-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .ategoat-rsdd .rs-clear {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .ategoat-rsdd .rs-clear:hover { color: var(--accent); }
+        .ategoat-rsdd .rs-row {
+            display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
+            padding: 10px 14px;
+            align-items: center; cursor: pointer;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text); text-decoration: none;
+        }
+        .ategoat-rsdd .rs-row:last-of-type { border-bottom: none; }
+        .ategoat-rsdd .rs-row:hover { background: var(--surface-2); }
+        .ategoat-rsdd .rs-row svg { color: var(--text-muted); flex-shrink: 0; }
+        .ategoat-rsdd .rs-q {
+            font-family: var(--font-body); font-size: 13px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ategoat-rsdd .rs-x {
+            background: transparent; border: none; cursor: pointer;
+            width: 24px; height: 24px; border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 16px; line-height: 1;
+        }
+        .ategoat-rsdd .rs-x:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
         .nav-brand { font-family: var(--font-display); font-size: 36px; text-transform: uppercase; letter-spacing: 1px; }
         .nav-brand .accent { color: var(--accent); }
         .nav-links { display: flex; gap: 0; list-style: none; align-items: center; }
@@ -790,6 +846,111 @@
     <button class="back-top" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
 
     <script>
+        // ====================================================================
+        // Global recent-searches helper. Any search input can call:
+        //   attachRecentSearches({ input, form, autocompleteEl, getResults })
+        // Stores up to 8 queries in localStorage (deduped, most recent first).
+        // Renders a dropdown anchored under the input with per-row × delete +
+        // a "Clear all" link. Shown when the input is focused and empty.
+        // ====================================================================
+        (function(){
+            var KEY = 'ategoat_recent_searches';
+            var MAX = 8;
+            function load() {
+                try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; }
+                catch(_) { return []; }
+            }
+            function save(q) {
+                q = (q || '').trim();
+                if (!q) return;
+                var list = load().filter(function(x){ return x.toLowerCase() !== q.toLowerCase(); });
+                list.unshift(q);
+                if (list.length > MAX) list = list.slice(0, MAX);
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(_) {}
+            }
+            function remove(q) {
+                var list = load().filter(function(x){ return x !== q; });
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(_) {}
+            }
+            function clear() { try { localStorage.removeItem(KEY); } catch(_) {} }
+            function esc(s) {
+                return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+            }
+
+            // Default dropdown element + styles. Inserted next to the input
+            // if the caller doesn't supply their own (used by /shop).
+            function ensureDropdown(input) {
+                var dd = input.nextElementSibling;
+                if (dd && dd.classList && dd.classList.contains('ategoat-rsdd')) return dd;
+                dd = document.createElement('div');
+                dd.className = 'ategoat-rsdd';
+                input.parentNode.insertBefore(dd, input.nextSibling);
+                return dd;
+            }
+            function renderInto(dd, callbacks) {
+                var list = load();
+                if (!list.length) { dd.classList.remove('active'); dd.innerHTML = ''; return; }
+                var rows = list.map(function(q){
+                    var safe = esc(q);
+                    return '<a class="rs-row" href="/shop?q=' + encodeURIComponent(q) + '" data-q="' + safe + '">'
+                         +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>'
+                         +   '<span class="rs-q">' + safe + '</span>'
+                         +   '<button type="button" class="rs-x" aria-label="Remove" data-remove="' + safe + '">&times;</button>'
+                         + '</a>';
+                }).join('');
+                dd.innerHTML = '<div class="rs-head"><span>Recent searches</span>'
+                            + '<button type="button" class="rs-clear">Clear all</button></div>'
+                            + rows;
+                dd.classList.add('active');
+            }
+
+            window.attachRecentSearches = function(opts) {
+                var input = opts.input;
+                if (!input) return;
+                var form = opts.form || input.closest('form');
+                var dd = opts.dropdown || ensureDropdown(input);
+                var navTo = opts.navTo || function(q){ return '/shop?q=' + encodeURIComponent(q); };
+
+                function render() { renderInto(dd, {}); }
+                function maybeShow() {
+                    var v = input.value.trim();
+                    if (!v) render();
+                    else dd.classList.remove('active');
+                }
+                input.addEventListener('focus', maybeShow);
+                input.addEventListener('input', function(){
+                    // Don't fight the page's autocomplete — only show recents
+                    // when the input is empty. Otherwise hide the dropdown.
+                    if (!input.value.trim()) render();
+                    else dd.classList.remove('active');
+                });
+                if (form) form.addEventListener('submit', function(){ save(input.value); });
+
+                dd.addEventListener('click', function(e){
+                    var x = e.target.closest('.rs-x');
+                    if (x) {
+                        e.preventDefault(); e.stopPropagation();
+                        remove(x.getAttribute('data-remove'));
+                        render();
+                        return;
+                    }
+                    if (e.target.classList && e.target.classList.contains('rs-clear')) {
+                        e.preventDefault(); e.stopPropagation();
+                        clear(); dd.classList.remove('active');
+                        return;
+                    }
+                    var row = e.target.closest('.rs-row');
+                    if (row) {
+                        save(row.getAttribute('data-q'));
+                        // let the <a> navigate naturally
+                    }
+                });
+                document.addEventListener('click', function(e){
+                    if (!input.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('active');
+                });
+            };
+        })();
+
         function closePopup() {
             document.getElementById('popup').classList.remove('active');
             document.body.style.overflow = '';

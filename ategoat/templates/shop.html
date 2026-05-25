@@ -22,10 +22,18 @@
 {% block content %}
 <div class="shop-header">
     <h1>{% if search_query %}Results for "{{ search_query }}"{% elif current_category %}{{ current_category|title }}{% else %}All Products{% endif %}</h1>
-    <form class="search-wrap" action="/shop" method="get">
-        <input type="text" name="q" placeholder="Search products..." value="{{ search_query or '' }}">
+    <form class="search-wrap" action="/shop" method="get" autocomplete="off" style="position:relative;">
+        <input type="text" name="q" id="shopSearch" placeholder="Search products..." value="{{ search_query or '' }}" autocomplete="off">
         <button type="submit">&#128269;</button>
     </form>
+    <script>
+        (function(){
+            var input = document.getElementById('shopSearch');
+            if (input && window.attachRecentSearches) {
+                window.attachRecentSearches({ input: input });
+            }
+        })();
+    </script>
     <div class="filter-row">
         <a href="/shop" class="filter-tab {% if not current_category %}active{% endif %}">All</a>
         {% for cat in categories %}
