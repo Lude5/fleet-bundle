@@ -38,7 +38,9 @@
     border-radius: 999px; padding: 6px 6px 6px 18px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     animation: fadeUp 0.5s ease 0.4s both;
+    z-index: 100;
 }
+.hero-search:has(.hero-search-dropdown.active) { z-index: 1000; }
 .hero-search:focus-within { border-color: var(--accent); box-shadow: 0 12px 32px var(--accent-dim); }
 .hero-search-icon { color: var(--text-muted); flex-shrink: 0; }
 .hero-search input {
@@ -62,7 +64,7 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
     overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.55);
     max-height: 60vh; overflow-y: auto;
-    z-index: 50; text-align: left;
+    z-index: 1000; text-align: left;
 }
 .hero-search-dropdown.active { display: block; }
 .hero-search-suggestion {
