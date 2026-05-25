@@ -214,7 +214,7 @@
         }
         .mobile-menu .mobile-menu-cta:hover .mm-cta-line1 { color: var(--accent); }
         .mobile-menu .mobile-menu-brand {
-            position: absolute; top: calc(env(safe-area-inset-top) + 56px);
+            position: absolute; top: calc(env(safe-area-inset-top) + 110px);
             left: 50%; transform: translateX(-50%);
             font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; line-height: 1;
             color: #fff; text-transform: uppercase;
@@ -547,8 +547,8 @@
         .pd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 400; display: none; align-items: center; justify-content: center; padding: 24px; }
         .pd-overlay.active { display: flex; }
         .pd-modal { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 20px; max-width: 1100px; width: 100%; max-height: 92vh; overflow-y: auto; position: relative; box-shadow: 0 30px 90px rgba(0,0,0,0.6); }
-        .pd-close { position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all .15s; }
-        .pd-close:hover { border-color: var(--accent); color: var(--accent); }
+        .pd-close { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.65); border: none; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all .15s; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+        .pd-close:hover { background: rgba(0,0,0,0.85); transform: scale(1.05); }
         .pd-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; padding: 32px; }
         .pd-img-wrap { background: #ffffff; border-radius: var(--radius); overflow: hidden; aspect-ratio: 1; position: relative; }
         .pd-img { width: 100%; height: 100%; object-fit: contain; display: block; transition: opacity .2s; background: #ffffff; }
