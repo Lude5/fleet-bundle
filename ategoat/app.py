@@ -106,15 +106,25 @@ try:
             {'slug': 'shirts', 'name': 'Shirts', 'sort_order': 2},
             {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 3},
             {'slug': 'pants', 'name': 'Pants', 'sort_order': 4},
-            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 5},
-            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 6},
-            {'slug': 'bags', 'name': 'Bags', 'sort_order': 7},
-            {'slug': 'tech', 'name': 'Tech', 'sort_order': 8},
-            {'slug': 'womens', 'name': 'Womens', 'sort_order': 9},
+            {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 5},
+            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 6},
+            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 7},
+            {'slug': 'bags', 'name': 'Bags', 'sort_order': 8},
+            {'slug': 'tech', 'name': 'Tech', 'sort_order': 9},
+            {'slug': 'womens', 'name': 'Womens', 'sort_order': 10},
         ]
         for c in CATS:
             add_category(c['slug'], c['name'], '', '', c['sort_order'])
         print("Categories seeded")
+    else:
+        # Ensure newly-introduced categories show up even on DBs that were
+        # seeded before they existed. add_category is INSERT OR REPLACE so
+        # this is idempotent and won't clobber renames the operator made.
+        existing_slugs = {c['slug'] for c in get_categories()}
+        for slug, name, order in [('shorts', 'Shorts', 5)]:
+            if slug not in existing_slugs:
+                add_category(slug, name, '', '', order)
+                print(f"Backfilled category: {slug}")
 except Exception as e:
     print(f"DB init warning: {e}")
 
