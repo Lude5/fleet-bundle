@@ -105,12 +105,13 @@
         .side-btn .side-tip { position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s; }
         .side-btn:hover .side-tip { opacity: 1; }
         .side-btn.discord:hover { background: #5865F2; border-color: #5865F2; box-shadow: 0 12px 30px rgba(88,101,242,0.35); }
-        .side-btn.back-top { display: none; }
-        .side-btn.back-top.visible { display: flex; }
         @media (max-width: 768px) {
-            .side-widget { right: 10px; gap: 8px; }
-            .side-btn { width: 44px; height: 44px; border-radius: 12px; }
-            .side-btn svg { width: 18px; height: 18px; }
+            .side-widget {
+                right: 8px; gap: 8px;
+                top: auto; bottom: 76px; transform: none;
+            }
+            .side-btn { width: 40px; height: 40px; border-radius: 10px; }
+            .side-btn svg { width: 16px; height: 16px; }
             .side-btn .side-tip { display: none; }
         }
         .nav-hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
@@ -668,12 +669,6 @@
             <span class="side-tip">Join Discord</span>
         </a>
         {% endif %}
-        <button type="button" class="side-btn back-top" id="backTopBtn" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="18 15 12 9 6 15"/>
-            </svg>
-            <span class="side-tip">Back to Top</span>
-        </button>
     </div>
 
     {% block content %}{% endblock %}
@@ -857,8 +852,6 @@
         window.addEventListener('scroll', function() {
             var btt = document.getElementById('btt');
             if (btt) btt.classList.toggle('vis', window.scrollY > 500);
-            var sideTop = document.getElementById('backTopBtn');
-            if (sideTop) sideTop.classList.toggle('visible', window.scrollY > 500);
         });
 
         var rObs = new IntersectionObserver(function(entries) {
