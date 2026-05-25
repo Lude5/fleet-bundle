@@ -112,6 +112,45 @@
     text-decoration: none;
 }
 .hero-search-allbtn:hover { background: var(--accent); color: #fff; }
+
+/* Recent searches */
+.hero-search-recent-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.hero-search-recent-clear {
+    background: transparent; border: none; color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px;
+}
+.hero-search-recent-clear:hover { color: var(--accent); }
+.hero-search-recent-row {
+    display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
+    padding: 10px 14px;
+    align-items: center; cursor: pointer;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text); text-decoration: none;
+}
+.hero-search-recent-row:last-of-type { border-bottom: none; }
+.hero-search-recent-row:hover, .hero-search-recent-row.active { background: var(--surface-2); }
+.hero-search-recent-row svg { color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0; }
+.hero-search-recent-q {
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-search-recent-x {
+    background: transparent; border: none; cursor: pointer;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 14px; line-height: 1;
+    transition: all 0.15s;
+}
+.hero-search-recent-x:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 .hero-browse-btn {
     margin: 18px auto 0;
     display: inline-flex;
@@ -352,6 +391,48 @@ function scrollConv(dir) {
     function escapeHtml(s) {
         return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
     }
+
+    // -- Recent searches (localStorage, max 8, dedupe, most-recent first) ----
+    var RECENT_KEY = 'ategoat_recent_searches';
+    var RECENT_MAX = 8;
+    function loadRecent() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []; }
+        catch(_) { return []; }
+    }
+    function saveRecent(q) {
+        q = (q || '').trim();
+        if (!q) return;
+        var list = loadRecent().filter(function(x){ return x.toLowerCase() !== q.toLowerCase(); });
+        list.unshift(q);
+        if (list.length > RECENT_MAX) list = list.slice(0, RECENT_MAX);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(_) {}
+    }
+    function removeRecent(q) {
+        var list = loadRecent().filter(function(x){ return x !== q; });
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(_) {}
+    }
+    function clearRecent() {
+        try { localStorage.removeItem(RECENT_KEY); } catch(_) {}
+    }
+    function renderRecent() {
+        var list = loadRecent();
+        if (!list.length) { close(); return; }
+        var rows = list.map(function(q){
+            var safe = escapeHtml(q);
+            return '<a class="hero-search-recent-row" href="/shop?q=' + encodeURIComponent(q) + '" data-q="' + safe + '">'
+                 +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>'
+                 +   '<span class="hero-search-recent-q">' + safe + '</span>'
+                 +   '<button type="button" class="hero-search-recent-x" aria-label="Remove" data-remove="' + safe + '">&times;</button>'
+                 + '</a>';
+        }).join('');
+        dd.innerHTML =
+            '<div class="hero-search-recent-head">'
+          +   '<span>Recent searches</span>'
+          +   '<button type="button" class="hero-search-recent-clear" id="heroRecentClear">Clear all</button>'
+          + '</div>'
+          + rows;
+        dd.classList.add('active');
+    }
     function render() {
         if (!results.length) {
             dd.innerHTML = '<div class="hero-search-empty">No matches</div>';
@@ -394,11 +475,41 @@ function scrollConv(dir) {
     input.addEventListener('input', function(){
         clearTimeout(timer);
         var v = input.value.trim();
-        if (!v) { close(); return; }
+        if (!v) { renderRecent(); return; }
         timer = setTimeout(function(){ runSearch(v); }, 180);
     });
     input.addEventListener('focus', function(){
-        if (results.length && input.value.trim()) dd.classList.add('active');
+        var v = input.value.trim();
+        if (!v) { renderRecent(); return; }
+        if (results.length) dd.classList.add('active');
+    });
+
+    // Save query when the form is submitted (Enter or Search button)
+    form.addEventListener('submit', function(){
+        saveRecent(input.value);
+    });
+
+    // Delegate clicks inside the dropdown: handle the per-row X and Clear-all
+    // before the parent <a> navigates. Also save the recent on suggestion click.
+    dd.addEventListener('click', function(e){
+        var x = e.target.closest('.hero-search-recent-x');
+        if (x) {
+            e.preventDefault(); e.stopPropagation();
+            removeRecent(x.getAttribute('data-remove'));
+            renderRecent();
+            return;
+        }
+        if (e.target.id === 'heroRecentClear') {
+            e.preventDefault(); e.stopPropagation();
+            clearRecent();
+            close();
+            return;
+        }
+        var recentRow = e.target.closest('.hero-search-recent-row');
+        if (recentRow) {
+            // Save (re-promotes it to the top) before navigation completes
+            saveRecent(recentRow.getAttribute('data-q'));
+        }
     });
     input.addEventListener('keydown', function(e){
         if (!dd.classList.contains('active') || !results.length) return;
