@@ -809,7 +809,6 @@
             <div class="pd-body">
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
-                    <div class="pd-thumbs" id="pdThumbs" style="display:none !important;"></div>
                     <div class="pd-buy-row">
                         <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
                         <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
@@ -1132,9 +1131,6 @@
             if (!url) return;
             var img = document.getElementById('pdMainImage');
             if (img) img.src = url;
-            var thumbs = document.querySelectorAll('#pdThumbs .pd-thumb');
-            thumbs.forEach(function(t){ t.classList.remove('active'); });
-            if (thumbBtn) thumbBtn.classList.add('active');
         };
 
         // Swap main image + highlight the active variant button.
@@ -1508,29 +1504,8 @@
                         vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">Only one version</div>';
                     }
 
-                    // Thumb strip: starts with the main image + any pre-scraped
-                    // gallery images. QC + variant images get appended later.
-                    var thumbs = document.getElementById('pdThumbs');
-                    var galleryImgs = [data.image];
-                    (data.images || []).forEach(function(u){
-                        if (u && galleryImgs.indexOf(u) === -1) galleryImgs.push(u);
-                    });
-                    function thumbHTML(url, active, badge) {
-                        var safe = (url || '').replace(/'/g, "\\'");
-                        var cls = 'pd-thumb' + (active ? ' active' : '') + (badge ? ' ' + badge : '');
-                        return '<button type="button" class="' + cls + '" onclick="swapMainImg(this, \'' + safe + '\')"><img src="' + url + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
-                    }
-                    // Hide the thumb strip when only one image exists — a single
-                    // useless thumb is worse than no strip. Also kept hidden on
-                    // load even if a variant fetch later appends thumbs, the
-                    // append step un-hides it.
-                    if (galleryImgs.length > 1) {
-                        thumbs.style.display = '';
-                        thumbs.innerHTML = galleryImgs.map(function(u, i){ return thumbHTML(u, i === 0, ''); }).join('');
-                    } else {
-                        thumbs.style.display = 'none';
-                        thumbs.innerHTML = '';
-                    }
+                    // (Thumb strip removed per operator request — variant tiles
+                    // on the right side already let users swap colors/styles.)
 
                     // Lazy variants — fetch SKU list from ategoat by name match.
                     var variantsBox = document.getElementById('pdVariants');
@@ -1558,20 +1533,6 @@
                                     variantsBox.innerHTML = '<div class="pd-qc-empty">Single variant</div>';
                                     if (variantCount) variantCount.textContent = 'Variants · 1';
                                 }
-                                // Append extra images (from the ategoat detail) to the thumb strip
-                                var existing = Array.from(document.querySelectorAll('#pdThumbs .pd-thumb img')).map(function(i){ return i.src; });
-                                var added = '';
-                                extraImgs.forEach(function(u){
-                                    if (u && existing.indexOf(u) === -1) { added += thumbHTML(u, false, ''); existing.push(u); }
-                                });
-                                if (added) {
-                                    if (!thumbs.children.length) {
-                                        // Re-seed with the main image too so the first thumb is the hero
-                                        thumbs.innerHTML = thumbHTML(data.image, true, '');
-                                    }
-                                    thumbs.insertAdjacentHTML('beforeend', added);
-                                    thumbs.style.display = '';
-                                }
                             })
                             .catch(function(){
                                 variantsBox.innerHTML = '<div class="pd-qc-empty">No variants available</div>';
@@ -1591,17 +1552,6 @@
                                 qc.innerHTML = photos.map(function(u){
                                     return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';
                                 }).join('');
-                                // Append QC thumbs to the gallery
-                                var html = '';
-                                photos.forEach(function(u){
-                                    var safe = u.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                                    html += '<button type="button" class="pd-thumb qc" onclick="swapMainImg(this, \'' + safe + '\')"><img src="' + u + '" alt="QC" loading="lazy" referrerpolicy="no-referrer"></button>';
-                                });
-                                if (!thumbs.children.length) {
-                                    thumbs.innerHTML = thumbHTML(data.image, true, '');
-                                }
-                                thumbs.insertAdjacentHTML('beforeend', html);
-                                thumbs.style.display = '';
                             } else {
                                 qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
                             }
