@@ -202,20 +202,16 @@
         .mobile-menu a:hover { color: var(--accent); }
         .mobile-menu .mobile-menu-cta {
             display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
-            margin-top: 28px;
-            padding: 20px 44px;
-            background: var(--accent); color: #fff !important;
-            border-radius: 16px;
-            box-shadow: 0 14px 40px var(--accent-dim);
-            min-width: 280px; max-width: 86vw;
+            background: transparent; padding: 0; border-radius: 0; box-shadow: none;
+            color: #fff !important;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line1 {
-            font-family: var(--font-display); font-size: 28px; letter-spacing: 3px; line-height: 1;
+            font-family: var(--font-display); font-size: 32px; letter-spacing: 3px; line-height: 1; color: #fff;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line2 {
-            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; opacity: 0.92; text-transform: uppercase;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; color: rgba(255,255,255,0.7); text-transform: uppercase;
         }
-        .mobile-menu .mobile-menu-cta:hover { background: var(--accent-hover); color: #fff !important; }
+        .mobile-menu .mobile-menu-cta:hover .mm-cta-line1 { color: var(--accent); }
         .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
 
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; border-radius: var(--radius-sm); }
