@@ -140,6 +140,22 @@
         .mobile-menu.open a:nth-child(5) { transition-delay: .24s; }
         .mobile-menu.open a:nth-child(6) { transition-delay: .30s; }
         .mobile-menu a:hover { color: var(--accent); }
+        .mobile-menu .mobile-menu-cta {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+            margin-top: 16px;
+            padding: 14px 28px;
+            background: var(--accent); color: #fff !important;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px var(--accent-dim);
+            max-width: 86vw;
+        }
+        .mobile-menu .mobile-menu-cta .mm-cta-line1 {
+            font-family: var(--font-display); font-size: 22px; letter-spacing: 2.5px; line-height: 1;
+        }
+        .mobile-menu .mobile-menu-cta .mm-cta-line2 {
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; line-height: 1; opacity: 0.95;
+        }
+        .mobile-menu .mobile-menu-cta:hover { background: var(--accent-hover); color: #fff !important; }
         .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
 
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; border-radius: var(--radius-sm); }
@@ -630,7 +646,10 @@
         <a href="/shop">Shop</a>
         <a href="/link-converter">Converter</a>
         <a href="/tutorial">How to Buy</a>
-        <a href="/agents" style="color:var(--accent);">Sign Up — Coupons $50–$500</a>
+        <a href="/agents" class="mobile-menu-cta">
+            <span class="mm-cta-line1">Sign Up</span>
+            <span class="mm-cta-line2">Coupons $50–$500</span>
+        </a>
     </div>
 
     <!-- Floating right-side widget -->
