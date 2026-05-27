@@ -639,7 +639,7 @@
 
         .pd-qc { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
         .pd-qc-empty { padding: 28px 14px; text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; background: var(--surface-2); border: 1px dashed var(--border-subtle); border-radius: 12px; }
-        .pd-qc img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 9px; background: var(--surface-2); cursor: pointer; transition: transform .15s; }
+        .pd-qc img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 9px; background: #ffffff; cursor: pointer; transition: transform .15s; padding: 4px; }
         .pd-qc img:hover { transform: scale(1.05); }
 
         @media (max-width: 860px) {

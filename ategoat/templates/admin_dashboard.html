@@ -37,7 +37,7 @@
 .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
 .recent-card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; transition: all .15s; text-decoration: none; color: inherit; display: block; }
 .recent-card:hover { border-color: var(--border); transform: translateY(-2px); }
-.recent-card .ri-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.recent-card .ri-img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #ffffff; display: block; padding: 4px; }
 .recent-card .ri-body { padding: 10px 12px; }
 .recent-card .ri-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
 .recent-card .ri-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); display: flex; justify-content: space-between; }
@@ -155,7 +155,7 @@
     <div class="recent-grid">
         {% for p in recent_products %}
         <a href="/admin/products" class="recent-card">
-            <img class="ri-img" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.background='var(--surface-3)';this.removeAttribute('src');">
+            <img class="ri-img" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.background='#ffffff';this.removeAttribute('src');">
             <div class="ri-body">
                 <div class="ri-name">{{ p.name }}</div>
                 <div class="ri-meta">

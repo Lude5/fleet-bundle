@@ -76,7 +76,7 @@
 .scrape-card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; transition: all .15s; }
 .scrape-card:hover { border-color: var(--border); }
 .scrape-card .check { position: absolute; top: 8px; right: 8px; background: var(--accent); color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--accent-glow); }
-.scrape-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.scrape-card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #ffffff; display: block; padding: 4px; }
 .scrape-card .sb { padding: 8px 10px; }
 .scrape-card .sb-name { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scrape-card .sb-price { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 3px; }
@@ -88,7 +88,7 @@
 .modal h2 { font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
 .modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 18px; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .modal-close:hover { border-color: var(--accent); color: var(--accent); }
-.edit-preview { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; background: var(--surface-2); margin-bottom: 18px; display: none; }
+.edit-preview { width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; background: #ffffff; margin-bottom: 18px; display: none; padding: 4px; }
 
 .empty-table { padding: 60px 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
 
@@ -108,7 +108,7 @@
 .padmin-card:hover { border-color: var(--border); transform: translateY(-2px); }
 .padmin-card .pa-star { position: absolute; top: 8px; right: 8px; z-index: 2; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
 .padmin-card .pa-star .star-btn { padding: 0; font-size: 16px; }
-.padmin-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface-3); display: block; }
+.padmin-card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #ffffff; display: block; padding: 4px; }
 .padmin-card .pa-body { padding: 12px; }
 .padmin-card .pa-name { font-size: 12px; font-weight: 600; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .padmin-card .pa-row { display: flex; justify-content: space-between; align-items: center; }
@@ -124,7 +124,7 @@
 .padmin-compact .pcomp { display: grid; grid-template-columns: 36px 44px 1fr 80px 80px 80px; gap: 14px; align-items: center; padding: 10px 14px; background: var(--surface); transition: background .12s; }
 .padmin-compact .pcomp:hover { background: var(--surface-2); }
 .padmin-compact .pcomp .rank { font-family: var(--font-mono); color: var(--text-muted); font-size: 11px; font-weight: 700; }
-.padmin-compact .pcomp .img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: var(--surface-2); }
+.padmin-compact .pcomp .img { width: 36px; height: 36px; border-radius: 6px; object-fit: contain; background: #ffffff; padding: 2px; }
 .padmin-compact .pcomp .nm { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .padmin-compact .pcomp .cat { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-align: right; text-transform: uppercase; letter-spacing: 1px; }
 .padmin-compact .pcomp .price { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; font-size: 13px; }
@@ -1244,7 +1244,7 @@ async function scrapeLink() {
                 this.querySelector('.check').style.display = sel ? 'none' : 'flex';
             };
             card.innerHTML = '<div class="check">✓</div>'
-                + '<img src="' + (p.image || '') + '" onerror="this.style.background=\'var(--surface-3)\'">'
+                + '<img src="' + (p.image || '') + '" onerror="this.style.background=\'#ffffff\'">'
                 + '<div class="sb"><div class="sb-name">' + (p.name || '—') + '</div>'
                 + '<div class="sb-price">$' + (p.price || '?') + '</div></div>';
             grid.appendChild(card);
