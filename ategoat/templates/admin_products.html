@@ -50,7 +50,11 @@
 .product-table .cat-select.saved { border-color: #22c55e; }
 
 .drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 0 4px; user-select: none; line-height: 1; }
+.drag-handle:hover { color: var(--accent); }
 .drag-handle:active { cursor: grabbing; }
+.product-table tr.drag-over td { box-shadow: 0 -2px 0 var(--accent) inset; }
+.product-table tr.drag-over-bottom td { box-shadow: 0 2px 0 var(--accent) inset; }
+.product-table tr.dragging { opacity: 0.5; }
 
 .star-btn { background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 4px 6px; line-height: 1; color: var(--text-muted); transition: color .15s, transform .15s; }
 .star-btn:hover { color: var(--warn); transform: scale(1.15); }
@@ -394,12 +398,13 @@
         <h2 data-i18n="tb_catalog">Catalog</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" onclick="toggleSelectAll()" data-i18n="select_all">Select all</button>
+            <button class="btn btn-secondary btn-sm" id="autoCatBtn" onclick="autoCategorizeAll()">⚡ Auto-categorize uncategorized</button>
             <button class="btn btn-secondary btn-sm" id="reorderBtn" onclick="toggleReorderMode()" data-i18n="reorder_mode">Reorder mode</button>
         </div>
     </div>
 
-    <p class="help-line" data-i18n="cat_help">
-        Tip: Click ⭐ to pin a product to the top of the shop page. Check rows to bulk-move them between categories or delete. In Reorder Mode, drag rows to set the exact order shown on /shop.
+    <p class="help-line">
+        Click <strong>⭐</strong> to pin · <strong>🔥</strong> to mark trending · use the category dropdown per row. All changes save instantly — no refresh. Check rows to bulk-set them.
     </p>
 
     <div class="reorder-hint">
@@ -411,12 +416,12 @@
     <div class="bulk-bar hidden" id="bulkBar">
         <span class="count" id="bulkCount">0 selected</span>
         <select id="bulkMoveCat" class="select">
-            <option value="" data-i18n="move_to">Move to category…</option>
+            <option value="">Set category…</option>
             {% for cat in categories %}
             <option value="{{ cat.slug }}">{{ cat.name }}</option>
             {% endfor %}
         </select>
-        <button class="btn btn-primary btn-sm" onclick="bulkMoveCategory()" data-i18n="move">Move</button>
+        <button class="btn btn-primary btn-sm" onclick="bulkMoveCategory()">Set</button>
         <button class="btn btn-secondary btn-sm" onclick="bulkFeature(true)" data-i18n="pin">⭐ Pin</button>
         <button class="btn btn-secondary btn-sm" onclick="bulkFeature(false)" data-i18n="unpin">Unpin</button>
         <button class="btn btn-secondary btn-sm" onclick="bulkTrending(true)">🔥 Trending</button>
@@ -890,20 +895,60 @@ async function toggleFeatureCard(btn) {
 }
 
 // === FEATURE ===
+// When a row is pinned, move it to the top of the visible tbody so the new
+// position is obvious immediately (no refresh required). Unpin moves it
+// back below all other pinned rows (in natural creation order).
+function _reorderByPinAfterToggle(tr, willBe) {
+    var tbody = tr.parentNode;
+    if (!tbody) return;
+    if (willBe) {
+        // Move to the very top so pin "sticks" visually
+        tbody.insertBefore(tr, tbody.firstChild);
+    } else {
+        // Find the first un-pinned sibling and place this row above it,
+        // so the unpinned row sits just below the remaining pinned ones.
+        var siblings = Array.from(tbody.children);
+        var insertBefore = null;
+        for (var i = 0; i < siblings.length; i++) {
+            if (siblings[i] === tr) continue;
+            if (siblings[i].dataset.featured !== '1') {
+                insertBefore = siblings[i]; break;
+            }
+        }
+        if (insertBefore) tbody.insertBefore(tr, insertBefore);
+        else tbody.appendChild(tr);
+    }
+    // Persist the new order so a refresh shows the same layout
+    _scheduleSaveOrder();
+}
+
 async function toggleFeature(btn) {
     var tr = btn.closest('tr');
     var pid = tr.dataset.id;
     var willBe = !btn.classList.contains('active');
+    // Optimistic visual: star + row position update immediately
     btn.classList.toggle('active', willBe);
     tr.dataset.featured = willBe ? '1' : '0';
-    var res = await fetch('/admin/products/feature', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: [pid], featured: willBe }) });
-    var json = await res.json();
-    if (!json.ok) {
+    _reorderByPinAfterToggle(tr, willBe);
+    try {
+        var res = await fetch('/admin/products/feature', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ ids: [pid], featured: willBe })
+        });
+        var json = await res.json();
+        if (!json.ok) {
+            // Revert visual on failure
+            btn.classList.toggle('active', !willBe);
+            tr.dataset.featured = !willBe ? '1' : '0';
+            _reorderByPinAfterToggle(tr, !willBe);
+            showToast(json.error || t('failed'), 'error');
+        } else {
+            showToast(willBe ? '⭐ Pinned to top' : 'Unpinned', 'success');
+        }
+    } catch(e) {
         btn.classList.toggle('active', !willBe);
         tr.dataset.featured = !willBe ? '1' : '0';
-        showToast(json.error || t('failed'), 'error');
-    } else {
-        showToast(t(willBe ? 'pinned_to_top' : 'unpinned'), 'success');
+        showToast('Pin failed: ' + e.message, 'error');
     }
 }
 async function bulkFeature(featured) {
@@ -917,6 +962,7 @@ async function bulkFeature(featured) {
         if (!tr) return;
         tr.dataset.featured = featured ? '1' : '0';
         var s = tr.querySelector('.star-btn'); if (s) s.classList.toggle('active', featured);
+        _reorderByPinAfterToggle(tr, featured);
     });
     showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
 }
@@ -1089,61 +1135,85 @@ async function deleteSelected() {
     updateBulkBar();
 }
 
-// === REORDER ===
-var reorderActive = false;
-function toggleReorderMode() {
-    reorderActive = !reorderActive;
-    var panel = document.getElementById('productPanel');
-    panel.classList.toggle('reorder-mode', reorderActive);
-    document.getElementById('reorderBtn').textContent = reorderActive ? 'Cancel reorder' : 'Reorder mode';
-    if (reorderActive) {
-        attachDragHandlers();
-        showToast(t('reorder_filter_hint'), 'info');
-    }
-}
+// === REORDER (always-on drag-and-drop with auto-save) ===
+// Drag the ⋮⋮ handle to move a row above/below any other. Saves
+// automatically after each drop. No mode toggle needed.
+var draggedRow = null;
+var _saveOrderTimer = null;
+
 function attachDragHandlers() {
     document.querySelectorAll('#productTbody tr').forEach(function(tr){
-        tr.draggable = true;
-        tr.addEventListener('dragstart', onDragStart);
-        tr.addEventListener('dragover', onDragOver);
-        tr.addEventListener('dragleave', onDragLeave);
-        tr.addEventListener('drop', onDrop);
-        tr.addEventListener('dragend', onDragEnd);
+        if (tr.dataset._dragAttached) return;
+        tr.dataset._dragAttached = '1';
+        var handle = tr.querySelector('.drag-handle');
+        if (handle) {
+            // Only the handle initiates drag (don't fight inline buttons/inputs)
+            handle.setAttribute('draggable', 'true');
+            handle.addEventListener('dragstart', function(e){
+                draggedRow = tr;
+                tr.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', tr.dataset.id); } catch(_) {}
+            });
+            handle.addEventListener('dragend', function(){
+                document.querySelectorAll('#productTbody tr').forEach(function(r){ r.classList.remove('dragging','drag-over','drag-over-bottom'); });
+                draggedRow = null;
+            });
+        }
+        // Row-level drop targets
+        tr.addEventListener('dragover', function(e){
+            if (!draggedRow || tr === draggedRow) return;
+            e.preventDefault();
+            var rect = tr.getBoundingClientRect();
+            var midpoint = rect.top + rect.height / 2;
+            tr.classList.remove('drag-over-bottom');
+            tr.classList.remove('drag-over');
+            if (e.clientY < midpoint) tr.classList.add('drag-over');
+            else tr.classList.add('drag-over-bottom');
+        });
+        tr.addEventListener('dragleave', function(){
+            tr.classList.remove('drag-over','drag-over-bottom');
+        });
+        tr.addEventListener('drop', function(e){
+            if (!draggedRow || tr === draggedRow) return;
+            e.preventDefault();
+            var rect = tr.getBoundingClientRect();
+            var below = e.clientY > rect.top + rect.height / 2;
+            tr.parentNode.insertBefore(draggedRow, below ? tr.nextSibling : tr);
+            tr.classList.remove('drag-over','drag-over-bottom');
+            _scheduleSaveOrder();
+        });
     });
 }
-var draggedRow = null;
-function onDragStart(e) {
-    if (!reorderActive) { e.preventDefault(); return; }
-    draggedRow = this; this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', this.dataset.id); } catch(_) {}
+
+function _scheduleSaveOrder() {
+    // Debounce: if the user drags several rows in quick succession, only one POST fires.
+    clearTimeout(_saveOrderTimer);
+    _saveOrderTimer = setTimeout(saveReorder, 400);
 }
-function onDragOver(e) {
-    if (!reorderActive || !draggedRow || this === draggedRow) return;
-    e.preventDefault();
-    this.classList.add('drag-over');
-}
-function onDragLeave() { this.classList.remove('drag-over'); }
-function onDrop(e) {
-    if (!reorderActive || !draggedRow || this === draggedRow) return;
-    e.preventDefault();
-    this.classList.remove('drag-over');
-    this.parentNode.insertBefore(draggedRow, this);
-}
-function onDragEnd() {
-    document.querySelectorAll('#productTbody tr').forEach(function(tr){tr.classList.remove('dragging','drag-over');});
-    draggedRow = null;
-}
+
 async function saveReorder() {
-    var visible = Array.from(document.querySelectorAll('#productTbody tr')).filter(function(tr){return tr.style.display !== 'none';});
-    var ids = visible.map(function(tr){return tr.dataset.id;});
-    if (!ids.length) return showToast(t('nothing_to_save'), 'error');
-    var res = await fetch('/admin/products/reorder', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ ids: ids }) });
-    var json = await res.json();
-    if (!json.ok) return showToast(json.error || t('failed'), 'error');
-    showToast(t('saved_order_n', { n: ids.length }), 'success');
-    toggleReorderMode();
+    var rows = Array.from(document.querySelectorAll('#productTbody tr'));
+    var ids = rows.map(function(tr){return tr.dataset.id;}).filter(Boolean);
+    if (!ids.length) return;
+    try {
+        var res = await fetch('/admin/products/reorder', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ ids: ids })
+        });
+        var json = await res.json();
+        if (!json.ok) return showToast(json.error || t('failed'), 'error');
+        showToast('Order saved', 'success');
+    } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
 }
+
+// Initialise drag on every row at page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDragHandlers);
+} else { attachDragHandlers(); }
+
+// Stub for the old reorder-mode buttons in case any leftover handler triggers them
+function toggleReorderMode() { /* no-op — drag is always on now */ }
 
 // === SCRAPE ===
 var scrapedProducts = [];
