@@ -510,14 +510,22 @@
             <option value="0" data-i18n="not_pinned">Not pinned</option>
         </select>
         <select id="tableTrendingFilter" class="select" onchange="filterTable()">
-            <option value="">All (trending+not)</option>
+            <option value="">All</option>
             <option value="1">🔥 Trending only</option>
             <option value="0">Not trending</option>
         </select>
         <select id="tableStockFilter" class="select" onchange="filterTable()">
-            <option value="">All (in+out of stock)</option>
+            <option value="">All</option>
             <option value="1">📦 In stock only</option>
             <option value="0">❌ Out of stock only</option>
+        </select>
+        <select id="tableSortFilter" class="select" onchange="filterTable()">
+            <option value="default">Default (pinned first)</option>
+            <option value="recent">Recently added</option>
+            <option value="oldest">Oldest first</option>
+            <option value="price_low">Price ↑ (low to high)</option>
+            <option value="price_high">Price ↓ (high to low)</option>
+            <option value="name_az">Name (A → Z)</option>
         </select>
     </div>
 
@@ -542,7 +550,7 @@
                 {% for p in products %}
                 {% set is_trending = 'trending' in (p.tags or '').split() %}
                 {% set in_stock = p.in_stock if p.in_stock is not none else 1 %}
-                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}" data-stock="{{ in_stock }}" {% if not in_stock %}class="out-of-stock"{% endif %}>
+                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-price-num="{{ p.price_numeric or 0 }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}" data-stock="{{ in_stock }}" data-created="{{ p.created_at or '' }}" {% if not in_stock %}class="out-of-stock"{% endif %}>
                     <td><input type="checkbox" class="product-cb" value="{{ p.id }}" onchange="updateBulkBar()"></td>
                     <td><span class="drag-handle" title="Drag to reorder">⋮⋮</span></td>
                     <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
@@ -876,7 +884,9 @@ function getMatchingRows() {
     var trend = trendEl ? trendEl.value : '';
     var stockEl = document.getElementById('tableStockFilter');
     var stock = stockEl ? stockEl.value : '';
-    return Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
+    var sortEl = document.getElementById('tableSortFilter');
+    var sort = sortEl ? sortEl.value : 'default';
+    var matched = Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
         var name = (tr.dataset.name || '').toLowerCase();
         var seller = (tr.dataset.seller || '').toLowerCase();
         var tags = (tr.dataset.tags || '').toLowerCase();
@@ -893,6 +903,19 @@ function getMatchingRows() {
         if (stock && rowStock !== stock) return false;
         return true;
     });
+    // Apply sort (when not 'default', otherwise honor DOM order = backend's
+    // featured/position ordering)
+    if (sort && sort !== 'default') {
+        matched.sort(function(a, b){
+            if (sort === 'recent')      return (b.dataset.created || '').localeCompare(a.dataset.created || '');
+            if (sort === 'oldest')      return (a.dataset.created || '').localeCompare(b.dataset.created || '');
+            if (sort === 'price_low')   return parseFloat(a.dataset.priceNum || 0) - parseFloat(b.dataset.priceNum || 0);
+            if (sort === 'price_high')  return parseFloat(b.dataset.priceNum || 0) - parseFloat(a.dataset.priceNum || 0);
+            if (sort === 'name_az')     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+            return 0;
+        });
+    }
+    return matched;
 }
 
 function applyPagination() {
@@ -903,11 +926,16 @@ function applyPagination() {
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    // Hide everything, then show only the slice
+    // Hide everything, then show + re-append the slice in matched-order so
+    // the sort dropdown actually reorders the visible rows in the DOM.
     document.querySelectorAll('#productTable tbody tr').forEach(function(tr) { tr.style.display = 'none'; });
     var start = (currentPage - 1) * size;
     var end = PAGE_SIZE ? start + size : totalMatching;
-    matching.slice(start, end).forEach(function(tr) { tr.style.display = ''; });
+    var tbody = document.getElementById('productTbody');
+    matching.slice(start, end).forEach(function(tr) {
+        tr.style.display = '';
+        tbody.appendChild(tr);  // moves tr to end in given order → visible rows display sorted
+    });
 
     // Update UI
     var pageInfo = document.getElementById('pageInfo');
