@@ -4,11 +4,79 @@
 
 {% block topbar_actions %}
     <span class="pill" id="productTotalPill">{{ products|length }} total</span>
+    <div class="filter-pop-wrap">
+        <button class="pill filter-pop-btn" type="button" onclick="toggleFilterPop()" id="filterPopBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filter <span class="filter-pop-count" id="filterPopCount" style="display:none;">0</span>
+        </button>
+        <div class="filter-pop" id="filterPop" style="display:none;">
+            <div class="filter-pop-section">
+                <div class="filter-pop-head">Status</div>
+                <label class="filter-chip"><input type="checkbox" class="f-status" value="featured"> ⭐ Pinned</label>
+                <label class="filter-chip"><input type="checkbox" class="f-status" value="trending"> 🔥 Trending</label>
+                <label class="filter-chip"><input type="checkbox" class="f-status" value="in_stock"> 📦 In stock</label>
+                <label class="filter-chip"><input type="checkbox" class="f-status" value="out_of_stock"> ❌ Out of stock</label>
+            </div>
+            <div class="filter-pop-section">
+                <div class="filter-pop-head">Categories (any of)</div>
+                {% for cat in categories %}
+                <label class="filter-chip"><input type="checkbox" class="f-cat" value="{{ cat.slug }}"> {{ cat.name }}</label>
+                {% endfor %}
+                <label class="filter-chip"><input type="checkbox" class="f-cat" value="(uncategorized)"> (uncategorized)</label>
+            </div>
+            <div class="filter-pop-foot">
+                <button type="button" class="btn btn-ghost btn-xs" onclick="clearAllFilters()">Clear all</button>
+            </div>
+        </div>
+    </div>
     <button class="pill" type="button" onclick="document.getElementById('importPanel').scrollIntoView({behavior:'smooth'})" data-i18n="tb_add_product">+ Add</button>
     <a href="/" target="_blank" class="pill primary" data-i18n="tb_view_site">View site &rarr;</a>
 {% endblock %}
 
 {% block admin_extra_css %}
+/* Topbar filter popover (multi-select) */
+.filter-pop-wrap { position: relative; display: inline-flex; }
+.filter-pop-btn { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.filter-pop-btn .filter-pop-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 18px; padding: 0 6px; margin-left: 4px;
+    background: var(--accent); color: #fff;
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 800; line-height: 1;
+}
+.filter-pop {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 320px; max-height: 70vh; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+    padding: 14px;
+    z-index: 60;
+}
+.filter-pop-section { margin-bottom: 14px; }
+.filter-pop-section:last-child { margin-bottom: 0; }
+.filter-pop-head {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+.filter-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; margin: 3px 4px 3px 0;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--border); color: var(--text); }
+.filter-chip input[type="checkbox"] { width: 0; height: 0; opacity: 0; position: absolute; pointer-events: none; }
+.filter-chip:has(input:checked) {
+    background: var(--accent-dim); border-color: var(--accent); color: var(--accent);
+}
+.filter-pop-foot { padding-top: 8px; border-top: 1px solid var(--border-subtle); text-align: right; }
+
 /* Search + filter bar */
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
 .toolbar .grow { flex: 1; min-width: 220px; position: relative; }
@@ -498,27 +566,6 @@
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="tableSearch" class="input" placeholder="Search name, seller, tags…" data-i18n-placeholder="search_placeholder" oninput="filterTable()">
         </div>
-        <select id="tableCatFilter" class="select" onchange="filterTable()">
-            <option value="" data-i18n="all_categories">All categories</option>
-            {% for cat in categories %}
-            <option value="{{ cat.slug }}">{{ cat.name }}</option>
-            {% endfor %}
-        </select>
-        <select id="tableFeaturedFilter" class="select" onchange="filterTable()">
-            <option value="" data-i18n="all_products_filter">All products</option>
-            <option value="1" data-i18n="pinned_only">⭐ Pinned only</option>
-            <option value="0" data-i18n="not_pinned">Not pinned</option>
-        </select>
-        <select id="tableTrendingFilter" class="select" onchange="filterTable()">
-            <option value="">All</option>
-            <option value="1">🔥 Trending only</option>
-            <option value="0">Not trending</option>
-        </select>
-        <select id="tableStockFilter" class="select" onchange="filterTable()">
-            <option value="">All</option>
-            <option value="1">📦 In stock only</option>
-            <option value="0">❌ Out of stock only</option>
-        </select>
         <select id="tableSortFilter" class="select" onchange="filterTable()">
             <option value="default">Default (pinned first)</option>
             <option value="recent">Recently added</option>
@@ -876,16 +923,45 @@ var PAGE_SIZE = 50;
 var currentPage = 1;
 var TOTAL_PRODUCTS = {{ products|length }};
 
+window.toggleFilterPop = function() {
+    var pop = document.getElementById('filterPop');
+    pop.style.display = (pop.style.display === 'none' || !pop.style.display) ? 'block' : 'none';
+};
+document.addEventListener('click', function(e){
+    var pop = document.getElementById('filterPop');
+    var btn = document.getElementById('filterPopBtn');
+    if (pop && btn && !btn.contains(e.target) && !pop.contains(e.target)) {
+        pop.style.display = 'none';
+    }
+});
+window.clearAllFilters = function() {
+    document.querySelectorAll('.filter-pop input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
+    filterTable();
+};
+// Wire every popover checkbox to filterTable
+document.addEventListener('change', function(e){
+    if (e.target.matches('.filter-pop input[type="checkbox"]')) filterTable();
+});
+function _selectedFilters() {
+    var cats = Array.from(document.querySelectorAll('.f-cat:checked')).map(function(el){return el.value;});
+    var status = Array.from(document.querySelectorAll('.f-status:checked')).map(function(el){return el.value;});
+    return { cats: cats, status: status };
+}
+function _updateFilterBadge() {
+    var f = _selectedFilters();
+    var n = f.cats.length + f.status.length;
+    var pill = document.getElementById('filterPopCount');
+    if (!pill) return;
+    if (n > 0) { pill.textContent = n; pill.style.display = 'inline-flex'; }
+    else pill.style.display = 'none';
+}
+
 function getMatchingRows() {
     var q = document.getElementById('tableSearch').value.toLowerCase();
-    var cat = document.getElementById('tableCatFilter').value;
-    var feat = document.getElementById('tableFeaturedFilter').value;
-    var trendEl = document.getElementById('tableTrendingFilter');
-    var trend = trendEl ? trendEl.value : '';
-    var stockEl = document.getElementById('tableStockFilter');
-    var stock = stockEl ? stockEl.value : '';
     var sortEl = document.getElementById('tableSortFilter');
     var sort = sortEl ? sortEl.value : 'default';
+    var f = _selectedFilters();
+    _updateFilterBadge();
     var matched = Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
         var name = (tr.dataset.name || '').toLowerCase();
         var seller = (tr.dataset.seller || '').toLowerCase();
@@ -895,12 +971,25 @@ function getMatchingRows() {
         var rowTrend = tr.dataset.trending || '0';
         var rowStock = tr.dataset.stock || '1';
         if (q && !name.includes(q) && !seller.includes(q) && !tags.includes(q)) return false;
-        // "trending" in the category filter is a tag, not a category field
-        if (cat === 'trending') { if (rowTrend !== '1') return false; }
-        else if (cat && rowCat !== cat) return false;
-        if (feat && rowFeat !== feat) return false;
-        if (trend && rowTrend !== trend) return false;
-        if (stock && rowStock !== stock) return false;
+        // Multi-cat filter: any-of (OR within the group). '(uncategorized)' matches empty cat.
+        if (f.cats.length) {
+            var hit = f.cats.some(function(c){
+                if (c === '(uncategorized)') return !rowCat;
+                if (c === 'trending') return rowTrend === '1';  // trending acts as a pseudo-category
+                return rowCat === c;
+            });
+            if (!hit) return false;
+        }
+        // Status filter: all-of (AND within the group) — pinned AND in stock both must hold.
+        if (f.status.length) {
+            for (var i = 0; i < f.status.length; i++) {
+                var s = f.status[i];
+                if (s === 'featured'     && rowFeat  !== '1') return false;
+                if (s === 'trending'     && rowTrend !== '1') return false;
+                if (s === 'in_stock'     && rowStock !== '1') return false;
+                if (s === 'out_of_stock' && rowStock !== '0') return false;
+            }
+        }
         return true;
     });
     // Apply sort (when not 'default', otherwise honor DOM order = backend's
