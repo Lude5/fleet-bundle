@@ -402,8 +402,26 @@ BUNDLE_RECIPES = [
 ]
 
 
+import re as _re_bundle
+# Names to skip when picking for a NON-womens bundle slot — keeps menswear
+# bundles from accidentally picking women's leggings, dresses, etc.
+_BUNDLE_AVOID_PAT = _re_bundle.compile(
+    r'\b(legging|leggings|yoga|alo|sports?\s*bra|bra(?:lette)?|dress|skirt|romper|crop[ -]?top)\b',
+    _re_bundle.I,
+)
+# Also avoid out-of-stock items in bundles
+def _bundle_eligible(p, cat):
+    if p.get('in_stock') == 0:
+        return False
+    if cat != 'womens' and _BUNDLE_AVOID_PAT.search(p.get('name', '')):
+        return False
+    return True
+
+
 def _bundle_products(recipe, all_products):
-    """Pick one product per recipe category, stable across page loads."""
+    """Pick one product per recipe category, stable across page loads.
+    Filters out items inappropriate for the bundle (e.g. women's leggings in
+    a non-womens menswear pants slot)."""
     import hashlib
     by_cat = {}
     for p in all_products:
@@ -414,9 +432,13 @@ def _bundle_products(recipe, all_products):
     picks = []
     used_ids = set()
     for cat in recipe['cats']:
-        cands = [p for p in by_cat.get(cat, []) if p.get('id') not in used_ids]
+        cands = [p for p in by_cat.get(cat, [])
+                 if p.get('id') not in used_ids and _bundle_eligible(p, cat)]
         if not cands:
-            continue
+            # Fall back to the unfiltered bucket if the filter wiped everything
+            cands = [p for p in by_cat.get(cat, []) if p.get('id') not in used_ids]
+            if not cands:
+                continue
         # Hash recipe slug + cat for a stable, distinct pick per bundle slot.
         h = hashlib.md5(f"{recipe['slug']}-{cat}".encode()).hexdigest()
         idx = int(h, 16) % len(cands)

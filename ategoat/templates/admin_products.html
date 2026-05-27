@@ -474,6 +474,11 @@
             <option value="1">🔥 Trending only</option>
             <option value="0">Not trending</option>
         </select>
+        <select id="tableStockFilter" class="select" onchange="filterTable()">
+            <option value="">All (in+out of stock)</option>
+            <option value="1">📦 In stock only</option>
+            <option value="0">❌ Out of stock only</option>
+        </select>
     </div>
 
     <div class="table-wrap pro-only">
@@ -734,6 +739,8 @@ function getMatchingRows() {
     var feat = document.getElementById('tableFeaturedFilter').value;
     var trendEl = document.getElementById('tableTrendingFilter');
     var trend = trendEl ? trendEl.value : '';
+    var stockEl = document.getElementById('tableStockFilter');
+    var stock = stockEl ? stockEl.value : '';
     return Array.from(document.querySelectorAll('#productTable tbody tr')).filter(function(tr) {
         var name = (tr.dataset.name || '').toLowerCase();
         var seller = (tr.dataset.seller || '').toLowerCase();
@@ -741,12 +748,14 @@ function getMatchingRows() {
         var rowCat = tr.dataset.cat || '';
         var rowFeat = tr.dataset.featured || '0';
         var rowTrend = tr.dataset.trending || '0';
+        var rowStock = tr.dataset.stock || '1';
         if (q && !name.includes(q) && !seller.includes(q) && !tags.includes(q)) return false;
         // "trending" in the category filter is a tag, not a category field
         if (cat === 'trending') { if (rowTrend !== '1') return false; }
         else if (cat && rowCat !== cat) return false;
         if (feat && rowFeat !== feat) return false;
         if (trend && rowTrend !== trend) return false;
+        if (stock && rowStock !== stock) return false;
         return true;
     });
 }
