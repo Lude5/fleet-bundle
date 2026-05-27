@@ -1465,6 +1465,65 @@ def admin_backup():
     return jsonify({'ok': True, 'path': backup_database()})
 
 
+@app.route('/admin/scrape', methods=['POST'])
+def admin_scrape():
+    """Scrape a single Weidian/Taobao/1688 listing → returns {products, listing_name,
+    total_variants, platform, item_id}. On failure returns {error: '<human msg>'}."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    url = (data.get('url') or '').strip()
+    category = (data.get('category') or '').strip()
+    if not url:
+        return jsonify({'error': 'No URL provided. Paste a Weidian, Taobao, or 1688 product link.'}), 400
+    # Quick sanity: must look like a URL
+    if not (url.startswith('http://') or url.startswith('https://')):
+        return jsonify({'error': 'Not a valid URL. Must start with http:// or https://'}), 400
+    try:
+        try:
+            from .scraper import scrape_listing, detect_platform
+        except ImportError:
+            from scraper import scrape_listing, detect_platform
+        platform, item_id = detect_platform(url)
+        if not platform:
+            return jsonify({'error': 'Could not parse this link. Supported: Weidian, Taobao, 1688. (Looked for itemID=, id=, /offer/N.html.)'}), 400
+        result = scrape_listing(url, category=category, affiliate_code=SITE_CONFIG.get('affiliate_code', ''))
+        if not result or not isinstance(result, dict):
+            return jsonify({'error': f'Scraper returned no data for {platform} item {item_id}. The listing may be private, expired, or geo-blocked.'}), 502
+        if result.get('error'):
+            return jsonify({'error': result['error']}), 502
+        products = result.get('products') or []
+        if not products:
+            return jsonify({'error': f'No products / variants extracted from {platform} item {item_id}. The seller may have deleted the listing or blocked scraping.'}), 502
+        return jsonify(result)
+    except ImportError as e:
+        return jsonify({'error': f'Scraper module not available on the server: {e}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Scrape failed: {type(e).__name__}: {str(e)[:200]}'}), 500
+
+
+@app.route('/admin/scrape/import', methods=['POST'])
+def admin_scrape_import():
+    """Commit selected scraped products into the catalog."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    products = data.get('products') or []
+    if not products:
+        return jsonify({'error': 'Nothing to import'}), 400
+    try:
+        from tag_utils import generate_tags
+    except ImportError:
+        def generate_tags(n, c=''): return (c or '').lower()
+    for p in products:
+        if not p.get('id'):
+            p['id'] = f"p{secrets.token_hex(4)}"
+        if not p.get('tags'):
+            p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
+    add_products_bulk(products)
+    return jsonify({'ok': True, 'count': len(products)})
+
+
 # ===========================================================================
 # Cross-site API (used by the master admin) — token-auth alternative.
 # All routes accept either an admin session OR an X-Admin-Token header.

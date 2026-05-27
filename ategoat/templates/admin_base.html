@@ -333,7 +333,80 @@
         if (!e.target.closest('.view-switcher')) menu.classList.remove('open');
     });
     applyAdminView();
+
+    // ===== Collapsible cards =====
+    // Any .card with [data-collapsible] gets a minimize button in its head.
+    // State persists in localStorage under 'card_collapsed:<id-or-heading>'.
+    (function(){
+        function keyFor(card) {
+            if (card.id) return 'card_collapsed:' + card.id;
+            var h = card.querySelector('.card-head h2');
+            return 'card_collapsed:' + (h ? h.textContent.trim() : 'unknown');
+        }
+        function applyState(card) {
+            var key = keyFor(card);
+            var collapsed = localStorage.getItem(key) === '1';
+            card.classList.toggle('collapsed', collapsed);
+            var btn = card.querySelector('.card-collapse-btn');
+            if (btn) btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+        function attach(card) {
+            if (card.dataset._collapsibleAttached) return;
+            card.dataset._collapsibleAttached = '1';
+            var head = card.querySelector('.card-head');
+            if (!head) return;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'card-collapse-btn';
+            btn.setAttribute('aria-label', 'Minimize');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>';
+            btn.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation();
+                var collapsed = !card.classList.contains('collapsed');
+                card.classList.toggle('collapsed', collapsed);
+                localStorage.setItem(keyFor(card), collapsed ? '1' : '0');
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            });
+            head.appendChild(btn);
+            // Also make the head clickable to toggle
+            head.style.cursor = 'pointer';
+            head.addEventListener('click', function(e){
+                if (e.target.closest('button, a, input, select, textarea')) return;
+                btn.click();
+            });
+            applyState(card);
+        }
+        function scan() {
+            document.querySelectorAll('.card[data-collapsible]').forEach(attach);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', scan);
+        } else { scan(); }
+    })();
 </script>
+<style>
+    /* Collapsible card chrome */
+    .card[data-collapsible] .card-head { position: relative; padding-right: 38px; }
+    .card-collapse-btn {
+        position: absolute; top: 50%; right: 0;
+        transform: translateY(-50%);
+        width: 30px; height: 30px;
+        background: transparent; border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--text-secondary); cursor: pointer;
+        transition: all .15s;
+    }
+    .card-collapse-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .card-collapse-btn svg { transition: transform .25s; }
+    .card.collapsed .card-collapse-btn svg { transform: rotate(-90deg); }
+    .card.collapsed .card-head { margin-bottom: 0; border-bottom: none; }
+    /* Hide everything under the head when collapsed (head must be the first .card-head child) */
+    .card.collapsed > *:not(.card-head) { display: none !important; }
+    .card[data-collapsible] .card-head h2::after {
+        content: ''; display: inline-block; width: 6px;
+    }
+</style>
 {% block admin_extra_js %}{% endblock %}
 </body>
 </html>

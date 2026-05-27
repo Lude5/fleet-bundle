@@ -143,6 +143,90 @@
 
 .loading-block { padding: 28px; text-align: center; color: var(--text-secondary); font-size: 13px; }
 
+/* Scrape progress bar */
+.scrape-progress {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+}
+.scrape-progress .sp-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+}
+.scrape-progress .sp-phase {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--text); letter-spacing: 1.5px; text-transform: uppercase;
+}
+.scrape-progress .sp-pct {
+    font-family: var(--font-mono); font-size: 16px; font-weight: 800;
+    color: var(--accent); letter-spacing: 1px;
+}
+.scrape-progress .sp-track {
+    height: 8px; background: var(--surface-3);
+    border-radius: 4px; overflow: hidden; position: relative;
+}
+.scrape-progress .sp-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    border-radius: 4px;
+    transition: width .35s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 0 12px var(--accent-glow);
+    position: relative;
+}
+.scrape-progress .sp-fill::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    background-size: 60px 100%;
+    background-repeat: no-repeat;
+    animation: spShine 1.4s linear infinite;
+}
+@keyframes spShine {
+    0% { background-position: -60px 0; }
+    100% { background-position: calc(100% + 60px) 0; }
+}
+.scrape-progress.done .sp-fill { background: linear-gradient(90deg, #22c55e, #16a34a); box-shadow: 0 0 16px rgba(34, 197, 94, 0.4); }
+.scrape-progress.done .sp-fill::after { display: none; }
+.scrape-progress .sp-sub {
+    margin-top: 8px;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); letter-spacing: 1px;
+}
+
+/* Scrape error pill (matches link-converter red shake style) */
+.scrape-error {
+    display: none; align-items: center; justify-content: center; gap: 10px;
+    margin: 16px auto 0; padding: 14px 18px;
+    width: fit-content; max-width: 100%;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid #ef4444;
+    border-radius: 10px;
+    color: #ef4444;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; line-height: 1.5; text-align: left;
+}
+.scrape-error::before {
+    content: '!';
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    background: #ef4444; color: #fff;
+    border-radius: 50%; font-weight: 900; font-size: 13px;
+    flex-shrink: 0;
+}
+.scrape-error.active {
+    display: inline-flex;
+    animation: seShake 0.5s cubic-bezier(.36,.07,.19,.97);
+}
+@keyframes seShake {
+    0%, 100% { transform: translateX(0); }
+    12%, 60% { transform: translateX(-7px); }
+    24%, 72% { transform: translateX(7px); }
+    36%, 84% { transform: translateX(-4px); }
+    48%, 96% { transform: translateX(4px); }
+}
+
 .help-line { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.55; }
 .help-line strong { color: var(--accent); font-weight: 700; }
 
@@ -159,7 +243,7 @@
 <!-- ============================================================ -->
 <!-- ADD PRODUCTS (primary, top) -->
 <!-- ============================================================ -->
-<div class="card" id="importPanel">
+<div class="card" id="importPanel" data-collapsible>
     <div class="card-head">
         <h2 data-i18n="add_products">Add products</h2>
         <span class="sub" data-i18n="add_sub">Scrape · Manual · Bulk · Categories</span>
@@ -190,7 +274,20 @@
             </div>
         </div>
 
-        <div id="scrapeLoading" class="loading-block" style="display:none;" data-i18n="scrape_loading">Scraping… this may take a few seconds.</div>
+        <!-- Animated progress bar (shown during scrape) -->
+        <div id="scrapeProgress" class="scrape-progress" style="display:none;">
+            <div class="sp-head">
+                <span class="sp-phase" id="scrapePhase">Detecting platform…</span>
+                <span class="sp-pct" id="scrapePct">0%</span>
+            </div>
+            <div class="sp-track"><div class="sp-fill" id="scrapeFill"></div></div>
+            <div class="sp-sub" id="scrapeSub">Hold tight — Weidian/Taobao can take 5–10 seconds.</div>
+        </div>
+
+        <!-- Clear error pill (shown on failure) -->
+        <div id="scrapeError" class="scrape-error" role="alert">
+            <span class="se-text" id="scrapeErrorText">Something went wrong.</span>
+        </div>
 
         <div id="scrapeResults" style="display:none;margin-top:18px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
@@ -292,7 +389,7 @@
 <!-- ============================================================ -->
 <!-- PRODUCT LIST (catalog) -->
 <!-- ============================================================ -->
-<div class="card" id="productPanel" style="margin-bottom:24px;">
+<div class="card" id="productPanel" style="margin-bottom:24px;" data-collapsible>
     <div class="card-head">
         <h2 data-i18n="tb_catalog">Catalog</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1050,18 +1147,87 @@ async function saveReorder() {
 
 // === SCRAPE ===
 var scrapedProducts = [];
+var _scrapeTick = null;
+function _phaseTicker() {
+    // Estimated phases as % vs. ms elapsed. Scrape usually takes 5-10s.
+    var t0 = Date.now();
+    var phases = [
+        { until: 800,  pct: 15, label: 'Detecting platform…' },
+        { until: 2000, pct: 35, label: 'Fetching listing…' },
+        { until: 4000, pct: 60, label: 'Extracting variants…' },
+        { until: 7000, pct: 80, label: 'Parsing images…' },
+        { until: 12000, pct: 92, label: 'Almost done…' },
+    ];
+    var fillEl = document.getElementById('scrapeFill');
+    var pctEl = document.getElementById('scrapePct');
+    var phaseEl = document.getElementById('scrapePhase');
+    if (_scrapeTick) clearInterval(_scrapeTick);
+    _scrapeTick = setInterval(function(){
+        var elapsed = Date.now() - t0;
+        var phase = phases[phases.length - 1];
+        for (var i = 0; i < phases.length; i++) {
+            if (elapsed < phases[i].until) { phase = phases[i]; break; }
+        }
+        // Smooth interpolate toward this phase's pct
+        var current = parseFloat(fillEl.style.width || '0');
+        var target = phase.pct;
+        var next = current + (target - current) * 0.25;
+        fillEl.style.width = next.toFixed(1) + '%';
+        pctEl.textContent = Math.round(next) + '%';
+        phaseEl.textContent = phase.label;
+    }, 200);
+}
+function _phaseDone(success, msg) {
+    if (_scrapeTick) { clearInterval(_scrapeTick); _scrapeTick = null; }
+    var prog = document.getElementById('scrapeProgress');
+    var fill = document.getElementById('scrapeFill');
+    var pct = document.getElementById('scrapePct');
+    var phase = document.getElementById('scrapePhase');
+    if (success) {
+        prog.classList.add('done');
+        fill.style.width = '100%';
+        pct.textContent = '100%';
+        phase.textContent = msg || 'Done';
+        setTimeout(function(){ prog.style.display = 'none'; prog.classList.remove('done'); fill.style.width = '0%'; }, 900);
+    } else {
+        prog.style.display = 'none';
+        prog.classList.remove('done');
+        fill.style.width = '0%';
+    }
+}
+function _showScrapeError(msg) {
+    var err = document.getElementById('scrapeError');
+    var txt = document.getElementById('scrapeErrorText');
+    txt.textContent = msg || 'Something went wrong.';
+    err.classList.remove('active');
+    void err.offsetWidth;  // reflow to re-trigger the shake animation
+    err.classList.add('active');
+}
+
 async function scrapeLink() {
     var url = document.getElementById('scrapeUrl').value.trim();
     var category = document.getElementById('scrapeCategory').value.trim();
-    if (!url) return showToast(t('enter_url'), 'error');
-    document.getElementById('scrapeLoading').style.display = 'block';
+    var err = document.getElementById('scrapeError');
+    err.classList.remove('active');
+    if (!url) { _showScrapeError('Enter a Weidian / Taobao / 1688 product link.'); return; }
+    if (!url.match(/^https?:\/\//i)) { _showScrapeError('Not a valid URL — link must start with http:// or https://'); return; }
+    document.getElementById('scrapeProgress').style.display = 'block';
     document.getElementById('scrapeResults').style.display = 'none';
+    _phaseTicker();
     try {
         var res = await fetch('/admin/scrape', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url: url, category: category }) });
         var data = await res.json();
-        document.getElementById('scrapeLoading').style.display = 'none';
-        if (data.error) return showToast(data.error, 'error');
-        if (!data.products || !data.products.length) return showToast(t('no_products_found'), 'error');
+        if (!res.ok || data.error) {
+            _phaseDone(false);
+            _showScrapeError(data.error || ('Scrape failed (HTTP ' + res.status + ')'));
+            return;
+        }
+        if (!data.products || !data.products.length) {
+            _phaseDone(false);
+            _showScrapeError('No products found for that link. The listing may be private, expired, or seller-blocked.');
+            return;
+        }
+        _phaseDone(true, 'Found ' + data.total_variants + ' variant' + (data.total_variants === 1 ? '' : 's'));
         scrapedProducts = data.products;
         document.getElementById('scrapeResultTitle').textContent = data.listing_name || t('scraped_products');
         document.getElementById('scrapeResultCount').textContent = t('n_variants', { n: data.total_variants });
@@ -1084,10 +1250,9 @@ async function scrapeLink() {
             grid.appendChild(card);
         });
         document.getElementById('scrapeResults').style.display = 'block';
-        showToast(t('found_n_items', { n: data.total_variants }), 'success');
     } catch(e) {
-        document.getElementById('scrapeLoading').style.display = 'none';
-        showToast(t('scrape_failed', { msg: e.message }), 'error');
+        _phaseDone(false);
+        _showScrapeError('Network error: ' + (e.message || e.toString()));
     }
 }
 async function importAll() {
