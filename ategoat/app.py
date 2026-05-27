@@ -8,7 +8,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+# SECRET_KEY: prefer env var, else persist a random key to disk so it survives
+# server restarts (otherwise every restart logs every admin out with a
+# confusing 'Unauthorized' toast).
+_secret_from_env = os.environ.get('SECRET_KEY')
+if _secret_from_env:
+    app.secret_key = _secret_from_env
+else:
+    _data_dir = os.environ.get('ATEGOAT_DATA_DIR') or ('/data' if os.path.exists('/data') else os.path.join(os.path.dirname(__file__), 'data'))
+    os.makedirs(_data_dir, exist_ok=True)
+    _key_path = os.path.join(_data_dir, '.secret_key')
+    if os.path.exists(_key_path):
+        with open(_key_path, 'r', encoding='utf-8') as _kf:
+            app.secret_key = _kf.read().strip() or secrets.token_hex(32)
+    else:
+        app.secret_key = secrets.token_hex(32)
+        try:
+            with open(_key_path, 'w', encoding='utf-8') as _kf:
+                _kf.write(app.secret_key)
+        except Exception:
+            pass
+# Keep sessions alive for 30 days so an admin who logs in once doesn't keep
+# getting kicked out mid-session.
+from datetime import timedelta as _td
+app.permanent_session_lifetime = _td(days=30)
 CORS(app)
 
 # === SITE CONFIG (all customizable via env vars) ===
@@ -1069,6 +1092,7 @@ def admin_login():
     if request.method == 'POST':
         if request.form.get('password') == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
+            session.permanent = True   # honor the 30-day session lifetime
             return redirect(url_for('admin_dashboard'))
         return render_template('admin_login.html', error='Wrong password')
     return render_template('admin_login.html')
@@ -1112,14 +1136,17 @@ def admin_add_product():
     if not data.get('name'):
         return jsonify({'error': 'Name required'}), 400
     data['id'] = data.get('id', f"p{secrets.token_hex(4)}")
+    try:
+        from tag_utils import generate_tags, auto_category
+    except ImportError:
+        from .tag_utils import generate_tags, auto_category
+    # Auto-categorize if not set: name 'Stussy Hoodie' -> 'hoodies' etc.
+    if not (data.get('category') or '').strip():
+        data['category'] = auto_category(data['name'], fallback='')
     if not data.get('tags'):
-        try:
-            from .tag_utils import generate_tags
-        except ImportError:
-            from tag_utils import generate_tags
         data['tags'] = generate_tags(data['name'], data.get('category', ''))
     add_product(data)
-    return jsonify({'ok': True, 'id': data['id']})
+    return jsonify({'ok': True, 'id': data['id'], 'category': data.get('category', '')})
 
 
 @app.route('/admin/products/update/<pid>', methods=['POST'])
@@ -1147,12 +1174,14 @@ def admin_bulk():
     if not products:
         return jsonify({'error': 'No products'}), 400
     try:
-        from .tag_utils import generate_tags
+        from tag_utils import generate_tags, auto_category
     except ImportError:
-        from tag_utils import generate_tags
+        from .tag_utils import generate_tags, auto_category
     for p in products:
         if not p.get('id'):
             p['id'] = f"p{secrets.token_hex(4)}"
+        if not (p.get('category') or '').strip():
+            p['category'] = auto_category(p.get('name', ''), fallback='')
         if not p.get('tags'):
             p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
     add_products_bulk(products)
@@ -1512,16 +1541,40 @@ def admin_scrape_import():
     if not products:
         return jsonify({'error': 'Nothing to import'}), 400
     try:
-        from tag_utils import generate_tags
+        from tag_utils import generate_tags, auto_category
     except ImportError:
-        def generate_tags(n, c=''): return (c or '').lower()
+        from .tag_utils import generate_tags, auto_category
     for p in products:
         if not p.get('id'):
             p['id'] = f"p{secrets.token_hex(4)}"
+        if not (p.get('category') or '').strip():
+            p['category'] = auto_category(p.get('name', ''), fallback='')
         if not p.get('tags'):
             p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
     add_products_bulk(products)
     return jsonify({'ok': True, 'count': len(products)})
+
+
+@app.route('/admin/products/auto-categorize', methods=['POST'])
+def admin_auto_categorize_all():
+    """Apply auto_category(name) to every product currently without a category.
+    Returns how many got updated. Idempotent."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        from tag_utils import auto_category
+    except ImportError:
+        from .tag_utils import auto_category
+    products = get_products()
+    updated = 0
+    for p in products:
+        if (p.get('category') or '').strip():
+            continue
+        guess = auto_category(p.get('name', ''), fallback='')
+        if guess:
+            update_product(p['id'], {'category': guess})
+            updated += 1
+    return jsonify({'ok': True, 'updated': updated, 'scanned': len(products)})
 
 
 # ===========================================================================

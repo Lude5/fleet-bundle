@@ -334,6 +334,28 @@
     });
     applyAdminView();
 
+    // ===== Global 401 handler =====
+    // Wrap fetch so any admin AJAX call that returns 401 (session expired)
+    // redirects to /admin/login instead of showing a confusing 'Unauthorized'
+    // toast. Preserves where the user was so they land back here after login.
+    (function(){
+        var origFetch = window.fetch;
+        window.fetch = function(input, init){
+            return origFetch(input, init).then(function(resp){
+                if (resp.status === 401) {
+                    var url = (typeof input === 'string') ? input : (input && input.url);
+                    if (url && (url.indexOf('/admin/') === 0 || url.indexOf('/admin/') > 0)) {
+                        if (window.showToast) showToast('Session expired — redirecting to login', 'error');
+                        setTimeout(function(){
+                            location.href = '/admin/login?next=' + encodeURIComponent(location.pathname + location.search);
+                        }, 800);
+                    }
+                }
+                return resp;
+            });
+        };
+    })();
+
     // ===== Collapsible cards =====
     // Any .card with [data-collapsible] gets a minimize button in its head.
     // State persists in localStorage under 'card_collapsed:<id-or-heading>'.
