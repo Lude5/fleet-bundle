@@ -119,6 +119,40 @@
 
 .empty-table { padding: 60px 24px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
 
+/* Uncategorized tab */
+.uncat-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 18px; padding: 0 6px; margin-left: 6px;
+    background: #ef4444; color: #fff;
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 800;
+    line-height: 1;
+}
+.uncat-list { display: flex; flex-direction: column; gap: 8px; }
+.uncat-row {
+    display: grid; grid-template-columns: 44px 1fr 180px; gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    transition: opacity .25s, transform .25s;
+}
+.uncat-row.removing { opacity: 0; transform: translateX(20px); }
+.uncat-row .uc-img { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: #ffffff; padding: 2px; }
+.uncat-row .uc-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uncat-row .uc-name .uc-tags { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.5px; }
+.uncat-row .uc-cat-select { width: 100%; padding: 8px 10px; }
+.uncat-empty {
+    padding: 60px 24px; text-align: center;
+    background: rgba(34,197,94,0.05);
+    border: 1px dashed rgba(34,197,94,0.3);
+    border-radius: 12px;
+    color: #22c55e;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+}
+.uncat-empty::before { content: '✓'; display: inline-block; margin-right: 10px; font-size: 18px; }
+
 /* Category manager list rows */
 .cat-manager-list { display: flex; flex-direction: column; gap: 8px; }
 .cat-manager-list .cat-row { display: grid; grid-template-columns: minmax(140px, 1.4fr) minmax(120px, 1fr) 80px 110px auto auto; gap: 8px; align-items: center; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; }
@@ -281,6 +315,7 @@
         <button class="tab-btn" data-tab="manual" onclick="switchTab('manual')" data-i18n="tab_manual">Add manually</button>
         <button class="tab-btn" data-tab="bulk" onclick="switchTab('bulk')" data-i18n="tab_bulk">Bulk JSON</button>
         <button class="tab-btn" data-tab="cat" onclick="switchTab('cat')" data-i18n="tab_categories">Categories</button>
+        <button class="tab-btn" data-tab="uncat" onclick="switchTab('uncat')">Uncategorized <span class="uncat-pill" id="uncatPill" style="display:none;">0</span></button>
     </div>
 
     <!-- TAB: Scrape -->
@@ -411,6 +446,12 @@
             <button class="btn btn-primary" onclick="addCategory()" data-i18n="add_category_btn">+ Add category</button>
         </div>
     </div>
+
+    <!-- TAB: Uncategorized -->
+    <div class="tab-panel" id="tab-uncat">
+        <p class="help-line">Products that the auto-categorizer couldn't place (no clear category hint in the name). Set a category from the dropdown and the row disappears.</p>
+        <div id="uncatList" class="uncat-list"><div class="loading-block">Click this tab to load uncategorized products…</div></div>
+    </div>
 </div>
 
 <!-- ============================================================ -->
@@ -421,7 +462,6 @@
         <h2 data-i18n="tb_catalog">Catalog</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" onclick="toggleSelectAll()" data-i18n="select_all">Select all</button>
-            <button class="btn btn-secondary btn-sm" id="autoCatBtn" onclick="autoCategorizeAll()">⚡ Auto-categorize uncategorized</button>
             <button class="btn btn-secondary btn-sm" id="reorderBtn" onclick="toggleReorderMode()" data-i18n="reorder_mode">Reorder mode</button>
         </div>
     </div>
@@ -666,7 +706,102 @@ function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + name); });
     if (name === 'cat') loadCategoryManager();
+    if (name === 'uncat') loadUncategorized();
 }
+
+// ===== Uncategorized tab =====
+var _ALL_CATEGORIES = {{ categories|tojson }};
+async function loadUncategorized() {
+    var box = document.getElementById('uncatList');
+    if (!box) return;
+    box.innerHTML = '<div class="loading-block">Loading…</div>';
+    try {
+        var res = await fetch('/admin/products/uncategorized');
+        var json = await res.json();
+        var items = json.products || [];
+        updateUncatBadge(items.length);
+        if (!items.length) {
+            box.innerHTML = '<div class="uncat-empty">All items are categorized</div>';
+            return;
+        }
+        var catOpts = '<option value="">Set category…</option>' +
+            _ALL_CATEGORIES.map(function(c){
+                return '<option value="' + c.slug + '">' + c.name + '</option>';
+            }).join('');
+        box.innerHTML = items.map(function(p){
+            var safeName = String(p.name || '').replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});
+            var tags = (p.tags || '').toString().split(/\s+/).filter(Boolean).slice(0, 5).join(' ');
+            return '<div class="uncat-row" data-id="' + p.id + '">'
+                +  '<img class="uc-img" src="' + (p.image || '') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+                +  '<div class="uc-name">' + safeName + '<span class="uc-tags">' + tags + '</span></div>'
+                +  '<select class="select uc-cat-select" onchange="setUncatCategory(this, \'' + p.id + '\')">' + catOpts + '</select>'
+                + '</div>';
+        }).join('');
+    } catch (e) {
+        box.innerHTML = '<div class="empty-table">Failed to load uncategorized products</div>';
+    }
+}
+
+async function setUncatCategory(sel, pid) {
+    var cat = sel.value;
+    if (!cat) return;
+    sel.disabled = true;
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: cat })
+        });
+        var json = await res.json();
+        if (!json.ok) {
+            sel.disabled = false;
+            showToast(json.error || 'Failed', 'error');
+            return;
+        }
+        // Animate row out and remove
+        var row = sel.closest('.uncat-row');
+        if (row) {
+            row.classList.add('removing');
+            setTimeout(function(){
+                row.remove();
+                var remaining = document.querySelectorAll('.uncat-row').length;
+                updateUncatBadge(remaining);
+                if (!remaining) {
+                    document.getElementById('uncatList').innerHTML = '<div class="uncat-empty">All items are categorized</div>';
+                }
+                // Also update the matching row in the main products table
+                var mainRow = document.querySelector('#productTable tr[data-id="' + pid + '"]');
+                if (mainRow) {
+                    mainRow.dataset.cat = cat;
+                    var mainSel = mainRow.querySelector('.cat-select');
+                    if (mainSel) mainSel.value = cat;
+                }
+            }, 250);
+        }
+        showToast('Moved to ' + cat, 'success');
+    } catch(e) {
+        sel.disabled = false;
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function updateUncatBadge(n) {
+    var pill = document.getElementById('uncatPill');
+    if (!pill) return;
+    if (n > 0) {
+        pill.textContent = n;
+        pill.style.display = 'inline-flex';
+    } else {
+        pill.style.display = 'none';
+    }
+}
+
+// Auto-load the badge count once on first render so users see the indicator
+(function(){
+    fetch('/admin/products/uncategorized?count_only=1')
+        .then(function(r){ return r.json(); })
+        .then(function(j){ updateUncatBadge((j.products || []).length); })
+        .catch(function(){});
+})();
 
 // === EDIT ===
 function openEdit(tr) {

@@ -1288,7 +1288,36 @@ def admin_reorder():
 def admin_products():
     if not is_admin():
         return redirect(url_for('admin_login'))
+    # Silent auto-categorize: every product without a category whose name has
+    # a clear hint gets moved into its proper bucket. Idempotent + fast.
+    try:
+        try:
+            from tag_utils import auto_category
+        except ImportError:
+            from .tag_utils import auto_category
+        products = get_products()
+        for p in products:
+            if (p.get('category') or '').strip(): continue
+            guess = auto_category(p.get('name', ''), fallback='')
+            if guess:
+                update_product(p['id'], {'category': guess})
+    except Exception:
+        pass
     return render_template('admin_products.html', products=get_products(), categories=get_categories())
+
+
+@app.route('/admin/products/uncategorized')
+def admin_list_uncategorized():
+    """Return all products with an empty category. Used by the Uncategorized tab."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    products = get_products()
+    items = [
+        {'id': p['id'], 'name': p.get('name',''), 'image': p.get('image',''),
+         'tags': p.get('tags','')}
+        for p in products if not (p.get('category') or '').strip()
+    ]
+    return jsonify({'count': len(items), 'products': items})
 
 
 @app.route('/admin/analytics')
