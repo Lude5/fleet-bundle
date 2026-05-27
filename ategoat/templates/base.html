@@ -269,6 +269,18 @@
         .product-card-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .product-card-price { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--accent); }
         .product-card-buy { padding: 8px 14px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        /* Out-of-stock state on a product card */
+        .product-card.out-of-stock { opacity: 0.55; }
+        .product-card.out-of-stock .product-card-img { filter: grayscale(70%); }
+        .product-card.out-of-stock .product-card-img-wrap::after {
+            content: 'OUT OF STOCK'; position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55); color: #fff;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+            letter-spacing: 2px; text-transform: uppercase;
+            pointer-events: none;
+        }
+        .product-card.out-of-stock .product-card-buy { background: var(--surface-3); color: var(--text-muted); pointer-events: none; }
         .product-card-buy:hover { background: var(--accent-hover); }
 
         .section { padding: 64px 24px; max-width: 1200px; margin: 0 auto; }

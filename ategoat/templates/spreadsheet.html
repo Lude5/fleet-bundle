@@ -61,7 +61,7 @@
     </div>
     <div class="product-grid">
         {% for p in products[:12] %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap">
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
             </div>

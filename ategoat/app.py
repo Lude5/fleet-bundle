@@ -80,7 +80,8 @@ try:
             update_category, delete_category, count_products_in_category,
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
-            set_featured, move_category, reorder_products, get_listing_variants
+            set_featured, move_category, reorder_products, get_listing_variants,
+            get_top_clicked_products, set_in_stock
         )
     except ImportError:
         from database import (
@@ -89,7 +90,8 @@ try:
             update_category, delete_category, count_products_in_category,
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
-            set_featured, move_category, reorder_products, get_listing_variants
+            set_featured, move_category, reorder_products, get_listing_variants,
+            get_top_clicked_products, set_in_stock
         )
     init_db()
     check_auto_backup()
@@ -459,13 +461,19 @@ def shop():
     if q:
         all_products = search_products(q)
         if category == 'trending':
-            all_products = [p for p in all_products if 'trending' in (p.get('tags') or '').split()]
+            top_ids = {p['id'] for p in get_top_clicked_products(limit=75)}
+            all_products = [p for p in all_products if p['id'] in top_ids]
         elif category:
             all_products = [p for p in all_products if p.get('category') == category]
     elif category == 'trending':
-        # Trending is now a tag, not a category — products can be in shoes/shirts/etc
-        # and also tagged trending so they appear here.
-        all_products = [p for p in get_products() if 'trending' in (p.get('tags') or '').split()]
+        # Trending = top 75 most-clicked products in the last 30 days (auto-derived
+        # from analytics — no manual tagging needed). Falls back to tag-based
+        # trending if there aren't enough clicks yet to fill 75 slots.
+        all_products = get_top_clicked_products(limit=75)
+        if len(all_products) < 75:
+            top_ids = {p['id'] for p in all_products}
+            tagged = [p for p in get_products() if 'trending' in (p.get('tags') or '').split() and p['id'] not in top_ids]
+            all_products.extend(tagged[: 75 - len(all_products)])
     else:
         all_products = get_products(category if category else None)
 
@@ -1466,6 +1474,22 @@ def admin_set_one_category():
         return jsonify({'error': 'Product id required'}), 400
     update_product(pid, {'category': category})
     return jsonify({'ok': True, 'id': pid, 'category': category})
+
+
+@app.route('/admin/products/stock', methods=['POST'])
+def admin_set_stock():
+    """Toggle in_stock on one or many products. Body: {ids:[pid,...], in_stock:bool}."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') or []
+    if isinstance(ids, str):
+        ids = [ids]
+    in_stock = bool(data.get('in_stock', True))
+    if not ids:
+        return jsonify({'error': 'No product ids'}), 400
+    n = set_in_stock(ids, in_stock)
+    return jsonify({'ok': True, 'count': n, 'in_stock': in_stock})
 
 
 @app.route('/admin/products/trending', methods=['POST'])

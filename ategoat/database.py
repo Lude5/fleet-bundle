@@ -93,6 +93,7 @@ def init_db():
         ('quality',    'ALTER TABLE products ADD COLUMN quality TEXT DEFAULT ""'),
         ('sales',      'ALTER TABLE products ADD COLUMN sales INTEGER DEFAULT 0'),
         ('qc_photos',  'ALTER TABLE products ADD COLUMN qc_photos TEXT DEFAULT ""'),
+        ('in_stock',   'ALTER TABLE products ADD COLUMN in_stock INTEGER DEFAULT 1'),
     ]:
         try:
             conn.execute(ddl)
@@ -207,7 +208,7 @@ def add_products_bulk(products):
 
 def update_product(product_id, updates):
     conn = get_db()
-    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position']
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock']
     sets = []
     vals = []
     for key in allowed:
@@ -384,6 +385,42 @@ def count_products_in_category(slug):
     row = conn.execute('SELECT COUNT(*) AS n FROM products WHERE category = ?', (slug,)).fetchone()
     conn.close()
     return int(row['n']) if row else 0
+
+
+def get_top_clicked_products(limit=75, days=30):
+    """Return the top N products by click count over the last N days.
+    Used by the /shop?category=trending route to derive 'trending' from real
+    user behaviour instead of a manual tag."""
+    conn = get_db()
+    from datetime import datetime, timedelta
+    since = (datetime.now() - timedelta(days=days)).isoformat()
+    rows = conn.execute(f'''
+        SELECT p.*, COUNT(c.id) AS click_count
+        FROM products p
+        JOIN clicks c ON c.product_id = p.id
+        WHERE c.clicked_at >= ?
+        GROUP BY p.id
+        ORDER BY click_count DESC, {SHOP_ORDER}
+        LIMIT ?
+    ''', (since, limit)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def set_in_stock(product_ids, in_stock):
+    """Toggle in_stock for one or many product IDs. Returns count changed."""
+    if not product_ids:
+        return 0
+    conn = get_db()
+    qmarks = ','.join('?' * len(product_ids))
+    conn.execute(
+        f'UPDATE products SET in_stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({qmarks})',
+        (1 if in_stock else 0, *product_ids)
+    )
+    n = conn.total_changes
+    conn.commit()
+    conn.close()
+    return n
 
 
 def cache_get(key, max_age_seconds=7 * 24 * 3600):

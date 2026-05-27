@@ -65,6 +65,29 @@
 .trend-btn.active { opacity: 1; filter: none; }
 .product-table .col-trend { width: 38px; }
 
+/* In-stock / Out-of-stock toggle */
+.stock-btn { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; line-height: 1; transition: transform .15s; color: #22c55e; }
+.stock-btn:hover { transform: scale(1.15); }
+.stock-btn.out { color: #ef4444; }
+.stock-btn.out::after { content: ''; }
+.product-table .col-stock { width: 38px; }
+/* Visually grey out the entire row when out-of-stock */
+.product-table tr.out-of-stock .name-cell,
+.product-table tr.out-of-stock .price-cell,
+.product-table tr.out-of-stock .seller-cell,
+.product-table tr.out-of-stock .thumb { opacity: 0.4; }
+.product-table tr.out-of-stock .name-cell::after {
+    content: 'OUT OF STOCK';
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 7px;
+    background: #ef4444; color: #fff;
+    font-family: var(--font-mono); font-size: 8px; font-weight: 800;
+    letter-spacing: 1.5px; border-radius: 4px;
+    vertical-align: middle;
+    opacity: 1;
+}
+
 .td-actions { display: flex; gap: 4px; }
 
 /* Tabs for the add-methods panel */
@@ -461,6 +484,7 @@
                     <th class="col-handle"></th>
                     <th class="col-star"></th>
                     <th class="col-trend" title="Trending">🔥</th>
+                    <th class="col-stock" title="In stock">📦</th>
                     <th class="col-thumb"></th>
                     <th data-i18n="th_name">Name</th>
                     <th data-i18n="th_category">Category</th>
@@ -472,11 +496,13 @@
             <tbody id="productTbody">
                 {% for p in products %}
                 {% set is_trending = 'trending' in (p.tags or '').split() %}
-                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}">
+                {% set in_stock = p.in_stock if p.in_stock is not none else 1 %}
+                <tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}" data-stock="{{ in_stock }}" {% if not in_stock %}class="out-of-stock"{% endif %}>
                     <td><input type="checkbox" class="product-cb" value="{{ p.id }}" onchange="updateBulkBar()"></td>
                     <td><span class="drag-handle" title="Drag to reorder">⋮⋮</span></td>
                     <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
                     <td><button type="button" class="trend-btn {% if is_trending %}active{% endif %}" onclick="toggleTrending(this)" title="Mark as trending">🔥</button></td>
+                    <td><button type="button" class="stock-btn {% if not in_stock %}out{% endif %}" onclick="toggleStock(this)" title="In stock / Out of stock">{% if in_stock %}📦{% else %}❌{% endif %}</button></td>
                     <td><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
                     <td class="name-cell">
                         {{ p.name }}
@@ -682,12 +708,13 @@ async function saveEdit() {
                 tr.dataset.cat = data.category;
                 tr.dataset.retail = data.retail_price;
                 var cells = tr.querySelectorAll('td');
-                var img = cells[4].querySelector('img');
+                // Columns: [0]cb [1]drag [2]star [3]trend [4]stock [5]thumb [6]name [7]cat [8]price [9]seller [10]actions
+                var img = cells[5].querySelector('img');
                 if (img) { img.src = data.image; img.style.display = ''; }
-                cells[5].childNodes[0].textContent = data.name + ' ';
-                var catSel = cells[6].querySelector('.cat-select'); if (catSel) catSel.value = data.category || '';
-                cells[7].textContent = '$' + data.price;
-                cells[8].textContent = data.seller || '—';
+                cells[6].childNodes[0].textContent = data.name + ' ';
+                var catSel = cells[7].querySelector('.cat-select'); if (catSel) catSel.value = data.category || '';
+                cells[8].textContent = '$' + data.price;
+                cells[9].textContent = data.seller || '—';
             }
         } else { showToast(json.error || t('update_failed'), 'error'); }
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -965,6 +992,36 @@ async function bulkFeature(featured) {
         _reorderByPinAfterToggle(tr, featured);
     });
     showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
+}
+
+// === IN-STOCK TOGGLE (per-row) ===
+async function toggleStock(btn) {
+    var tr = btn.closest('tr');
+    var pid = tr.dataset.id;
+    var willBeInStock = btn.classList.contains('out');  // currently out → flipping to in
+    // Optimistic visual
+    btn.classList.toggle('out', !willBeInStock);
+    btn.textContent = willBeInStock ? '📦' : '❌';
+    tr.classList.toggle('out-of-stock', !willBeInStock);
+    tr.dataset.stock = willBeInStock ? '1' : '0';
+    try {
+        var res = await fetch('/admin/products/stock', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ ids: [pid], in_stock: willBeInStock })
+        });
+        var json = await res.json();
+        if (!json.ok) {
+            btn.classList.toggle('out', willBeInStock);
+            btn.textContent = willBeInStock ? '❌' : '📦';
+            tr.classList.toggle('out-of-stock', willBeInStock);
+            tr.dataset.stock = willBeInStock ? '0' : '1';
+            showToast(json.error || 'Stock toggle failed', 'error');
+        } else {
+            showToast(willBeInStock ? '📦 Back in stock' : '❌ Marked out of stock', 'success');
+        }
+    } catch(e) {
+        showToast('Stock toggle failed: ' + e.message, 'error');
+    }
 }
 
 // === TRENDING TOGGLE (per-row + bulk) ===
