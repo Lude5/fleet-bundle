@@ -28,11 +28,24 @@ else:
                 _kf.write(app.secret_key)
         except Exception:
             pass
-# Keep sessions alive for 30 days so an admin who logs in once doesn't keep
-# getting kicked out mid-session.
+# Keep sessions alive for 24 hours so an admin who logs in once stays in
+# across page refreshes / new tabs / browser restarts (matches master_admin).
 from datetime import timedelta as _td
-app.permanent_session_lifetime = _td(days=30)
+app.permanent_session_lifetime = _td(hours=24)
+# Belt-and-suspenders cookie flags so the session survives top-level navigation
+# and isn't dropped by browser quirks (Lax = sent on same-site nav, not stripped
+# on link-click). HttpOnly is on by default in Flask.
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 CORS(app)
+
+
+# Upgrade every admin request's session to permanent — this catches old sessions
+# that were created before the 24h lifetime was set so they stop getting kicked.
+@app.before_request
+def _persist_admin_session():
+    if request.path.startswith('/admin') and session.get('admin_logged_in'):
+        session.permanent = True
 
 # === SITE CONFIG (all customizable via env vars) ===
 SITE_CONFIG = {
