@@ -4,6 +4,7 @@
 
 {% block topbar_actions %}
     <span class="pill" data-i18n="tb_total_matching" data-i18n-vars='{"n":"{{ total }}","m":"{{ sites_with_tokens|length }}"}'>{{ total }} matching · {{ sites_with_tokens|length }} sites connected</span>
+    {% if sites_with_tokens %}<button type="button" class="pill primary" onclick="openAddAll()" style="cursor:pointer;" data-i18n="add_to_all_sites">+ Add to all sites</button>{% endif %}
     <a href="/export/products?format=xlsx" class="pill" title="Download every product across every connected site as an Excel workbook">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span data-i18n="tb_excel">Excel</span>
@@ -272,6 +273,36 @@
         </div>
     </div>
 </div>
+
+<!-- Add-to-all-sites modal -->
+<div class="pm-overlay" id="addAllModal" onclick="if(event.target===this)closeAddAll()">
+    <div class="pm-modal">
+        <h2 data-i18n="add_to_all_sites">Add to all sites</h2>
+        <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;">
+            <span data-i18n="add_all_subtitle">Create one product, push it live to every connected site at once.</span>
+        </p>
+        <div style="display:flex;gap:16px;margin-bottom:14px;">
+            <div style="width:96px;height:96px;border-radius:var(--radius-sm);background:#fff;flex-shrink:0;overflow:hidden;border:1px solid var(--border-subtle);">
+                <img id="aaPreview" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:none;">
+            </div>
+            <div style="flex:1;">
+                <div class="field" style="margin-bottom:8px;"><label data-i18n="aa_name">Product name</label><input class="input" id="aaName" placeholder="Nike Dunk Low Panda"></div>
+                <div style="display:flex;gap:8px;">
+                    <div class="field" style="flex:1;margin-bottom:0;"><label data-i18n="aa_price">Price ($)</label><input class="input" id="aaPrice" placeholder="45.00"></div>
+                    <div class="field" style="flex:1;margin-bottom:0;"><label data-i18n="aa_category">Category</label><input class="input" id="aaCat" placeholder="shoes"></div>
+                </div>
+            </div>
+        </div>
+        <div class="field"><label data-i18n="aa_image">Image URL</label><input class="input" id="aaImage" placeholder="https://..." oninput="aaUpdatePreview()"></div>
+        <div class="field"><label data-i18n="aa_url">Buy / product URL</label><input class="input" id="aaUrl" placeholder="https://weidian.com/item.html?itemID=..."></div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="btn btn-primary" id="aaGo" type="button" onclick="submitAddAll()" style="flex:1;">
+                <span data-i18n="aa_push_all">Push to all</span> <span id="aaCount">{{ sites_with_tokens|length }}</span> <span data-i18n="aa_sites">sites</span>
+            </button>
+            <button class="btn btn-secondary" type="button" onclick="closeAddAll()" data-i18n="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -339,6 +370,47 @@ async function deleteRow(btn) {
     }
 }
 
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closePushModal(); });
+// === Add to all sites ===
+function aaUpdatePreview() {
+    var u = document.getElementById('aaImage').value.trim();
+    var img = document.getElementById('aaPreview');
+    if (u) { img.src = u; img.style.display = 'block'; } else { img.style.display = 'none'; }
+}
+function openAddAll() {
+    ['aaName','aaPrice','aaCat','aaImage','aaUrl'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('aaPreview').style.display = 'none';
+    document.getElementById('addAllModal').classList.add('active');
+}
+function closeAddAll() { document.getElementById('addAllModal').classList.remove('active'); }
+async function submitAddAll() {
+    var name = document.getElementById('aaName').value.trim();
+    var price = document.getElementById('aaPrice').value.trim();
+    if (!name) return showToast('Product name required', 'error');
+    if (!SITES.length) return showToast('No connected sites', 'error');
+    var product = {
+        name: name,
+        price: price,
+        price_numeric: parseFloat(price) || 0,
+        category: document.getElementById('aaCat').value.trim(),
+        image: document.getElementById('aaImage').value.trim(),
+        url: document.getElementById('aaUrl').value.trim(),
+    };
+    var targets = SITES.map(function(s){ return s.id; });
+    var btn = document.getElementById('aaGo');
+    btn.disabled = true; btn.textContent = tm('pushing');
+    var res = await fetch('/products/push', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product: product, targets: targets }),
+    });
+    var json = await res.json();
+    btn.disabled = false; btn.innerHTML = '<span>Push to all</span> ' + targets.length + ' <span>sites</span>';
+    if (!json.ok) return showToast(tm('toast_failed'), 'error');
+    var ok = Object.values(json.results).filter(function(r){return r.ok;}).length;
+    var fail = targets.length - ok;
+    showToast(fail ? tm('toast_pushed_with_fail', { ok: ok, fail: fail }) : tm('toast_pushed', { ok: ok }), fail ? 'error' : 'success');
+    closeAddAll();
+}
+
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closePushModal(); closeAddAll(); } });
 </script>
 {% endblock %}
