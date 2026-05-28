@@ -146,10 +146,11 @@ try:
             {'slug': 'pants', 'name': 'Pants', 'sort_order': 4},
             {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 5},
             {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 6},
-            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 7},
-            {'slug': 'bags', 'name': 'Bags', 'sort_order': 8},
-            {'slug': 'tech', 'name': 'Tech', 'sort_order': 9},
-            {'slug': 'womens', 'name': 'Womens', 'sort_order': 10},
+            {'slug': 'headwear', 'name': 'Headwear', 'sort_order': 7},
+            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 8},
+            {'slug': 'bags', 'name': 'Bags', 'sort_order': 9},
+            {'slug': 'tech', 'name': 'Tech', 'sort_order': 10},
+            {'slug': 'womens', 'name': 'Womens', 'sort_order': 11},
         ]
         for c in CATS:
             add_category(c['slug'], c['name'], '', '', c['sort_order'])
@@ -159,7 +160,7 @@ try:
         # seeded before they existed. add_category is INSERT OR REPLACE so
         # this is idempotent and won't clobber renames the operator made.
         existing_slugs = {c['slug'] for c in get_categories()}
-        for slug, name, order in [('shorts', 'Shorts', 5)]:
+        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7)]:
             if slug not in existing_slugs:
                 add_category(slug, name, '', '', order)
                 print(f"Backfilled category: {slug}")

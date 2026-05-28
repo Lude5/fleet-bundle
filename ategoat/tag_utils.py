@@ -214,7 +214,8 @@ _AUTO_CATEGORY_RULES = [
     ('pants',       _re.compile(r'\b(pant|pants|trouser|trousers|jean|jeans|denim|sweatpant|sweatpants|jogger|joggers|cargo|cargos|chino|chinos|legging|leggings|track[- ]?pant|track[- ]?pants|slack|slacks|skirt|skort)\b', _re.I)),
     ('shirts',      _re.compile(r'\b(t[- ]?shirt|tshirt|tee|tees|polo|polos|shirt|shirts|button[- ]?up|button[- ]?down|jersey|tank|top|tops|long[- ]?sleeve|short[- ]?sleeve|knit|knitted(?!\s*hat)|sweater|cardigan)\b', _re.I)),
     ('tech',        _re.compile(r'\b(iphone|samsung|airpod|airpods|earpod|earbud|earphone|headphone|laptop|macbook|ipad|tablet|charger|cable|speaker|airtag|dyson|stanley|kindle|switch|playstation|xbox|drone|smartwatch)\b', _re.I)),
-    ('accessories', _re.compile(r'\b(hat|hats|cap|caps|beanie|scarf|scarves|glove|gloves|belt|belts|wallet|cardholder|card[- ]?holder|sunglasses?|glasses?|watch|watches|jewel(?:ry|lery)?|necklace|chain|ring|earring|bracelet|brooch|bandana|tie\b|bowtie|cufflink|umbrella|keychain|sock|socks|mask)\b', _re.I)),
+    ('headwear',    _re.compile(r'\b(hat|hats|cap|caps|beanie|beanies|bucket[ -]?hat|trucker|snapback|fedora|visor|skull[ -]?cap|knit cap|toque)\b', _re.I)),
+    ('accessories', _re.compile(r'\b(scarf|scarves|glove|gloves|belt|belts|wallet|cardholder|card[- ]?holder|sunglasses?|glasses?|watch|watches|jewel(?:ry|lery)?|necklace|chain|ring|earring|bracelet|brooch|bandana|tie\b|bowtie|cufflink|umbrella|keychain|sock|socks|mask)\b', _re.I)),
     ('womens',      _re.compile(r'\b(womens?|women\'s|female|ladies|dress|skirt|bra|bralette|crop[- ]?top|romper|jumpsuit|bodysuit)\b', _re.I)),
 ]
 
