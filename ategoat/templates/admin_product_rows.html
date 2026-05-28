@@ -1,0 +1,33 @@
+{% for p in products %}
+{% set is_trending = 'trending' in (p.tags or '').split() %}
+{% set in_stock = p.in_stock if p.in_stock is not none else 1 %}
+<tr data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-price-num="{{ p.price_numeric or 0 }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}" data-trending="{{ 1 if is_trending else 0 }}" data-stock="{{ in_stock }}" data-created="{{ p.created_at or '' }}" {% if not in_stock %}class="out-of-stock"{% endif %}>
+    <td><input type="checkbox" class="product-cb" value="{{ p.id }}" onchange="updateBulkBar()"></td>
+    <td><span class="drag-handle" title="Drag to reorder">⋮⋮</span></td>
+    <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
+    <td><button type="button" class="trend-btn {% if is_trending %}active{% endif %}" onclick="toggleTrending(this)" title="Mark as trending">🔥</button></td>
+    <td><button type="button" class="stock-btn {% if not in_stock %}out{% endif %}" onclick="toggleStock(this)" title="In stock / Out of stock">{% if in_stock %}📦{% else %}❌{% endif %}</button></td>
+    <td><span class="thumb-wrap"><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'" onclick="uploadCustomImage(this, '{{ p.id }}')" title="Click to upload a custom image"></span></td>
+    <td class="name-cell">
+        {{ p.name }}
+        {% if p.tags %}<span class="tags-line">{{ p.tags }}</span>{% endif %}
+    </td>
+    <td>
+        <select class="cat-select" onchange="quickSetCategory(this, '{{ p.id }}')">
+            <option value="" {% if not p.category %}selected{% endif %}>— uncategorized —</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}" {% if p.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="price-cell">${{ p.price }}</td>
+    <td class="seller-cell">{{ p.seller or '—' }}</td>
+    <td>
+        <div class="td-actions">
+            <a class="btn btn-ghost btn-xs" href="/?preview={{ p.id }}" target="_blank" rel="noopener" title="Open this product on the public storefront">View</a>
+            <button class="btn btn-secondary btn-xs" onclick="openEdit(this.closest('tr'))" data-i18n="edit">Edit</button>
+            <button class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
+        </div>
+    </td>
+</tr>
+{% endfor %}

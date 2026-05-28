@@ -622,7 +622,7 @@
                     <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
                     <td><button type="button" class="trend-btn {% if is_trending %}active{% endif %}" onclick="toggleTrending(this)" title="Mark as trending">🔥</button></td>
                     <td><button type="button" class="stock-btn {% if not in_stock %}out{% endif %}" onclick="toggleStock(this)" title="In stock / Out of stock">{% if in_stock %}📦{% else %}❌{% endif %}</button></td>
-                    <td><span class="thumb-wrap"><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'" onclick="uploadCustomImage(this, '{{ p.id }}')" title="Click to upload a custom image"></span></td>
+                    <td><span class="thumb-wrap"><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'" onclick="uploadCustomImage(this, '{{ p.id }}')" title="Click to upload a custom image"></span></td>
                     <td class="name-cell">
                         {{ p.name }}
                         {% if p.tags %}<span class="tags-line">{{ p.tags }}</span>{% endif %}
@@ -653,48 +653,9 @@
         {% endif %}
     </div>
 
-    <!-- ============ COMFORT VIEW: grid of product cards ============ -->
-    <div class="comfort-only padmin-grid" id="productGrid">
-        {% for p in products %}
-        <div class="padmin-card" data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
-            <div class="pa-star">
-                <button class="star-btn {% if p.featured %}active{% endif %}" type="button" onclick="toggleFeatureCard(this)" title="Pin to top">★</button>
-            </div>
-            <img src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'">
-            <div class="pa-body">
-                <div class="pa-name">{{ p.name }}</div>
-                <div class="pa-row">
-                    <span class="pa-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                    <span class="pa-cat">{{ p.category or '—' }}</span>
-                </div>
-            </div>
-            <div class="pa-actions">
-                <button type="button" onclick="openEditCard(this.closest('.padmin-card'))" data-i18n="edit">Edit</button>
-                <button type="button" class="danger" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- ============ EXEC VIEW: compact ranked list ============ -->
-    <div class="exec-only padmin-compact" id="productCompact">
-        {% for p in products %}
-        <div class="pcomp" data-id="{{ p.id }}" data-name="{{ p.name }}" data-cat="{{ p.category }}" data-price="{{ p.price }}" data-image="{{ p.image }}" data-url="{{ p.url }}" data-seller="{{ p.seller }}" data-batch="{{ p.batch or '' }}" data-retail="{{ p.retail_price or '' }}" data-tags="{{ p.tags or '' }}" data-featured="{{ p.featured or 0 }}">
-            <span class="rank">{{ loop.index }}</span>
-            <img class="img" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display='none'">
-            <span class="nm">{{ p.name }}</span>
-            <span class="cat">{{ p.category or '—' }}</span>
-            <span class="price">${{ p.price }}</span>
-            <span class="star-cell">
-                <button class="star-btn {% if p.featured %}active{% endif %}" type="button" onclick="toggleFeatureCard(this)">★</button>
-            </span>
-        </div>
-        {% endfor %}
-    </div>
-
     <!-- Pagination -->
     <div class="pagination-bar" id="paginationBar">
-        <span class="page-count" id="pageCount">{{ products|length }} products</span>
+        <span class="page-count" id="pageCount">{{ total_products or products|length }} products</span>
         <div class="page-controls">
             <label class="page-size-label">
                 <select id="pageSizeSelect" class="select page-size" onchange="changePageSize(this.value)">
@@ -1587,6 +1548,44 @@ if (document.readyState === 'loading') {
 
 // Stub for the old reorder-mode buttons in case any leftover handler triggers them
 function toggleReorderMode() { /* no-op — drag is always on now */ }
+
+// === Lazy-load remaining rows after initial paint ===
+// Server only renders the first 200 rows to keep TTFB fast on the 9k catalog.
+// We pull the rest in 1000-row chunks in the background, after the initial
+// page has painted, so the user can start working immediately.
+var _TOTAL_PRODUCTS = {{ total_products|default(products|length) }};
+var _LOADED_COUNT = {{ initial_count|default(products|length) }};
+async function _lazyLoadRemainingRows() {
+    if (_LOADED_COUNT >= _TOTAL_PRODUCTS) return;
+    var tbody = document.getElementById('productTbody');
+    if (!tbody) return;
+    var CHUNK = 1000;
+    while (_LOADED_COUNT < _TOTAL_PRODUCTS) {
+        try {
+            var res = await fetch('/admin/products/rows?offset=' + _LOADED_COUNT + '&limit=' + CHUNK);
+            if (!res.ok) break;
+            var html = await res.text();
+            if (!html || !html.trim()) break;
+            // Parse and append rows in a doc fragment to avoid reflow per row
+            var temp = document.createElement('tbody');
+            temp.innerHTML = html;
+            var frag = document.createDocumentFragment();
+            while (temp.firstChild) frag.appendChild(temp.firstChild);
+            tbody.appendChild(frag);
+            _LOADED_COUNT += CHUNK;
+            // Re-attach drag handlers to the new rows
+            if (typeof attachDragHandlers === 'function') attachDragHandlers();
+            // Tell pagination to refresh its known row count
+            if (typeof _refreshPagination === 'function') _refreshPagination();
+        } catch(e) { console.warn('Row chunk load failed', e); break; }
+        // Brief yield so UI stays responsive
+        await new Promise(function(r){ setTimeout(r, 50); });
+    }
+}
+// Kick off after first paint, not blocking initial render
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(_lazyLoadRemainingRows, 250); });
+} else { setTimeout(_lazyLoadRemainingRows, 250); }
 
 // === SCRAPE ===
 var scrapedProducts = [];

@@ -1,7 +1,7 @@
 import os
 import json
 import secrets
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file, make_response
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -370,14 +370,37 @@ def home():
     products = get_products()
     categories = get_categories()
     import random
-    shuffled = list(products)
+    # Pre-bucket by category in Python so Jinja doesn't run selectattr
+    # over 9k+ products N times (was the main rendering bottleneck).
+    by_cat = {}
+    for p in products:
+        by_cat.setdefault(p.get('category', ''), []).append(p)
+    # Each section only needs the first 4 — slice now to keep payload small.
+    cat_previews = {}
+    for cat in categories:
+        slug = cat['slug'] if isinstance(cat, dict) else cat.get('slug')
+        if slug == 'trending':
+            continue
+        bucket = by_cat.get(slug, [])
+        if bucket:
+            cat_previews[slug] = {'name': cat['name'], 'slug': slug,
+                                  'count': len(bucket), 'picks': bucket[:4]}
+    # Conveyor/hero rows use random picks; sample is O(n) but bounded by 40.
+    sample_pool = products if len(products) <= 500 else random.sample(products, 500)
+    shuffled = list(sample_pool)
     random.shuffle(shuffled)
-    return render_template('home.html',
+    resp = make_response(render_template('home.html',
         products=products,
+        featured=products[:8],
+        cat_previews=cat_previews,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
         categories=categories,
-        bundles=_all_bundles_with_picks(products))
+        bundles=_all_bundles_with_picks(products)))
+    # Browser caches refreshes for 60s so quick re-loads feel instant.
+    # Short window keeps category edits / new products visible quickly.
+    resp.headers['Cache-Control'] = 'public, max-age=60'
+    return resp
 
 
 # ============================================================
@@ -1304,7 +1327,29 @@ def admin_products():
                 update_product(p['id'], {'category': guess})
     except Exception:
         pass
-    return render_template('admin_products.html', products=get_products(), categories=get_categories())
+    # Render only the first 200 rows server-side; the rest stream in via
+    # /admin/products/rows on demand. This cut admin HTML from ~35MB to
+    # ~800KB for the 9k-product catalogue.
+    all_products = get_products()
+    INITIAL = 200
+    return render_template('admin_products.html',
+        products=all_products[:INITIAL],
+        total_products=len(all_products),
+        initial_count=min(INITIAL, len(all_products)),
+        categories=get_categories())
+
+
+@app.route('/admin/products/rows')
+def admin_products_rows():
+    """Lazy-load additional rows of the admin table beyond the initial 200."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    offset = max(0, int(request.args.get('offset', 200)))
+    limit = min(2000, max(50, int(request.args.get('limit', 1000))))
+    all_products = get_products()
+    chunk = all_products[offset:offset+limit]
+    return render_template('admin_product_rows.html',
+        products=chunk, categories=get_categories())
 
 
 @app.route('/admin/products/uncategorized')
