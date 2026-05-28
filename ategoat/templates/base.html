@@ -233,8 +233,16 @@
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
         .product-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); overflow: hidden; transition: all 0.3s; display: block; color: inherit; text-decoration: none; }
         .product-card:hover { border-color: var(--border); transform: translateY(-4px); box-shadow: 0 12px 40px var(--accent-dim); }
-        .product-card-img-wrap { overflow: hidden; position: relative; background: #ffffff; aspect-ratio: 1; }
-        .product-card-img { width: 100%; height: 100%; object-fit: contain; padding: 8px; transition: transform 0.5s ease; }
+        .product-card-img-wrap { overflow: hidden; position: relative; background: #ffffff !important; aspect-ratio: 1; }
+        .product-card-img { width: 100%; height: 100%; object-fit: contain !important; padding: 8px; transition: transform 0.5s ease; background: #ffffff !important; }
+        /* Catch-all: anything that looks like a product image gets white bg
+           regardless of wrapper. Defensive against missed cases. */
+        img.product-card-img, img.pd-img, img.pd-thumb, img.sn-img,
+        img.uc-img, img.thumb, img.ri-img, img.edit-preview,
+        .pd-variant img, .pd-thumb img, .scrape-card img,
+        .padmin-card img, .bundle-card-imgs img, .pd-qc img,
+        .hero-search-suggestion img, .hero-bg-card img,
+        .padmin-compact .pcomp .img { background: #ffffff !important; object-fit: contain !important; }
         .product-card:hover .product-card-img { transform: scale(1.05); }
         /* Hero ticker keeps cover-fit so the masthead background stays full-bleed */
         .hero-bg-card { background: #ffffff !important; }
