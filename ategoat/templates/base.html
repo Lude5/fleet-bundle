@@ -1167,13 +1167,17 @@
         // Saved-agent helpers — remember the user's preferred agent so
         // they don't have to pick every single time.
         // ============================================================
+        // Default agent: KakoBuy is auto-selected for first-time visitors so the
+        // Buy button is ready on every product. They can still switch agents,
+        // and their choice is remembered.
+        window.DEFAULT_AGENT = { key: 'kakobuy', name: 'KakoBuy' };
         window.getSavedAgent = function() {
             try {
                 var v = localStorage.getItem('ategoat_agent');
-                if (!v) return null;
+                if (!v) return window.DEFAULT_AGENT;
                 var p = JSON.parse(v);
-                return (p && p.key && p.name) ? p : null;
-            } catch (e) { return null; }
+                return (p && p.key && p.name) ? p : window.DEFAULT_AGENT;
+            } catch (e) { return window.DEFAULT_AGENT; }
         };
         window.saveAgent = function(key, name) {
             try { localStorage.setItem('ategoat_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
