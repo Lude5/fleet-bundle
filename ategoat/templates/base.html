@@ -610,6 +610,8 @@
         }
         .pd-agent-pickprompt.active { display: inline-flex; animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
         .pd-agent-pickprompt::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+        .pd-auto-agent { display: none; align-items: center; gap: 7px; margin-top: 9px; padding: 9px 13px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+        .pd-auto-agent.show { display: inline-flex; }
         @keyframes pdShake {
             0%, 100% { transform: translateX(0); }
             12%, 60% { transform: translateX(-6px); }
@@ -837,6 +839,7 @@
                         </button>
                     </div>
                     <div class="pd-agent-pickprompt" id="pdAgentPickWarn">Pick an agent first ↑</div>
+                    <div class="pd-auto-agent" id="pdAutoAgent"></div>
                     <button type="button" id="pdRawCopy" onclick="copyRawSellerUrl()" class="pd-raw-copy" title="Copy raw seller link (no agent)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         <span id="pdRawCopyLabel">Copy raw seller link</span>
@@ -1185,6 +1188,16 @@
         // Apply the saved agent to a freshly-opened product modal: hit
         // /api/agents/<pid>, find the user's preferred entry, and wire
         // the Buy button to it so they can click Buy immediately.
+        // Green note under the Switch Agent button. "auto-selected" until the
+        // user manually picks a different agent, then "selected".
+        window.updateAutoAgentNote = function(name) {
+            var el = document.getElementById('pdAutoAgent');
+            if (!el) return;
+            var manual = false;
+            try { manual = !!localStorage.getItem('ategoat_agent'); } catch (e) {}
+            el.textContent = '✓ ' + name + (manual ? ' — selected' : ' — auto-selected');
+            el.classList.add('show');
+        };
         window.applySavedAgentToBuy = function(pid) {
             var saved = getSavedAgent();
             if (!saved) return;
@@ -1203,6 +1216,7 @@
                     pdBuy.dataset.agentName = match.name;
                     var lbl = document.getElementById('pdAgentBtnLabel');
                     if (lbl) lbl.textContent = match.name + ' ✓';
+                    updateAutoAgentNote(match.name);
                 });
         };
 
@@ -1297,6 +1311,7 @@
                 pdBuy.dataset.agentName = name;
                 var lbl = document.getElementById('pdAgentBtnLabel');
                 if (lbl) lbl.textContent = name + ' ✓';
+                updateAutoAgentNote(name);
                 var warn = document.getElementById('pdAgentPickWarn');
                 if (warn) warn.classList.remove('active');
             } else {
