@@ -1779,6 +1779,53 @@ def admin_download_backup():
     return send_file(backup_database(), as_attachment=True)
 
 
+# ===========================================================================
+# Custom image uploads — stored on the persistent disk so they survive deploys
+# ===========================================================================
+UPLOADS_DIR = os.path.join(DATA_DIR, 'uploads')
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+ALLOWED_IMG_EXT = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+
+
+@app.route('/uploads/<path:fname>')
+def serve_upload(fname):
+    """Serve uploaded images from the persistent disk."""
+    # Path-traversal guard
+    safe = os.path.basename(fname)
+    full = os.path.join(UPLOADS_DIR, safe)
+    if not os.path.exists(full):
+        return ('', 404)
+    return send_file(full)
+
+
+@app.route('/admin/products/upload-image/<pid>', methods=['POST'])
+def admin_upload_image(pid):
+    """Accept a multipart image upload, save to disk, set as product's primary image."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    f = request.files['file']
+    if not f or not f.filename:
+        return jsonify({'error': 'Empty filename'}), 400
+    import os as _os
+    ext = _os.path.splitext(f.filename)[1].lower()
+    if ext not in ALLOWED_IMG_EXT:
+        return jsonify({'error': f'Unsupported image type ({ext}). Use jpg/png/webp/gif.'}), 400
+    # Size cap: 8MB
+    f.seek(0, 2); size = f.tell(); f.seek(0)
+    if size > 8 * 1024 * 1024:
+        return jsonify({'error': 'File too large (max 8MB)'}), 400
+    # Save with safe name
+    safe_pid = ''.join(c for c in pid if c.isalnum())[:16] or 'p'
+    fname = f'{safe_pid}-{secrets.token_hex(4)}{ext}'
+    full = _os.path.join(UPLOADS_DIR, fname)
+    f.save(full)
+    new_url = f'/uploads/{fname}'
+    update_product(pid, {'image': new_url})
+    return jsonify({'ok': True, 'image': new_url, 'pid': pid})
+
+
 @app.errorhandler(404)
 def not_found(e):
     return redirect(url_for('home'))

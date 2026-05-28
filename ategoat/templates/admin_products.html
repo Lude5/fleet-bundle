@@ -105,7 +105,26 @@
 .product-table .col-star { width: 38px; }
 .product-table .col-thumb { width: 56px; }
 .product-table .col-actions { width: 140px; }
-.product-table .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: #ffffff; padding: 2px; }
+.product-table .col-thumb { width: 56px; position: relative; overflow: visible; }
+.product-table .thumb-wrap { position: relative; display: inline-block; }
+.product-table .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: #ffffff !important; padding: 2px; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; display: block; }
+.product-table .thumb-wrap:hover .thumb {
+    transform: scale(5);
+    transform-origin: 0 50%;
+    z-index: 200; position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px var(--accent);
+}
+.product-table .thumb-overlay {
+    position: absolute; inset: 0; border-radius: 8px;
+    background: rgba(0,0,0,0.5); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+    font-size: 9px; font-family: var(--font-mono); font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; pointer-events: none;
+    border-radius: 8px;
+}
+.product-table .thumb-wrap:hover .thumb-overlay { opacity: 0; }  /* hide overlay while zoomed */
+.product-table .thumb-uploading { opacity: 0.5; }
 .product-table .name-cell { font-weight: 500; }
 .product-table .name-cell .tags-line { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.5px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .product-table .price-cell { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--accent); }
@@ -603,7 +622,7 @@
                     <td><button type="button" class="star-btn {% if p.featured %}active{% endif %}" onclick="toggleFeature(this)" title="Pin to top">★</button></td>
                     <td><button type="button" class="trend-btn {% if is_trending %}active{% endif %}" onclick="toggleTrending(this)" title="Mark as trending">🔥</button></td>
                     <td><button type="button" class="stock-btn {% if not in_stock %}out{% endif %}" onclick="toggleStock(this)" title="In stock / Out of stock">{% if in_stock %}📦{% else %}❌{% endif %}</button></td>
-                    <td><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
+                    <td><span class="thumb-wrap"><img class="thumb" src="{{ p.image }}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'" onclick="uploadCustomImage(this, '{{ p.id }}')" title="Click to upload a custom image"></span></td>
                     <td class="name-cell">
                         {{ p.name }}
                         {% if p.tags %}<span class="tags-line">{{ p.tags }}</span>{% endif %}
@@ -1254,6 +1273,41 @@ async function bulkFeature(featured) {
         _reorderByPinAfterToggle(tr, featured);
     });
     showToast(t(featured ? 'n_pinned' : 'n_unpinned', { n: ids.length }), 'success');
+}
+
+// === CUSTOM IMAGE UPLOAD (per-row, click thumbnail) ===
+function uploadCustomImage(imgEl, pid) {
+    // Create a hidden file input on demand
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/jpg,image/webp,image/gif';
+    input.style.display = 'none';
+    input.onchange = async function() {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) {
+            showToast('File too big — 8MB max', 'error'); return;
+        }
+        imgEl.classList.add('thumb-uploading');
+        var fd = new FormData(); fd.append('file', file);
+        try {
+            var res = await fetch('/admin/products/upload-image/' + encodeURIComponent(pid), { method: 'POST', body: fd });
+            var json = await res.json();
+            imgEl.classList.remove('thumb-uploading');
+            if (!json.ok) return showToast(json.error || 'Upload failed', 'error');
+            imgEl.src = json.image + '?v=' + Date.now();   // cache-bust
+            var tr = imgEl.closest('tr');
+            if (tr) tr.dataset.image = json.image;
+            showToast('Image updated', 'success');
+        } catch(e) {
+            imgEl.classList.remove('thumb-uploading');
+            showToast('Upload error: ' + e.message, 'error');
+        }
+    };
+    document.body.appendChild(input);
+    input.click();
+    // Remove the input after dialog closes (small delay to allow change event)
+    setTimeout(function(){ input.remove(); }, 60000);
 }
 
 // === IN-STOCK TOGGLE (per-row) ===
