@@ -1001,57 +1001,6 @@ def _looks_like_seller_url(s: str) -> bool:
     return False
 
 
-def _related_products(p, limit=8):
-    """'You might also like' — products sharing the same brand, then same category,
-    ranked with a nudge toward best-sellers. Keeps users browsing on-site."""
-    if not p:
-        return []
-    try:
-        from tag_utils import BRANDS
-    except Exception:
-        BRANDS = {}
-    hay = (p.get('name', '') + ' ' + p.get('tags', '')).lower()
-    hay_tokens = set(hay.split())
-    brand_tokens = set()
-    for key, aliases in BRANDS.items():
-        toks = aliases if isinstance(aliases, list) else [aliases]
-        if key in hay or any(t in hay_tokens for t in toks):
-            brand_tokens.update(toks)
-    cat = p.get('category', '')
-    pid = p.get('id')
-
-    def has_brand(x):
-        xt = (x.get('name', '') + ' ' + x.get('tags', '')).lower()
-        return any(t in xt for t in brand_tokens)
-
-    def score(x):
-        s = 0.0
-        if brand_tokens and has_brand(x):
-            s += 10
-        if x.get('category') == cat:
-            s += 3
-        s += min(int(x.get('sales') or 0), 2000) / 2000.0
-        return s
-
-    pool = [x for x in get_products()
-            if x.get('id') != pid
-            and (x.get('category') == cat or (brand_tokens and has_brand(x)))]
-    return sorted(pool, key=score, reverse=True)[:limit]
-
-
-@app.route('/product/<pid>')
-def product_page(pid):
-    """Standalone, on-site product page — full detail + 'you might also like',
-    so visitors browse more before clicking through to an agent."""
-    p = get_product(pid)
-    if not p:
-        return redirect(url_for('shop'))
-    return render_template('product.html',
-                           product=p,
-                           related=_related_products(p, 8),
-                           categories=get_categories())
-
-
 @app.route('/api/product/<pid>')
 def api_product(pid):
     """Return a product with its listing variants and (stubbed) QC photos.
