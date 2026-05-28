@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Open on KakoBuy & more | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.pp { max-width: 1120px; margin: 0 auto; padding: 88px 20px 40px; }
+.pp-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.02fr); gap: 38px; }
+@media (max-width: 860px) { .pp-grid { grid-template-columns: 1fr; gap: 22px; } .pp { padding-top: 74px; } }
+.pp-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.pp-thumb { width: 62px; height: 62px; border-radius: 10px; overflow: hidden; background: #fff; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
+.pp-thumb.active { border-color: var(--accent); }
+.pp-thumb img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+/* inline agent list under the Switch Agent button */
+.pp-agentlist { display: none; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.pp-agentlist.show { display: flex; }
+.pp-agentchip { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 8px 12px; border-radius: 9px; background: var(--surface-2); border: 1.5px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+.pp-agentchip:hover { color: var(--text); border-color: var(--border); }
+.pp-agentchip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.pp-related { max-width: 1120px; margin: 50px auto 0; padding: 0 20px; }
+.pp-related h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+{% endblock %}
+
+{% block content %}
+<div class="pp">
+  <div class="pp-grid">
+    <!-- LEFT: image + buy-row (mirrors the modal) -->
+    <div>
+      <div class="pd-img-wrap"><img id="ppMain" class="pd-img" src="{{ product.image }}" alt="{{ product.name }}" referrerpolicy="no-referrer"></div>
+      <div class="pp-thumbs" id="ppThumbs"></div>
+      <div class="pd-buy-row">
+        <a id="ppBuy" class="pd-buy" href="#" target="_blank" rel="noopener"
+           onclick="trackClick('affiliate','buy','{{ product.id }}','{{ product.category }}','{{ product.name }}')">Buy on KakoBuy</a>
+        <button type="button" class="pd-copy pd-agent-btn" id="ppAgentBtn" onclick="document.getElementById('ppAgentList').classList.toggle('show')" aria-label="Switch agent">
+          <span class="pd-agent-top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+            <span>Switch Agent</span>
+          </span>
+          <span class="pd-agent-sub" id="ppAgentSub"></span>
+        </button>
+      </div>
+      <div class="pp-agentlist" id="ppAgentList"></div>
+    </div>
+    <!-- RIGHT: info (mirrors the modal pd-side) -->
+    <div class="pd-side">
+      <span class="pd-source"><span class="src-dot"></span><span>{{ (product.category or 'Find')|upper }}</span></span>
+      <h2 class="pd-title" id="ppTitle">{{ product.name }}</h2>
+      <div class="pd-badges">
+        {% if product.quality %}<span class="pd-badge quality">QUALITY {{ product.quality }}</span>{% endif %}
+        <span class="pd-badge verified">VERIFIED</span>
+        {% if product.category %}<span class="pd-badge cat">{{ product.category }}</span>{% endif %}
+      </div>
+      <div class="pd-price" id="ppPrice" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
+      <div class="pd-meta">
+        <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val">{{ product.weight or '—' }}</div></div>
+        {% if product.sales and product.sales|int > 0 %}<div class="pd-meta-cell"><div class="lbl">Sales</div><div class="val">🔥 {{ '{:,}'.format(product.sales|int) }} sold</div></div>{% endif %}
+        <div class="pd-meta-cell"><div class="lbl">Listing</div><div class="val"><span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>Verified</span></div></div>
+        <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val">{{ product.batch or 'Unspecified' }}</div></div>
+      </div>
+      <div>
+        <div class="pd-sec-head"><span id="ppVariantCount">Versions</span></div>
+        <div class="pd-variants" id="ppVariants"><div class="pd-qc-empty">Loading variants…</div></div>
+      </div>
+      <div>
+        <div class="pd-sec-head">QC photos</div>
+        <div id="ppQc"><div class="pd-qc-empty">Looking for QC photos…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if related %}
+<div class="pp-related">
+  <h2>You might also like</h2>
+  <div class="product-grid">
+    {% for r in related %}
+    <a href="/product/{{ r.id }}" class="product-card{% if r.in_stock == 0 %} out-of-stock{% endif %}">
+      <div class="product-card-img-wrap"><img class="product-card-img" src="{{ r.image }}" alt="{{ r.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+      <div class="product-card-body">
+        <div class="product-card-name">{{ r.name }}</div>
+        <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ r.price_numeric or r.price }}">${{ r.price }}</span><span class="product-card-buy">View</span></div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+var PID = {{ product.id|tojson }};
+var ppAgents = [];
+
+function ppSetAgent(a) {
+    var buy = document.getElementById('ppBuy');
+    buy.href = a.url; buy.textContent = 'Buy on ' + a.name;
+    if (window.saveAgent) saveAgent(a.key, a.name);
+    var manual = false; try { manual = !!localStorage.getItem('ategoat_agent'); } catch(e){}
+    document.getElementById('ppAgentSub').textContent = a.name + (manual ? ' (selected)' : ' (auto selected)');
+    document.querySelectorAll('#ppAgentList .pp-agentchip').forEach(function(c){ c.classList.toggle('active', c.dataset.key === a.key); });
+}
+fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
+    ppAgents = d.agents || d || [];
+    if (!ppAgents.length) return;
+    var box = document.getElementById('ppAgentList');
+    box.innerHTML = '';
+    ppAgents.forEach(function(a){
+        var el = document.createElement('button');
+        el.type='button'; el.className='pp-agentchip'; el.dataset.key=a.key; el.textContent=a.name;
+        el.onclick=function(){ ppSetAgent(a); box.classList.remove('show'); };
+        box.appendChild(el);
+    });
+    var saved = (window.getSavedAgent && getSavedAgent()) || { key:'kakobuy' };
+    var match = ppAgents.filter(function(a){return a.key===saved.key;})[0] || ppAgents[0];
+    ppSetAgent(match);
+}).catch(function(){});
+
+// Photos / versions / QC — same sources the modal uses.
+fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
+    if (d.error) return;
+    var imgs = [];
+    if (d.image) imgs.push(d.image);
+    (d.variants || []).forEach(function(v){ if (v.image && imgs.indexOf(v.image) < 0) imgs.push(v.image); });
+    var th = document.getElementById('ppThumbs');
+    if (imgs.length > 1) {
+        imgs.slice(0,12).forEach(function(src,i){
+            var t=document.createElement('div'); t.className='pp-thumb'+(i===0?' active':'');
+            t.innerHTML='<img src="'+src+'" referrerpolicy="no-referrer">';
+            t.onclick=function(){ document.getElementById('ppMain').src=src; document.querySelectorAll('.pp-thumb').forEach(function(x){x.classList.remove('active');}); t.classList.add('active'); };
+            th.appendChild(t);
+        });
+    }
+}).catch(function(){});
+
+fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(vd){
+    var variants=(vd&&vd.variants)||[]; var box=document.getElementById('ppVariants'); var cnt=document.getElementById('ppVariantCount');
+    if (variants.length) {
+        cnt.textContent = variants.length + ' variant' + (variants.length===1?'':'s');
+        box.innerHTML = variants.map(function(v){
+            var img=(v.image||'').replace(/'/g,"\\'");
+            return '<button type="button" class="pd-variant" title="'+v.title+'" onclick="document.getElementById(\'ppMain\').src=\''+img+'\'">'
+                 + (v.image?'<img src="'+v.image+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'')
+                 + '<span class="pd-variant-lbl">'+v.title+'</span></button>';
+        }).join('');
+    } else { box.innerHTML='<div class="pd-qc-empty">Single variant</div>'; cnt.textContent='Variants · 1'; }
+}).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">No variants available</div>'; });
+
+fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(qd){
+    var photos=(qd&&qd.photos)||[]; var qc=document.getElementById('ppQc');
+    if (photos.length) { qc.className='pd-qc'; qc.innerHTML=photos.map(function(u){return '<img src="'+u+'" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';}).join(''); }
+    else { qc.innerHTML='<div class="pd-qc-empty">No QC photos available for this listing yet.</div>'; }
+}).catch(function(){ document.getElementById('ppQc').innerHTML='<div class="pd-qc-empty">Couldn\'t load QC photos.</div>'; });
+
+if (typeof refreshCurrencyPrices === 'function') setTimeout(refreshCurrencyPrices, 300);
+{% endblock %}

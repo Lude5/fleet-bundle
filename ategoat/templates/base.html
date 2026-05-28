@@ -610,8 +610,10 @@
         }
         .pd-agent-pickprompt.active { display: inline-flex; animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
         .pd-agent-pickprompt::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
-        .pd-auto-agent { display: none; align-items: center; gap: 7px; margin-top: 9px; padding: 9px 13px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
-        .pd-auto-agent.show { display: inline-flex; }
+        .pd-agent-btn { flex-direction: column; gap: 4px; }
+        .pd-agent-btn .pd-agent-top { display: inline-flex; align-items: center; gap: 8px; }
+        .pd-agent-sub { color: #22c55e; font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: none; }
+        .pd-agent-sub:empty { display: none; }
         @keyframes pdShake {
             0%, 100% { transform: translateX(0); }
             12%, 60% { transform: translateX(-6px); }
@@ -833,13 +835,12 @@
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
                         <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
-                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-                            <span id="pdAgentBtnLabel">Choose Agent</span>
+                        <button type="button" class="pd-copy pd-agent-btn" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Switch agent" title="Switch agent">
+                            <span class="pd-agent-top"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg><span id="pdAgentBtnLabel">Switch Agent</span></span>
+                            <span class="pd-agent-sub" id="pdAgentSub"></span>
                         </button>
                     </div>
                     <div class="pd-agent-pickprompt" id="pdAgentPickWarn">Pick an agent first ↑</div>
-                    <div class="pd-auto-agent" id="pdAutoAgent"></div>
                     <button type="button" id="pdRawCopy" onclick="copyRawSellerUrl()" class="pd-raw-copy" title="Copy raw seller link (no agent)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         <span id="pdRawCopyLabel">Copy raw seller link</span>
@@ -1191,12 +1192,13 @@
         // Green note under the Switch Agent button. "auto-selected" until the
         // user manually picks a different agent, then "selected".
         window.updateAutoAgentNote = function(name) {
-            var el = document.getElementById('pdAutoAgent');
+            var el = document.getElementById('pdAgentSub');
             if (!el) return;
             var manual = false;
             try { manual = !!localStorage.getItem('ategoat_agent'); } catch (e) {}
-            el.textContent = '✓ ' + name + (manual ? ' — selected' : ' — auto-selected');
-            el.classList.add('show');
+            el.textContent = name + (manual ? ' (selected)' : ' (auto selected)');
+            var lbl = document.getElementById('pdAgentBtnLabel');
+            if (lbl) lbl.textContent = 'Switch Agent';
         };
         window.applySavedAgentToBuy = function(pid) {
             var saved = getSavedAgent();

@@ -116,7 +116,7 @@
     {% if products %}
     <div class="product-grid">
         {% for p in products %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card reveal{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','bundle','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" class="product-card reveal{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','bundle','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button>
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
             </div>
