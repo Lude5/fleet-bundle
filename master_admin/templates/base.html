@@ -285,26 +285,6 @@
                     <span class="arrow">&#8646;</span>
                     <span data-lang-other>中文</span>
                 </button>
-                <div class="view-switcher">
-                    <button class="view-btn" type="button" onclick="toggleViewMenu()" aria-label="Switch view mode" data-i18n-title="view_switch_aria">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        <span data-view-label>Pro</span>
-                    </button>
-                    <div class="view-menu" id="viewMenu">
-                        <button type="button" data-view="pro" onclick="setViewMode('pro')">
-                            <span class="vm-title" data-i18n="vm_pro">Pro</span>
-                            <span class="vm-desc" data-i18n="vm_pro_desc">Dense tables · power user</span>
-                        </button>
-                        <button type="button" data-view="comfort" onclick="setViewMode('comfort')">
-                            <span class="vm-title" data-i18n="vm_comfort">Comfort</span>
-                            <span class="vm-desc" data-i18n="vm_comfort_desc">Spacious cards · easier to read</span>
-                        </button>
-                        <button type="button" data-view="exec" onclick="setViewMode('exec')">
-                            <span class="vm-title" data-i18n="vm_exec">Executive</span>
-                            <span class="vm-desc" data-i18n="vm_exec_desc">KPI-first · charts &amp; trends</span>
-                        </button>
-                    </div>
-                </div>
             </div>
         </header>
         <div class="content {% block content_class %}{% endblock %}">
@@ -325,8 +305,7 @@
 
     // === View mode (Pro / Comfort / Executive) ===
     var VIEW_KEYS = { pro: 'vm_pro', comfort: 'vm_comfort', exec: 'vm_exec' };
-    var currentView = localStorage.getItem('master_view') || 'pro';
-    if (!VIEW_KEYS[currentView]) currentView = 'pro';
+    var currentView = 'pro';  // single unified full-feature view (Pro layout); switcher removed
 
     function viewLabel(mode) {
         return (window.tm ? window.tm(VIEW_KEYS[mode]) : null) || { pro: 'Pro', comfort: 'Comfort', exec: 'Executive' }[mode];
