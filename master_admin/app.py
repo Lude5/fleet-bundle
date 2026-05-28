@@ -511,6 +511,22 @@ def products_push():
     return jsonify({'ok': True, 'results': results})
 
 
+@app.route('/products/scrape', methods=['POST'])
+def products_scrape():
+    """Scrape a Weidian/Taobao/1688 (or agent-wrapped) link for the add-product composer.
+    Returns scrapable fields (name, base + per-style prices, variants, gallery) plus a
+    manifest of fields the operator must add by hand (QC photos, sizes, batch, etc.)."""
+    import scrape_product
+    data = request.get_json(silent=True) or {}
+    url = (data.get('url') or '').strip()
+    if not url:
+        return jsonify({'ok': False, 'error': 'url required'}), 400
+    try:
+        return jsonify(scrape_product.scrape(url))
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:200]}), 200
+
+
 @app.route('/products/<site_id>/<pid>', methods=['DELETE'])
 def products_delete_one(site_id, pid):
     sites = {s['id']: s for s in load_sites()}
