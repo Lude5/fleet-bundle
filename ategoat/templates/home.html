@@ -254,13 +254,13 @@
         <button class="conv-btn conv-btn-r" onclick="scrollConv(1)">&#8250;</button>
         <div class="conveyor-track" id="conv">
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
                 <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
             </a>
             {% endfor %}
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}">
+            <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
                 <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
             </a>
@@ -311,7 +311,7 @@
     <div class="sec-header"><h2 class="sec-title">Best Selling</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
     <div class="product-grid">
         {% for p in featured %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button>
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 <span class="product-card-badge">Best Selling</span>
@@ -330,7 +330,7 @@
     <div class="sec-header"><h2 class="sec-title">{{ cat.name }}</h2><a href="/shop?category={{ cat.slug }}" class="sec-link">View All ({{ cp.count }}) &rarr;</a></div>
     <div class="product-grid">
         {% for p in cp.picks %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
             <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
         </a>

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Open on KakoBuy & 9 more agents | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.pp-wrap { max-width: 1180px; margin: 0 auto; padding: 90px 20px 60px; }
+.pp-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; }
+@media (max-width: 860px) { .pp-top { grid-template-columns: 1fr; gap: 24px; } .pp-wrap { padding-top: 76px; } }
+
+/* Gallery — white bg + contain (load-bearing image rule) */
+.pp-main { background: #fff; border-radius: 18px; overflow: hidden; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+.pp-main img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.pp-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.pp-thumb { width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #fff; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
+.pp-thumb.active { border-color: var(--accent); }
+.pp-thumb img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+
+.pp-cat { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+.pp-name { font-family: var(--font-display); font-size: clamp(26px, 4vw, 40px); line-height: 1.05; margin: 8px 0 14px; }
+.pp-price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.pp-price { font-family: var(--font-display); font-size: 34px; color: var(--accent); }
+.pp-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.pp-badge { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.5px; padding: 5px 11px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+.pp-badge.hot { background: rgba(239,68,68,0.14); color: #ef4444; }
+.pp-badge.qc { background: rgba(34,197,94,0.14); color: #22c55e; }
+.pp-badge.sold { background: var(--surface-2); color: var(--text-secondary); }
+
+/* Buy + agents */
+.pp-buy { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 18px; border-radius: 14px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; transition: filter .15s, transform .15s; }
+.pp-buy:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.pp-agent-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin: 18px 0 8px; }
+.pp-agents { display: flex; gap: 8px; flex-wrap: wrap; }
+.pp-agent { font-family: var(--font-mono); font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 10px; background: var(--surface-2); border: 1.5px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+.pp-agent:hover { color: var(--text); border-color: var(--border); }
+.pp-agent.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+.pp-section { margin-top: 26px; }
+.pp-section h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+.pp-variants { display: flex; gap: 8px; flex-wrap: wrap; }
+.pp-variant { width: 60px; border-radius: 10px; overflow: hidden; background: #fff; border: 2px solid transparent; cursor: pointer; }
+.pp-variant.active { border-color: var(--accent); }
+.pp-variant img { width: 60px; height: 60px; object-fit: contain; background: #fff; display: block; }
+.pp-qc { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.pp-qc img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 10px; }
+
+.pp-related { max-width: 1180px; margin: 60px auto 0; padding: 0 20px; }
+.pp-related h2 { font-family: var(--font-display); font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+{% endblock %}
+
+{% block content %}
+<div class="pp-wrap">
+    <div class="pp-top">
+        <div>
+            <div class="pp-main"><img id="ppMain" src="{{ product.image }}" alt="{{ product.name }}" referrerpolicy="no-referrer"></div>
+            <div class="pp-thumbs" id="ppThumbs"></div>
+        </div>
+        <div>
+            <div class="pp-cat">{{ product.category or 'Find' }}</div>
+            <h1 class="pp-name">{{ product.name }}</h1>
+            <div class="pp-price-row">
+                <span class="pp-price" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</span>
+            </div>
+            <div class="pp-badges">
+                {% if product.sales and product.sales|int > 0 %}<span class="pp-badge sold">🔥 {{ '{:,}'.format(product.sales|int) }} sold</span>{% endif %}
+                {% if product.badge %}<span class="pp-badge hot">{{ product.badge }}</span>{% endif %}
+                <span class="pp-badge qc" id="ppQcBadge" style="display:none;">QC ✓</span>
+            </div>
+
+            <a href="#" id="ppBuy" class="pp-buy" target="_blank" rel="noopener"
+               onclick="trackClick('affiliate','buy','{{ product.id }}','{{ product.category }}','{{ product.name }}')">Buy on KakoBuy</a>
+
+            <div class="pp-agent-label">Open on agent — switch anytime</div>
+            <div class="pp-agents" id="ppAgents"></div>
+
+            <div class="pp-section" id="ppVariantsWrap" style="display:none;">
+                <h3>Styles</h3>
+                <div class="pp-variants" id="ppVariants"></div>
+            </div>
+            <div class="pp-section" id="ppQcWrap" style="display:none;">
+                <h3>QC Photos</h3>
+                <div class="pp-qc" id="ppQc"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if related %}
+<div class="pp-related">
+    <h2>You might also like</h2>
+    <div class="product-grid">
+        {% for r in related %}
+        <a href="/product/{{ r.id }}" class="product-card{% if r.in_stock == 0 %} out-of-stock{% endif %}">
+            <div class="product-card-img-wrap"><img class="product-card-img" src="{{ r.image }}" alt="{{ r.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ r.name }}</div>
+                <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ r.price_numeric or r.price }}">${{ r.price }}</span><span class="product-card-buy">View</span></div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+var PID = {{ product.id|tojson }};
+var ppAgents = [];
+
+// Wire the Buy button + agent chips. KakoBuy is the default (getSavedAgent).
+function ppRenderAgents(activeKey) {
+    var box = document.getElementById('ppAgents');
+    box.innerHTML = '';
+    ppAgents.forEach(function(a) {
+        var el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'pp-agent' + (a.key === activeKey ? ' active' : '');
+        el.textContent = a.name;
+        el.onclick = function() { ppSelectAgent(a); };
+        box.appendChild(el);
+    });
+}
+function ppSelectAgent(a) {
+    var buy = document.getElementById('ppBuy');
+    buy.href = a.url;
+    buy.textContent = 'Buy on ' + a.name;
+    if (window.saveAgent) saveAgent(a.key, a.name);
+    ppRenderAgents(a.key);
+}
+fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
+    ppAgents = d.agents || d || [];
+    if (!ppAgents.length) return;
+    var saved = (window.getSavedAgent && getSavedAgent()) || { key: 'kakobuy' };
+    var match = ppAgents.filter(function(a){ return a.key === saved.key; })[0] || ppAgents[0];
+    ppSelectAgent(match);
+}).catch(function(){});
+
+// Gallery, styles, QC from the same data the modal uses.
+fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
+    if (d.error) return;
+    var imgs = [];
+    (d.variants || []).forEach(function(v){ if (v.image && imgs.indexOf(v.image) < 0) imgs.push(v.image); });
+    if (d.image && imgs.indexOf(d.image) < 0) imgs.unshift(d.image);
+    var thumbs = document.getElementById('ppThumbs');
+    if (imgs.length > 1) {
+        imgs.slice(0, 12).forEach(function(src, i){
+            var t = document.createElement('div');
+            t.className = 'pp-thumb' + (i === 0 ? ' active' : '');
+            t.innerHTML = '<img src="' + src + '" referrerpolicy="no-referrer">';
+            t.onclick = function(){
+                document.getElementById('ppMain').src = src;
+                document.querySelectorAll('.pp-thumb').forEach(function(x){x.classList.remove('active');});
+                t.classList.add('active');
+            };
+            thumbs.appendChild(t);
+        });
+    }
+    // Styles (variants with names)
+    var named = (d.variants || []).filter(function(v){ return v.name && v.image; });
+    if (named.length > 1) {
+        document.getElementById('ppVariantsWrap').style.display = 'block';
+        var vbox = document.getElementById('ppVariants');
+        named.slice(0, 24).forEach(function(v){
+            var el = document.createElement('div');
+            el.className = 'pp-variant';
+            el.title = v.name;
+            el.innerHTML = '<img src="' + v.image + '" referrerpolicy="no-referrer">';
+            el.onclick = function(){ document.getElementById('ppMain').src = v.image; };
+            vbox.appendChild(el);
+        });
+    }
+    // QC photos
+    var qc = d.qc_photos || [];
+    if (qc.length) {
+        document.getElementById('ppQcBadge').style.display = 'inline-flex';
+        document.getElementById('ppQcWrap').style.display = 'block';
+        var qbox = document.getElementById('ppQc');
+        qc.slice(0, 12).forEach(function(src){
+            var im = document.createElement('img');
+            im.src = src; im.loading = 'lazy'; im.referrerPolicy = 'no-referrer';
+            qbox.appendChild(im);
+        });
+    }
+    if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
+}).catch(function(){});
+{% endblock %}
