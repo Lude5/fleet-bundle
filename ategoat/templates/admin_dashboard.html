@@ -114,11 +114,16 @@
         </div>
         {% if stats.top_products %}
         <div class="top-list">
+            <div class="top-row top-row-head">
+                <span class="rank">#</span>
+                <span class="name" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;">Product</span>
+                <span class="clicks" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;">Clicks</span>
+            </div>
             {% for tp in stats.top_products[:8] %}
             <div class="top-row">
                 <span class="rank">{{ loop.index }}</span>
                 <span class="name">{{ tp.product_name }}</span>
-                <span class="clicks">{{ tp.clicks }}</span>
+                <span class="clicks">{{ tp.clicks }} click{{ '' if tp.clicks == 1 else 's' }}</span>
             </div>
             {% endfor %}
         </div>

@@ -1621,6 +1621,16 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && document.getElementById('pdModal').classList.contains('active')) closeProductModal();
         });
+
+        // Storefront preview: if URL has ?preview=<pid>, auto-open that product's
+        // modal so the admin can verify their changes from the storefront.
+        (function(){
+            try {
+                var qp = new URLSearchParams(location.search);
+                var pid = qp.get('preview');
+                if (pid) setTimeout(function(){ openProductModal(pid); }, 200);
+            } catch(_){}
+        })();
     </script>
     <script src="/static/js/currency.js" defer></script>
 </body>
