@@ -310,7 +310,7 @@ def _b_usfans(url, _id, _plat, code):
 # URLs with NO referral code. To enable affiliate income for those, drop the
 # operator's own codes in via env vars or edit the URLs directly.
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register/?affcode=bswes',           'coupon': 'Up to $500 shipping credit'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': SITE_CONFIG['agent_signup_url'],           'coupon': 'Up to $500 shipping credit'},
     {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=KRLHFHSGL',          'coupon': 'Up to $300 in coupons'},
     {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://hipobuy.com/register?inviteCode=25RXG9B0E',         'coupon': 'Up to $100 in coupons'},
     {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register',               'coupon': 'Up to $300 in coupons'},
