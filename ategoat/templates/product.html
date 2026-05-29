@@ -21,6 +21,18 @@
 .pf-empty { display: none; }
 .retail-val { text-decoration: line-through; color: var(--text-muted); }
 .pd-buylink { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); word-break: break-all; margin-top: 12px; padding: 7px 10px; background: var(--surface-2); border-radius: 8px; line-height: 1.5; }
+#ppQc img { cursor: zoom-in; }
+/* QC lightbox — in-page gallery with arrow navigation */
+.qc-lb { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.93); display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.qc-lb.open { display: flex; }
+.qc-lb img { max-width: 88vw; max-height: 84vh; object-fit: contain; border-radius: 8px; user-select: none; box-shadow: 0 20px 60px rgba(0,0,0,0.6); background: #111; }
+.qc-lb-close { position: absolute; top: 16px; right: 22px; font-size: 30px; line-height: 1; color: #fff; background: none; border: none; cursor: pointer; opacity: 0.8; }
+.qc-lb-close:hover { opacity: 1; }
+.qc-lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.25); color: #fff; font-size: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.qc-lb-nav:hover { background: rgba(255,255,255,0.22); }
+.qc-lb-prev { left: 22px; } .qc-lb-next { right: 22px; }
+.qc-lb-count { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; background: rgba(0,0,0,0.55); padding: 6px 14px; border-radius: 999px; }
+@media (max-width: 600px) { .qc-lb-nav { width: 44px; height: 44px; font-size: 24px; } .qc-lb-prev { left: 8px; } .qc-lb-next { right: 8px; } .qc-lb img { max-width: 94vw; } }
 {% endblock %}
 
 {% block content %}
@@ -149,11 +161,43 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
     } else { box.innerHTML='<div class="pd-qc-empty">Single variant</div>'; cnt.textContent='Variants · 1'; }
 }).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">No variants available</div>'; });
 
+var qcPhotos = [], qcIdx = 0;
 fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(qd){
-    var photos=(qd&&qd.photos)||[]; var qc=document.getElementById('ppQc');
-    if (photos.length) { qc.className='pd-qc'; qc.innerHTML=photos.map(function(u){return '<img src="'+u+'" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';}).join(''); }
+    qcPhotos = (qd&&qd.photos)||[]; var qc=document.getElementById('ppQc');
+    if (qcPhotos.length) { qc.className='pd-qc'; qc.innerHTML=qcPhotos.map(function(u,i){return '<img src="'+u+'" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQc('+i+')">';}).join(''); }
     else { qc.innerHTML='<div class="pd-qc-empty">No QC photos available for this listing yet.</div>'; }
 }).catch(function(){ document.getElementById('ppQc').innerHTML='<div class="pd-qc-empty">Couldn\'t load QC photos.</div>'; });
+
+// In-page QC lightbox: click a photo to open, arrow left/right (or ←/→ keys) to compare.
+(function(){
+    var lb = document.createElement('div'); lb.className='qc-lb'; lb.id='qcLb';
+    lb.innerHTML = '<button class="qc-lb-close" aria-label="Close">&times;</button>'
+                 + '<button class="qc-lb-nav qc-lb-prev" aria-label="Previous">&#8249;</button>'
+                 + '<img id="qcLbImg" src="" alt="QC photo" referrerpolicy="no-referrer">'
+                 + '<button class="qc-lb-nav qc-lb-next" aria-label="Next">&#8250;</button>'
+                 + '<div class="qc-lb-count" id="qcLbCount"></div>';
+    document.body.appendChild(lb);
+    lb.addEventListener('click', function(e){ if(e.target===lb) closeQc(); });
+    lb.querySelector('.qc-lb-close').onclick = closeQc;
+    lb.querySelector('.qc-lb-prev').onclick = function(e){ e.stopPropagation(); qcNav(-1); };
+    lb.querySelector('.qc-lb-next').onclick = function(e){ e.stopPropagation(); qcNav(1); };
+    document.addEventListener('keydown', function(e){
+        if(!lb.classList.contains('open')) return;
+        if(e.key==='Escape') closeQc();
+        else if(e.key==='ArrowLeft') qcNav(-1);
+        else if(e.key==='ArrowRight') qcNav(1);
+    });
+})();
+function openQc(i){
+    if(!qcPhotos.length) return;
+    qcIdx = (i + qcPhotos.length) % qcPhotos.length;
+    document.getElementById('qcLbImg').src = qcPhotos[qcIdx];
+    document.getElementById('qcLbCount').textContent = (qcIdx+1) + ' / ' + qcPhotos.length;
+    document.getElementById('qcLb').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function qcNav(d){ openQc(qcIdx + d); }
+function closeQc(){ document.getElementById('qcLb').classList.remove('open'); document.body.style.overflow=''; }
 
 if (typeof refreshCurrencyPrices === 'function') setTimeout(refreshCurrencyPrices, 300);
 {% endblock %}
