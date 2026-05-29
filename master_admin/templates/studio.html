@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio · {{ site.name if site else 'Editor' }}</title>
+<style>
+  :root { --bar:#101014; --line:#23232c; --accent:#6366f1; --txt:#e6e6ea; --mut:#8b8b96; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#0a0a0d; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--txt); overflow:hidden; }
+  .bar { height:52px; display:flex; align-items:center; gap:10px; padding:0 14px; background:var(--bar); border-bottom:1px solid var(--line); position:relative; z-index:5; }
+  .bar .logo { font-weight:800; letter-spacing:.5px; font-size:14px; margin-right:4px; }
+  .bar .logo b { color:var(--accent); }
+  .bar select, .bar .btn { background:#191920; border:1px solid var(--line); color:var(--txt); border-radius:9px; padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+  .bar .btn:hover { border-color:var(--accent); color:#fff; }
+  .bar .btn.active { border-color:var(--accent); color:#fff; background:#20202b; }
+  .seg { display:flex; background:#191920; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+  .seg .btn { border:none; border-radius:0; background:transparent; }
+  .spacer { flex:1; }
+  .status { font-size:12px; color:var(--mut); min-width:90px; text-align:right; transition:color .2s; }
+  .status.ok { color:#22c55e; } .status.err { color:#ef4444; }
+  .btn.exit { background:transparent; }
+  .stage { position:absolute; top:52px; left:0; right:0; bottom:0; display:flex; justify-content:center; background:#0a0a0d; }
+  .frame-wrap { width:100%; height:100%; transition:width .2s, max-width .2s; background:#fff; }
+  .frame-wrap.mobile { width:390px; max-width:390px; margin-top:14px; height:calc(100% - 28px); border-radius:26px; border:8px solid #1c1c22; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  iframe { width:100%; height:100%; border:none; background:#fff; }
+  .notice { position:absolute; inset:52px 0 0 0; display:none; align-items:center; justify-content:center; text-align:center; padding:40px; color:var(--mut); }
+  .notice.show { display:flex; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <span class="logo">Lude<b>Studio</b></span>
+    {% if sites %}
+    <select id="siteSel" onchange="location.href='/studio/'+this.value">
+      {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id==site.id %}selected{% endif %}>{{ s.name }}{% if not (s.url and s.admin_token) %} (not connected){% endif %}</option>{% endfor %}
+    </select>
+    {% endif %}
+    {% if site and site.url %}
+    <button class="btn" onclick="go('/')">Home</button>
+    <button class="btn" onclick="go('/shop')">Shop</button>
+    <button class="btn" id="catBtn" onclick="editCategories()">⌗ Categories</button>
+    <div class="seg">
+      <button class="btn active" id="devD" onclick="setDevice('desktop')">Desktop</button>
+      <button class="btn" id="devM" onclick="setDevice('mobile')">Mobile</button>
+    </div>
+    {% endif %}
+    <span class="spacer"></span>
+    <span class="status" id="status">Edit mode</span>
+    <button class="btn exit" onclick="location.href='/'">✕ Exit</button>
+  </div>
+
+  <div class="stage">
+    {% if site and site.url %}
+    <div class="frame-wrap" id="wrap"><iframe id="fr" src="{{ site.url }}"></iframe></div>
+    {% endif %}
+  </div>
+  <div class="notice" id="notice"></div>
+
+  <script>
+    var SITE_ID = {{ (site.id if site else '')|tojson }};
+    var BASE = {{ (site.url if site and site.url else '')|tojson }}.replace(/\/$/, '');
+    var fr = document.getElementById('fr');
+
+    // status hook the injected editor calls
+    window.StudioStatus = function (msg, kind) {
+      var s = document.getElementById('status'); if (!s) return;
+      s.textContent = msg; s.className = 'status' + (kind === 'success' ? ' ok' : kind === 'error' ? ' err' : '');
+      if (kind === 'success') setTimeout(function () { s.textContent = 'Edit mode'; s.className = 'status'; }, 2500);
+    };
+    function go(path) { if (fr) fr.src = BASE + path; }
+    function setDevice(d) {
+      document.getElementById('wrap').classList.toggle('mobile', d === 'mobile');
+      document.getElementById('devD').classList.toggle('active', d === 'desktop');
+      document.getElementById('devM').classList.toggle('active', d === 'mobile');
+    }
+    function editCategories() {
+      try { fr.contentWindow.StudioEditor.openCategories(); }
+      catch (e) { StudioStatus('Open the Shop page first', 'error'); }
+    }
+    function inject() {
+      try {
+        var win = fr.contentWindow, doc = fr.contentDocument || win.document;
+        win.__STUDIO__ = { siteId: SITE_ID };
+        var s = doc.createElement('script');
+        s.src = '/static/js/site_editor.js?v=2';
+        doc.body.appendChild(s);
+        document.getElementById('notice').classList.remove('show');
+      } catch (e) {
+        // cross-origin site — browser blocks in-place editing
+        var n = document.getElementById('notice');
+        n.innerHTML = 'In-place editing needs the site on the same domain as this panel.<br>“' + SITE_ID + '” appears to be on another domain, so its page can’t be edited here.';
+        n.classList.add('show');
+      }
+    }
+    if (fr) fr.addEventListener('load', inject);
+  </script>
+</body>
+</html>

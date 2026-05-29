@@ -647,6 +647,70 @@ def content_save(site_id):
     return jsonify(data or {'ok': True})
 
 
+# === Immersive visual Studio (full-screen in-place editor) ===================
+@app.route('/studio')
+def studio_index():
+    sites = load_sites()
+    connected = [s for s in sites if s.get('url') and s.get('admin_token')]
+    if connected:
+        return redirect('/studio/' + connected[0]['id'])
+    return render_template('studio.html', site=None, sites=sites, active='content')
+
+
+@app.route('/studio/<site_id>')
+def studio(site_id):
+    sites = load_sites()
+    site = next((s for s in sites if s['id'] == site_id), None)
+    if not site:
+        return redirect('/studio')
+    return render_template('studio.html', site=site, sites=sites, active='content')
+
+
+# --- category proxies (used by the in-place editor) ---
+@app.route('/categories/<site_id>')
+def categories_list(site_id):
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    return jsonify(_call_site(site, '/admin/api/categories') or {'ok': False, 'categories': []})
+
+
+@app.route('/categories/<site_id>', methods=['POST'])
+def categories_add(site_id):
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    data, err = _call_site_detailed(site, '/admin/api/categories', method='POST', json_body=request.get_json(silent=True) or {})
+    return (jsonify({'ok': False, 'error': err}), 502) if err else jsonify(data or {'ok': True})
+
+
+@app.route('/categories/<site_id>/reorder', methods=['POST'])
+def categories_reorder(site_id):
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    data, err = _call_site_detailed(site, '/admin/api/categories/reorder', method='POST', json_body=request.get_json(silent=True) or {})
+    return (jsonify({'ok': False, 'error': err}), 502) if err else jsonify(data or {'ok': True})
+
+
+@app.route('/categories/<site_id>/<slug>', methods=['PATCH', 'PUT'])
+def categories_update(site_id, slug):
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    data, err = _call_site_detailed(site, '/admin/api/categories/' + slug, method='PATCH', json_body=request.get_json(silent=True) or {})
+    return (jsonify({'ok': False, 'error': err}), 502) if err else jsonify(data or {'ok': True})
+
+
+@app.route('/categories/<site_id>/<slug>', methods=['DELETE'])
+def categories_delete(site_id, slug):
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    data, err = _call_site_detailed(site, '/admin/api/categories/' + slug, method='DELETE', json_body=request.get_json(silent=True) or {})
+    return (jsonify({'ok': False, 'error': err}), 502) if err else jsonify(data or {'ok': True})
+
+
 @app.route('/analytics')
 def analytics():
     """Aggregated analytics across all sites that expose an API token."""
