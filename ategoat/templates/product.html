@@ -17,6 +17,8 @@
 .pp-agentchip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 .pp-related { max-width: 1120px; margin: 50px auto 0; padding: 0 20px; }
 .pp-related h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+/* fields that are empty stay hidden on the public site; the editor reveals them */
+.pf-empty { display: none; }
 {% endblock %}
 
 {% block content %}
@@ -24,7 +26,7 @@
   <div class="pp-grid">
     <!-- LEFT: image + buy-row (mirrors the modal) -->
     <div>
-      <div class="pd-img-wrap"><img id="ppMain" class="pd-img" src="{{ product.image }}" alt="{{ product.name }}" referrerpolicy="no-referrer"></div>
+      <div class="pd-img-wrap"><img id="ppMain" class="pd-img" data-pf="image" data-pf-type="image" src="{{ product.image }}" alt="{{ product.name }}" referrerpolicy="no-referrer"></div>
       <div class="pp-thumbs" id="ppThumbs"></div>
       <div class="pd-buy-row">
         <a id="ppBuy" class="pd-buy" href="#" target="_blank" rel="noopener"
@@ -41,26 +43,28 @@
     </div>
     <!-- RIGHT: info (mirrors the modal pd-side) -->
     <div class="pd-side">
-      <span class="pd-source"><span class="src-dot"></span><span>{{ (product.category or 'Find')|upper }}</span></span>
-      <h2 class="pd-title" id="ppTitle">{{ product.name }}</h2>
+      <span class="pd-source"><span class="src-dot"></span><span id="ppSource">{{ (product.category or 'Find')|upper }}</span></span>
+      <h2 class="pd-title" id="ppTitle" data-pf="name">{{ product.name }}</h2>
       <div class="pd-badges">
-        {% if product.quality %}<span class="pd-badge quality">QUALITY {{ product.quality }}</span>{% endif %}
+        <span class="pd-badge quality{% if not product.quality %} pf-empty{% endif %}" data-pf="quality" data-pf-type="quality">QUALITY <span class="pf-val">{{ product.quality or '—' }}</span></span>
         <span class="pd-badge verified">VERIFIED</span>
-        {% if product.category %}<span class="pd-badge cat">{{ product.category }}</span>{% endif %}
+        <span class="pd-badge cat{% if not product.category %} pf-empty{% endif %}" data-pf="category" data-pf-type="category"><span class="pf-val">{{ product.category or '—' }}</span></span>
       </div>
-      <div class="pd-price" id="ppPrice" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
+      <div class="pd-price" id="ppPrice" data-pf="price" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
       <div class="pd-meta">
-        <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val">{{ product.weight or '—' }}</div></div>
-        {% if product.sales and product.sales|int > 0 %}<div class="pd-meta-cell"><div class="lbl">Sales</div><div class="val">🔥 {{ '{:,}'.format(product.sales|int) }} sold</div></div>{% endif %}
+        <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val" data-pf="weight">{{ product.weight or '—' }}</div></div>
+        <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val" data-pf="batch">{{ product.batch or 'Unspecified' }}</div></div>
+        <div class="pd-meta-cell{% if not (product.sales and product.sales|int > 0) %} pf-empty{% endif %}"><div class="lbl">Sales</div><div class="val">🔥 <span data-pf="sales" data-pf-type="int">{{ product.sales|int if product.sales else 0 }}</span> sold</div></div>
+        <div class="pd-meta-cell{% if not product.retail_price %} pf-empty{% endif %}"><div class="lbl">Retail</div><div class="val" data-pf="retail_price">{{ product.retail_price or '—' }}</div></div>
+        <div class="pd-meta-cell{% if not product.seller %} pf-empty{% endif %}"><div class="lbl">Seller</div><div class="val" data-pf="seller">{{ product.seller or '—' }}</div></div>
         <div class="pd-meta-cell"><div class="lbl">Listing</div><div class="val"><span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;"><span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>Verified</span></div></div>
-        <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val">{{ product.batch or 'Unspecified' }}</div></div>
       </div>
       <div>
         <div class="pd-sec-head"><span id="ppVariantCount">Versions</span></div>
         <div class="pd-variants" id="ppVariants"><div class="pd-qc-empty">Loading variants…</div></div>
       </div>
       <div>
-        <div class="pd-sec-head">QC photos</div>
+        <div class="pd-sec-head" data-qc-edit="1">QC photos</div>
         <div id="ppQc"><div class="pd-qc-empty">Looking for QC photos…</div></div>
       </div>
     </div>

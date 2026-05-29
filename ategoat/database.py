@@ -242,7 +242,7 @@ def add_products_bulk(products):
 
 def update_product(product_id, updates):
     conn = get_db()
-    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock']
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos']
     sets = []
     vals = []
     for key in allowed:
