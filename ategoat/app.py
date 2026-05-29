@@ -2079,8 +2079,10 @@ def serve_upload(fname):
 
 @app.route('/admin/products/upload-image/<pid>', methods=['POST'])
 def admin_upload_image(pid):
-    """Accept a multipart image upload, save to disk, set as product's primary image."""
-    if not is_admin():
+    """Accept a multipart image upload, save to disk, optionally set as the
+    product's primary image (?primary=0 to just store + return the URL, e.g.
+    for QC / variant photos). Token-auth so the master-admin studio can call it."""
+    if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -2101,7 +2103,8 @@ def admin_upload_image(pid):
     full = _os.path.join(UPLOADS_DIR, fname)
     f.save(full)
     new_url = f'/uploads/{fname}'
-    update_product(pid, {'image': new_url})
+    if request.args.get('primary', '1') != '0':
+        update_product(pid, {'image': new_url})
     return jsonify({'ok': True, 'image': new_url, 'pid': pid})
 
 

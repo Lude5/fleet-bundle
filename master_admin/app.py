@@ -590,6 +590,31 @@ def search_proxy(site_id):
     return jsonify(resp or {'results': []})
 
 
+@app.route('/upload/<site_id>/<pid>', methods=['POST'])
+def upload_proxy(site_id, pid):
+    """Forward a multipart image upload to the origin site (token-authed)."""
+    import requests
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site or not site.get('url'):
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    if 'file' not in request.files:
+        return jsonify({'ok': False, 'error': 'no file'}), 400
+    f = request.files['file']
+    base = site['url'].rstrip('/')
+    primary = request.args.get('primary', '1')
+    try:
+        r = requests.post(base + '/admin/products/upload-image/' + pid + '?primary=' + primary,
+                          headers={'X-Admin-Token': site.get('admin_token', '')},
+                          files={'file': (f.filename, f.stream, f.mimetype or 'application/octet-stream')},
+                          timeout=40)
+        try:
+            return jsonify(r.json()), r.status_code
+        except Exception:
+            return jsonify({'ok': False, 'error': 'upload failed (HTTP ' + str(r.status_code) + ')'}), 502
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:160]}), 502
+
+
 @app.route('/products/<site_id>/bulk', methods=['POST'])
 def products_bulk(site_id):
     """Proxy a batch of product edits to the origin site in one request."""

@@ -20,6 +20,7 @@
 /* fields that are empty stay hidden on the public site; the editor reveals them */
 .pf-empty { display: none; }
 .retail-val { text-decoration: line-through; color: var(--text-muted); }
+.pd-buylink { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); word-break: break-all; margin-top: 12px; padding: 7px 10px; background: var(--surface-2); border-radius: 8px; line-height: 1.5; }
 {% endblock %}
 
 {% block content %}
@@ -41,6 +42,7 @@
         </button>
       </div>
       <div class="pp-agentlist" id="ppAgentList"></div>
+      <div class="pd-buylink pf-empty" data-pf="url" data-pf-type="url" title="The source buy link — powers every agent button">{{ product.url or '— no buy link set —' }}</div>
     </div>
     <!-- RIGHT: info (mirrors the modal pd-side) -->
     <div class="pd-side">

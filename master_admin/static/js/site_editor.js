@@ -37,6 +37,23 @@
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function isPlaceholder(t) { t = (t || '').trim(); return t === '' || t === '—' || t === 'Unspecified'; }
   function mkPen() { var p = D.createElement('span'); p.className = 'se-pen'; p.textContent = '✎'; return p; }
+  function imgSrc(u) { return (u && u.charAt(0) === '/') ? (SITEROOT + u) : u; }  // prefix /uploads with the site root for display
+  function uploadImg(pid, file, primary) {
+    var fd = new FormData(); fd.append('file', file);
+    return fetch('/upload/' + SITE + '/' + encodeURIComponent(pid) + (primary === false ? '?primary=0' : ''), { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: 'network error' }; });
+  }
+  function toast(msg, actionLabel, onAction) {
+    var t = D.createElement('div'); t.className = 'se-toast';
+    t.innerHTML = '<span>' + esc(msg) + '</span>' + (actionLabel ? '<button>' + esc(actionLabel) + '</button>' : '');
+    B.appendChild(t); var done = false;
+    function close() { if (done) return; done = true; t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 300); }
+    if (actionLabel) t.querySelector('button').onclick = function () { onAction && onAction(); close(); };
+    setTimeout(close, 6500); return t;
+  }
+  function confirmBox(anchor, message, onYes) {
+    mini(anchor, '<span style="font-size:13px;">' + esc(message) + '</span><button class="ok" style="background:#ef4444;">Delete</button>', function () { closeMini(); onYes(); });
+  }
 
   /* ---------- pending changes ---------- */
   function recordProduct(id, partial) { if (!id) return; var p = pending.products[id] || (pending.products[id] = {}); Object.keys(partial).forEach(function (k) { p[k] = partial[k]; }); refreshBar(); }
@@ -105,6 +122,10 @@
     '.bs-add{display:flex;align-items:center;justify-content:center;min-height:120px;border:2px dashed #6366f1;border-radius:14px;background:rgba(99,102,241,.08);color:#a5b4fc;font:700 13px system-ui;cursor:pointer;transition:all .12s;}.bs-add:hover{background:rgba(99,102,241,.18);color:#fff;}',
     '.se-var{display:flex;gap:8px;align-items:center;background:#0f0f14;border:1px solid #2a2a35;border-radius:10px;padding:8px;margin-bottom:8px;}.se-var .h{cursor:grab;color:#6b7280;}.se-var input{background:#16161c;border:1px solid #2a2a35;color:#fff;border-radius:7px;padding:7px 9px;font:12px system-ui;outline:none;}.se-var .vn{width:110px;}.se-var .vi{flex:1;min-width:0;}.se-var .del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:15px;}',
     '.bs-res{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;}.bs-res:hover{background:#23232c;}.bs-res img{width:42px;height:42px;object-fit:cover;border-radius:6px;background:#222;flex-shrink:0;}',
+    '.se-up{display:inline-flex;align-items:center;gap:4px;background:#23232c;color:#cbd5e1;border:1px solid #2a2a35;border-radius:7px;padding:8px 11px;font:700 12px system-ui;cursor:pointer;white-space:nowrap;}.se-up:hover{border-color:#6366f1;color:#fff;}.se-up-sm{padding:7px 9px;}',
+    '.se-uprow{display:flex;gap:6px;align-items:center;margin-top:8px;}',
+    '.se-menu{display:flex;flex-direction:column;min-width:172px;}.se-menu button{background:none;border:none;color:#e6e6ea;text-align:left;padding:9px 11px;border-radius:7px;font:600 13px system-ui;cursor:pointer;}.se-menu button:hover{background:#23232c;}.se-menu button.danger{color:#ef4444;}',
+    '.se-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:2147483600;display:flex;align-items:center;gap:12px;background:#16161c;border:1px solid #2a2a35;color:#fff;padding:11px 16px;border-radius:12px;font:600 13px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:opacity .3s;}.se-toast button{background:#6366f1;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-weight:700;cursor:pointer;}',
     '.se-row{display:flex;gap:8px;margin-top:14px;}.se-b{flex:1;border:none;border-radius:8px;padding:10px;font-weight:700;font-size:12px;cursor:pointer;}.se-b.save{background:#6366f1;color:#fff;}.se-b.ghost{background:#23232c;color:#cbd5e1;}',
     '.se-bar{position:fixed;bottom:0;left:0;right:0;z-index:2147483600;display:none;align-items:center;justify-content:center;gap:14px;padding:12px;background:linear-gradient(0deg,rgba(10,10,13,.97),rgba(10,10,13,.85));backdrop-filter:blur(8px);border-top:1px solid #2a2a35;font:600 13px system-ui;color:#fff;}',
     '.se-bar.show{display:flex;}.se-bar .cnt{color:#fbbf24;}',
@@ -195,15 +216,21 @@
     }
     if (el.__se) return; el.__se = 1; el.classList.add('se-ed-h');
     var pen = mkPen(); el.appendChild(pen);
-    // category/quality are pick-from-list: clicking the badge itself opens the dropdown
-    if (type === 'quality' || type === 'category') {
+    // category/quality/buy-link open a picker/field: clicking the element opens it
+    if (type === 'quality' || type === 'category' || type === 'url') {
       el.style.cursor = 'pointer';
-      el.addEventListener('click', function (e) { if (e.target === pen || pen.contains(e.target)) return; e.preventDefault(); e.stopPropagation(); (type === 'quality' ? editQuality : editCategory)(el); });
+      el.addEventListener('click', function (e) { if (e.target === pen || pen.contains(e.target)) return; e.preventDefault(); e.stopPropagation(); pen.onclick(e); });
     }
     pen.onclick = function (e) {
       e.preventDefault(); e.stopPropagation();
       if (type === 'quality') return editQuality(el);
       if (type === 'category') return editCategory(el);
+      if (type === 'url') {
+        var cur = isPlaceholder(el.textContent) ? '' : el.textContent.trim();
+        return mini(el, '<input id="bl" value="' + esc(cur) + '" size="40" placeholder="https://weidian.com/item.html?itemID=..."><button class="ok">Save</button>', function (m) {
+          var v = m.querySelector('#bl').value.trim(); el.textContent = v || '— no buy link set —'; el.classList.toggle('pf-empty', false); recordProduct(PID, { url: v }); closeMini();
+        });
+      }
       if (type === 'price' || type === 'money') {
         var fld = type === 'price' ? 'price' : field;
         var num = (el.textContent.replace('✎', '').match(/[0-9.]+/) || [''])[0];
@@ -216,9 +243,11 @@
     };
   }
   function editImage(img) {
-    mini(img, '<input id="iu" value="' + esc(img.getAttribute('src')) + '" size="34" placeholder="https://..."><button class="ok">OK</button>', function (m) {
-      var v = m.querySelector('#iu').value.trim(); if (!v) return; img.src = v; recordProduct(PID, { image: v }); closeMini();
+    var m = mini(img, '<input id="iu" value="' + esc(img.getAttribute('src')) + '" size="26" placeholder="https://..."><button class="ok">Set</button><label class="se-up">⤴ Upload<input type="file" accept="image/*" hidden></label>', function (mm) {
+      var v = mm.querySelector('#iu').value.trim(); if (!v) return; img.src = imgSrc(v); recordProduct(PID, { image: v }); closeMini();
     });
+    var fi = m.querySelector('input[type=file]');
+    if (fi) fi.onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, true).then(function (j) { if (j && j.ok) { img.src = imgSrc(j.image); status('Image uploaded ✓', 'success'); closeMini(); } else status((j && j.error) || 'Upload failed', 'error'); }); };
   }
   function editQuality(el) {
     var valEl = el.querySelector('.pf-val') || el, cur = isPlaceholder(valEl.textContent) ? '' : valEl.textContent.trim();
@@ -240,11 +269,13 @@
     pen.onclick = function (e) {
       e.preventDefault(); e.stopPropagation();
       var imgs = [].map.call(D.querySelectorAll('#ppQc img'), function (i) { return i.src; });
-      mini(el, '<textarea id="qc" placeholder="One QC photo URL per line">' + esc(imgs.join('\n')) + '</textarea><button class="ok">OK</button>', function (m) {
+      var mm = mini(el, '<textarea id="qc" placeholder="One QC photo URL per line">' + esc(imgs.join('\n')) + '</textarea><div class="se-uprow"><button class="ok">Save</button><label class="se-up">⤴ Upload photo<input type="file" accept="image/*" hidden></label></div>', function (m) {
         var lines = m.querySelector('#qc').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
         var box = D.getElementById('ppQc'); if (box) { box.className = 'pd-qc'; box.innerHTML = lines.length ? lines.map(function (u) { return '<img src="' + esc(u) + '" referrerpolicy="no-referrer">'; }).join('') : '<div class="pd-qc-empty">No QC photos yet.</div>'; }
         recordProduct(PID, { qc_photos: JSON.stringify(lines) }); closeMini();
       });
+      var fi = mm.querySelector('input[type=file]');
+      if (fi) fi.onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, false).then(function (j) { if (j && j.ok) { var ta = mm.querySelector('#qc'); ta.value = (ta.value ? ta.value + '\n' : '') + imgSrc(j.image); status('Photo added — click Save', 'success'); } else status((j && j.error) || 'Upload failed', 'error'); }); };
     };
   }
 
@@ -273,8 +304,9 @@
     var list = bg.querySelector('#vl');
     function row(v) {
       var d = D.createElement('div'); d.className = 'se-var'; d.setAttribute('draggable', 'true');
-      d.innerHTML = '<span class="h">⠿</span><input class="vn" placeholder="Name" value="' + esc(v.name || '') + '"><input class="vi" placeholder="Image URL" value="' + esc(v.image || '') + '"><button class="del">✕</button>';
+      d.innerHTML = '<span class="h">⠿</span><input class="vn" placeholder="Name" value="' + esc(v.name || '') + '"><input class="vi" placeholder="Image URL" value="' + esc(v.image || '') + '"><label class="se-up se-up-sm" title="Upload photo">⤴<input type="file" accept="image/*" hidden></label><button class="del">✕</button>';
       d.querySelector('.del').onclick = function () { d.remove(); };
+      d.querySelector('input[type=file]').onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, false).then(function (j) { if (j && j.ok) { d.querySelector('.vi').value = imgSrc(j.image); status('Uploaded ✓', 'success'); } else status((j && j.error) || 'Upload failed', 'error'); }); };
       d.addEventListener('dragstart', function () { dragEl = d; }); d.addEventListener('dragover', function (e) { e.preventDefault(); });
       d.addEventListener('drop', function (e) { e.preventDefault(); if (!dragEl || dragEl === d) return; var rs = [].slice.call(list.children); if (rs.indexOf(dragEl) < rs.indexOf(d)) d.after(dragEl); else d.before(dragEl); });
       return d;
@@ -317,14 +349,87 @@
       var hot = card.classList.contains('is-hot');
       var t = D.createElement('div'); t.className = 'se-ptools';
       t.innerHTML = (isShop && grid ? '<button class="se-pbtn grab" title="Drag to reorder">⠿</button>' : '') +
-        '<button class="se-pbtn b-hot' + (hot ? ' on' : '') + '" title="Hot">🔥</button>' +
-        '<button class="se-pbtn b-edit" title="Edit this product">✎</button>';
+        '<button class="se-pbtn b-hot' + (hot ? ' on' : '') + '" title="Mark hot">🔥</button>' +
+        '<button class="se-pbtn b-edit" title="Edit this product">✎</button>' +
+        '<button class="se-pbtn b-more" title="More">⋯</button>';
       card.appendChild(t);
       t.querySelectorAll('.se-pbtn').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); }); });
       t.querySelector('.b-edit').onclick = function (e) { e.preventDefault(); e.stopPropagation(); navTo(card.getAttribute('href')); };
       t.querySelector('.b-hot').onclick = function (e) { e.preventDefault(); e.stopPropagation(); toggleHot(card, id, this); };
+      t.querySelector('.b-more').onclick = function (e) { e.preventDefault(); e.stopPropagation(); cardMenu(card, id, this); };
       if (isShop && grid) { var g = t.querySelector('.grab'); if (g) setupDrag(card, g, grid, function () { recordOrder(grid); }); }
     });
+    if (isShop) { var sg = D.querySelector('.product-grid'); if (sg && !sg.__addtile) { sg.__addtile = 1; var tile = D.createElement('button'); tile.type = 'button'; tile.className = 'bs-add'; tile.textContent = '+ Add product'; tile.onclick = openAddProduct; sg.appendChild(tile); } }
+  }
+  function cardMenu(card, id, btn) {
+    var stockLabel = card.classList.contains('out-of-stock') ? '✅ Mark in stock' : '⛔ Mark out of stock';
+    var m = mini(btn, '<div class="se-menu"><button data-a="dup">⧉ Duplicate</button><button data-a="stock">' + stockLabel + '</button><button data-a="del" class="danger">🗑 Delete</button></div>');
+    m.querySelector('[data-a=dup]').onclick = function () { closeMini(); duplicateProduct(id); };
+    m.querySelector('[data-a=stock]').onclick = function () { closeMini(); toggleStock(card, id); };
+    m.querySelector('[data-a=del]').onclick = function () { closeMini(); deleteProduct(card, id, btn); };
+  }
+  function toggleStock(card, id) {
+    var nowOut = !card.classList.contains('out-of-stock');
+    card.classList.toggle('out-of-stock', nowOut);
+    recordProduct(id, { in_stock: nowOut ? 0 : 1 });
+    status(nowOut ? 'Marked out of stock' : 'Marked in stock', 'success');
+  }
+  function duplicateProduct(id) {
+    status('Duplicating…');
+    fetch(SITEROOT + '/api/product/' + encodeURIComponent(id), { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (p) {
+      if (!p || p.error) { status('Could not load product', 'error'); return; }
+      var core = { name: (p.name || 'Product') + ' (copy)', price: p.price, url: p.url, image: p.image, category: p.category, seller: p.seller, batch: p.batch, retail_price: p.retail_price, tags: p.tags };
+      jfetch('/products/' + SITE + '/new', 'POST', core).then(function (j) {
+        if (j && j.ok && j.id) {
+          var extras = {}; ['weight', 'quality', 'sales', 'in_stock'].forEach(function (k) { if (p[k] != null && p[k] !== '') extras[k] = p[k]; });
+          var go = function () { status('Duplicated ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); };
+          if (Object.keys(extras).length) jfetch('/products/' + SITE + '/' + j.id, 'PUT', extras).then(go); else go();
+        } else status((j && j.error) || 'Duplicate failed', 'error');
+      });
+    }).catch(function () { status('Duplicate failed', 'error'); });
+  }
+  function deleteProduct(card, id, anchor) {
+    confirmBox(anchor, 'Delete this product?', function () {
+      fetch(SITEROOT + '/api/product/' + encodeURIComponent(id), { credentials: 'same-origin' }).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function (p) {
+        jfetch('/products/' + SITE + '/' + encodeURIComponent(id), 'DELETE').then(function (j) {
+          if (j && j.ok) {
+            var grid = card.closest('.product-grid') || card.parentNode; flip(grid, function () { card.remove(); });
+            toast('Product deleted', p ? 'Undo' : null, p ? function () { restoreProduct(p); } : null);
+          } else status((j && j.error) || 'Delete failed', 'error');
+        });
+      });
+    });
+  }
+  function restoreProduct(p) {
+    if (!p || !p.id) { status('Cannot undo', 'error'); return; }
+    var core = { id: p.id, name: p.name, price: p.price, url: p.url, image: p.image, category: p.category, seller: p.seller, batch: p.batch, retail_price: p.retail_price, tags: p.tags };
+    jfetch('/products/' + SITE + '/new', 'POST', core).then(function (j) {
+      var extras = {}; ['weight', 'quality', 'sales', 'featured', 'in_stock'].forEach(function (k) { if (p[k] != null && p[k] !== '') extras[k] = p[k]; });
+      var done = function () { status('Restored ✓', 'success'); setTimeout(function () { location.reload(); }, 700); };
+      if (Object.keys(extras).length) jfetch('/products/' + SITE + '/' + p.id, 'PUT', extras).then(done); else done();
+    });
+  }
+  function openAddProduct() {
+    var build = function () {
+      var bg = D.createElement('div'); bg.className = 'se-modal-bg';
+      var catOpts = '<option value="">— category —</option>' + CATS.map(function (c) { return '<option value="' + c.slug + '">' + esc(c.name) + '</option>'; }).join('');
+      bg.innerHTML = '<div class="se-modal"><h3>Add product</h3><div class="sub">Fill the basics — you can edit the rest on its page after</div>' +
+        '<label class="se-pl">Name *</label><input id="ap-n" class="se-ps">' +
+        '<label class="se-pl">Price ($)</label><input id="ap-p" class="se-ps">' +
+        '<label class="se-pl">Category</label><select id="ap-c" class="se-ps">' + catOpts + '</select>' +
+        '<label class="se-pl">Image URL</label><input id="ap-i" class="se-ps" placeholder="https://… (or upload after)">' +
+        '<div class="se-row"><button class="se-b ghost" id="ap-x">Cancel</button><button class="se-b save" id="ap-s">Create</button></div></div>';
+      B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
+      bg.querySelector('#ap-x').onclick = function () { bg.remove(); };
+      bg.querySelector('#ap-s').onclick = function () {
+        var name = bg.querySelector('#ap-n').value.trim(); if (!name) { status('Name is required', 'error'); return; }
+        var body = { name: name, price: bg.querySelector('#ap-p').value.trim(), category: bg.querySelector('#ap-c').value, image: bg.querySelector('#ap-i').value.trim() };
+        status('Creating…');
+        jfetch('/products/' + SITE + '/new', 'POST', body).then(function (j) { if (j && j.ok && j.id) { bg.remove(); status('Created ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); } else status((j && j.error) || 'Create failed', 'error'); });
+      };
+      bg.querySelector('#ap-n').focus();
+    };
+    if (CATS.length) build(); else loadCats().then(build);
   }
   function toggleHot(card, id, btn) {
     var makeHot = !card.classList.contains('is-hot');
