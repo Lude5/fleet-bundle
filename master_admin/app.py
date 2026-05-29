@@ -23,7 +23,7 @@ SITES_FILE = ROOT / 'sites.json'
 app = Flask(__name__, template_folder='templates', static_folder='static')
 # Keep the login alive for a day so we don't have to re-enter the password
 # every time the browser closes.
-app.permanent_session_lifetime = timedelta(days=1)
+app.permanent_session_lifetime = timedelta(days=365)
 
 # Secret key must survive auto-reloads, or every code change kicks you out.
 # Persist a generated one to a local file the first time we run.

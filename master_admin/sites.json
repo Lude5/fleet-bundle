@@ -93,5 +93,24 @@
     "product_count": 6907,
     "ga_measurement_id": "G-H5ZV66KWSC",
     "ga_property_id": ""
+  },
+  {
+    "id": "goats",
+    "name": "GOATS",
+    "slug": "goats",
+    "url": "",
+    "admin_url": "",
+    "admin_password": "",
+    "admin_token": "",
+    "render_service_id": "",
+    "agent": "KakoBuy",
+    "agent_signup": "",
+    "affiliate_code": "",
+    "color": "#eab308",
+    "tag": "wip",
+    "description": "New site — add public URL + admin API token to connect (Sites > edit)",
+    "product_count": 0,
+    "ga_measurement_id": "",
+    "ga_property_id": ""
   }
 ]
