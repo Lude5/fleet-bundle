@@ -578,6 +578,20 @@ def products_create_one(site_id):
     return jsonify(data or {'ok': True})
 
 
+@app.route('/products/<site_id>/bulk', methods=['POST'])
+def products_bulk(site_id):
+    """Proxy a batch of product edits to the origin site in one request."""
+    sites = {s['id']: s for s in load_sites()}
+    site = sites.get(site_id)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    data, err = _call_site_detailed(site, '/admin/api/products/bulk', method='POST', json_body=body, timeout=20)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
+
+
 @app.route('/products/<site_id>/<pid>', methods=['PUT', 'POST'])
 def products_update_one(site_id, pid):
     """Proxy an inline product edit to the origin site (works on any domain)."""

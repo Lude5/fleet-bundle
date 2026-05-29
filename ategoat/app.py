@@ -1849,16 +1849,44 @@ def api_admin_add_product():
     return jsonify({'ok': True, 'id': data['id']})
 
 
+def _coerce_price(data):
+    if 'price' in data:
+        import re as _re
+        try:
+            data['price_numeric'] = float(_re.sub(r'[^0-9.]', '', str(data['price'])) or 0)
+        except Exception:
+            data['price_numeric'] = 0
+
+
 @app.route('/admin/api/products/<pid>', methods=['PUT', 'PATCH'])
 def api_admin_update_product(pid):
     if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
-    if 'price' in data:
-        try: data['price_numeric'] = float(data['price'] or 0)
-        except ValueError: data['price_numeric'] = 0
+    _coerce_price(data)
     update_product(pid, data)
     return jsonify({'ok': True})
+
+
+@app.route('/admin/api/products/bulk', methods=['POST'])
+def api_admin_bulk_update():
+    """Apply many product edits in ONE request (used by the studio 'Save changes')."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    updates = data.get('updates') or []
+    n = 0
+    for u in updates:
+        pid = u.get('id')
+        if not pid:
+            continue
+        fields = {k: v for k, v in u.items() if k != 'id'}
+        if not fields:
+            continue
+        _coerce_price(fields)
+        update_product(pid, fields)
+        n += 1
+    return jsonify({'ok': True, 'updated': n})
 
 
 @app.route('/admin/api/products/<pid>', methods=['DELETE'])
