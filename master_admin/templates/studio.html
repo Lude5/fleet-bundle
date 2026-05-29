@@ -99,9 +99,6 @@
       }
     }
     if (fr) fr.addEventListener('load', inject);
-    // Keep the site warm while the Studio is open so saves stay instant
-    // (Render free tier sleeps when idle). 24/7 warmth needs an external pinger.
-    if (BASE) setInterval(function () { fetch(BASE, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' }).catch(function () {}); }, 240000);
   </script>
 </body>
 </html>
