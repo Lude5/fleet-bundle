@@ -19,10 +19,17 @@ from flask import (Flask, render_template, request, jsonify, redirect,
 ROOT = Path(__file__).resolve().parent       # _master_admin/
 CLIENTS = ROOT.parent                         # clients/
 SITES_FILE = ROOT / 'sites.json'
-# Make sibling modules (ga_client, scrape_product) importable whether app.py is
-# run directly (cwd=master_admin) OR imported as a package by the fleet bundle.
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+
+
+def _sibling(name):
+    """Import a sibling module (ga_client, scrape_product) whether app.py runs
+    directly (cwd=master_admin) OR is imported as the master_admin package by the
+    fleet bundle. Avoids polluting global sys.path (which shadows other apps)."""
+    import importlib
+    try:
+        return importlib.import_module(name)
+    except ImportError:
+        return importlib.import_module('master_admin.' + name)
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 # Keep the login alive for a day so we don't have to re-enter the password
@@ -554,7 +561,7 @@ def products_scrape():
     """Scrape a Weidian/Taobao/1688 (or agent-wrapped) link for the add-product composer.
     Returns scrapable fields (name, base + per-style prices, variants, gallery) plus a
     manifest of fields the operator must add by hand (QC photos, sizes, batch, etc.)."""
-    import scrape_product
+    scrape_product = _sibling('scrape_product')
     data = request.get_json(silent=True) or {}
     url = (data.get('url') or '').strip()
     if not url:
@@ -1023,7 +1030,7 @@ def export(kind):
 @app.route('/api/ga/<sid>')
 def api_ga(sid):
     """Pull live GA data for a site. Returns null if not configured."""
-    import ga_client
+    ga_client = _sibling('ga_client')
     site = find_site(sid)
     if not site:
         return jsonify({'error': 'site not found'}), 404
@@ -1044,7 +1051,7 @@ def api_ga(sid):
 @app.route('/ga/setup')
 def ga_setup():
     """Walks the user through getting GA Data API credentials."""
-    import ga_client
+    ga_client = _sibling('ga_client')
     return render_template('ga_setup.html',
         active='analytics',
         is_configured=ga_client.is_configured(),
