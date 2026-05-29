@@ -688,6 +688,8 @@
         .footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 40px; flex-wrap: wrap; }
         .footer-brand { font-family: var(--font-display); font-size: 30px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .footer-desc { font-size: 12px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
+        .product-card-img-wrap { position: relative; }
+        .product-card-hot { position: absolute; top: 8px; left: 8px; z-index: 3; font-size: 15px; line-height: 1; padding: 4px 6px; border-radius: 8px; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .footer-col h4 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
         .footer-col a { display: block; padding: 3px 0; color: var(--text-secondary); font-size: 12px; transition: color 0.2s; }
         .footer-col a:hover { color: var(--accent); }
@@ -754,9 +756,9 @@
     <script src="/static/js/preview-mode.js"></script>
 </head>
 <body>
-    {% if settings.announcement_text %}<div class="announce-bar" style="background:var(--accent);color:#0b0b0b;text-align:center;padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.3px;">{{ settings.announcement_text }}</div>{% endif %}
+    {% if settings.announcement_text %}<div class="announce-bar" data-edit="announcement_text" style="background:var(--accent);color:#0b0b0b;text-align:center;padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.3px;">{{ settings.announcement_text }}</div>{% endif %}
     <nav class="nav" id="nav">
-        <a href="/" class="nav-brand">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></a>
+        <a href="/" class="nav-brand" data-edit-brand="1">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></a>
         <ul class="nav-links">
             <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
             <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}">Shop</a></li>
@@ -816,7 +818,7 @@
         <div class="footer-top">
             <div>
                 <div class="footer-brand">{{ settings.brand_part1 or site.name_part1 }}<span style="color:var(--accent);">{{ settings.brand_part2 or site.name_part2 }}</span></div>
-                <p class="footer-desc">{{ settings.footer_text or 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.' }}</p>
+                <p class="footer-desc" data-edit="footer_text">{{ settings.footer_text or 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.' }}</p>
             </div>
             <div class="footer-col">
                 <h4>Categories</h4>

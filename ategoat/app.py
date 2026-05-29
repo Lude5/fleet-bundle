@@ -1910,6 +1910,62 @@ def api_admin_update_settings():
     return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
 
 
+# --- Category management API (token-auth, for the master-admin visual editor) ---
+@app.route('/admin/api/categories')
+def api_admin_categories():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'categories': [dict(c) for c in get_categories()]})
+
+
+@app.route('/admin/api/categories', methods=['POST'])
+def api_admin_category_add():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import re as _re
+    d = request.get_json(silent=True) or {}
+    name = (d.get('name') or '').strip()
+    if not name:
+        return jsonify({'ok': False, 'error': 'name required'}), 400
+    slug = (d.get('slug') or name).strip().lower().replace(' ', '-')
+    slug = _re.sub(r'[^a-z0-9\-]', '', slug) or 'category'
+    add_category(slug, name, d.get('icon', ''), d.get('description', ''), int(d.get('sort_order', 999)))
+    return jsonify({'ok': True, 'slug': slug})
+
+
+@app.route('/admin/api/categories/reorder', methods=['POST'])
+def api_admin_category_reorder():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    order = d.get('order') or []
+    for i, slug in enumerate(order):
+        try:
+            update_category(slug, {'sort_order': i})
+        except Exception:
+            pass
+    return jsonify({'ok': True, 'n': len(order)})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['PATCH', 'PUT'])
+def api_admin_category_update(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    updates = {k: d[k] for k in ('name', 'icon', 'description', 'sort_order', 'slug') if k in d}
+    new_slug = update_category(slug, updates)
+    return jsonify({'ok': True, 'slug': new_slug})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['DELETE'])
+def api_admin_category_delete(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    delete_category(slug, d.get('reassign_to', ''))
+    return jsonify({'ok': True})
+
+
 @app.route('/admin/backup/download')
 def admin_download_backup():
     if not is_admin():
