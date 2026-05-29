@@ -333,7 +333,7 @@ tr[draggable]:hover .drag-h{color:var(--accent);}
     <div class="ed-pv-wrap">
       <div class="ed-pv-bar"><span class="dot"></span><span data-i18n="ed_live">Live preview</span><span id="edSiteName" style="color:var(--text-secondary);"></span></div>
       <div class="ed-pv-stage" id="edStage">
-        <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer" onload="edFitPreview()"></iframe>
+        <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer" onload="window.edFitPreview&&edFitPreview()"></iframe>
       </div>
     </div>
     <div class="ed-fields">

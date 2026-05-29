@@ -19,6 +19,10 @@ from flask import (Flask, render_template, request, jsonify, redirect,
 ROOT = Path(__file__).resolve().parent       # _master_admin/
 CLIENTS = ROOT.parent                         # clients/
 SITES_FILE = ROOT / 'sites.json'
+# Make sibling modules (ga_client, scrape_product) importable whether app.py is
+# run directly (cwd=master_admin) OR imported as a package by the fleet bundle.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 # Keep the login alive for a day so we don't have to re-enter the password
