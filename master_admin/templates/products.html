@@ -454,8 +454,7 @@ function openEditModal(product){
     document.getElementById('edTrending').checked = (product.tags||'').toLowerCase().indexOf('trending') >= 0;
     document.getElementById('edStock').checked = !(product.in_stock === 0 || product.in_stock === false);
     var _qc = product.qc_photos, _t = '';
-    if (_qc) { try { var _a = (typeof _qc === 'string') ? JSON.parse(_qc) : _qc; _t = (Array.isArray(_a)?_a:[]).join('
-'); } catch(e){ _t = (typeof _qc==='string')?_qc:''; } }
+    if (_qc) { try { var _a = (typeof _qc === 'string') ? JSON.parse(_qc) : _qc; _t = (Array.isArray(_a)?_a:[]).join('\n'); } catch(e){ _t = (typeof _qc==='string')?_qc:''; } }
     document.getElementById('edQc').value = _t;
     document.getElementById('edSiteName').textContent = ' · ' + (product._site_name || '');
     var base = (site.url || '');
@@ -475,8 +474,7 @@ async function saveEdit(){
     var _tags = document.getElementById('edTags').value.trim();
     var _toks = _tags.split(/\s+/).filter(function(t){ return t && t.toLowerCase()!=='trending'; });
     if (document.getElementById('edTrending').checked) _toks.push('trending');
-    var _qcLines = document.getElementById('edQc').value.split('
-').map(function(x){return x.trim();}).filter(Boolean);
+    var _qcLines = document.getElementById('edQc').value.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
     var body = {
         name: document.getElementById('edName').value,
         category: document.getElementById('edCategory').value,
