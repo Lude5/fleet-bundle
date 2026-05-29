@@ -47,7 +47,7 @@
     var n = dirtyCount();
     bar.classList.toggle('show', n > 0);
     var c = bar.querySelector('.cnt'); if (c) c.textContent = '● ' + n + ' unsaved change' + (n === 1 ? '' : 's');
-    try { if (n) localStorage.setItem(PKEY, JSON.stringify(pending)); else localStorage.removeItem(PKEY); } catch (e) {}
+    try { if (n) localStorage.setItem(PKEY, JSON.stringify(pending)); } catch (e) {}  // cleared only on explicit save/dismiss
   }
   function showRecover(saved) {
     var n = Object.keys(saved.products || {}).reduce(function (a, id) { return a + Object.keys(saved.products[id]).length; }, 0) + Object.keys(saved.settings || {}).length + (saved.order ? 1 : 0);
@@ -72,7 +72,7 @@
     return Promise.all(ops).then(function (res) {
       var ok = res.every(function (r) { return r && r.ok; });
       if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save changes'; }
-      if (ok) { pending = { products: {}, settings: {}, order: null }; refreshBar(); status('All changes saved ✓', 'success'); return true; }
+      if (ok) { pending = { products: {}, settings: {}, order: null }; try { localStorage.removeItem(PKEY); } catch (e) {} refreshBar(); status('All changes saved ✓', 'success'); return true; }
       status('Some changes failed — try again', 'error'); return false;
     }).catch(function () { if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save changes'; } status('Network error — NOT saved', 'error'); return false; });
   }
