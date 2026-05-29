@@ -933,6 +933,16 @@ def api_qc(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'photos': []})
+    # Operator-saved QC photos (edited via the master-admin studio) always win.
+    stored = p.get('qc_photos')
+    if stored:
+        try:
+            import json as _json
+            arr = _json.loads(stored) if isinstance(stored, str) else stored
+            if isinstance(arr, list) and arr:
+                return jsonify({'photos': arr})
+        except Exception:
+            pass
     cached = cache_get(f'qc:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify({'photos': cached})

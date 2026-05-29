@@ -50,7 +50,7 @@
         <span class="pd-badge verified">VERIFIED</span>
         <span class="pd-badge cat{% if not product.category %} pf-empty{% endif %}" data-pf="category" data-pf-type="category"><span class="pf-val">{{ product.category or '—' }}</span></span>
       </div>
-      <div class="pd-price" id="ppPrice" data-pf="price" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
+      <div class="pd-price" id="ppPrice" data-pf="price" data-pf-type="price" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
       <div class="pd-meta">
         <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val" data-pf="weight">{{ product.weight or '—' }}</div></div>
         <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val" data-pf="batch">{{ product.batch or 'Unspecified' }}</div></div>
