@@ -912,14 +912,24 @@ def export(kind):
         connected = [s for s in sites if s.get('admin_token')]
         results = fetch_all_sites(fetch_site_products, connected)
         rows = []
+        MAX_ROWS = 60000  # hard cap so a multi-site export can't OOM the instance
+        truncated = False
         for site, prods in results:
-            if not prods: continue
+            if not prods:
+                continue
             for p in prods:
+                if len(rows) >= MAX_ROWS:
+                    truncated = True
+                    break
                 rows.append([
-                    site['name'], p.get('id',''), p.get('name',''), p.get('category',''),
-                    p.get('price',''), p.get('seller',''), p.get('url',''), p.get('image',''),
-                    'YES' if p.get('featured') else '', p.get('tags','')
+                    site['name'], p.get('id', ''), p.get('name', ''), p.get('category', ''),
+                    p.get('price', ''), p.get('seller', ''), p.get('url', ''), p.get('image', ''),
+                    'YES' if p.get('featured') else '', p.get('tags', '')
                 ])
+            if truncated:
+                break
+        if truncated:
+            rows.append(['(truncated at %d rows — use CSV for the full export)' % MAX_ROWS, '', '', '', '', '', '', '', '', ''])
         sheets['Products'] = (
             ['Site', 'ID', 'Name', 'Category', 'Price USD', 'Seller', 'Product URL', 'Image', 'Featured', 'Tags'],
             rows,
@@ -972,59 +982,49 @@ def export(kind):
     base_name = f'master-{kind}-{datetime.now().strftime("%Y%m%d-%H%M")}'
 
     if fmt == 'csv':
-        # CSV can only hold one sheet — flatten and use first
+        # Stream row-by-row so even a huge fleet export uses ~no memory.
+        from flask import Response, stream_with_context
         sheet_name, (headers, rows) = next(iter(sheets.items()))
-        buf = StringIO()
-        w = csv_mod.writer(buf)
-        w.writerow(headers)
-        for r in rows: w.writerow(r)
-        resp = make_response(buf.getvalue())
-        resp.headers['Content-Type'] = 'text/csv; charset=utf-8'
+
+        def _gen():
+            buf = StringIO(); w = csv_mod.writer(buf)
+            w.writerow(headers); yield buf.getvalue(); buf.seek(0); buf.truncate(0)
+            for r in rows:
+                w.writerow(r); yield buf.getvalue(); buf.seek(0); buf.truncate(0)
+        resp = Response(stream_with_context(_gen()), mimetype='text/csv; charset=utf-8')
         resp.headers['Content-Disposition'] = f'attachment; filename="{base_name}.csv"'
         return resp
 
-    # XLSX with multiple sheets + brand styling
+    # XLSX — write_only mode keeps memory bounded (no per-cell style objects held
+    # for every row, which is what OOM'd the instance on big product exports).
     try:
         import openpyxl
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.cell import WriteOnlyCell
+        from openpyxl.styles import Font, PatternFill
     except ImportError:
         return jsonify({'error': 'openpyxl not installed — pip install openpyxl'}), 500
-
-    wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # remove default sheet
-    header_fill = PatternFill('solid', fgColor='06B6D4')
-    header_font = Font(bold=True, color='FFFFFF', size=11)
-    alt_fill = PatternFill('solid', fgColor='F8FAFC')
-    thin = Side(border_style='thin', color='E2E8F0')
-
-    for sheet_name, (headers, rows) in sheets.items():
-        ws = wb.create_sheet(title=sheet_name[:31])
-        ws.append(headers)
-        for cell in ws[1]:
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = Alignment(horizontal='left', vertical='center')
-            cell.border = Border(bottom=thin)
-        for i, r in enumerate(rows, 2):
-            ws.append(r)
-            if i % 2 == 0:
-                for cell in ws[i]:
-                    cell.fill = alt_fill
-        # Auto-size
-        for col_idx, h in enumerate(headers, 1):
-            longest = max([len(str(h))] + [len(str(r[col_idx-1])) for r in rows[:200]], default=10)
-            ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = min(longest + 3, 60)
-        ws.freeze_panes = 'A2'
-
-    if not wb.sheetnames:
-        wb.create_sheet('Empty').append(['No data'])
-
-    buf = BytesIO()
-    wb.save(buf)
-    resp = make_response(buf.getvalue())
-    resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    resp.headers['Content-Disposition'] = f'attachment; filename="{base_name}.xlsx"'
-    return resp
+    try:
+        wb = openpyxl.Workbook(write_only=True)
+        hfont = Font(bold=True, color='FFFFFF', size=11)
+        hfill = PatternFill('solid', fgColor='06B6D4')
+        for sheet_name, (headers, rows) in sheets.items():
+            ws = wb.create_sheet(title=sheet_name[:31])
+            hdr = []
+            for h in headers:
+                c = WriteOnlyCell(ws, value=h); c.font = hfont; c.fill = hfill; hdr.append(c)
+            ws.append(hdr)
+            for r in rows:
+                ws.append(r)
+        if not wb.sheetnames:
+            ws = wb.create_sheet('Empty'); ws.append(['No data'])
+        buf = BytesIO()
+        wb.save(buf)
+        resp = make_response(buf.getvalue())
+        resp.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        resp.headers['Content-Disposition'] = f'attachment; filename="{base_name}.xlsx"'
+        return resp
+    except Exception as e:
+        return jsonify({'error': 'Export failed (try CSV for very large catalogues): ' + str(e)[:150]}), 500
 
 
 @app.route('/api/ga/<sid>')
