@@ -527,6 +527,21 @@ def products_scrape():
         return jsonify({'ok': False, 'error': str(e)[:200]}), 200
 
 
+@app.route('/products/<site_id>/new', methods=['POST'])
+def products_create_one(site_id):
+    """Create a brand-new product on the origin site (works on any domain)."""
+    sites = {s['id']: s for s in load_sites()}
+    site = sites.get(site_id)
+    if not site:
+        return jsonify({'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    body = {k: v for k, v in body.items() if not k.startswith('_')}
+    if not (body.get('name') or '').strip():
+        return jsonify({'error': 'name required'}), 400
+    resp = _call_site(site, '/admin/api/products', method='POST', json_body=body)
+    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+
+
 @app.route('/products/<site_id>/<pid>', methods=['PUT', 'POST'])
 def products_update_one(site_id, pid):
     """Proxy an inline product edit to the origin site (works on any domain)."""
@@ -547,6 +562,45 @@ def products_delete_one(site_id, pid):
     if not site:
         return jsonify({'error': 'site not found'}), 404
     resp = _call_site(site, f'/admin/api/products/{pid}', method='DELETE')
+    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+
+
+# === Site Content editor (hero, nav, footer, branding, theme) ================
+@app.route('/content')
+def content_index():
+    sites = load_sites()
+    connected = [s for s in sites if s.get('url') and s.get('admin_token')]
+    if connected:
+        return redirect('/content/' + connected[0]['id'])
+    return render_template('content.html', site=None, sites=sites,
+                           connected=connected, settings={}, active='content')
+
+
+@app.route('/content/<site_id>')
+def content_edit(site_id):
+    sites = load_sites()
+    site = next((s for s in sites if s['id'] == site_id), None)
+    if not site:
+        return redirect('/content')
+    connected = [s for s in sites if s.get('url') and s.get('admin_token')]
+    settings = {}
+    if site.get('url') and site.get('admin_token'):
+        resp = _call_site(site, '/admin/api/settings')
+        if resp and isinstance(resp, dict):
+            settings = resp.get('settings', resp) or {}
+    return render_template('content.html', site=site, sites=sites,
+                           connected=connected, settings=settings, active='content')
+
+
+@app.route('/content/<site_id>', methods=['POST', 'PUT'])
+def content_save(site_id):
+    sites = {s['id']: s for s in load_sites()}
+    site = sites.get(site_id)
+    if not site:
+        return jsonify({'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    body = {k: v for k, v in body.items() if not k.startswith('_')}
+    resp = _call_site(site, '/admin/api/settings', method='PUT', json_body=body)
     return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
 
 

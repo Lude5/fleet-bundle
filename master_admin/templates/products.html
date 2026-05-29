@@ -4,7 +4,9 @@
 
 {% block topbar_actions %}
     <span class="pill" data-i18n="tb_total_matching" data-i18n-vars='{"n":"{{ total }}","m":"{{ sites_with_tokens|length }}"}'>{{ total }} matching · {{ sites_with_tokens|length }} sites connected</span>
-    {% if sites_with_tokens %}<button type="button" class="pill primary" onclick="openAddAll()" style="cursor:pointer;" data-i18n="add_to_all_sites">+ Add to all sites</button>{% endif %}
+    {% if sites_with_tokens %}<button type="button" class="pill primary" onclick="openNewModal()" style="cursor:pointer;" data-i18n="new_product">+ New product</button>{% endif %}
+    {% if sites_with_tokens %}<button type="button" class="pill" onclick="openAddAll()" style="cursor:pointer;" data-i18n="add_to_all_sites">+ Add to all sites</button>{% endif %}
+    <a href="/tools/spreadsheet" class="pill" title="Bulk-import products from a spreadsheet" data-i18n="tb_spreadsheet">⊞ Spreadsheet import</a>
     <a href="/export/products?format=xlsx" class="pill" title="Download every product across every connected site as an Excel workbook">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span data-i18n="tb_excel">Excel</span>
@@ -332,7 +334,8 @@ tr[draggable]:hover .drag-h{color:var(--accent);}
       <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer"></iframe>
     </div>
     <div class="ed-fields">
-      <h2 data-i18n="ed_edit_product">Edit product</h2>
+      <h2 id="edModalTitle" data-i18n="ed_edit_product">Edit product</h2>
+      <div class="field" id="edSiteField" style="display:none;"><label data-i18n="ed_site">Site</label><select class="select" id="edSite" onchange="edNewPreview()">{% for s in sites_with_tokens %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
       <div class="field"><label data-i18n="ed_title">Title</label><input class="input" id="edName"></div>
       <div class="form-grid">
         <div class="field"><label data-i18n="ed_category">Category</label><input class="input" id="edCategory"></div>
@@ -369,6 +372,27 @@ var pmProduct = null;
 
 // === WYSIWYG inline edit ===
 var edProduct = null;
+var edCreateMode = false;
+
+// === Create a brand-new product from scratch ===
+function openNewModal(){
+    edProduct = null; edCreateMode = true;
+    var t=document.getElementById('edModalTitle'); t.textContent = (window.tm? tm('ed_new_product'):'') || 'Add new product';
+    document.getElementById('edSiteField').style.display = '';
+    ['edName','edCategory','edPrice','edImage','edUrl','edSeller','edBatch','edRetail','edWeight','edQuality','edTags','edQc'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('edSales').value = '';
+    document.getElementById('edFeatured').checked = false;
+    document.getElementById('edTrending').checked = false;
+    document.getElementById('edStock').checked = true; // new items in stock by default
+    document.getElementById('edSiteName').textContent = '';
+    edNewPreview();
+    document.getElementById('edModal').classList.add('active');
+}
+function edNewPreview(){
+    var sel=document.getElementById('edSite'); var s=(SITES.filter(function(x){return x.id===sel.value;})[0])||{};
+    var base=(s.url||''); if(base.charAt(base.length-1)==='/') base=base.slice(0,-1);
+    document.getElementById('edPreview').src = base || 'about:blank';
+}
 
 // === Inline category change (move between categories) ===
 async function quickCategory(sel){
@@ -426,9 +450,14 @@ function openEditModal(product){
     document.getElementById('edPreview').src = base ? base + '/product/' + encodeURIComponent(product.id) : 'about:blank';
     document.getElementById('edModal').classList.add('active');
 }
-function closeEdit(){ document.getElementById('edModal').classList.remove('active'); edProduct=null; }
+function closeEdit(){
+    document.getElementById('edModal').classList.remove('active');
+    edProduct=null; edCreateMode=false;
+    document.getElementById('edSiteField').style.display='none';
+    var t=document.getElementById('edModalTitle'); t.textContent=(window.tm?tm('ed_edit_product'):'')||'Edit product';
+}
 async function saveEdit(){
-    if(!edProduct) return;
+    if(!edProduct && !edCreateMode) return;
     var _tags = document.getElementById('edTags').value.trim();
     var _toks = _tags.split(/\s+/).filter(function(t){ return t && t.toLowerCase()!=='trending'; });
     if (document.getElementById('edTrending').checked) _toks.push('trending');
@@ -453,15 +482,20 @@ async function saveEdit(){
     };
     var btn=document.getElementById('edSave'); var ot=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
     try{
-        var res = await fetch('/products/'+encodeURIComponent(edProduct._site_id)+'/'+encodeURIComponent(edProduct.id), {
-            method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-        });
+        var url, method;
+        if(edCreateMode){
+            if(!body.name){ showToast('Name is required','error'); btn.disabled=false; btn.textContent=ot; return; }
+            url='/products/'+encodeURIComponent(document.getElementById('edSite').value)+'/new'; method='POST';
+        } else {
+            url='/products/'+encodeURIComponent(edProduct._site_id)+'/'+encodeURIComponent(edProduct.id); method='PUT';
+        }
+        var res = await fetch(url, { method:method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         var json = await res.json();
         btn.disabled=false; btn.textContent=ot;
         if(json && json.ok){
-            showToast('Saved ✓','success');
-            var f=document.getElementById('edPreview'); f.src=f.src;
-        } else { showToast('Save failed','error'); }
+            if(edCreateMode){ showToast('Product created ✓','success'); closeEdit(); setTimeout(function(){ location.reload(); }, 600); }
+            else { showToast('Saved ✓','success'); var f=document.getElementById('edPreview'); f.src=f.src; }
+        } else { showToast((json && json.error) ? json.error : 'Save failed','error'); }
     }catch(e){ btn.disabled=false; btn.textContent=ot; showToast('Network error','error'); }
 }
 

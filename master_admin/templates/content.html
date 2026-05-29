@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <span class="current" data-i18n="sb_content">Site Content</span>{% endblock %}
+{% block heading %}<span data-i18n="content_heading">Site content editor</span>{% endblock %}
+
+{% block topbar_actions %}
+    {% if sites %}
+    <select class="pill" id="ctSiteSwitch" onchange="location.href='/content/'+this.value" style="cursor:pointer;padding:8px 12px;">
+        {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id==site.id %}selected{% endif %}>{{ s.name }}{% if not (s.url and s.admin_token) %} (not connected){% endif %}</option>{% endfor %}
+    </select>
+    {% endif %}
+    {% if site and site.url %}<a href="{{ site.url }}" target="_blank" rel="noopener" class="pill" data-i18n="ct_open_live">↗ Open live site</a>{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+.ct-wrap { display: grid; grid-template-columns: 1fr 430px; gap: 20px; align-items: start; }
+@media (max-width: 1024px) { .ct-wrap { grid-template-columns: 1fr; } }
+.ct-preview { position: sticky; top: 84px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; overflow: hidden; height: calc(100vh - 120px); display: flex; flex-direction: column; }
+.ct-pv-bar { padding: 10px 14px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; }
+.ct-pv-bar .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.ct-pv { flex: 1; width: 100%; border: none; background: #fff; }
+.ct-fields { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; }
+.ct-group { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 20px 0 10px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.ct-group:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+.ct-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.ct-color-row { display: flex; gap: 10px; align-items: center; }
+.ct-color-row input[type=color] { width: 48px; height: 42px; padding: 2px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--surface-3); cursor: pointer; }
+.ct-save-row { display: flex; gap: 8px; margin-top: 22px; position: sticky; bottom: 0; }
+.ct-warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--warn); padding: 12px 16px; border-radius: 10px; font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
+{% endblock %}
+
+{% block content %}
+{% if not site %}
+<div class="ct-warn" data-i18n="ct_none">No sites are connected yet. Add a public URL + admin API token to a site under <a href="/sites" style="color:var(--accent);">Sites</a> to edit its content here.</div>
+{% else %}
+{% if not (site.url and site.admin_token) %}
+<div class="ct-warn"><strong>{{ site.name }}</strong> isn't connected yet — add its <b>URL</b> and <b>admin token</b> under <a href="/sites" style="color:var(--accent);">Sites</a> to load and save content.</div>
+{% endif %}
+<div class="ct-wrap">
+    <!-- LIVE PREVIEW -->
+    <div class="ct-preview">
+        <div class="ct-pv-bar"><span class="dot"></span><span data-i18n="ct_live">Live site</span><span style="color:var(--text-secondary);"> · {{ site.name }}</span><span style="flex:1;"></span><button type="button" class="btn btn-secondary btn-xs" onclick="ctReload()" data-i18n="ct_refresh">Refresh</button></div>
+        <iframe id="ctPreview" class="ct-pv" src="{{ site.url or 'about:blank' }}" referrerpolicy="no-referrer"></iframe>
+    </div>
+
+    <!-- FIELDS -->
+    <div class="ct-fields">
+        <div class="ct-group" data-i18n="ct_g_branding">Branding</div>
+        <div class="form-grid">
+            <div class="field"><label data-i18n="ct_brand1">Brand — first part</label><input class="input" id="brand_part1" value="{{ settings.brand_part1 or '' }}" placeholder="{{ site.name }}"></div>
+            <div class="field"><label data-i18n="ct_brand2">Brand — accent part</label><input class="input" id="brand_part2" value="{{ settings.brand_part2 or '' }}"></div>
+        </div>
+        <div class="field"><label data-i18n="ct_accent">Accent color</label>
+            <div class="ct-color-row">
+                <input type="color" id="accent_color_pick" value="{{ settings.accent_color or '#22c55e' }}" oninput="document.getElementById('accent_color').value=this.value">
+                <input class="input" id="accent_color" value="{{ settings.accent_color or '' }}" placeholder="#22c55e" oninput="try{document.getElementById('accent_color_pick').value=this.value}catch(e){}">
+            </div>
+            <div class="ct-hint" data-i18n="ct_accent_hint">Leave empty to keep the site's default brand color.</div>
+        </div>
+
+        <div class="ct-group" data-i18n="ct_g_top">Top bar</div>
+        <div class="field"><label data-i18n="ct_announce">Announcement bar</label><input class="input" id="announcement_text" value="{{ settings.announcement_text or '' }}" placeholder="e.g. Spring sale — coupons up to $500"></div>
+        <div class="ct-hint" data-i18n="ct_announce_hint">Shows a colored bar across the very top. Leave empty to hide it.</div>
+
+        <div class="ct-group" data-i18n="ct_g_hero">Homepage hero</div>
+        <div class="field"><label data-i18n="ct_hero_label">Eyebrow label</label><input class="input" id="hero_label" value="{{ settings.hero_label or '' }}" placeholder="The Open Catalogue"></div>
+        <div class="field"><label data-i18n="ct_hero_title">Big title</label><textarea class="input" id="hero_title" style="min-height:60px;">{{ settings.hero_title or '' }}</textarea>
+            <div class="ct-hint" data-i18n="ct_hero_title_hint">You can use &lt;br&gt; for line breaks and &lt;span class="accent"&gt;word&lt;/span&gt; to color a word. Empty = default.</div></div>
+        <div class="field"><label data-i18n="ct_hero_sub">Subtitle</label><textarea class="input" id="hero_sub" style="min-height:64px;">{{ settings.hero_sub or '' }}</textarea></div>
+
+        <div class="ct-group" data-i18n="ct_g_footer">Footer</div>
+        <div class="field"><label data-i18n="ct_footer">Footer description</label><textarea class="input" id="footer_text" style="min-height:60px;">{{ settings.footer_text or '' }}</textarea></div>
+
+        <div class="ct-group" data-i18n="ct_g_seo">SEO</div>
+        <div class="field"><label data-i18n="ct_page_title">Page title (browser tab)</label><input class="input" id="page_title" value="{{ settings.page_title or '' }}"></div>
+        <div class="field"><label data-i18n="ct_meta">Meta description</label><textarea class="input" id="meta_description" style="min-height:56px;">{{ settings.meta_description or '' }}</textarea></div>
+
+        <div class="ct-save-row">
+            <button class="btn btn-primary" id="ctSave" onclick="ctSave()" style="flex:1;" data-i18n="ct_save">Save content</button>
+        </div>
+        <div class="ct-hint" style="margin-top:8px;" data-i18n="ct_save_hint">Saving updates the live site. The preview refreshes automatically.</div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var CT_FIELDS = ['brand_part1','brand_part2','accent_color','announcement_text','hero_label','hero_title','hero_sub','footer_text','page_title','meta_description'];
+var CT_SITE = {{ (site.id if site else '')|tojson }};
+function ctReload(){ var f=document.getElementById('ctPreview'); if(f){ var u=(f.src||'').split('#')[0].split('?')[0]; f.src = u + '?_=' + (new Date()).getTime(); } }
+function ctToast(m,k){ if(window.showToast){ showToast(m,k); } else { console.log(m); } }
+async function ctSave(){
+    if(!CT_SITE) return;
+    var body={}; CT_FIELDS.forEach(function(id){ var el=document.getElementById(id); if(el) body[id]=el.value; });
+    var btn=document.getElementById('ctSave'); var ot=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+    try{
+        var res=await fetch('/content/'+encodeURIComponent(CT_SITE),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var j=await res.json(); btn.disabled=false; btn.textContent=ot;
+        if(j && j.ok){ ctToast('Content saved ✓','success'); setTimeout(ctReload, 500); }
+        else { ctToast((j && j.error)?j.error:'Save failed','error'); }
+    }catch(e){ btn.disabled=false; btn.textContent=ot; ctToast('Network error','error'); }
+}
+</script>
+{% endblock %}

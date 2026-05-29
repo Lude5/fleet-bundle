@@ -95,6 +95,25 @@
     "ga_property_id": ""
   },
   {
+    "id": "ategoat",
+    "name": "ategoat",
+    "slug": "ategoat",
+    "url": "https://fleet-bundle.onrender.com/ategoat",
+    "admin_url": "https://fleet-bundle.onrender.com/ategoat/admin",
+    "admin_password": "",
+    "admin_token": "atg_52d41524017565597ebe4096e4e9301200666e4c",
+    "render_service_id": "",
+    "agent": "KakoBuy",
+    "agent_signup": "",
+    "affiliate_code": "",
+    "color": "#10b981",
+    "tag": "client",
+    "description": "Client site (kaiom) — products + full site content editable here",
+    "product_count": 0,
+    "ga_measurement_id": "",
+    "ga_property_id": ""
+  },
+  {
     "id": "goats",
     "name": "GOATS",
     "slug": "goats",
