@@ -88,7 +88,7 @@
         var win = fr.contentWindow, doc = fr.contentDocument || win.document;
         win.__STUDIO__ = { siteId: SITE_ID };
         var s = doc.createElement('script');
-        s.src = '/static/js/site_editor.js?v=8';
+        s.src = '/static/js/site_editor.js?v=9';
         doc.body.appendChild(s);
         document.getElementById('notice').classList.remove('show');
       } catch (e) {
@@ -99,6 +99,9 @@
       }
     }
     if (fr) fr.addEventListener('load', inject);
+    // Keep the site warm while the Studio is open so saves stay instant
+    // (Render free tier sleeps when idle). 24/7 warmth needs an external pinger.
+    if (BASE) setInterval(function () { fetch(BASE, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' }).catch(function () {}); }, 240000);
   </script>
 </body>
 </html>

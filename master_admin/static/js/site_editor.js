@@ -17,10 +17,21 @@
   var dragEl = null;
   var D = document, B = D.body;
   var pending = { products: {}, settings: {}, order: null };
+  var PKEY = 'se_pending_' + SITE; // unsaved edits survive crashes / cold-starts
 
-  function jfetch(path, method, body) {
+  // Auto-retries 5xx + network errors with backoff so a Render cold-start
+  // (slow first hit) doesn't fail an otherwise-valid save.
+  function jfetch(path, method, body, _t) {
+    _t = _t || 0;
     return fetch(path, { method: method || 'GET', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' })
-      .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); });
+      .then(function (r) {
+        if (!r.ok && r.status >= 500 && _t < 3) return new Promise(function (res) { setTimeout(res, 1500 * (_t + 1)); }).then(function () { return jfetch(path, method, body, _t + 1); });
+        return r.json().catch(function () { return { ok: r.ok }; });
+      })
+      .catch(function (e) {
+        if (_t < 3) return new Promise(function (res) { setTimeout(res, 1500 * (_t + 1)); }).then(function () { return jfetch(path, method, body, _t + 1); });
+        throw e;
+      });
   }
   function status(msg, kind) { try { (window.parent.StudioStatus || function () {})(msg, kind); } catch (e) {} }
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -36,6 +47,16 @@
     var n = dirtyCount();
     bar.classList.toggle('show', n > 0);
     var c = bar.querySelector('.cnt'); if (c) c.textContent = '● ' + n + ' unsaved change' + (n === 1 ? '' : 's');
+    try { if (n) localStorage.setItem(PKEY, JSON.stringify(pending)); else localStorage.removeItem(PKEY); } catch (e) {}
+  }
+  function showRecover(saved) {
+    var n = Object.keys(saved.products || {}).reduce(function (a, id) { return a + Object.keys(saved.products[id]).length; }, 0) + Object.keys(saved.settings || {}).length + (saved.order ? 1 : 0);
+    if (!n) return;
+    var r = D.createElement('div'); r.className = 'se-recover';
+    r.innerHTML = '<span>↩ ' + n + ' unsaved change' + (n === 1 ? '' : 's') + ' from earlier</span><button class="rsave">Save them</button><button class="rdismiss">Dismiss</button>';
+    B.appendChild(r);
+    r.querySelector('.rsave').onclick = function () { pending = { products: saved.products || {}, settings: saved.settings || {}, order: saved.order || null }; refreshBar(); r.remove(); flush(); };
+    r.querySelector('.rdismiss').onclick = function () { try { localStorage.removeItem(PKEY); } catch (e) {} r.remove(); };
   }
   function flush() {
     var ops = [], labels = [];
@@ -90,6 +111,8 @@
     '.se-bar button{border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;}',
     '.se-bar .save{background:#6366f1;color:#fff;}.se-bar .save:hover{background:#4f46e5;}.se-bar .save:disabled{opacity:.6;cursor:default;}.se-bar .disc{background:#23232c;color:#cbd5e1;}',
     '.se-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:#6366f1;color:#fff;padding:9px 18px;border-radius:999px;font:600 12px system-ui;z-index:2147483500;box-shadow:0 6px 20px rgba(0,0,0,.4);}',
+    '.se-recover{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:2147483600;display:flex;align-items:center;gap:12px;background:#1f2937;border:1px solid #f59e0b;color:#fff;padding:10px 14px;border-radius:12px;font:600 13px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.5);}',
+    '.se-recover button{border:none;border-radius:8px;padding:7px 13px;font-weight:700;font-size:12px;cursor:pointer;}.se-recover .rsave{background:#f59e0b;color:#111;}.se-recover .rdismiss{background:#374151;color:#cbd5e1;}',
     /* suppress the site\'s first-visit popups so they don\'t block editing */
     'body.se-editing #popup,body.se-editing .popup-overlay,body.se-editing #sn,body.se-editing .sales-notif{display:none!important;}',
     'body.se-editing{padding-bottom:64px;}' /* room for the Save bar */
@@ -449,9 +472,11 @@
       bar.innerHTML = '<span class="cnt">● 0 unsaved changes</span><button class="disc">Discard</button><button class="save">Save changes</button>';
       B.appendChild(bar);
       bar.querySelector('.save').onclick = function () { flush(); };
-      bar.querySelector('.disc').onclick = function () { if (dirtyCount()) location.reload(); };
+      bar.querySelector('.disc').onclick = function () { try { localStorage.removeItem(PKEY); } catch (e) {} if (dirtyCount()) location.reload(); };
     }
     refreshBar();
+    // Recover unsaved edits from a previous session (crash / cold-start / accidental close)
+    if (!window.__seRecoverChecked) { window.__seRecoverChecked = 1; try { var saved = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (saved) showRecover(saved); } catch (e) {} }
   }
   window.__seRescan = scan;
   if (PID) loadCats().finally(scan); else scan();  // categories only needed on the product page

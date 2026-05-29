@@ -114,13 +114,22 @@ try:
             except Exception:
                 seeded_hash = ''
         if json_hash != seeded_hash:
+            try:
+                from .database import get_db as _get_db
+            except ImportError:
+                from database import get_db as _get_db
+            # Capture operator-edited products FIRST so a reseed never wipes the
+            # owner's work (their edits + any edited listing removed from json).
+            _preserved = []
+            try:
+                _c = _get_db()
+                _preserved = [dict(r) for r in _c.execute('SELECT * FROM products WHERE edited = 1').fetchall()]
+                _c.close()
+            except Exception as _e:
+                print(f"Preserve-read warning: {_e}")
             # Wipe + re-seed. INSERT OR REPLACE on its own would leave stale
             # rows that aren't in the new json — wipe makes this idempotent.
             try:
-                try:
-                    from .database import get_db as _get_db
-                except ImportError:
-                    from database import get_db as _get_db
                 _c = _get_db()
                 _c.execute('DELETE FROM products')
                 _c.commit()
@@ -130,6 +139,19 @@ try:
             with open(products_file, 'r', encoding='utf-8') as _f:
                 _products = json.load(_f)
             add_products_bulk(_products)
+            # Re-apply preserved edits so the operator's version wins over json.
+            if _preserved:
+                try:
+                    _c = _get_db()
+                    _cols = set(r[1] for r in _c.execute('PRAGMA table_info(products)').fetchall())
+                    for _row in _preserved:
+                        _k = [k for k in _row.keys() if k in _cols]
+                        _c.execute('INSERT OR REPLACE INTO products (' + ','.join(_k) + ') VALUES (' + ','.join(['?'] * len(_k)) + ')', [_row[k] for k in _k])
+                    _c.commit()
+                    _c.close()
+                    print(f"Preserved {len(_preserved)} operator-edited products across reseed")
+                except Exception as _e:
+                    print(f"Preserve-write warning: {_e}")
             try:
                 with open(marker_path, 'w', encoding='utf-8') as _mf:
                     _mf.write(json_hash)

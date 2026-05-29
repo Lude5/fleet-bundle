@@ -101,6 +101,7 @@ def init_db():
         ('qc_photos',  'ALTER TABLE products ADD COLUMN qc_photos TEXT DEFAULT ""'),
         ('in_stock',   'ALTER TABLE products ADD COLUMN in_stock INTEGER DEFAULT 1'),
         ('variants',   'ALTER TABLE products ADD COLUMN variants TEXT DEFAULT ""'),
+        ('edited',     'ALTER TABLE products ADD COLUMN edited INTEGER DEFAULT 0'),
     ]:
         try:
             conn.execute(ddl)
@@ -254,6 +255,7 @@ def update_product(product_id, updates):
         conn.close()
         return
     sets.append('updated_at = CURRENT_TIMESTAMP')
+    sets.append('edited = 1')  # mark operator-edited so a reseed never wipes this product's work
     vals.append(product_id)
     conn.execute(f'UPDATE products SET {", ".join(sets)} WHERE id = ?', vals)
     conn.commit()
