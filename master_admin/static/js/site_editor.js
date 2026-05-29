@@ -35,7 +35,7 @@
   }
   function status(msg, kind) { try { (window.parent.StudioStatus || function () {})(msg, kind); } catch (e) {} }
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function isPlaceholder(t) { t = (t || '').trim(); return t === '' || t === '—' || t === 'Unspecified'; }
+  function isPlaceholder(t) { t = (t || '').replace('✎', '').trim(); return t === '' || t === '—' || t === 'Unspecified' || t === '— no buy link set —'; }
   function mkPen() { var p = D.createElement('span'); p.className = 'se-pen'; p.textContent = '✎'; return p; }
   function imgSrc(u) { return (u && u.charAt(0) === '/') ? (SITEROOT + u) : u; }  // prefix /uploads with the site root for display
   function uploadImg(pid, file, primary) {
@@ -226,7 +226,8 @@
       if (type === 'quality') return editQuality(el);
       if (type === 'category') return editCategory(el);
       if (type === 'url') {
-        var cur = isPlaceholder(el.textContent) ? '' : el.textContent.trim();
+        var raw = el.textContent.replace('✎', '').trim();
+        var cur = isPlaceholder(raw) ? '' : raw;
         return mini(el, '<input id="bl" value="' + esc(cur) + '" size="40" placeholder="https://weidian.com/item.html?itemID=..."><button class="ok">Save</button>', function (m) {
           var v = m.querySelector('#bl').value.trim(); el.textContent = v || '— no buy link set —'; el.classList.toggle('pf-empty', false); recordProduct(PID, { url: v }); closeMini();
         });
@@ -253,14 +254,14 @@
     var valEl = el.querySelector('.pf-val') || el, cur = isPlaceholder(valEl.textContent) ? '' : valEl.textContent.trim();
     var opts = ['', 'BUDGET', 'TOP', '1:1'].map(function (o) { return '<option' + (o.toUpperCase() === cur.toUpperCase() ? ' selected' : '') + ' value="' + o + '">' + (o || '— none —') + '</option>'; }).join('');
     mini(el, '<select id="q">' + opts + '</select><button class="ok">OK</button>', function (m) {
-      var v = m.querySelector('#q').value; valEl.textContent = v || '—'; el.classList.toggle('pf-empty', !v); recordProduct(PID, { quality: v }); closeMini();
+      var v = m.querySelector('#q').value; valEl.textContent = v || '—'; recordProduct(PID, { quality: v }); closeMini();
     });
   }
   function editCategory(el) {
     var valEl = el.querySelector('.pf-val') || el, cur = isPlaceholder(valEl.textContent) ? '' : valEl.textContent.trim();
     var opts = ['<option value="">— none —</option>'].concat(CATS.map(function (c) { return '<option' + (c.slug === cur ? ' selected' : '') + ' value="' + c.slug + '">' + esc(c.name) + '</option>'; })).join('');
     mini(el, '<select id="c">' + opts + '</select><button class="ok">OK</button>', function (m) {
-      var v = m.querySelector('#c').value; valEl.textContent = v || '—'; el.classList.toggle('pf-empty', !v); var s = D.getElementById('ppSource'); if (s) s.textContent = (v || 'Find').toUpperCase(); recordProduct(PID, { category: v }); closeMini();
+      var v = m.querySelector('#c').value; valEl.textContent = v || '—'; var s = D.getElementById('ppSource'); if (s) s.textContent = (v || 'Find').toUpperCase(); recordProduct(PID, { category: v }); closeMini();
     });
   }
   function bindQc(el) {
@@ -374,25 +375,30 @@
     recordProduct(id, { in_stock: nowOut ? 0 : 1 });
     status(nowOut ? 'Marked out of stock' : 'Marked in stock', 'success');
   }
+  var EXTRA_FIELDS = ['weight', 'quality', 'sales', 'in_stock', 'qc_photos', 'variants'];      // non-core columns add_product skips
+  function rawProduct(id) { return jfetch('/products/' + SITE + '/' + encodeURIComponent(id)).then(function (r) { return (r && r.product) || null; }); }
+  function coreOf(p) { return { name: p.name, price: p.price, url: p.url, image: p.image, category: p.category, seller: p.seller, batch: p.batch, retail_price: p.retail_price, tags: p.tags }; }
+  function applyExtras(id, p, fields, done) {
+    var extras = {}; fields.forEach(function (k) { if (p[k] != null && p[k] !== '') extras[k] = p[k]; });
+    if (Object.keys(extras).length) jfetch('/products/' + SITE + '/' + id, 'PUT', extras).then(done); else done();
+  }
   function duplicateProduct(id) {
     status('Duplicating…');
-    fetch(SITEROOT + '/api/product/' + encodeURIComponent(id), { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (p) {
-      if (!p || p.error) { status('Could not load product', 'error'); return; }
-      var core = { name: (p.name || 'Product') + ' (copy)', price: p.price, url: p.url, image: p.image, category: p.category, seller: p.seller, batch: p.batch, retail_price: p.retail_price, tags: p.tags };
+    rawProduct(id).then(function (p) {
+      if (!p) { status('Could not load product', 'error'); return; }
+      var core = coreOf(p); core.name = (p.name || 'Product') + ' (copy)';
       jfetch('/products/' + SITE + '/new', 'POST', core).then(function (j) {
-        if (j && j.ok && j.id) {
-          var extras = {}; ['weight', 'quality', 'sales', 'in_stock'].forEach(function (k) { if (p[k] != null && p[k] !== '') extras[k] = p[k]; });
-          var go = function () { status('Duplicated ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); };
-          if (Object.keys(extras).length) jfetch('/products/' + SITE + '/' + j.id, 'PUT', extras).then(go); else go();
-        } else status((j && j.error) || 'Duplicate failed', 'error');
+        if (j && j.ok && j.id) applyExtras(j.id, p, EXTRA_FIELDS, function () { status('Duplicated ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); });
+        else status((j && j.error) || 'Duplicate failed', 'error');
       });
-    }).catch(function () { status('Duplicate failed', 'error'); });
+    });
   }
   function deleteProduct(card, id, anchor) {
     confirmBox(anchor, 'Delete this product?', function () {
-      fetch(SITEROOT + '/api/product/' + encodeURIComponent(id), { credentials: 'same-origin' }).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function (p) {
+      rawProduct(id).then(function (p) {
         jfetch('/products/' + SITE + '/' + encodeURIComponent(id), 'DELETE').then(function (j) {
           if (j && j.ok) {
+            delete pending.products[id]; if (pending.order) pending.order = pending.order.filter(function (x) { return x !== id; }); refreshBar();
             var grid = card.closest('.product-grid') || card.parentNode; flip(grid, function () { card.remove(); });
             toast('Product deleted', p ? 'Undo' : null, p ? function () { restoreProduct(p); } : null);
           } else status((j && j.error) || 'Delete failed', 'error');
@@ -402,11 +408,9 @@
   }
   function restoreProduct(p) {
     if (!p || !p.id) { status('Cannot undo', 'error'); return; }
-    var core = { id: p.id, name: p.name, price: p.price, url: p.url, image: p.image, category: p.category, seller: p.seller, batch: p.batch, retail_price: p.retail_price, tags: p.tags };
-    jfetch('/products/' + SITE + '/new', 'POST', core).then(function (j) {
-      var extras = {}; ['weight', 'quality', 'sales', 'featured', 'in_stock'].forEach(function (k) { if (p[k] != null && p[k] !== '') extras[k] = p[k]; });
-      var done = function () { status('Restored ✓', 'success'); setTimeout(function () { location.reload(); }, 700); };
-      if (Object.keys(extras).length) jfetch('/products/' + SITE + '/' + p.id, 'PUT', extras).then(done); else done();
+    var core = coreOf(p); core.id = p.id;
+    jfetch('/products/' + SITE + '/new', 'POST', core).then(function () {
+      applyExtras(p.id, p, EXTRA_FIELDS.concat(['featured', 'position']), function () { status('Restored ✓', 'success'); setTimeout(function () { location.reload(); }, 700); });
     });
   }
   function openAddProduct() {
@@ -567,7 +571,7 @@
   /* ---------- boot ---------- */
   function scan() {
     B.classList.add('se-editing');
-    D.querySelectorAll('.pf-empty').forEach(function (el) { el.style.display = el.classList.contains('pd-badge') ? 'inline-flex' : ''; });
+    D.querySelectorAll('.pf-empty').forEach(function (el) { el.classList.remove('pf-empty'); }); // reveal empty slots so they can be filled (class is the only thing hiding them)
     D.querySelectorAll('[data-edit],[data-edit-brand]').forEach(bindText);
     if (PID) { D.querySelectorAll('[data-pf]').forEach(bindProductField); D.querySelectorAll('[data-qc-edit]').forEach(bindQc); D.querySelectorAll('[data-variant-edit]').forEach(bindVariants); }
     enhanceBestSelling();

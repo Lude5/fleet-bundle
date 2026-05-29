@@ -1892,8 +1892,20 @@ def api_admin_add_product():
             data['tags'] = generate_tags(data['name'], data.get('category', ''))
         except ImportError:
             pass
+    _coerce_price(data)  # derive price_numeric so sort/bundles aren't broken
     add_product(data)
     return jsonify({'ok': True, 'id': data['id']})
+
+
+@app.route('/admin/api/products/<pid>', methods=['GET'])
+def api_admin_get_product(pid):
+    """Raw product row (all columns) — used by the studio for duplicate / undo."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    p = get_product(pid)
+    if not p:
+        return jsonify({'ok': False, 'error': 'not found'}), 404
+    return jsonify({'ok': True, 'product': dict(p)})
 
 
 def _coerce_price(data):
