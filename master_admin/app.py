@@ -650,8 +650,11 @@ def content_save(site_id):
 def studio_index():
     sites = load_sites()
     connected = [s for s in sites if s.get('url') and s.get('admin_token')]
-    if connected:
-        return redirect('/studio/' + connected[0]['id'])
+    # Prefer the in-bundle same-origin site (ategoat) which the in-place editor fully
+    # supports; fall back to the first connected site, then anything.
+    pref = next((s for s in connected if s['id'] == 'ategoat'), None) or (connected[0] if connected else None) or (sites[0] if sites else None)
+    if pref:
+        return redirect('/studio/' + pref['id'])
     return render_template('studio.html', site=None, sites=sites, active='content')
 
 
