@@ -28,7 +28,7 @@
   /* ---------- pending changes ---------- */
   function recordProduct(id, partial) { if (!id) return; var p = pending.products[id] || (pending.products[id] = {}); Object.keys(partial).forEach(function (k) { p[k] = partial[k]; }); refreshBar(); }
   function recordSetting(key, val) { pending.settings[key] = val; refreshBar(); }
-  function dirtyCount() { return Object.keys(pending.products).length + Object.keys(pending.settings).length + (pending.order ? 1 : 0); }
+  function dirtyCount() { var n = 0; Object.keys(pending.products).forEach(function (id) { n += Object.keys(pending.products[id]).length; }); return n + Object.keys(pending.settings).length + (pending.order ? 1 : 0); }
   function refreshBar() {
     var bar = D.getElementById('se-bar'); if (!bar) return;
     var n = dirtyCount();
