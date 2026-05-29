@@ -599,6 +599,7 @@ th.col-trend.active, th.col-stock.active {
         </div>
         <select id="tableSortFilter" class="select" onchange="filterTable()">
             <option value="default">Default (pinned first)</option>
+            <option value="category">Category (grouped A → Z)</option>
             <option value="recent">Recently added</option>
             <option value="oldest">Oldest first</option>
             <option value="price_low">Price ↑ (low to high)</option>
@@ -1011,6 +1012,12 @@ function getMatchingRows() {
             if (sort === 'price_low')   return parseFloat(a.dataset.priceNum || 0) - parseFloat(b.dataset.priceNum || 0);
             if (sort === 'price_high')  return parseFloat(b.dataset.priceNum || 0) - parseFloat(a.dataset.priceNum || 0);
             if (sort === 'name_az')     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+            if (sort === 'category') {
+                var ca = (a.dataset.cat || 'zzz').toLowerCase();
+                var cb = (b.dataset.cat || 'zzz').toLowerCase();
+                if (ca !== cb) return ca.localeCompare(cb);
+                return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+            }
             return 0;
         });
     }
