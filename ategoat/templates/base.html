@@ -243,6 +243,22 @@
         .padmin-card img, .bundle-card-imgs img, .pd-qc img,
         .hero-search-suggestion img, .hero-bg-card img,
         .padmin-compact .pcomp .img { background: #ffffff !important; object-fit: contain !important; }
+        /* NUCLEAR: every image whose src is from a product-image CDN gets a
+           white background, no matter what class or wrapper it's in. This
+           covers JS-injected <img> tags in variant grids, QC modals, search
+           suggestions, scrape preview, agent picker, and anywhere else a
+           product image lands that the class-based selectors above miss. */
+        img[src*="postimg.cc"],
+        img[src*="iili.io"],
+        img[src*="geilicdn.com"],
+        img[src*="googleusercontent.com"],
+        img[src*="alicdn.com"],
+        img[src*="img.kakobuy.com"],
+        img[src*="bcebos.com"],
+        img[src*="dhresource.com"] {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
         .product-card:hover .product-card-img { transform: scale(1.05); }
         /* Hero ticker keeps cover-fit so the masthead background stays full-bleed */
         .hero-bg-card { background: #ffffff !important; }
@@ -610,10 +626,6 @@
         }
         .pd-agent-pickprompt.active { display: inline-flex; animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
         .pd-agent-pickprompt::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
-        .pd-agent-btn { flex-direction: column; gap: 4px; }
-        .pd-agent-btn .pd-agent-top { display: inline-flex; align-items: center; gap: 8px; }
-        .pd-agent-sub { color: #22c55e; font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: none; }
-        .pd-agent-sub:empty { display: none; }
         @keyframes pdShake {
             0%, 100% { transform: translateX(0); }
             12%, 60% { transform: translateX(-6px); }
@@ -835,9 +847,9 @@
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
                         <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
-                        <button type="button" class="pd-copy pd-agent-btn" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Switch agent" title="Switch agent">
-                            <span class="pd-agent-top"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg><span id="pdAgentBtnLabel">Switch Agent</span></span>
-                            <span class="pd-agent-sub" id="pdAgentSub"></span>
+                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            <span id="pdAgentBtnLabel">Choose Agent</span>
                         </button>
                     </div>
                     <div class="pd-agent-pickprompt" id="pdAgentPickWarn">Pick an agent first ↑</div>
@@ -1171,17 +1183,13 @@
         // Saved-agent helpers — remember the user's preferred agent so
         // they don't have to pick every single time.
         // ============================================================
-        // Default agent: KakoBuy is auto-selected for first-time visitors so the
-        // Buy button is ready on every product. They can still switch agents,
-        // and their choice is remembered.
-        window.DEFAULT_AGENT = { key: 'kakobuy', name: 'KakoBuy' };
         window.getSavedAgent = function() {
             try {
                 var v = localStorage.getItem('ategoat_agent');
-                if (!v) return window.DEFAULT_AGENT;
+                if (!v) return null;
                 var p = JSON.parse(v);
-                return (p && p.key && p.name) ? p : window.DEFAULT_AGENT;
-            } catch (e) { return window.DEFAULT_AGENT; }
+                return (p && p.key && p.name) ? p : null;
+            } catch (e) { return null; }
         };
         window.saveAgent = function(key, name) {
             try { localStorage.setItem('ategoat_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
@@ -1189,17 +1197,6 @@
         // Apply the saved agent to a freshly-opened product modal: hit
         // /api/agents/<pid>, find the user's preferred entry, and wire
         // the Buy button to it so they can click Buy immediately.
-        // Green note under the Switch Agent button. "auto-selected" until the
-        // user manually picks a different agent, then "selected".
-        window.updateAutoAgentNote = function(name) {
-            var el = document.getElementById('pdAgentSub');
-            if (!el) return;
-            var manual = false;
-            try { manual = !!localStorage.getItem('ategoat_agent'); } catch (e) {}
-            el.textContent = name + (manual ? ' (selected)' : ' (auto selected)');
-            var lbl = document.getElementById('pdAgentBtnLabel');
-            if (lbl) lbl.textContent = 'Switch Agent';
-        };
         window.applySavedAgentToBuy = function(pid) {
             var saved = getSavedAgent();
             if (!saved) return;
@@ -1218,7 +1215,6 @@
                     pdBuy.dataset.agentName = match.name;
                     var lbl = document.getElementById('pdAgentBtnLabel');
                     if (lbl) lbl.textContent = match.name + ' ✓';
-                    updateAutoAgentNote(match.name);
                 });
         };
 
@@ -1313,7 +1309,6 @@
                 pdBuy.dataset.agentName = name;
                 var lbl = document.getElementById('pdAgentBtnLabel');
                 if (lbl) lbl.textContent = name + ' ✓';
-                updateAutoAgentNote(name);
                 var warn = document.getElementById('pdAgentPickWarn');
                 if (warn) warn.classList.remove('active');
             } else {
