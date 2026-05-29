@@ -527,6 +527,19 @@ def products_scrape():
         return jsonify({'ok': False, 'error': str(e)[:200]}), 200
 
 
+@app.route('/products/<site_id>/<pid>', methods=['PUT', 'POST'])
+def products_update_one(site_id, pid):
+    """Proxy an inline product edit to the origin site (works on any domain)."""
+    sites = {s['id']: s for s in load_sites()}
+    site = sites.get(site_id)
+    if not site:
+        return jsonify({'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    body = {k: v for k, v in body.items() if not k.startswith('_')}
+    resp = _call_site(site, f'/admin/api/products/{pid}', method='PUT', json_body=body)
+    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+
+
 @app.route('/products/<site_id>/<pid>', methods=['DELETE'])
 def products_delete_one(site_id, pid):
     sites = {s['id']: s for s in load_sites()}

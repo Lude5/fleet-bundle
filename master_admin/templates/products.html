@@ -147,6 +147,7 @@
                 <td style="color:var(--text-muted);font-size:12px;">{{ p.seller or '—' }}</td>
                 <td>
                     <div class="row-actions">
+                        <button type="button" class="btn btn-primary btn-xs" onclick='openEditModal({{ p|tojson }})' data-i18n="edit_btn">✎ Edit</button>
                         <button type="button" class="btn btn-secondary btn-xs" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
                         <button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteRow(this)" data-i18n="del">Delete</button>
                     </div>
@@ -172,6 +173,7 @@
                 </div>
             </div>
             <div class="pcard-actions">
+                <button type="button" onclick='openEditModal({{ p|tojson }})' data-i18n="edit_btn">✎ Edit</button>
                 <button type="button" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
                 <button type="button" class="danger" onclick="deleteRow(this)" data-i18n="del">Delete</button>
             </div>
@@ -217,7 +219,8 @@
                                 <td style="color:var(--text-muted);font-size:12px;">{{ p.seller or '—' }}</td>
                                 <td>
                                     <div class="row-actions">
-                                        <button type="button" class="btn btn-secondary btn-xs" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
+                                        <button type="button" class="btn btn-primary btn-xs" onclick='openEditModal({{ p|tojson }})' data-i18n="edit_btn">✎ Edit</button>
+                        <button type="button" class="btn btn-secondary btn-xs" onclick='openPushModal({{ p|tojson }})' data-i18n="push_to">Push to…</button>
                                         <button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteRow(this)" data-i18n="del">Delete</button>
                                     </div>
                                 </td>
@@ -303,12 +306,86 @@
         </div>
     </div>
 </div>
+<style>
+.ed-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);z-index:210;display:none;align-items:center;justify-content:center;padding:20px;}
+.ed-overlay.active{display:flex;}
+.ed-modal{background:var(--surface);border:1px solid var(--border-subtle);border-radius:18px;width:100%;max-width:1060px;max-height:90vh;overflow:hidden;display:grid;grid-template-columns:1fr 372px;box-shadow:var(--shadow-lg);}
+@media(max-width:820px){.ed-modal{grid-template-columns:1fr;max-height:94vh;overflow:auto;}}
+.ed-pv-wrap{background:var(--bg);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;min-height:440px;}
+.ed-pv-bar{padding:10px 14px;font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px;}
+.ed-pv-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
+.ed-pv{flex:1;width:100%;border:none;background:#fff;}
+.ed-fields{padding:22px;overflow-y:auto;display:flex;flex-direction:column;}
+.ed-fields h2{font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.ed-actions{display:flex;gap:8px;margin-top:16px;}
+</style>
+<div class="ed-overlay" id="edModal" onclick="if(event.target===this)closeEdit()">
+  <div class="ed-modal">
+    <div class="ed-pv-wrap">
+      <div class="ed-pv-bar"><span class="dot"></span><span data-i18n="ed_live">Live preview</span><span id="edSiteName" style="color:var(--text-secondary);"></span></div>
+      <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer"></iframe>
+    </div>
+    <div class="ed-fields">
+      <h2 data-i18n="ed_edit_product">Edit product</h2>
+      <div class="field"><label data-i18n="ed_title">Title</label><input class="input" id="edName"></div>
+      <div class="field"><label data-i18n="ed_category">Category</label><input class="input" id="edCategory"></div>
+      <div class="field"><label data-i18n="ed_price">Price ($)</label><input class="input" id="edPrice"></div>
+      <div class="field"><label data-i18n="ed_image">Image URL</label><input class="input" id="edImage"></div>
+      <div class="field"><label data-i18n="ed_url">Product / buy URL</label><input class="input" id="edUrl"></div>
+      <div class="ed-actions">
+        <button class="btn btn-primary" id="edSave" onclick="saveEdit()" style="flex:1;" data-i18n="ed_save">Save changes</button>
+        <button class="btn btn-secondary" onclick="closeEdit()" data-i18n="cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 var SITES = {{ sites_with_tokens|tojson }};
 var pmProduct = null;
+
+// === WYSIWYG inline edit ===
+var edProduct = null;
+function openEditModal(product){
+    edProduct = product;
+    var site = SITES.filter(function(s){return s.id===product._site_id;})[0] || {};
+    document.getElementById('edName').value = product.name || '';
+    document.getElementById('edCategory').value = product.category || '';
+    document.getElementById('edPrice').value = product.price || '';
+    document.getElementById('edImage').value = product.image || '';
+    document.getElementById('edUrl').value = product.url || '';
+    document.getElementById('edSiteName').textContent = ' · ' + (product._site_name || '');
+    var base = (site.url || '');
+    if (base.charAt(base.length-1) === '/') base = base.slice(0,-1);
+    document.getElementById('edPreview').src = base ? base + '/product/' + encodeURIComponent(product.id) : 'about:blank';
+    document.getElementById('edModal').classList.add('active');
+}
+function closeEdit(){ document.getElementById('edModal').classList.remove('active'); edProduct=null; }
+async function saveEdit(){
+    if(!edProduct) return;
+    var body = {
+        name: document.getElementById('edName').value,
+        category: document.getElementById('edCategory').value,
+        price: document.getElementById('edPrice').value,
+        image: document.getElementById('edImage').value,
+        url: document.getElementById('edUrl').value,
+    };
+    var btn=document.getElementById('edSave'); var ot=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
+    try{
+        var res = await fetch('/products/'+encodeURIComponent(edProduct._site_id)+'/'+encodeURIComponent(edProduct.id), {
+            method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        var json = await res.json();
+        btn.disabled=false; btn.textContent=ot;
+        if(json && json.ok){
+            showToast('Saved ✓','success');
+            var f=document.getElementById('edPreview'); f.src=f.src;
+        } else { showToast('Save failed','error'); }
+    }catch(e){ btn.disabled=false; btn.textContent=ot; showToast('Network error','error'); }
+}
+
 
 function openPushModal(product) {
     pmProduct = product;
