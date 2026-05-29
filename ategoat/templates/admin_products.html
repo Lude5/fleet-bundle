@@ -34,17 +34,25 @@
 {% endblock %}
 
 {% block admin_extra_css %}
-/* Clickable column-header filter icons (🔥 trending, 📦 in-stock).
-   Click the table header to filter the table by that flag. */
-th.col-trend, th.col-stock {
-    cursor: pointer; user-select: none;
-    transition: background .15s, color .15s;
-    border-radius: 6px;
+/* Catalog toolbar quick-filter buttons (🔥 Trending, 📦 In stock).
+   Sit right next to the search box / sort dropdown above the table.
+   Click toggles; turns solid-accent when active, syncs with the
+   Filter popover checkboxes. */
+.catalog-filter-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px;
+    background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px;
+    cursor: pointer; transition: all .15s; user-select: none; white-space: nowrap;
 }
-th.col-trend:hover, th.col-stock:hover { background: var(--surface-2); }
-th.col-trend.active, th.col-stock.active {
-    background: var(--accent); color: #fff;
+.catalog-filter-btn:hover { border-color: var(--border); color: var(--text); }
+.catalog-filter-btn.active {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
+.catalog-filter-btn .cfb-icon { font-size: 14px; line-height: 1; }
 
 /* Topbar filter popover (multi-select) */
 .filter-pop-wrap { position: relative; display: inline-flex; }
@@ -597,9 +605,21 @@ th.col-trend.active, th.col-stock.active {
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="tableSearch" class="input" placeholder="Search name, seller, tags…" data-i18n-placeholder="search_placeholder" oninput="filterTable()">
         </div>
+        <button type="button" class="catalog-filter-btn" data-quick="trending" onclick="quickToggle(this)" title="Show only trending products">
+            <span class="cfb-icon">🔥</span> Trending
+        </button>
+        <button type="button" class="catalog-filter-btn" data-quick="in_stock" onclick="quickToggle(this)" title="Show only in-stock products">
+            <span class="cfb-icon">📦</span> In stock
+        </button>
+        <select id="tableCatFilter" class="select" onchange="quickCatFilter(this.value)" title="Filter to one category">
+            <option value="">All categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}">{{ cat.name }}</option>
+            {% endfor %}
+            <option value="(uncategorized)">(uncategorized)</option>
+        </select>
         <select id="tableSortFilter" class="select" onchange="filterTable()">
             <option value="default">Default (pinned first)</option>
-            <option value="category">Category (grouped A → Z)</option>
             <option value="recent">Recently added</option>
             <option value="oldest">Oldest first</option>
             <option value="price_low">Price ↑ (low to high)</option>
@@ -615,8 +635,8 @@ th.col-trend.active, th.col-stock.active {
                     <th class="col-cb"><input type="checkbox" id="selectAllCb" onchange="toggleSelectAll()"></th>
                     <th class="col-handle"></th>
                     <th class="col-star"></th>
-                    <th class="col-trend" data-quick="trending" onclick="quickToggle(this)" title="Click to filter to trending only">🔥</th>
-                    <th class="col-stock" data-quick="in_stock" onclick="quickToggle(this)" title="Click to filter to in-stock only">📦</th>
+                    <th class="col-trend" title="Trending">🔥</th>
+                    <th class="col-stock" title="In stock">📦</th>
                     <th class="col-thumb"></th>
                     <th data-i18n="th_name">Name</th>
                     <th data-i18n="th_category">Category</th>
@@ -930,25 +950,38 @@ document.addEventListener('click', function(e){
 });
 window.clearAllFilters = function() {
     document.querySelectorAll('.filter-pop input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
-    document.querySelectorAll('th[data-quick].active').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.catalog-filter-btn.active').forEach(function(b){ b.classList.remove('active'); });
+    var cf = document.getElementById('tableCatFilter');
+    if (cf) cf.value = '';
     filterTable();
 };
-// Clicking the 🔥 or 📦 column header toggles that filter on/off.
-// Stays in sync with the matching status checkbox inside the Filter popover.
-window.quickToggle = function(th) {
-    var key = th.dataset.quick;  // 'trending' or 'in_stock'
+// Clicking 🔥 Trending / 📦 In stock pills in the toolbar toggles the
+// matching Filter-popover checkbox so both UIs stay in sync.
+window.quickToggle = function(btn) {
+    var key = btn.dataset.quick;  // 'trending' or 'in_stock'
     var cb = document.querySelector('.f-status[value="' + key + '"]');
     if (!cb) return;
     cb.checked = !cb.checked;
-    th.classList.toggle('active', cb.checked);
+    btn.classList.toggle('active', cb.checked);
     filterTable();
 };
-// Reverse-sync: when a popover checkbox changes, mirror to the column header.
+// Reverse-sync: popover checkbox changes mirror to toolbar pills.
 document.addEventListener('change', function(e){
     if (!e.target.matches('.f-status')) return;
-    var th = document.querySelector('th[data-quick="' + e.target.value + '"]');
-    if (th) th.classList.toggle('active', e.target.checked);
+    var btn = document.querySelector('.catalog-filter-btn[data-quick="' + e.target.value + '"]');
+    if (btn) btn.classList.toggle('active', e.target.checked);
 });
+// Single-category quick filter — toolbar dropdown sets the popover
+// checkboxes and re-runs the filter. Empty value = all categories.
+window.quickCatFilter = function(slug) {
+    // Clear every category checkbox first
+    document.querySelectorAll('.f-cat').forEach(function(cb){ cb.checked = false; });
+    if (slug) {
+        var cb = document.querySelector('.f-cat[value="' + slug + '"]');
+        if (cb) cb.checked = true;
+    }
+    filterTable();
+};
 // Wire every popover checkbox to filterTable
 document.addEventListener('change', function(e){
     if (e.target.matches('.filter-pop input[type="checkbox"]')) filterTable();
@@ -1012,12 +1045,6 @@ function getMatchingRows() {
             if (sort === 'price_low')   return parseFloat(a.dataset.priceNum || 0) - parseFloat(b.dataset.priceNum || 0);
             if (sort === 'price_high')  return parseFloat(b.dataset.priceNum || 0) - parseFloat(a.dataset.priceNum || 0);
             if (sort === 'name_az')     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
-            if (sort === 'category') {
-                var ca = (a.dataset.cat || 'zzz').toLowerCase();
-                var cb = (b.dataset.cat || 'zzz').toLowerCase();
-                if (ca !== cb) return ca.localeCompare(cb);
-                return (a.dataset.name || '').localeCompare(b.dataset.name || '');
-            }
             return 0;
         });
     }
