@@ -82,7 +82,7 @@ try:
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
             get_top_clicked_products, set_in_stock,
-            get_all_settings, set_settings
+            get_all_settings, set_settings, count_products
         )
     except ImportError:
         from database import (
@@ -93,7 +93,7 @@ try:
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
             get_top_clicked_products, set_in_stock,
-            get_all_settings, set_settings
+            get_all_settings, set_settings, count_products
         )
     init_db()
     check_auto_backup()
@@ -389,7 +389,20 @@ def inject_config():
         _settings = get_all_settings()
     except Exception:
         _settings = {}
-    return {'site': SITE_CONFIG, 'settings': _settings}
+    cfg = SITE_CONFIG
+    # Unless the owner pinned PRODUCT_COUNT_LABEL via env, show the LIVE count
+    # (rounded down to the nearest 100) everywhere instead of a stale default.
+    if not os.environ.get('PRODUCT_COUNT_LABEL'):
+        try:
+            n = count_products()
+            if n >= 100:
+                label = '{:,}+'.format((n // 100) * 100)
+                cfg = dict(SITE_CONFIG)
+                cfg['product_count_label'] = label
+                cfg['tagline'] = 'A curated catalogue of {} finds. Updated daily.'.format(label)
+        except Exception:
+            pass
+    return {'site': cfg, 'settings': _settings}
 
 
 # --- Public Routes ---

@@ -112,6 +112,17 @@ def init_db():
     conn.close()
 
 
+def count_products():
+    """Fast live product count (for the dynamic '<n>+ finds' labels)."""
+    try:
+        conn = get_db()
+        n = conn.execute('SELECT COUNT(*) FROM products').fetchone()[0]
+        conn.close()
+        return int(n or 0)
+    except Exception:
+        return 0
+
+
 # --- Editable site settings (hero, nav, footer, branding, theme) -------------
 def get_all_settings():
     """Return every site setting as a plain dict (empty dict if none/missing)."""
