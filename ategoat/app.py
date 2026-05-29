@@ -81,7 +81,8 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     except ImportError:
         from database import (
@@ -91,7 +92,8 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     init_db()
     check_auto_backup()
@@ -360,8 +362,12 @@ def is_admin_api():
 
 @app.context_processor
 def inject_config():
-    """Make SITE_CONFIG available in all templates as 'site'."""
-    return {'site': SITE_CONFIG}
+    """Make SITE_CONFIG + editable site settings available in all templates."""
+    try:
+        _settings = get_all_settings()
+    except Exception:
+        _settings = {}
+    return {'site': SITE_CONFIG, 'settings': _settings}
 
 
 # --- Public Routes ---
@@ -1860,6 +1866,29 @@ def api_admin_config():
     # Don't leak secrets — strip token-ish keys
     safe = {k: v for k, v in SITE_CONFIG.items() if 'token' not in k.lower() and 'secret' not in k.lower()}
     return jsonify(safe)
+
+
+@app.route('/admin/api/settings')
+def api_admin_get_settings():
+    """Return all editable site settings (hero, nav, footer, branding, theme)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'settings': get_all_settings()})
+
+
+@app.route('/admin/api/settings', methods=['PUT', 'PATCH', 'POST'])
+def api_admin_update_settings():
+    """Upsert one or more site settings."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    if 'settings' in data and isinstance(data['settings'], dict):
+        data = data['settings']
+    try:
+        n = set_settings(data)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:200]}), 500
+    return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
 
 
 @app.route('/admin/backup/download')

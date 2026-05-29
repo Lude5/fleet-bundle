@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
-    <meta name="description" content="{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.">
+    <title>{% block title %}{{ settings.page_title or (site.name ~ ' — Curated Finds, Open on Any Agent') }}{% endblock %}</title>
+    <meta name="description" content="{{ settings.meta_description or (site.name ~ ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.') }}">
     <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, kakobuy, joyagoo, cnfans, sugargoo, oopbuy, allchinabuy, mulebuy, hoobuy, acbuy">
     <link rel="canonical" href="https://{{ site.domain }}">
     <meta property="og:type" content="website">
@@ -57,9 +57,9 @@
             --text: #ffffff;
             --text-secondary: rgba(255,255,255,0.6);
             --text-muted: rgba(255,255,255,0.3);
-            --accent: {{ site.brand_color }};
-            --accent-hover: {{ site.brand_color }}dd;
-            --accent-dim: {{ site.brand_color }}1a;
+            --accent: {{ settings.accent_color or site.brand_color }};
+            --accent-hover: {{ settings.accent_color or site.brand_color }}dd;
+            --accent-dim: {{ settings.accent_color or site.brand_color }}1a;
             --accent-glow: {{ site.brand_color }}33;
             --font-display: 'Anton', sans-serif;
             --font-body: 'Inter', sans-serif;
@@ -754,8 +754,9 @@
     <script src="/static/js/preview-mode.js"></script>
 </head>
 <body>
+    {% if settings.announcement_text %}<div class="announce-bar" style="background:var(--accent);color:#0b0b0b;text-align:center;padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.3px;">{{ settings.announcement_text }}</div>{% endif %}
     <nav class="nav" id="nav">
-        <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
+        <a href="/" class="nav-brand">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></a>
         <ul class="nav-links">
             <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
             <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}">Shop</a></li>
@@ -780,7 +781,7 @@
 
     <div class="mobile-menu" id="mob">
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
-        <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
+        <div class="mobile-menu-brand">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></div>
         <a href="/">Home</a>
         <a href="/shop">Shop</a>
         <a href="/link-converter">Converter</a>
@@ -814,8 +815,8 @@
     <footer class="footer">
         <div class="footer-top">
             <div>
-                <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--accent);">{{ site.name_part2 }}</span></div>
-                <p class="footer-desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
+                <div class="footer-brand">{{ settings.brand_part1 or site.name_part1 }}<span style="color:var(--accent);">{{ settings.brand_part2 or site.name_part2 }}</span></div>
+                <p class="footer-desc">{{ settings.footer_text or 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.' }}</p>
             </div>
             <div class="footer-col">
                 <h4>Categories</h4>

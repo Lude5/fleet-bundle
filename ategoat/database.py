@@ -82,6 +82,12 @@ def init_db():
             value TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS site_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     ''')
     # Migrations for older DBs
     for col, ddl in [
@@ -102,6 +108,34 @@ def init_db():
     conn.execute('CREATE INDEX IF NOT EXISTS idx_products_order ON products(featured DESC, position ASC, created_at DESC)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_products_listing ON products(listing_id)')
     conn.close()
+
+
+# --- Editable site settings (hero, nav, footer, branding, theme) -------------
+def get_all_settings():
+    """Return every site setting as a plain dict (empty dict if none/missing)."""
+    try:
+        conn = get_db()
+        rows = conn.execute('SELECT key, value FROM site_settings').fetchall()
+        conn.close()
+        return {r['key']: r['value'] for r in rows}
+    except Exception:
+        return {}
+
+
+def set_settings(updates):
+    """Upsert a dict of {key: value} settings. Returns count written."""
+    conn = get_db()
+    n = 0
+    for k, v in (updates or {}).items():
+        conn.execute(
+            'INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) '
+            'ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP',
+            (str(k), '' if v is None else str(v))
+        )
+        n += 1
+    conn.commit()
+    conn.close()
+    return n
 
 
 SHOP_ORDER = 'featured DESC, position ASC, created_at DESC'
