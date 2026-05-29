@@ -576,7 +576,7 @@ function renderPro() {
         grid: { borderColor: SURFACE_2, strokeDashArray: 4 },
         xaxis: { type: 'category', tickAmount: 7 },
         yaxis: { labels: { formatter: function(v){ return Math.round(v).toLocaleString(); } } },
-        legend: { position: 'top', horizontalAlign: 'right' },
+        legend: { position: 'top', horizontalAlign: 'left', offsetY: -6 },
         markers: { size: 0, hover: { size: 5 } },
         tooltip: { theme: 'dark', shared: true },
     });
@@ -615,7 +615,7 @@ function renderPro() {
             plotOptions: { bar: { borderRadius: 6, columnWidth: '60%' } },
             stroke: { width: 0 },
             grid: { borderColor: SURFACE_2 },
-            legend: { position: 'top', horizontalAlign: 'right' },
+            legend: { position: 'top', horizontalAlign: 'left', offsetY: -6 },
             dataLabels: { enabled: false },
             tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString(); } } },
         });
@@ -669,7 +669,7 @@ function renderExec() {
         plotOptions: { bar: { borderRadius: 3, columnWidth: '70%' } },
         stroke: { width: 0 },
         grid: { borderColor: SURFACE_2 },
-        legend: { position: 'top', horizontalAlign: 'right' },
+        legend: { position: 'top', horizontalAlign: 'left', offsetY: -6 },
         dataLabels: { enabled: false },
         tooltip: { theme: 'dark', shared: true, intersect: false, y: { formatter: function(v){ return v.toLocaleString() + ' clicks'; } } },
     });
@@ -753,7 +753,7 @@ function renderExec() {
             plotOptions: { bar: { borderRadius: 5, columnWidth: '60%' } },
             grid: { borderColor: SURFACE_2 },
             stroke: { width: 0 },
-            legend: { position: 'top', horizontalAlign: 'right' },
+            legend: { position: 'top', horizontalAlign: 'left', offsetY: -6 },
             dataLabels: { enabled: false },
             tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString(); } } },
         });

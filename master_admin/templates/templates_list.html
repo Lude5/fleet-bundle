@@ -43,9 +43,9 @@
     <h2 data-i18n="tpl_intro_h">Designs ready to deploy</h2>
     <p data-i18n="tpl_intro_p">Each template is a fully-built Flask site with the kai-style admin panel, currency switcher, link converter, tutorial, and analytics baked in. Pick one, plug in your spreadsheet URL, click deploy — a new client site is live in 5 minutes. Currently 1 production-ready template; 7 more designs are scoped and ready to build on demand.</p>
     <div class="tpl-stats">
-        <span data-i18n="tpl_stat_live">Live<b>{{ templates | selectattr('status', 'equalto', 'live') | list | length }}</b></span>
-        <span data-i18n="tpl_stat_planned">Planned<b>{{ templates | selectattr('status', 'equalto', 'coming-soon') | list | length }}</b></span>
-        <span data-i18n="tpl_stat_total">Total<b>{{ templates | length }}</b></span>
+        <span><span data-i18n="tpl_stat_live">Live</span><b>{{ templates | selectattr('status', 'equalto', 'live') | list | length }}</b></span>
+        <span><span data-i18n="tpl_stat_planned">Planned</span><b>{{ templates | selectattr('status', 'equalto', 'coming-soon') | list | length }}</b></span>
+        <span><span data-i18n="tpl_stat_total">Total</span><b>{{ templates | length }}</b></span>
     </div>
 </div>
 

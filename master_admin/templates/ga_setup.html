@@ -35,7 +35,7 @@
     <h2 style="font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Step 2 · Generate &amp; save the key</h2>
     <ol style="color:var(--text-secondary);font-size:14px;line-height:1.9;padding-left:20px;">
         <li>Click into the new service account → <strong>Keys</strong> tab → <strong>Add Key</strong> → <strong>Create new key</strong> → <strong>JSON</strong>. A file downloads.</li>
-        <li>Save the downloaded JSON file as <code style="color:var(--accent);background:var(--surface-2);padding:3px 8px;border-radius:5px;">{{ '/'.join([request.host.split(':')[0], '_master_admin', '.ga-creds.json']) }}</code> on your PC — i.e. drop it into <code style="color:var(--accent);">C:\Users\talan\clients\_master_admin\.ga-creds.json</code>.</li>
+        <li>Save the downloaded JSON file into the <code style="color:var(--accent);background:var(--surface-2);padding:3px 8px;border-radius:5px;">master_admin/</code> folder as <code style="color:var(--accent);background:var(--surface-2);padding:3px 8px;border-radius:5px;">.ga-creds.json</code> (next to <code>app.py</code>), then redeploy. It's gitignored so it won't be committed.</li>
         <li>Copy the service account <strong>email address</strong> (looks like <code style="color:var(--accent);">master-admin-ga@your-project.iam.gserviceaccount.com</code>) — you need it for the next step.</li>
     </ol>
 </div>
