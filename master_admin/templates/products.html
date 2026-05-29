@@ -334,10 +334,25 @@ tr[draggable]:hover .drag-h{color:var(--accent);}
     <div class="ed-fields">
       <h2 data-i18n="ed_edit_product">Edit product</h2>
       <div class="field"><label data-i18n="ed_title">Title</label><input class="input" id="edName"></div>
-      <div class="field"><label data-i18n="ed_category">Category</label><input class="input" id="edCategory"></div>
-      <div class="field"><label data-i18n="ed_price">Price ($)</label><input class="input" id="edPrice"></div>
+      <div class="form-grid">
+        <div class="field"><label data-i18n="ed_category">Category</label><input class="input" id="edCategory"></div>
+        <div class="field"><label data-i18n="ed_price">Price ($)</label><input class="input" id="edPrice"></div>
+        <div class="field"><label>Retail price</label><input class="input" id="edRetail"></div>
+        <div class="field"><label>Sold count</label><input class="input" id="edSales" type="number"></div>
+        <div class="field"><label>Seller</label><input class="input" id="edSeller"></div>
+        <div class="field"><label>Batch</label><input class="input" id="edBatch"></div>
+        <div class="field"><label>Weight</label><input class="input" id="edWeight"></div>
+        <div class="field"><label>Quality tier</label><select class="select" id="edQuality"><option value="">—</option><option value="BUDGET">BUDGET</option><option value="TOP">TOP</option><option value="1:1">1:1</option></select></div>
+      </div>
       <div class="field"><label data-i18n="ed_image">Image URL</label><input class="input" id="edImage"></div>
       <div class="field"><label data-i18n="ed_url">Product / buy URL</label><input class="input" id="edUrl"></div>
+      <div class="field"><label>Tags (space-separated)</label><input class="input" id="edTags"></div>
+      <div class="field"><label>QC photo URLs (one per line)</label><textarea class="input" id="edQc" style="min-height:64px;font-family:var(--font-mono);font-size:11px;"></textarea></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 4px;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="edFeatured" style="width:16px;height:16px;accent-color:var(--accent);"> Featured (pin)</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="edTrending" style="width:16px;height:16px;accent-color:var(--accent);"> Trending</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;"><input type="checkbox" id="edStock" style="width:16px;height:16px;accent-color:var(--accent);"> In stock</label>
+      </div>
       <div class="ed-actions">
         <button class="btn btn-primary" id="edSave" onclick="saveEdit()" style="flex:1;" data-i18n="ed_save">Save changes</button>
         <button class="btn btn-secondary" onclick="closeEdit()" data-i18n="cancel">Cancel</button>
@@ -391,6 +406,20 @@ function openEditModal(product){
     document.getElementById('edPrice').value = product.price || '';
     document.getElementById('edImage').value = product.image || '';
     document.getElementById('edUrl').value = product.url || '';
+    document.getElementById('edSeller').value = product.seller || '';
+    document.getElementById('edBatch').value = product.batch || '';
+    document.getElementById('edRetail').value = product.retail_price || '';
+    document.getElementById('edWeight').value = product.weight || '';
+    document.getElementById('edQuality').value = product.quality || '';
+    document.getElementById('edSales').value = product.sales || '';
+    document.getElementById('edTags').value = product.tags || '';
+    document.getElementById('edFeatured').checked = !!(product.featured && product.featured != 0);
+    document.getElementById('edTrending').checked = (product.tags||'').toLowerCase().indexOf('trending') >= 0;
+    document.getElementById('edStock').checked = !(product.in_stock === 0 || product.in_stock === false);
+    var _qc = product.qc_photos, _t = '';
+    if (_qc) { try { var _a = (typeof _qc === 'string') ? JSON.parse(_qc) : _qc; _t = (Array.isArray(_a)?_a:[]).join('
+'); } catch(e){ _t = (typeof _qc==='string')?_qc:''; } }
+    document.getElementById('edQc').value = _t;
     document.getElementById('edSiteName').textContent = ' · ' + (product._site_name || '');
     var base = (site.url || '');
     if (base.charAt(base.length-1) === '/') base = base.slice(0,-1);
@@ -400,12 +429,27 @@ function openEditModal(product){
 function closeEdit(){ document.getElementById('edModal').classList.remove('active'); edProduct=null; }
 async function saveEdit(){
     if(!edProduct) return;
+    var _tags = document.getElementById('edTags').value.trim();
+    var _toks = _tags.split(/\s+/).filter(function(t){ return t && t.toLowerCase()!=='trending'; });
+    if (document.getElementById('edTrending').checked) _toks.push('trending');
+    var _qcLines = document.getElementById('edQc').value.split('
+').map(function(x){return x.trim();}).filter(Boolean);
     var body = {
         name: document.getElementById('edName').value,
         category: document.getElementById('edCategory').value,
         price: document.getElementById('edPrice').value,
         image: document.getElementById('edImage').value,
         url: document.getElementById('edUrl').value,
+        seller: document.getElementById('edSeller').value,
+        batch: document.getElementById('edBatch').value,
+        retail_price: document.getElementById('edRetail').value,
+        weight: document.getElementById('edWeight').value,
+        quality: document.getElementById('edQuality').value,
+        sales: parseInt(document.getElementById('edSales').value,10) || 0,
+        tags: _toks.join(' '),
+        featured: document.getElementById('edFeatured').checked ? 1 : 0,
+        in_stock: document.getElementById('edStock').checked ? 1 : 0,
+        qc_photos: JSON.stringify(_qcLines),
     };
     var btn=document.getElementById('edSave'); var ot=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
     try{
