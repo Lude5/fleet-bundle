@@ -135,14 +135,18 @@
         </tr></thead>
         <tbody>
         {% for p in products %}
-            <tr data-pid="{{ p.id }}" data-site="{{ p._site_id }}" data-name="{{ p.name }}">
-                <td><img class="thumb" src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
+            <tr data-pid="{{ p.id }}" data-site="{{ p._site_id }}" data-name="{{ p.name }}" draggable="true" ondragstart="dragStart(event,this)" ondragover="dragOver(event)" ondrop="dragDrop(event,this)" ondragend="dragEnd(event)">
+                <td><span class="drag-h" title="Drag to reorder">∷</span><img class="thumb" src="{{ p.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'"></td>
                 <td>
                     <div style="font-weight:500;">{{ p.name }}</div>
                     {% if p.tags %}<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-top:3px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.tags }}</div>{% endif %}
                 </td>
                 <td><span class="site-chip"><span class="swatch" style="background: {{ p._site_color }};"></span>{{ p._site_name }}</span></td>
-                <td><span class="cat-pill">{{ p.category or '—' }}</span></td>
+                <td><select class="select cat-inline" style="min-width:120px;padding:6px 8px;font-size:12px;" onchange="quickCategory(this)" data-pid="{{ p.id }}" data-site="{{ p._site_id }}">
+                    {% for c in cats %}<option value="{{ c }}" {% if c == p.category %}selected{% endif %}>{{ c }}</option>{% endfor %}
+                    {% if p.category and p.category not in cats %}<option value="{{ p.category }}" selected>{{ p.category }}</option>{% endif %}
+                    <option value="">—</option>
+                </select></td>
                 <td class="price-cell">${{ p.price }}</td>
                 <td style="color:var(--text-muted);font-size:12px;">{{ p.seller or '—' }}</td>
                 <td>
@@ -318,6 +322,8 @@
 .ed-fields{padding:22px;overflow-y:auto;display:flex;flex-direction:column;}
 .ed-fields h2{font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
 .ed-actions{display:flex;gap:8px;margin-top:16px;}
+.drag-h{display:inline-block;color:var(--text-muted);cursor:grab;margin-right:8px;font-size:14px;vertical-align:middle;letter-spacing:-2px;}
+tr[draggable]:hover .drag-h{color:var(--accent);}
 </style>
 <div class="ed-overlay" id="edModal" onclick="if(event.target===this)closeEdit()">
   <div class="ed-modal">
@@ -348,6 +354,35 @@ var pmProduct = null;
 
 // === WYSIWYG inline edit ===
 var edProduct = null;
+
+// === Inline category change (move between categories) ===
+async function quickCategory(sel){
+    var pid=sel.dataset.pid, site=sel.dataset.site, cat=sel.value;
+    sel.disabled=true;
+    try{
+        var res=await fetch('/products/'+encodeURIComponent(site)+'/'+encodeURIComponent(pid),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({category:cat})});
+        var j=await res.json(); showToast((j&&j.ok)?'Category updated':'Update failed',(j&&j.ok)?'success':'error');
+    }catch(e){ showToast('Network error','error'); }
+    sel.disabled=false;
+}
+
+// === Drag-to-reorder (persists position to the origin site) ===
+var dragRow=null;
+function dragStart(e,tr){ dragRow=tr; e.dataTransfer.effectAllowed='move'; setTimeout(function(){tr.style.opacity='0.35';},0); }
+function dragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function dragDrop(e,tr){
+    e.preventDefault();
+    if(!dragRow||dragRow===tr) return;
+    var tb=tr.parentNode, rows=Array.prototype.slice.call(tb.children);
+    if(rows.indexOf(dragRow)<rows.indexOf(tr)) tb.insertBefore(dragRow,tr.nextSibling); else tb.insertBefore(dragRow,tr);
+    var pos=Array.prototype.slice.call(tb.children).indexOf(dragRow);
+    persistPosition(dragRow,pos);
+}
+function dragEnd(){ if(dragRow) dragRow.style.opacity=''; dragRow=null; }
+async function persistPosition(tr,pos){
+    try{ var r=await fetch('/products/'+encodeURIComponent(tr.dataset.site)+'/'+encodeURIComponent(tr.dataset.pid),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({position:pos})}); var j=await r.json(); showToast((j&&j.ok)?'Order saved':'Order failed',(j&&j.ok)?'success':'error'); }
+    catch(e){ showToast('Order save failed','error'); }
+}
 function openEditModal(product){
     edProduct = product;
     var site = SITES.filter(function(s){return s.id===product._site_id;})[0] || {};
