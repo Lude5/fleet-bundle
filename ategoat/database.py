@@ -100,6 +100,7 @@ def init_db():
         ('sales',      'ALTER TABLE products ADD COLUMN sales INTEGER DEFAULT 0'),
         ('qc_photos',  'ALTER TABLE products ADD COLUMN qc_photos TEXT DEFAULT ""'),
         ('in_stock',   'ALTER TABLE products ADD COLUMN in_stock INTEGER DEFAULT 1'),
+        ('variants',   'ALTER TABLE products ADD COLUMN variants TEXT DEFAULT ""'),
     ]:
         try:
             conn.execute(ddl)
@@ -242,7 +243,7 @@ def add_products_bulk(products):
 
 def update_product(product_id, updates):
     conn = get_db()
-    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos']
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos', 'variants']
     sets = []
     vals = []
     for key in allowed:

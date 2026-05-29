@@ -578,6 +578,18 @@ def products_create_one(site_id):
     return jsonify(data or {'ok': True})
 
 
+@app.route('/search/<site_id>')
+def search_proxy(site_id):
+    """Proxy a catalogue search to the origin site (for the Best-Selling picker)."""
+    from urllib.parse import quote
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'results': []})
+    q = (request.args.get('q') or '').strip()
+    resp = _call_site(site, '/api/search?limit=12&q=' + quote(q))
+    return jsonify(resp or {'results': []})
+
+
 @app.route('/products/<site_id>/bulk', methods=['POST'])
 def products_bulk(site_id):
     """Proxy a batch of product edits to the origin site in one request."""

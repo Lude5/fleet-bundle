@@ -396,9 +396,23 @@ def home():
     sample_pool = products if len(products) <= 500 else random.sample(products, 500)
     shuffled = list(sample_pool)
     random.shuffle(shuffled)
+    # "Best Selling" = an operator-curated, ordered list (home_featured_ids in
+    # site_settings). Falls back to the first 8 by DB order when unset.
+    featured = products[:8]
+    try:
+        ids_str = get_all_settings().get('home_featured_ids', '')
+        if ids_str:
+            import json as _fj
+            ids = _fj.loads(ids_str)
+            idx = {p['id']: p for p in products}
+            featured = [idx[i] for i in ids if i in idx]
+            if not featured:
+                featured = products[:8]
+    except Exception:
+        featured = products[:8]
     resp = make_response(render_template('home.html',
         products=products,
-        featured=products[:8],
+        featured=featured,
         cat_previews=cat_previews,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
@@ -799,6 +813,17 @@ def api_variants(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'variants': [], 'images': []})
+    # Operator-edited variants (from the studio) always win over the scrape.
+    stored = p.get('variants')
+    if stored:
+        try:
+            import json as _sj
+            arr = _sj.loads(stored) if isinstance(stored, str) else stored
+            if isinstance(arr, list) and arr:
+                vs = [{'title': (v.get('name') or v.get('title') or ''), 'image': (v.get('image') or '')} for v in arr if (v.get('image') or v.get('name') or v.get('title'))]
+                return jsonify({'variants': vs, 'images': [v['image'] for v in vs if v['image']]})
+        except Exception:
+            pass
     cached = cache_get(f'variants:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify(cached)

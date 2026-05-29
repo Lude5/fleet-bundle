@@ -309,9 +309,9 @@
 {% if products %}
 <div class="section reveal">
     <div class="sec-header"><h2 class="sec-title">Best Selling</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
-    <div class="product-grid">
+    <div class="product-grid" data-best-selling="1">
         {% for p in featured %}
-        <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" data-pid="{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button>
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 <span class="product-card-badge">Best Selling</span>
