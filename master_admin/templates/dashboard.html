@@ -153,7 +153,7 @@ body.view-comfort .topbar { padding: 18px 32px; }
     <div class="pro-kpi"><div class="l" data-i18n="dash_tenants">Tenants</div><div class="v">{{ sites|length }}</div><div class="ctx" data-i18n="n_live" data-i18n-vars='{"n":"{{ live_count }}"}'>{{ live_count }} live</div></div>
     <div class="pro-kpi"><div class="l" data-i18n="dash_products_fleet">Products · fleet</div><div class="v accent">{{ '{:,}'.format(total_products) }}</div><div class="ctx" data-i18n="dash_total_catalog">total catalog</div></div>
     <div class="pro-kpi"><div class="l" data-i18n="dash_avg_site">Avg / site</div><div class="v">{{ '{:,}'.format((total_products / sites|length) | int) if sites|length else 0 }}</div><div class="ctx" data-i18n="products_per_tenant">products per tenant</div></div>
-    <div class="pro-kpi"><div class="l" data-i18n="dash_uptime">Uptime</div><div class="v accent">100<span style="font-size:14px;">%</span></div><div class="ctx" data-i18n="n_of_m_reachable" data-i18n-vars='{"n":"{{ live_count }}","m":"{{ sites|length }}"}'>{{ live_count }}/{{ sites|length }} reachable</div></div>
+    <div class="pro-kpi"><div class="l" data-i18n="dash_uptime">Uptime</div><div class="v accent">{{ (live_count * 100 // (sites|length or 1)) }}<span style="font-size:14px;">%</span></div><div class="ctx" data-i18n="n_of_m_reachable" data-i18n-vars='{"n":"{{ live_count }}","m":"{{ sites|length }}"}'>{{ live_count }}/{{ sites|length }} reachable</div></div>
 </div>
 
 <div class="pro-row">
@@ -220,8 +220,8 @@ body.view-comfort .topbar { padding: 18px 32px; }
     </div>
     <div class="ex-tile">
         <div class="l" data-i18n="dash_uptime">Uptime</div>
-        <div class="v accent">100<span style="font-size:18px;">%</span></div>
-        <div class="x" data-i18n="dash_all_systems_ok">all systems ok</div>
+        <div class="v accent">{{ (live_count * 100 // (sites|length or 1)) }}<span style="font-size:18px;">%</span></div>
+        <div class="x">{% if live_count == sites|length %}<span data-i18n="dash_all_systems_ok">all systems ok</span>{% else %}{{ live_count }}/{{ sites|length }} reachable{% endif %}</div>
     </div>
 </div>
 

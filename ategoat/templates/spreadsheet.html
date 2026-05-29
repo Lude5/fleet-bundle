@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}KakoBuy Spreadsheet — 7,500+ Products | Kakobuy.Locker{% endblock %}
+{% block title %}KakoBuy Spreadsheet — {{ total }}+ Products | {{ site.name }}{% endblock %}
 
 {% block extra_css %}
 .spread-hero { padding: 120px 24px 48px; max-width: 900px; margin: 0 auto; text-align: center; }
@@ -35,14 +35,14 @@
             <div class="spread-stat-label">Categories</div>
         </div>
         <div class="spread-stat">
-            <div class="spread-stat-num">$400</div>
+            <div class="spread-stat-num">${{ site.coupon_amount }}</div>
             <div class="spread-stat-label">In Coupons</div>
         </div>
     </div>
 
     <div class="spread-cta">
         <a href="/shop" class="btn btn-primary" style="padding:16px 32px;font-size:13px;">Browse All Products</a>
-        <a href="https://www.kakobuy.com/register?affcode=bzaey" target="_blank" rel="noopener" class="btn btn-outline" style="padding:16px 32px;font-size:13px;" onclick="trackClick('signup','spreadsheet','','')">Sign Up — Coupons $50–$500</a>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" style="padding:16px 32px;font-size:13px;" onclick="trackClick('signup','spreadsheet','','')">Sign Up — Coupons $50–$500</a>
     </div>
 
     <div class="spread-cats">
@@ -84,7 +84,7 @@
     <div class="spread-faq">
         <div class="spread-faq-item">
             <div class="spread-faq-q">What is the KakoBuy spreadsheet?</div>
-            <div class="spread-faq-a">The Kakobuy.Locker spreadsheet is a curated list of {{ total }}+ products sourced from Weidian, Taobao, and 1688 — the biggest Chinese marketplaces. Every product has been handpicked for quality and value, and is purchasable through KakoBuy, a trusted shopping agent.</div>
+            <div class="spread-faq-a">The {{ site.name }} spreadsheet is a curated list of {{ total }}+ products sourced from Weidian, Taobao, and 1688 — the biggest Chinese marketplaces. Every product has been handpicked for quality and value, and is purchasable through KakoBuy, a trusted shopping agent.</div>
         </div>
         <div class="spread-faq-item">
             <div class="spread-faq-q">How do I buy from KakoBuy?</div>
@@ -109,6 +109,6 @@
     <div class="cta-glow"></div>
     <h2>Start Shopping</h2>
     <p>Sign up to KakoBuy and get Coupons $50–$500 with the lowest shipping rates.</p>
-    <a href="https://www.kakobuy.com/register?affcode=bzaey" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','spreadsheet-cta','','')">Claim Your Coupons</a>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','spreadsheet-cta','','')">Claim Your Coupons</a>
 </section>
 {% endblock %}

@@ -61,9 +61,9 @@ SITE_CONFIG = {
     'brand_color': os.environ.get('BRAND_COLOR', '#0d9488'),
     'brand_color_shadow': os.environ.get('BRAND_COLOR_SHADOW', '#0f766e'),
     'meta_pixel_id': os.environ.get('META_PIXEL_ID', ''),
-    'coupon_amount': os.environ.get('COUPON_AMOUNT', '400'),
-    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 5,000+ finds. Updated daily.'),
-    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '5,800+'),
+    'coupon_amount': os.environ.get('COUPON_AMOUNT', '500'),
+    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 9,400+ finds. Updated daily.'),
+    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '9,400+'),
     'discord_url': os.environ.get('DISCORD_URL', ''),
 }
 
@@ -390,19 +390,25 @@ def inject_config():
     except Exception:
         _settings = {}
     cfg = SITE_CONFIG
-    # Unless the owner pinned PRODUCT_COUNT_LABEL via env, show the LIVE count
-    # (rounded down to the nearest 100) everywhere instead of a stale default.
-    if not os.environ.get('PRODUCT_COUNT_LABEL'):
-        try:
-            n = count_products()
-            if n >= 100:
-                label = '{:,}+'.format((n // 100) * 100)
+    from datetime import datetime as _dtnow
+    # Live numbers so the homepage stats / labels / copyright never go stale.
+    extra = {'now_year': _dtnow.now().year, 'product_count': 100, 'category_count': 0}
+    try:
+        n = count_products()
+        if n:
+            extra['product_count'] = (n // 100) * 100 if n >= 100 else n
+            if not os.environ.get('PRODUCT_COUNT_LABEL'):
+                label = '{:,}+'.format(extra['product_count'])
                 cfg = dict(SITE_CONFIG)
                 cfg['product_count_label'] = label
                 cfg['tagline'] = 'A curated catalogue of {} finds. Updated daily.'.format(label)
-        except Exception:
-            pass
-    return {'site': cfg, 'settings': _settings}
+    except Exception:
+        pass
+    try:
+        extra['category_count'] = len(get_categories())
+    except Exception:
+        pass
+    return dict({'site': cfg, 'settings': _settings}, **extra)
 
 
 # --- Public Routes ---
