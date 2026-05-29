@@ -190,7 +190,7 @@
             ed_new_product: 'Add new product',
             ed_site: 'Site',
             tb_spreadsheet: '⊞ Spreadsheet import',
-            sb_content: 'Site Content',
+            sb_content: 'Visual editor',
             content_heading: 'Site content editor',
             ct_open_live: '↗ Open live site',
             ct_live: 'Live site',

@@ -40,6 +40,7 @@
     <button class="btn" onclick="go('/')">Home</button>
     <button class="btn" onclick="go('/shop')">Shop</button>
     <button class="btn" id="catBtn" onclick="editCategories()">⌗ Categories</button>
+    <button class="btn" onclick="pageSettings()">⚙ Page</button>
     <div class="seg">
       <button class="btn active" id="devD" onclick="setDevice('desktop')">Desktop</button>
       <button class="btn" id="devM" onclick="setDevice('mobile')">Mobile</button>
@@ -78,12 +79,16 @@
       try { fr.contentWindow.StudioEditor.openCategories(); }
       catch (e) { StudioStatus('Open the Shop page first', 'error'); }
     }
+    function pageSettings() {
+      try { fr.contentWindow.StudioEditor.openPageSettings(); }
+      catch (e) { StudioStatus('Open a page first', 'error'); }
+    }
     function inject() {
       try {
         var win = fr.contentWindow, doc = fr.contentDocument || win.document;
         win.__STUDIO__ = { siteId: SITE_ID };
         var s = doc.createElement('script');
-        s.src = '/static/js/site_editor.js?v=6';
+        s.src = '/static/js/site_editor.js?v=7';
         doc.body.appendChild(s);
         document.getElementById('notice').classList.remove('show');
       } catch (e) {

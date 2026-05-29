@@ -622,29 +622,13 @@ def products_delete_one(site_id, pid):
 # === Site Content editor (hero, nav, footer, branding, theme) ================
 @app.route('/content')
 def content_index():
-    sites = load_sites()
-    connected = [s for s in sites if s.get('url') and s.get('admin_token')]
-    if connected:
-        return redirect('/content/' + connected[0]['id'])
-    return render_template('content.html', site=None, sites=sites,
-                           connected=connected, settings={}, defaults={}, active='content')
+    # The side-panel content form was superseded by the immersive Studio.
+    return redirect('/studio')
 
 
 @app.route('/content/<site_id>')
 def content_edit(site_id):
-    sites = load_sites()
-    site = next((s for s in sites if s['id'] == site_id), None)
-    if not site:
-        return redirect('/content')
-    connected = [s for s in sites if s.get('url') and s.get('admin_token')]
-    settings, defaults = {}, {}
-    if site.get('url') and site.get('admin_token'):
-        resp = _call_site(site, '/admin/api/settings')
-        if resp and isinstance(resp, dict):
-            settings = resp.get('settings', resp) or {}
-            defaults = resp.get('defaults', {}) or {}
-    return render_template('content.html', site=site, sites=sites, connected=connected,
-                           settings=settings, defaults=defaults, active='content')
+    return redirect('/studio/' + site_id)
 
 
 @app.route('/content/<site_id>', methods=['POST', 'PUT'])

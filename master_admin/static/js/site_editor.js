@@ -78,12 +78,16 @@
     '.se-modal h3{margin:0 0 4px;font-size:18px;}.se-modal .sub{color:#9ca3af;font-size:12px;margin-bottom:16px;}',
     '.se-cat{display:flex;align-items:center;gap:10px;background:#0f0f14;border:1px solid #2a2a35;border-radius:10px;padding:9px 11px;margin-bottom:8px;}',
     '.se-cat .h{cursor:grab;color:#6b7280;font-size:16px;}.se-cat input{flex:1;background:transparent;border:none;color:#fff;font-size:14px;outline:none;}.se-cat .del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;}',
+    '.se-pl{display:block;font-size:11px;color:#9ca3af;margin:12px 0 4px;}.se-ps{width:100%;box-sizing:border-box;background:#0f0f14;border:1px solid #2a2a35;color:#fff;border-radius:8px;padding:9px 10px;font:13px system-ui;outline:none;}',
     '.se-row{display:flex;gap:8px;margin-top:14px;}.se-b{flex:1;border:none;border-radius:8px;padding:10px;font-weight:700;font-size:12px;cursor:pointer;}.se-b.save{background:#6366f1;color:#fff;}.se-b.ghost{background:#23232c;color:#cbd5e1;}',
     '.se-bar{position:fixed;bottom:0;left:0;right:0;z-index:2147483600;display:none;align-items:center;justify-content:center;gap:14px;padding:12px;background:linear-gradient(0deg,rgba(10,10,13,.97),rgba(10,10,13,.85));backdrop-filter:blur(8px);border-top:1px solid #2a2a35;font:600 13px system-ui;color:#fff;}',
     '.se-bar.show{display:flex;}.se-bar .cnt{color:#fbbf24;}',
     '.se-bar button{border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;}',
     '.se-bar .save{background:#6366f1;color:#fff;}.se-bar .save:hover{background:#4f46e5;}.se-bar .save:disabled{opacity:.6;cursor:default;}.se-bar .disc{background:#23232c;color:#cbd5e1;}',
-    '.se-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:#6366f1;color:#fff;padding:9px 18px;border-radius:999px;font:600 12px system-ui;z-index:2147483500;box-shadow:0 6px 20px rgba(0,0,0,.4);}'
+    '.se-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:#6366f1;color:#fff;padding:9px 18px;border-radius:999px;font:600 12px system-ui;z-index:2147483500;box-shadow:0 6px 20px rgba(0,0,0,.4);}',
+    /* suppress the site\'s first-visit popups so they don\'t block editing */
+    'body.se-editing #popup,body.se-editing .popup-overlay,body.se-editing #sn,body.se-editing .sales-notif{display:none!important;}',
+    'body.se-editing{padding-bottom:64px;}' /* room for the Save bar */
   ].join('');
   D.head.appendChild(css);
 
@@ -117,8 +121,9 @@
   function mini(anchor, inner, onOk) {
     closeMini();
     var m = D.createElement('div'); m.className = 'se-mini'; m.id = 'se-mini'; m.innerHTML = inner; B.appendChild(m);
-    var r = anchor.getBoundingClientRect();
-    m.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    var r = anchor.getBoundingClientRect(), mh = m.offsetHeight;
+    // flip above the anchor if it would render below the fold
+    m.style.top = ((r.bottom + mh + 12 > window.innerHeight) ? (window.scrollY + r.top - mh - 6) : (window.scrollY + r.bottom + 6)) + 'px';
     m.style.left = (window.scrollX + Math.max(8, Math.min(r.left, window.innerWidth - m.offsetWidth - 12))) + 'px';
     var ok = m.querySelector('.ok'); if (ok) ok.onclick = function () { onOk(m); };
     var f = m.querySelector('input,textarea,select'); if (f) f.focus();
@@ -166,10 +171,11 @@
       e.preventDefault(); e.stopPropagation();
       if (type === 'quality') return editQuality(el);
       if (type === 'category') return editCategory(el);
-      if (type === 'price') {
+      if (type === 'price' || type === 'money') {
+        var fld = type === 'price' ? 'price' : field;
         var num = (el.textContent.replace('✎', '').match(/[0-9.]+/) || [''])[0];
         return inlineEdit(el, { pen: pen, startText: el.textContent.replace('✎', ''), setText: num, cmp: num,
-          save: function (val) { var n = (val.match(/[0-9.]+/) || [''])[0] || '0'; el.textContent = '$' + n; el.setAttribute('data-price-usd', n); recordProduct(PID, { price: n }); } });
+          save: function (val) { var n = (val.match(/[0-9.]+/) || [''])[0] || '0'; el.textContent = '$' + n; if (type === 'price') el.setAttribute('data-price-usd', n); var o = {}; o[fld] = n; recordProduct(PID, o); } });
       }
       var clone = el.cloneNode(true); var p = clone.querySelector('.se-pen'); if (p) p.remove();
       inlineEdit(el, { pen: pen, clearPlaceholder: true, startText: clone.textContent.trim(),
@@ -183,7 +189,7 @@
   }
   function editQuality(el) {
     var valEl = el.querySelector('.pf-val') || el, cur = isPlaceholder(valEl.textContent) ? '' : valEl.textContent.trim();
-    var opts = ['', 'BUDGET', 'TOP', '1:1'].map(function (o) { return '<option' + (o === cur ? ' selected' : '') + ' value="' + o + '">' + (o || '— none —') + '</option>'; }).join('');
+    var opts = ['', 'BUDGET', 'TOP', '1:1'].map(function (o) { return '<option' + (o.toUpperCase() === cur.toUpperCase() ? ' selected' : '') + ' value="' + o + '">' + (o || '— none —') + '</option>'; }).join('');
     mini(el, '<select id="q">' + opts + '</select><button class="ok">OK</button>', function (m) {
       var v = m.querySelector('#q').value; valEl.textContent = v || '—'; el.classList.toggle('pf-empty', !v); recordProduct(PID, { quality: v }); closeMini();
     });
@@ -282,7 +288,28 @@
       };
     });
   }
-  window.StudioEditor = { openCategories: openCategories, save: flush, dirty: dirtyCount };
+  /* ---------- Page settings (announcement + SEO — not hoverable on the page) ---------- */
+  function openPageSettings() {
+    var ann = ((D.querySelector('.announce-bar') || {}).textContent || '').trim();
+    var title = D.title || '';
+    var desc = ((D.querySelector('meta[name="description"]') || {}).content) || '';
+    var bg = D.createElement('div'); bg.className = 'se-modal-bg';
+    bg.innerHTML = '<div class="se-modal"><h3>Page settings</h3><div class="sub">Top announcement bar + browser title & SEO description</div>' +
+      '<label class="se-pl">Announcement bar <span style="color:#6b7280;">(top strip — leave empty to hide)</span></label><input id="ps-ann" class="se-ps" value="' + esc(ann) + '" placeholder="e.g. Spring sale — coupons up to $500">' +
+      '<label class="se-pl">Browser tab title (SEO)</label><input id="ps-title" class="se-ps" value="' + esc(title) + '">' +
+      '<label class="se-pl">Meta description (SEO)</label><textarea id="ps-desc" class="se-ps" style="min-height:64px;">' + esc(desc) + '</textarea>' +
+      '<div class="se-row"><button class="se-b ghost" id="ps-c">Cancel</button><button class="se-b save" id="ps-s">Apply</button></div></div>';
+    B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
+    bg.querySelector('#ps-c').onclick = function () { bg.remove(); };
+    bg.querySelector('#ps-s').onclick = function () {
+      var a = bg.querySelector('#ps-ann').value, t = bg.querySelector('#ps-title').value, d = bg.querySelector('#ps-desc').value;
+      if (a !== ann) { recordSetting('announcement_text', a); var bar = D.querySelector('.announce-bar'); if (bar) bar.textContent = a; }
+      if (t !== title) recordSetting('page_title', t);
+      if (d !== desc) recordSetting('meta_description', d);
+      bg.remove(); status('Queued — click “Save changes”', 'success');
+    };
+  }
+  window.StudioEditor = { openCategories: openCategories, openPageSettings: openPageSettings, save: flush, dirty: dirtyCount };
 
   /* ---------- navigation guard: save before leaving with unsaved edits ---------- */
   D.addEventListener('click', function (e) {
@@ -311,7 +338,7 @@
     refreshBar();
   }
   window.__seRescan = scan;
-  loadCats().finally(scan);
+  if (PID) loadCats().finally(scan); else scan();  // categories only needed on the product page
   var h = D.createElement('div'); h.className = 'se-hint'; h.textContent = 'Edit mode — changes are instant; click “Save changes” when ready';
   B.appendChild(h); setTimeout(function () { h.style.transition = 'opacity .4s'; h.style.opacity = '0'; setTimeout(function () { h.remove(); }, 500); }, 4000);
 })();
