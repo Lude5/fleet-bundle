@@ -2,6 +2,17 @@
 {% block crumb %}<span data-i18n="tb_catalog">Catalog</span>{% endblock %}
 {% block heading %}<span data-i18n="sb_products">Products</span>{% endblock %}
 
+{% block topbar_left %}
+    <div class="quick-toggle-group">
+        <button type="button" class="quick-toggle" data-quick="trending" onclick="quickToggle(this)" title="Show only trending">
+            <span class="qt-icon">🔥</span><span class="qt-label">Trending</span>
+        </button>
+        <button type="button" class="quick-toggle" data-quick="in_stock" onclick="quickToggle(this)" title="Show only in-stock">
+            <span class="qt-icon">📦</span><span class="qt-label">In stock</span>
+        </button>
+    </div>
+{% endblock %}
+
 {% block topbar_actions %}
     <span class="pill" id="productTotalPill">{{ products|length }} total</span>
     <div class="filter-pop-wrap">
@@ -34,6 +45,33 @@
 {% endblock %}
 
 {% block admin_extra_css %}
+/* Quick-toggle pills next to the page heading — instant trending / in-stock filter */
+.quick-toggle-group {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-left: 18px; padding-left: 18px;
+    border-left: 1px solid var(--border-subtle);
+}
+.quick-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px;
+    cursor: pointer; transition: all .15s; user-select: none;
+}
+.quick-toggle:hover { border-color: var(--border); color: var(--text); }
+.quick-toggle.active {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.quick-toggle .qt-icon { font-size: 14px; line-height: 1; }
+@media (max-width: 720px) {
+    .quick-toggle-group { margin-left: 10px; padding-left: 10px; }
+    .quick-toggle .qt-label { display: none; }
+    .quick-toggle { padding: 8px 10px; }
+}
+
 /* Topbar filter popover (multi-select) */
 .filter-pop-wrap { position: relative; display: inline-flex; }
 .filter-pop-btn { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
@@ -917,8 +955,25 @@ document.addEventListener('click', function(e){
 });
 window.clearAllFilters = function() {
     document.querySelectorAll('.filter-pop input[type="checkbox"]').forEach(function(cb){ cb.checked = false; });
+    document.querySelectorAll('.quick-toggle.active').forEach(function(b){ b.classList.remove('active'); });
     filterTable();
 };
+// Quick-toggle pills next to the logo — flip the matching status checkbox in
+// the popover so the filter state stays in sync between the two UIs.
+window.quickToggle = function(btn) {
+    var key = btn.dataset.quick;  // 'trending' or 'in_stock'
+    var cb = document.querySelector('.f-status[value="' + key + '"]');
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    btn.classList.toggle('active', cb.checked);
+    filterTable();
+};
+// Reverse-sync: when a popover checkbox changes, mirror the quick-toggle pill.
+document.addEventListener('change', function(e){
+    if (!e.target.matches('.f-status')) return;
+    var btn = document.querySelector('.quick-toggle[data-quick="' + e.target.value + '"]');
+    if (btn) btn.classList.toggle('active', e.target.checked);
+});
 // Wire every popover checkbox to filterTable
 document.addEventListener('change', function(e){
     if (e.target.matches('.filter-pop input[type="checkbox"]')) filterTable();
