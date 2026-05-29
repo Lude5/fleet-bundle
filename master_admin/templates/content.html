@@ -55,33 +55,33 @@
     <div class="ct-fields">
         <div class="ct-group" data-i18n="ct_g_branding">Branding</div>
         <div class="form-grid">
-            <div class="field"><label data-i18n="ct_brand1">Brand — first part</label><input class="input" id="brand_part1" value="{{ settings.brand_part1 or '' }}" placeholder="{{ site.name }}"></div>
-            <div class="field"><label data-i18n="ct_brand2">Brand — accent part</label><input class="input" id="brand_part2" value="{{ settings.brand_part2 or '' }}"></div>
+            <div class="field"><label data-i18n="ct_brand1">Brand — first part</label><input class="input" id="brand_part1" value="{{ settings.brand_part1 or defaults.brand_part1 or '' }}" placeholder="{{ site.name }}"></div>
+            <div class="field"><label data-i18n="ct_brand2">Brand — accent part</label><input class="input" id="brand_part2" value="{{ settings.brand_part2 or defaults.brand_part2 or '' }}"></div>
         </div>
         <div class="field"><label data-i18n="ct_accent">Accent color</label>
             <div class="ct-color-row">
-                <input type="color" id="accent_color_pick" value="{{ settings.accent_color or '#22c55e' }}" oninput="document.getElementById('accent_color').value=this.value">
-                <input class="input" id="accent_color" value="{{ settings.accent_color or '' }}" placeholder="#22c55e" oninput="try{document.getElementById('accent_color_pick').value=this.value}catch(e){}">
+                <input type="color" id="accent_color_pick" value="{{ settings.accent_color or defaults.accent_color or '#22c55e' }}" oninput="document.getElementById('accent_color').value=this.value">
+                <input class="input" id="accent_color" value="{{ settings.accent_color or defaults.accent_color or '' }}" placeholder="#22c55e" oninput="try{document.getElementById('accent_color_pick').value=this.value}catch(e){}">
             </div>
             <div class="ct-hint" data-i18n="ct_accent_hint">Leave empty to keep the site's default brand color.</div>
         </div>
 
         <div class="ct-group" data-i18n="ct_g_top">Top bar</div>
-        <div class="field"><label data-i18n="ct_announce">Announcement bar</label><input class="input" id="announcement_text" value="{{ settings.announcement_text or '' }}" placeholder="e.g. Spring sale — coupons up to $500"></div>
+        <div class="field"><label data-i18n="ct_announce">Announcement bar</label><input class="input" id="announcement_text" value="{{ settings.announcement_text or defaults.announcement_text or '' }}" placeholder="e.g. Spring sale — coupons up to $500"></div>
         <div class="ct-hint" data-i18n="ct_announce_hint">Shows a colored bar across the very top. Leave empty to hide it.</div>
 
         <div class="ct-group" data-i18n="ct_g_hero">Homepage hero</div>
-        <div class="field"><label data-i18n="ct_hero_label">Eyebrow label</label><input class="input" id="hero_label" value="{{ settings.hero_label or '' }}" placeholder="The Open Catalogue"></div>
-        <div class="field"><label data-i18n="ct_hero_title">Big title</label><textarea class="input" id="hero_title" style="min-height:60px;">{{ settings.hero_title or '' }}</textarea>
+        <div class="field"><label data-i18n="ct_hero_label">Eyebrow label</label><input class="input" id="hero_label" value="{{ settings.hero_label or defaults.hero_label or '' }}" placeholder="The Open Catalogue"></div>
+        <div class="field"><label data-i18n="ct_hero_title">Big title</label><textarea class="input" id="hero_title" style="min-height:60px;">{{ settings.hero_title or defaults.hero_title or '' }}</textarea>
             <div class="ct-hint" data-i18n="ct_hero_title_hint">You can use &lt;br&gt; for line breaks and &lt;span class="accent"&gt;word&lt;/span&gt; to color a word. Empty = default.</div></div>
-        <div class="field"><label data-i18n="ct_hero_sub">Subtitle</label><textarea class="input" id="hero_sub" style="min-height:64px;">{{ settings.hero_sub or '' }}</textarea></div>
+        <div class="field"><label data-i18n="ct_hero_sub">Subtitle</label><textarea class="input" id="hero_sub" style="min-height:64px;">{{ settings.hero_sub or defaults.hero_sub or '' }}</textarea></div>
 
         <div class="ct-group" data-i18n="ct_g_footer">Footer</div>
-        <div class="field"><label data-i18n="ct_footer">Footer description</label><textarea class="input" id="footer_text" style="min-height:60px;">{{ settings.footer_text or '' }}</textarea></div>
+        <div class="field"><label data-i18n="ct_footer">Footer description</label><textarea class="input" id="footer_text" style="min-height:60px;">{{ settings.footer_text or defaults.footer_text or '' }}</textarea></div>
 
         <div class="ct-group" data-i18n="ct_g_seo">SEO</div>
-        <div class="field"><label data-i18n="ct_page_title">Page title (browser tab)</label><input class="input" id="page_title" value="{{ settings.page_title or '' }}"></div>
-        <div class="field"><label data-i18n="ct_meta">Meta description</label><textarea class="input" id="meta_description" style="min-height:56px;">{{ settings.meta_description or '' }}</textarea></div>
+        <div class="field"><label data-i18n="ct_page_title">Page title (browser tab)</label><input class="input" id="page_title" value="{{ settings.page_title or defaults.page_title or '' }}"></div>
+        <div class="field"><label data-i18n="ct_meta">Meta description</label><textarea class="input" id="meta_description" style="min-height:56px;">{{ settings.meta_description or defaults.meta_description or '' }}</textarea></div>
 
         <div class="ct-save-row">
             <button class="btn btn-primary" id="ctSave" onclick="ctSave()" style="flex:1;" data-i18n="ct_save">Save content</button>

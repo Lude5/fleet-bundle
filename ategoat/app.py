@@ -1868,12 +1868,31 @@ def api_admin_config():
     return jsonify(safe)
 
 
+def _settings_defaults():
+    """The site's CURRENT effective content — what each editable field shows when
+    it hasn't been customized. Mirrors the template fallbacks so the master-admin
+    editor can prefill every box with the real live text (no guessing)."""
+    name = SITE_CONFIG.get('name', '')
+    return {
+        'brand_part1': SITE_CONFIG.get('name_part1', ''),
+        'brand_part2': SITE_CONFIG.get('name_part2', ''),
+        'accent_color': SITE_CONFIG.get('brand_color', ''),
+        'announcement_text': '',
+        'hero_label': 'The Open Catalogue',
+        'hero_title': 'Every<br><span class="accent">Find.</span><br>Anywhere.',
+        'hero_sub': (str(SITE_CONFIG.get('product_count_label', '')) + ' curated products. Open every listing with the agent you trust — KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.').strip(),
+        'footer_text': 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.',
+        'page_title': name + ' — Curated Finds, Open on Any Agent',
+        'meta_description': name + ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.',
+    }
+
+
 @app.route('/admin/api/settings')
 def api_admin_get_settings():
     """Return all editable site settings (hero, nav, footer, branding, theme)."""
     if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
-    return jsonify({'ok': True, 'settings': get_all_settings()})
+    return jsonify({'ok': True, 'settings': get_all_settings(), 'defaults': _settings_defaults()})
 
 
 @app.route('/admin/api/settings', methods=['PUT', 'PATCH', 'POST'])

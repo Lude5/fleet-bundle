@@ -613,7 +613,7 @@ def content_index():
     if connected:
         return redirect('/content/' + connected[0]['id'])
     return render_template('content.html', site=None, sites=sites,
-                           connected=connected, settings={}, active='content')
+                           connected=connected, settings={}, defaults={}, active='content')
 
 
 @app.route('/content/<site_id>')
@@ -623,13 +623,14 @@ def content_edit(site_id):
     if not site:
         return redirect('/content')
     connected = [s for s in sites if s.get('url') and s.get('admin_token')]
-    settings = {}
+    settings, defaults = {}, {}
     if site.get('url') and site.get('admin_token'):
         resp = _call_site(site, '/admin/api/settings')
         if resp and isinstance(resp, dict):
             settings = resp.get('settings', resp) or {}
-    return render_template('content.html', site=site, sites=sites,
-                           connected=connected, settings=settings, active='content')
+            defaults = resp.get('defaults', {}) or {}
+    return render_template('content.html', site=site, sites=sites, connected=connected,
+                           settings=settings, defaults=defaults, active='content')
 
 
 @app.route('/content/<site_id>', methods=['POST', 'PUT'])
