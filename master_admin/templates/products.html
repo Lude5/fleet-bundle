@@ -320,7 +320,8 @@
 .ed-pv-wrap{background:var(--bg);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;min-height:440px;}
 .ed-pv-bar{padding:10px 14px;font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px;}
 .ed-pv-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
-.ed-pv{flex:1;width:100%;border:none;background:#fff;}
+.ed-pv-stage{flex:1;position:relative;overflow:hidden;background:#fff;}
+.ed-pv{position:absolute;top:0;left:0;border:none;background:#fff;transform-origin:top left;}
 .ed-fields{padding:22px;overflow-y:auto;display:flex;flex-direction:column;}
 .ed-fields h2{font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
 .ed-actions{display:flex;gap:8px;margin-top:16px;}
@@ -331,7 +332,9 @@ tr[draggable]:hover .drag-h{color:var(--accent);}
   <div class="ed-modal">
     <div class="ed-pv-wrap">
       <div class="ed-pv-bar"><span class="dot"></span><span data-i18n="ed_live">Live preview</span><span id="edSiteName" style="color:var(--text-secondary);"></span></div>
-      <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer"></iframe>
+      <div class="ed-pv-stage" id="edStage">
+        <iframe id="edPreview" class="ed-pv" src="about:blank" referrerpolicy="no-referrer" onload="edFitPreview()"></iframe>
+      </div>
     </div>
     <div class="ed-fields">
       <h2 id="edModalTitle" data-i18n="ed_edit_product">Edit product</h2>
@@ -387,12 +390,22 @@ function openNewModal(){
     document.getElementById('edSiteName').textContent = '';
     edNewPreview();
     document.getElementById('edModal').classList.add('active');
+    requestAnimationFrame(edFitPreview);
 }
 function edNewPreview(){
     var sel=document.getElementById('edSite'); var s=(SITES.filter(function(x){return x.id===sel.value;})[0])||{};
     var base=(s.url||''); if(base.charAt(base.length-1)==='/') base=base.slice(0,-1);
     document.getElementById('edPreview').src = base || 'about:blank';
 }
+// Render the preview at true desktop width, then scale to fit the box (no cramped/zoomed layout)
+function edFitPreview(){
+    var stage=document.getElementById('edStage'), f=document.getElementById('edPreview');
+    if(!stage||!f) return;
+    var w=stage.clientWidth, h=stage.clientHeight; if(!w||!h) return;
+    var DESK=1440, s=w/DESK;
+    f.style.width=DESK+'px'; f.style.height=(h/s)+'px'; f.style.transform='scale('+s+')';
+}
+window.addEventListener('resize', edFitPreview);
 
 // === Inline category change (move between categories) ===
 async function quickCategory(sel){
@@ -449,6 +462,7 @@ function openEditModal(product){
     if (base.charAt(base.length-1) === '/') base = base.slice(0,-1);
     document.getElementById('edPreview').src = base ? base + '/product/' + encodeURIComponent(product.id) : 'about:blank';
     document.getElementById('edModal').classList.add('active');
+    requestAnimationFrame(edFitPreview);
 }
 function closeEdit(){
     document.getElementById('edModal').classList.remove('active');

@@ -278,6 +278,40 @@ def _call_site(site, path, method='GET', json_body=None, timeout=6):
     return None
 
 
+def _call_site_detailed(site, path, method='GET', json_body=None, timeout=10):
+    """Like _call_site but returns (data, error). error is None on success,
+    otherwise a human-readable reason so the UI can show WHY a save failed."""
+    import requests
+    token = site.get('admin_token')
+    base = (site.get('url') or '').rstrip('/')
+    if not base:
+        return None, 'No site URL set — add it under Sites.'
+    if not token:
+        return None, 'No API key set for this site — add its admin token under Sites.'
+    try:
+        r = requests.request(
+            method, base + path,
+            headers={'X-Admin-Token': token, 'Content-Type': 'application/json'},
+            json=json_body, timeout=timeout,
+        )
+    except requests.exceptions.Timeout:
+        return None, 'Timed out reaching the site (it may be asleep — open it once, then retry).'
+    except requests.exceptions.ConnectionError:
+        return None, 'Could not connect — the site URL may be wrong or the site is down.'
+    except Exception as e:
+        return None, 'Request error: ' + str(e)[:140]
+    if 200 <= r.status_code < 300:
+        try:
+            return r.json(), None
+        except Exception:
+            return {'ok': True}, None
+    if r.status_code in (401, 403):
+        return None, 'API key rejected (401). The token here must match the site\'s ADMIN_API_TOKEN env var.'
+    if r.status_code == 404:
+        return None, 'Endpoint not found (404). This site may not have this API deployed yet.'
+    return None, 'Site returned HTTP ' + str(r.status_code) + '.'
+
+
 # ============================================================
 # Routes
 # ============================================================
@@ -537,9 +571,11 @@ def products_create_one(site_id):
     body = request.get_json(silent=True) or {}
     body = {k: v for k, v in body.items() if not k.startswith('_')}
     if not (body.get('name') or '').strip():
-        return jsonify({'error': 'name required'}), 400
-    resp = _call_site(site, '/admin/api/products', method='POST', json_body=body)
-    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+        return jsonify({'ok': False, 'error': 'name required'}), 400
+    data, err = _call_site_detailed(site, '/admin/api/products', method='POST', json_body=body)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
 
 
 @app.route('/products/<site_id>/<pid>', methods=['PUT', 'POST'])
@@ -548,11 +584,13 @@ def products_update_one(site_id, pid):
     sites = {s['id']: s for s in load_sites()}
     site = sites.get(site_id)
     if not site:
-        return jsonify({'error': 'site not found'}), 404
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
     body = request.get_json(silent=True) or {}
     body = {k: v for k, v in body.items() if not k.startswith('_')}
-    resp = _call_site(site, f'/admin/api/products/{pid}', method='PUT', json_body=body)
-    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+    data, err = _call_site_detailed(site, f'/admin/api/products/{pid}', method='PUT', json_body=body)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
 
 
 @app.route('/products/<site_id>/<pid>', methods=['DELETE'])
@@ -560,9 +598,11 @@ def products_delete_one(site_id, pid):
     sites = {s['id']: s for s in load_sites()}
     site = sites.get(site_id)
     if not site:
-        return jsonify({'error': 'site not found'}), 404
-    resp = _call_site(site, f'/admin/api/products/{pid}', method='DELETE')
-    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    data, err = _call_site_detailed(site, f'/admin/api/products/{pid}', method='DELETE')
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
 
 
 # === Site Content editor (hero, nav, footer, branding, theme) ================
@@ -600,8 +640,10 @@ def content_save(site_id):
         return jsonify({'error': 'site not found'}), 404
     body = request.get_json(silent=True) or {}
     body = {k: v for k, v in body.items() if not k.startswith('_')}
-    resp = _call_site(site, '/admin/api/settings', method='PUT', json_body=body)
-    return jsonify(resp or {'error': 'API call failed'}), (200 if resp else 502)
+    data, err = _call_site_detailed(site, '/admin/api/settings', method='PUT', json_body=body)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
 
 
 @app.route('/analytics')

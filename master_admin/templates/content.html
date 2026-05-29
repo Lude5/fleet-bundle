@@ -17,7 +17,10 @@
 .ct-preview { position: sticky; top: 84px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; overflow: hidden; height: calc(100vh - 120px); display: flex; flex-direction: column; }
 .ct-pv-bar { padding: 10px 14px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; }
 .ct-pv-bar .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
-.ct-pv { flex: 1; width: 100%; border: none; background: #fff; }
+.ct-pv-stage { flex: 1; position: relative; overflow: hidden; background: #fff; }
+.ct-pv { position: absolute; top: 0; left: 0; border: none; background: #fff; transform-origin: top left; }
+.ct-dev-btn { background: var(--surface-3); border: 1px solid var(--border-subtle); color: var(--text-secondary); border-radius: 6px; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; cursor: pointer; }
+.ct-dev-btn.active { border-color: var(--accent); color: var(--accent); }
 .ct-fields { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; }
 .ct-group { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 20px 0 10px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
 .ct-group:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
@@ -38,8 +41,14 @@
 <div class="ct-wrap">
     <!-- LIVE PREVIEW -->
     <div class="ct-preview">
-        <div class="ct-pv-bar"><span class="dot"></span><span data-i18n="ct_live">Live site</span><span style="color:var(--text-secondary);"> · {{ site.name }}</span><span style="flex:1;"></span><button type="button" class="btn btn-secondary btn-xs" onclick="ctReload()" data-i18n="ct_refresh">Refresh</button></div>
-        <iframe id="ctPreview" class="ct-pv" src="{{ site.url or 'about:blank' }}" referrerpolicy="no-referrer"></iframe>
+        <div class="ct-pv-bar"><span class="dot"></span><span data-i18n="ct_live">Live site</span><span style="color:var(--text-secondary);"> · {{ site.name }}</span><span style="flex:1;"></span>
+            <button type="button" class="ct-dev-btn active" id="ctDevDesk" onclick="ctSetDevice(1440)">DESKTOP</button>
+            <button type="button" class="ct-dev-btn" id="ctDevMob" onclick="ctSetDevice(390)">MOBILE</button>
+            <button type="button" class="btn btn-secondary btn-xs" onclick="ctReload()" data-i18n="ct_refresh">Refresh</button>
+        </div>
+        <div class="ct-pv-stage" id="ctStage">
+            <iframe id="ctPreview" class="ct-pv" src="{{ site.url or 'about:blank' }}" referrerpolicy="no-referrer" onload="ctFitPreview()"></iframe>
+        </div>
     </div>
 
     <!-- FIELDS -->
@@ -87,6 +96,25 @@
 <script>
 var CT_FIELDS = ['brand_part1','brand_part2','accent_color','announcement_text','hero_label','hero_title','hero_sub','footer_text','page_title','meta_description'];
 var CT_SITE = {{ (site.id if site else '')|tojson }};
+var CT_DEVICE = 1440; // render width: emulate a real PC, then scale to fit the box
+function ctFitPreview(){
+    var stage=document.getElementById('ctStage'), f=document.getElementById('ctPreview');
+    if(!stage||!f) return;
+    var availW=stage.clientWidth, availH=stage.clientHeight;
+    if(!availW||!availH) return;
+    var scale=availW/CT_DEVICE;
+    f.style.width=CT_DEVICE+'px';
+    f.style.height=(availH/scale)+'px';
+    f.style.transform='scale('+scale+')';
+}
+function ctSetDevice(w){
+    CT_DEVICE=w;
+    document.getElementById('ctDevDesk').classList.toggle('active', w>=1024);
+    document.getElementById('ctDevMob').classList.toggle('active', w<1024);
+    ctFitPreview();
+}
+window.addEventListener('resize', ctFitPreview);
+document.addEventListener('DOMContentLoaded', ctFitPreview);
 function ctReload(){ var f=document.getElementById('ctPreview'); if(f){ var u=(f.src||'').split('#')[0].split('?')[0]; f.src = u + '?_=' + (new Date()).getTime(); } }
 function ctToast(m,k){ if(window.showToast){ showToast(m,k); } else { console.log(m); } }
 async function ctSave(){
