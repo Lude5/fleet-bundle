@@ -50,7 +50,7 @@
       <div class="pd-buy-row">
         <a id="ppBuy" class="pd-buy" href="#" target="_blank" rel="noopener"
            onclick="trackClick('affiliate','buy','{{ product.id }}','{{ product.category }}','{{ product.name }}')">Buy on KakoBuy</a>
-        <button type="button" class="pd-copy pd-agent-btn" id="ppAgentBtn" onclick="document.getElementById('ppAgentList').classList.toggle('show')" aria-label="Switch agent">
+        <button type="button" class="pd-copy pd-agent-btn" id="ppAgentBtn" onclick="ppOpenAgents()" aria-label="Switch agent">
           <span class="pd-agent-top">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
             <span>Switch Agent</span>
@@ -58,7 +58,16 @@
           <span class="pd-agent-sub" id="ppAgentSub"></span>
         </button>
       </div>
-      <div class="pp-agentlist" id="ppAgentList"></div>
+      <div class="agent-picker-overlay" id="ppAgentOverlay" onclick="if(event.target===this)ppCloseAgents()">
+        <div class="agent-picker">
+          <button type="button" class="agent-picker-close" onclick="ppCloseAgents()" aria-label="Close">&times;</button>
+          <div class="agent-picker-head">
+            <div class="agent-picker-title">Choose your agent</div>
+            <div class="agent-picker-sub">Same product — open it on whichever agent you trust. Your pick is remembered.</div>
+          </div>
+          <div class="agent-picker-list" id="ppAgentList"></div>
+        </div>
+      </div>
       <div class="pd-buylink pf-empty" data-pf="url" data-pf-type="url" title="The source buy link — powers every agent button">{{ product.url or '— no buy link set —' }}</div>
     </div>
     <!-- RIGHT: info (mirrors the modal pd-side) -->
@@ -118,7 +127,7 @@ function ppSetAgent(a) {
     if (window.saveAgent) saveAgent(a.key, a.name);
     var manual = false; try { manual = !!localStorage.getItem('ategoat_agent'); } catch(e){}
     document.getElementById('ppAgentSub').textContent = a.name + (manual ? ' (selected)' : ' (auto selected)');
-    document.querySelectorAll('#ppAgentList .pp-agentchip').forEach(function(c){ c.classList.toggle('active', c.dataset.key === a.key); });
+    document.querySelectorAll('#ppAgentList .agent-picker-item').forEach(function(c){ c.classList.toggle('active', c.dataset.key === a.key); });
 }
 fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
     ppAgents = d.agents || d || [];
