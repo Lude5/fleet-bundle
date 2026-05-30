@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}KakoBuy Spreadsheet — {{ total }}+ Products | {{ site.name }}{% endblock %}
+{% block title %}{{ site.name }} Spreadsheet — {{ total }}+ Products | {{ site.name }}{% endblock %}
 
 {% block extra_css %}
 .spread-hero { padding: 120px 24px 48px; max-width: 900px; margin: 0 auto; text-align: center; }
@@ -22,8 +22,8 @@
 
 {% block content %}
 <section class="spread-hero">
-    <h1>KakoBuy<br><span class="accent">Spreadsheet</span></h1>
-    <p>The most complete KakoBuy product spreadsheet with {{ total }}+ curated finds from Weidian, Taobao, and 1688. Every product verified, organized by category, and ready to buy.</p>
+    <h1>{{ site.name }}<br><span class="accent">Spreadsheet</span></h1>
+    <p>The most complete {{ site.name }} product spreadsheet with {{ total }}+ curated finds from Weidian, Taobao, and 1688. Every product verified, organized by category, and ready to buy.</p>
 
     <div class="spread-stats">
         <div class="spread-stat">
@@ -69,7 +69,7 @@
                 <div class="product-card-name">{{ p.name }}</div>
                 <div class="product-card-row">
                     <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
-                    <span class="product-card-buy">Buy on KakoBuy</span>
+                    <span class="product-card-buy">Buy on {{ site.agent_name }}</span>
                 </div>
             </div>
         </a>
@@ -83,16 +83,16 @@
     <h2 class="sec-title" style="margin-bottom:24px;">About This Spreadsheet</h2>
     <div class="spread-faq">
         <div class="spread-faq-item">
-            <div class="spread-faq-q">What is the KakoBuy spreadsheet?</div>
-            <div class="spread-faq-a">The {{ site.name }} spreadsheet is a curated list of {{ total }}+ products sourced from Weidian, Taobao, and 1688 — the biggest Chinese marketplaces. Every product has been handpicked for quality and value, and is purchasable through KakoBuy, a trusted shopping agent.</div>
+            <div class="spread-faq-q">What is the {{ site.name }} spreadsheet?</div>
+            <div class="spread-faq-a">The {{ site.name }} spreadsheet is a curated list of {{ total }}+ products sourced from Weidian, Taobao, and 1688 — the biggest Chinese marketplaces. Every product has been handpicked for quality and value, and is purchasable through {{ site.agent_name }}, a trusted shopping agent.</div>
         </div>
         <div class="spread-faq-item">
-            <div class="spread-faq-q">How do I buy from KakoBuy?</div>
-            <div class="spread-faq-a">Click any product to be taken to KakoBuy where you can add it to your cart, select size/color, and checkout. KakoBuy handles purchasing from the Chinese seller, quality check photos, and international shipping to your address. Sign up with our link to get Coupons $50–$500.</div>
+            <div class="spread-faq-q">How do I buy from {{ site.agent_name }}?</div>
+            <div class="spread-faq-a">Click any product to be taken to {{ site.agent_name }} where you can add it to your cart, select size/color, and checkout. {{ site.agent_name }} handles purchasing from the Chinese seller, quality check photos, and international shipping to your address. Sign up with our link to get Coupons $50–$500.</div>
         </div>
         <div class="spread-faq-item">
-            <div class="spread-faq-q">Is KakoBuy safe and legit?</div>
-            <div class="spread-faq-a">Yes — KakoBuy is one of the most trusted shopping agents with thousands of users. They provide QC (quality check) photos before shipping, buyer protection, and responsive customer service. They also offer the lowest shipping rates compared to other agents.</div>
+            <div class="spread-faq-q">Is {{ site.agent_name }} safe and legit?</div>
+            <div class="spread-faq-a">Yes — {{ site.agent_name }} is one of the most trusted shopping agents with thousands of users. They provide QC (quality check) photos before shipping, buyer protection, and responsive customer service. They also offer the lowest shipping rates compared to other agents.</div>
         </div>
         <div class="spread-faq-item">
             <div class="spread-faq-q">How often is the spreadsheet updated?</div>
@@ -100,7 +100,7 @@
         </div>
         <div class="spread-faq-item">
             <div class="spread-faq-q">What's the link converter for?</div>
-            <div class="spread-faq-a">If you have a product link from another agent (CNFans, Sugargoo, CSSBuy, Pandabuy, etc.), our link converter instantly converts it to a KakoBuy link so you can buy through KakoBuy instead and get better prices and shipping rates.</div>
+            <div class="spread-faq-a">If you have a product link from another agent (CNFans, Sugargoo, CSSBuy, Pandabuy, etc.), our link converter instantly converts it to a {{ site.agent_name }} link so you can buy through {{ site.agent_name }} instead and get better prices and shipping rates.</div>
         </div>
     </div>
 </section>
@@ -108,7 +108,7 @@
 <section class="cta-section reveal">
     <div class="cta-glow"></div>
     <h2>Start Shopping</h2>
-    <p>Sign up to KakoBuy and get Coupons $50–$500 with the lowest shipping rates.</p>
+    <p>Sign up to {{ site.agent_name }} and get Coupons $50–$500 with the lowest shipping rates.</p>
     <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','spreadsheet-cta','','')">Claim Your Coupons</a>
 </section>
 {% endblock %}

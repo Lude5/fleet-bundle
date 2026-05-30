@@ -15,6 +15,11 @@
 .pp-agentchip { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 8px 12px; border-radius: 9px; background: var(--surface-2); border: 1.5px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; transition: all .15s; }
 .pp-agentchip:hover { color: var(--text); border-color: var(--border); }
 .pp-agentchip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+/* Switch-Agent button: stack its label + selected-agent sublabel (the intended 2-line design)
+   so it can't blow out the single-column grid on mobile; long agent names ellipsis-truncate. */
+.pd-agent-btn { flex-direction: column; gap: 3px; padding: 12px 14px; line-height: 1.2; overflow: hidden; }
+.pd-agent-btn .pd-agent-top { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; }
+.pd-agent-btn .pd-agent-sub { font-size: 9px; font-weight: 700; opacity: .72; letter-spacing: .5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pp-related { max-width: 1120px; margin: 50px auto 0; padding: 0 20px; }
 .pp-related h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
 /* fields that are empty stay hidden on the public site; the editor reveals them */

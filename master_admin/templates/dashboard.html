@@ -151,7 +151,7 @@ body.view-comfort .topbar { padding: 18px 32px; }
 
 <div class="pro-strip">
     <div class="pro-kpi"><div class="l" data-i18n="dash_tenants">Tenants</div><div class="v">{{ sites|length }}</div><div class="ctx" data-i18n="n_live" data-i18n-vars='{"n":"{{ live_count }}"}'>{{ live_count }} live</div></div>
-    <div class="pro-kpi"><div class="l" data-i18n="dash_products_fleet">Products · fleet</div><div class="v accent">{{ '{:,}'.format(total_products) }}</div><div class="ctx" data-i18n="dash_total_catalog">total catalog</div></div>
+    <div class="pro-kpi"><div class="l" data-i18n="dash_products_fleet">Products · fleet</div><div class="v accent">{{ '{:,}'.format(total_products) }}</div><div class="ctx"><span data-i18n="dash_total_catalog">total catalog</span> · {{ sites|length }} tenants</div></div>
     <div class="pro-kpi"><div class="l" data-i18n="dash_avg_site">Avg / site</div><div class="v">{{ '{:,}'.format((total_products / sites|length) | int) if sites|length else 0 }}</div><div class="ctx" data-i18n="products_per_tenant">products per tenant</div></div>
     <div class="pro-kpi"><div class="l" data-i18n="dash_uptime">Uptime</div><div class="v accent">{{ (live_count * 100 // (sites|length or 1)) }}<span style="font-size:14px;">%</span></div><div class="ctx" data-i18n="n_of_m_reachable" data-i18n-vars='{"n":"{{ live_count }}","m":"{{ sites|length }}"}'>{{ live_count }}/{{ sites|length }} reachable</div></div>
 </div>
@@ -205,7 +205,7 @@ body.view-comfort .topbar { padding: 18px 32px; }
     <div class="ex-tile">
         <div class="l" data-i18n="dash_products_fleet">Products · fleet</div>
         <div class="v accent">{{ '{:,}'.format(total_products) }}</div>
-        <div class="x" data-i18n="dash_total_catalog">total catalog</div>
+        <div class="x"><span data-i18n="dash_total_catalog">total catalog</span> · {{ sites|length }} tenants</div>
     </div>
     <div class="ex-tile">
         <div class="l" data-i18n="dash_avg_site">Avg / site</div>
@@ -285,7 +285,7 @@ function renderProDash() {
         theme: { mode: 'dark' },
         series: [{ name: 'Products', data: SITES.map(function(s){ return s.product_count || 0; }) }],
         xaxis: { categories: SITES.map(function(s){ return s.name; }) },
-        colors: [ACCENT],
+        colors: SITES.map(function(s){ return s.color || ACCENT; }),
         plotOptions: { bar: { borderRadius: 6, columnWidth: '60%', distributed: true } },
         stroke: { width: 0 },
         grid: { borderColor: SURFACE_2 },
@@ -293,8 +293,6 @@ function renderProDash() {
         dataLabels: { enabled: true, style: { fontFamily: 'Space Grotesk, monospace', fontSize: '11px', colors: ['#fff'] }, formatter: function(v){ return v.toLocaleString(); } },
         tooltip: { theme: 'dark', y: { formatter: function(v){ return v.toLocaleString() + ' products'; } } },
     });
-    // Per-site colors
-    c.updateOptions({ colors: SITES.map(function(s){ return s.color || ACCENT; }) });
     c.render(); dashCharts.push(c);
 }
 

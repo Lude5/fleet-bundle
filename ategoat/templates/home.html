@@ -200,7 +200,7 @@
     .hero-bg-col:nth-child(3) { display: none; }
     .hero-cta-row { flex-direction: column; align-items: center; }
     .conveyor-track .product-card { flex: 0 0 170px; }
-    .cat-tabs { padding: 0 16px; }
+    .cat-tabs { padding: 0 16px; justify-content: flex-start; scroll-padding-left: 16px; }
     .cat-tab { padding: 12px 14px; font-size: 10px; }
     .mid-cta { padding: 16px 14px; }
     .mid-cta a { font-size: 15px; letter-spacing: 1px; }
@@ -343,9 +343,9 @@
 
 <hr class="divider" style="max-width:1200px;margin:0 auto;">
 <div class="stat-row reveal">
-    <div class="stat"><div class="stat-num" data-count="{{ product_count }}" data-suffix="+">0</div><div class="stat-label">Products</div></div>
-    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">$0</div><div class="stat-label">In Coupons</div></div>
-    <div class="stat"><div class="stat-num" data-count="{{ category_count }}">0</div><div class="stat-label">Categories</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ product_count }}" data-suffix="+">{{ '{:,}'.format(product_count) }}+</div><div class="stat-label">Products</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">${{ '{:,}'.format(site.coupon_amount|int) }}</div><div class="stat-label">In Coupons</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ category_count }}">{{ category_count }}</div><div class="stat-label">Categories</div></div>
 </div>
 
 <section class="cta-section reveal">
