@@ -127,17 +127,33 @@ function ppSetAgent(a) {
     if (window.saveAgent) saveAgent(a.key, a.name);
     var manual = false; try { manual = !!localStorage.getItem('ategoat_agent'); } catch(e){}
     document.getElementById('ppAgentSub').textContent = a.name + (manual ? ' (selected)' : ' (auto selected)');
-    document.querySelectorAll('#ppAgentList .agent-picker-item').forEach(function(c){ c.classList.toggle('active', c.dataset.key === a.key); });
+    document.querySelectorAll('#ppAgentList .agent-picker-item').forEach(function(c){ c.classList.toggle('selected', c.dataset.key === a.key); });
 }
+// Centered agent-picker modal (agent logos + names) — same .agent-picker design as base.html.
+window.ppOpenAgents = function() {
+    var o = document.getElementById('ppAgentOverlay');
+    if (o) { o.classList.add('active'); document.body.style.overflow = 'hidden'; }
+};
+window.ppCloseAgents = function() {
+    var o = document.getElementById('ppAgentOverlay');
+    if (o) { o.classList.remove('active'); document.body.style.overflow = ''; }
+};
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') ppCloseAgents(); });
 fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
     ppAgents = d.agents || d || [];
     if (!ppAgents.length) return;
     var box = document.getElementById('ppAgentList');
     box.innerHTML = '';
     ppAgents.forEach(function(a){
+        var letter = (a.letter || a.name[0]).toUpperCase();
+        var bg = a.color || '#444';
         var el = document.createElement('button');
-        el.type='button'; el.className='pp-agentchip'; el.dataset.key=a.key; el.textContent=a.name;
-        el.onclick=function(){ ppSetAgent(a); box.classList.remove('show'); };
+        el.type='button'; el.className='agent-picker-item'; el.dataset.key=a.key;
+        el.innerHTML = (a.logo
+            ? '<span class="logo"><img src="' + a.logo + '" alt="' + a.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=&quot;' + letter + '&quot;;this.parentNode.classList.add(&quot;letter&quot;);this.parentNode.style.background=&quot;' + bg + '&quot;;"></span>'
+            : '<span class="logo letter" style="background:' + bg + '">' + letter + '</span>')
+            + '<span class="name">' + a.name + '</span>';
+        el.onclick=function(){ ppSetAgent(a); ppCloseAgents(); };
         box.appendChild(el);
     });
     var saved = (window.getSavedAgent && getSavedAgent()) || { key:'kakobuy' };
