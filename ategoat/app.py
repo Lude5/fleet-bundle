@@ -81,7 +81,8 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     except ImportError:
         from database import (
@@ -91,7 +92,8 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     init_db()
     check_auto_backup()
@@ -136,6 +138,23 @@ try:
             print(f"Re-seeded {len(_products)} products (hash {json_hash[:8]})")
         else:
             print(f"Seed up to date ({get_products() and len(get_products()) or 0} products, hash {json_hash[:8]})")
+
+    # Idempotent hygiene: scrub any leftover competitor referral code from stored
+    # product URLs so it can't sit in the data / page source. The live buy flow
+    # (/go, /api/agents) already swaps to our affcode, so this is data cleanliness.
+    # Runs every boot (no-op once clean) and re-runs after a product re-seed.
+    try:
+        try:
+            from .database import get_db as _gdb
+        except ImportError:
+            from database import get_db as _gdb
+        _mc = _gdb()
+        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=ategoat') WHERE url LIKE '%affcode=bswes%'").rowcount
+        _mc.commit(); _mc.close()
+        if _n:
+            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> ategoat)")
+    except Exception as _e:
+        print(f"Affcode scrub warning: {_e}")
 
     if not get_categories():
         CATS = [

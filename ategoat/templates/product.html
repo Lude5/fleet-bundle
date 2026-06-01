@@ -203,7 +203,7 @@ fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).
     var lb = document.createElement('div'); lb.className='qc-lb'; lb.id='qcLb';
     lb.innerHTML = '<button class="qc-lb-close" aria-label="Close">&times;</button>'
                  + '<button class="qc-lb-nav qc-lb-prev" aria-label="Previous">&#8249;</button>'
-                 + '<img id="qcLbImg" src="" alt="QC photo" referrerpolicy="no-referrer">'
+                 + '<img id="qcLbInlineImg" src="" alt="QC photo" referrerpolicy="no-referrer">'
                  + '<button class="qc-lb-nav qc-lb-next" aria-label="Next">&#8250;</button>'
                  + '<div class="qc-lb-count" id="qcLbCount"></div>';
     document.body.appendChild(lb);
@@ -221,7 +221,7 @@ fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).
 function openQc(i){
     if(!qcPhotos.length) return;
     qcIdx = (i + qcPhotos.length) % qcPhotos.length;
-    document.getElementById('qcLbImg').src = qcPhotos[qcIdx];
+    document.getElementById('qcLbInlineImg').src = qcPhotos[qcIdx];
     document.getElementById('qcLbCount').textContent = (qcIdx+1) + ' / ' + qcPhotos.length;
     document.getElementById('qcLb').classList.add('open');
     document.body.style.overflow = 'hidden';
