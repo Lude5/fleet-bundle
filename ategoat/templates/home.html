@@ -301,7 +301,7 @@
 
 <div class="cat-tabs reveal">
     <a href="/shop" class="cat-tab active">All</a>
-    {% for cat in categories %}
+    {% for cat in categories if cat.slug != 'trending' %}
     <a href="/shop?category={{ cat.slug }}" class="cat-tab">{{ cat.name }}</a>
     {% endfor %}
 </div>

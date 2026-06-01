@@ -139,7 +139,6 @@ try:
 
     if not get_categories():
         CATS = [
-            {'slug': 'trending', 'name': 'Trending', 'sort_order': 0},
             {'slug': 'shoes', 'name': 'Shoes', 'sort_order': 1},
             {'slug': 'shirts', 'name': 'Shirts', 'sort_order': 2},
             {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 3},

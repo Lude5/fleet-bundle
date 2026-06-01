@@ -118,6 +118,11 @@
     margin-top: 20px;
 }
 .cp-row.moving { opacity: 0; transform: translateX(20px); }
+/* Drag a product onto a category row to move it there */
+.cp-row { cursor: grab; }
+.cp-row:active { cursor: grabbing; }
+.cp-row.cp-dragging { opacity: 0.45; }
+.cat-row.drop-target { border-color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 0 2px var(--accent); }
 .cp-row img {
     width: 44px; height: 44px; object-fit: contain;
     background: #ffffff !important; padding: 2px; border-radius: 6px;
@@ -343,7 +348,7 @@ function renderCategoryProducts(drawer, products, currentSlug) {
             id: p.id, name: p.name||'', price: p.price||'', image: p.image||'',
             url: p.url||'', seller: p.seller||'', category: p.category||'', tags: p.tags||''
         }));
-        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
+        return '<div class="cp-row" draggable="true" title="Drag onto a category to move it" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
              + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
              + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
              + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
@@ -566,7 +571,8 @@ async function addCategory() {
         e.dataTransfer.effectAllowed = 'move';
     });
     list.addEventListener('dragend', function(e){
-        if (dragRow) dragRow.classList.remove('dragging');
+        if (!dragRow) return;   // product-row drags are handled by setupProductDrag, don't re-save category order
+        dragRow.classList.remove('dragging');
         dragRow = null;
         // Re-stamp sort_order based on visible order, then save all
         var rows = Array.from(list.querySelectorAll('.cat-row'));
@@ -609,6 +615,83 @@ function _autoSaveAllRows() {
         }
         showToast('Order saved', 'success');
     }, 400);
+}
+
+// Drag a PRODUCT (a .cp-row in an expanded drawer) onto any category row to move it
+// there. Coexists with the category-row reorder above: we only act when a product
+// row is the drag source, and category-row drags are ignored here (and vice-versa).
+(function setupProductDrag(){
+    var list = document.getElementById('catManagerList');
+    if (!list) return;
+    var dragP = null; // { pid, fromSlug, row }
+    function clearTargets(){ list.querySelectorAll('.cat-row.drop-target').forEach(function(r){ r.classList.remove('drop-target'); }); }
+
+    list.addEventListener('dragstart', function(e){
+        var cp = e.target.closest('.cp-row');
+        if (!cp) return;                 // a category-row drag — leave it to setupDragReorder
+        e.stopPropagation();
+        var block = cp.closest('.cat-block');
+        dragP = { pid: cp.dataset.id, fromSlug: block ? block.dataset.slug : '', row: cp };
+        cp.classList.add('cp-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', cp.dataset.id); } catch(_) {}
+    });
+    list.addEventListener('dragover', function(e){
+        if (!dragP) return;              // not moving a product
+        var target = e.target.closest('.cat-row');
+        if (!target) return;
+        e.preventDefault();              // allow the drop
+        e.stopPropagation();
+        if (!target.classList.contains('drop-target')) { clearTargets(); target.classList.add('drop-target'); }
+    });
+    list.addEventListener('drop', function(e){
+        if (!dragP) return;
+        var target = e.target.closest('.cat-row');
+        if (!target) return;
+        e.preventDefault(); e.stopPropagation();
+        var destSlug = (target.dataset.slug || '').trim();
+        clearTargets();
+        if (destSlug && destSlug !== dragP.fromSlug) moveProductToCategory(dragP.pid, dragP.fromSlug, destSlug, dragP.row);
+    });
+    list.addEventListener('dragend', function(e){
+        if (!dragP) return;
+        e.stopPropagation();
+        if (dragP.row) dragP.row.classList.remove('cp-dragging');
+        clearTargets();
+        dragP = null;
+    });
+})();
+
+function _adjustCatCount(slug, delta){
+    if (!slug) return;
+    var el = document.querySelector('.cat-block[data-slug="' + slug + '"] .cat-count');
+    if (!el) return;
+    var m = el.textContent.match(/(\d+)/);
+    var n = Math.max(0, (m ? parseInt(m[1]) : 0) + delta);
+    el.textContent = n + ' products';
+}
+
+async function moveProductToCategory(pid, fromSlug, destSlug, rowEl){
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: destSlug })
+        });
+        var json = await res.json();
+        if (!json.ok) { showToast(json.error || 'Failed', 'error'); return; }
+        if (rowEl) {
+            rowEl.classList.add('moving');
+            setTimeout(function(){
+                rowEl.remove();
+                _adjustCatCount(fromSlug, -1);
+                _adjustCatCount(destSlug, +1);
+            }, 200);
+        }
+        // If the destination drawer is open, drop a fresh copy in so it shows immediately.
+        var destDrawer = document.querySelector('.cat-block[data-slug="' + destSlug + '"] .cat-products');
+        if (destDrawer && destDrawer.dataset.loaded === '1' && destDrawer.style.display !== 'none') destDrawer.dataset.loaded = '0';
+        showToast('Moved to ' + destSlug, 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 </script>
 {% endblock %}

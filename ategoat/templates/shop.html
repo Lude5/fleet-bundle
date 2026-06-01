@@ -36,7 +36,7 @@
     </script>
     <div class="filter-row">
         <a href="/shop" class="filter-tab {% if not current_category %}active{% endif %}">All</a>
-        {% for cat in categories %}
+        {% for cat in categories if cat.slug != 'trending' %}
         <a href="/shop?category={{ cat.slug }}" class="filter-tab {% if current_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
         {% endfor %}
     </div>
