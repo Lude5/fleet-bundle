@@ -2,113 +2,167 @@
 {% block title %}How to Buy on {{ site.agent_name }} — Step by Step Tutorial | {{ site.name }}{% endblock %}
 
 {% block extra_css %}
-.tut-wrap { max-width: 900px; margin: 0 auto; padding: 120px 24px 80px; }
-.tut-head { text-align: center; margin-bottom: 56px; }
-.tut-head h1 { font-family: var(--font-display); font-size: 48px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-.tut-head p { color: var(--text-secondary); font-size: 14px; max-width: 620px; margin: 0 auto; line-height: 1.6; }
-.tut-steps { display: flex; flex-direction: column; gap: 20px; }
-.tut-step { display: flex; gap: 24px; padding: 28px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); transition: border-color .2s, transform .2s; }
-.tut-step:hover { border-color: var(--border); transform: translateY(-2px); }
-.tut-num { flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-family: var(--font-display); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px var(--accent-dim); }
-.tut-body { flex: 1; }
-.tut-body h3 { font-family: var(--font-display); font-size: 20px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-.tut-body p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
-.tut-body .tut-link { display: inline-block; margin-top: 12px; padding: 10px 18px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; }
-.tut-body .tut-link:hover { background: var(--accent-hover); }
-.tut-cta { margin-top: 56px; padding: 40px 24px; background: var(--accent-dim); border: 1px solid var(--border); border-radius: var(--radius); text-align: center; }
-.tut-cta h2 { font-family: var(--font-display); font-size: 28px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.tut-cta p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+.tut-wrap { max-width: 880px; margin: 0 auto; padding: 120px 24px 80px; }
+
+/* Hero */
+.tut-head { text-align: center; margin-bottom: 20px; }
+.tut-eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.tut-head h1 { font-family: var(--font-display); font-size: 52px; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 16px; }
+.tut-head p { color: var(--text-secondary); font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.65; }
+
+/* Trust badges */
+.tut-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 28px auto 0; }
+.tut-trust .tb { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 999px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); }
+.tut-trust .tb svg { color: var(--accent); flex-shrink: 0; }
+
+/* Timeline of steps */
+.tut-timeline { position: relative; margin-top: 64px; }
+.tut-timeline::before { content: ''; position: absolute; left: 35px; top: 36px; bottom: 36px; width: 2px;
+    background: linear-gradient(180deg, var(--accent), var(--border-subtle)); opacity: .5; }
+.tut-step { position: relative; display: grid; grid-template-columns: 72px 1fr; gap: 22px; align-items: start; margin-bottom: 18px; }
+.tut-icon { position: relative; z-index: 1; width: 72px; height: 72px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--accent); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px var(--bg), 0 10px 30px var(--accent-dim); }
+.tut-step-num { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
+.tut-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius);
+    padding: 22px 24px; transition: border-color .2s, transform .2s; }
+.tut-card:hover { border-color: var(--border); transform: translateY(-2px); }
+.tut-card h3 { font-family: var(--font-display); font-size: 19px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.tut-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+.tut-card .tut-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 10px 18px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; transition: background .15s; }
+.tut-card .tut-link:hover { background: var(--accent-hover); }
+.tut-card .tut-link.ghost { background: transparent; border: 1px solid var(--border-subtle); color: var(--text); }
+.tut-card .tut-link.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* CTA */
+.tut-cta { margin-top: 56px; padding: 44px 24px; position: relative; overflow: hidden; text-align: center;
+    background: radial-gradient(circle at 50% 0%, var(--accent-dim), var(--surface) 70%);
+    border: 1px solid var(--border); border-radius: var(--radius); }
+.tut-cta h2 { font-family: var(--font-display); font-size: 30px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.tut-cta p { color: var(--text-secondary); font-size: 13px; margin-bottom: 22px; }
+
+/* FAQ accordion */
 .tut-faq { margin-top: 56px; }
-.tut-faq h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
-.tut-faq-item { padding: 18px 22px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 10px; }
-.tut-faq-q { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 6px; }
-.tut-faq-a { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+.tut-faq h2 { font-family: var(--font-display); font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
+.tut-faq-item { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; }
+.tut-faq-q { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 22px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text); }
+.tut-faq-q .chev { flex-shrink: 0; color: var(--accent); transition: transform .2s; }
+.tut-faq-item.open .tut-faq-q .chev { transform: rotate(180deg); }
+.tut-faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease, padding .25s ease; padding: 0 22px;
+    color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+.tut-faq-item.open .tut-faq-a { max-height: 240px; padding: 0 22px 18px; }
+
 @media (max-width: 768px) {
-    .tut-wrap { padding: 90px 16px 60px; }
-    .tut-head h1 { font-size: 32px; }
-    .tut-step { flex-direction: column; padding: 20px; gap: 14px; }
-    .tut-num { width: 44px; height: 44px; font-size: 18px; }
+    .tut-wrap { padding: 96px 16px 60px; }
+    .tut-head h1 { font-size: 36px; }
+    .tut-timeline::before { left: 27px; }
+    .tut-step { grid-template-columns: 56px 1fr; gap: 16px; }
+    .tut-icon { width: 56px; height: 56px; }
+    .tut-icon svg { width: 24px; height: 24px; }
+    .tut-card { padding: 18px; }
 }
 {% endblock %}
 
 {% block content %}
 <div class="tut-wrap">
     <div class="tut-head">
+        <div class="tut-eyebrow">Step-by-step guide</div>
         <h1>How to Buy</h1>
-        <p>Buying from China through {{ site.agent_name }} is simple. Follow these 5 steps and your order will be delivered straight to your door — quality-checked, repackaged, and shipped at the lowest rates.</p>
+        <p>Getting designer-quality finds from China is easier than you think. Five simple steps — quality-checked, repackaged, and shipped to your door at the lowest rates.</p>
+        <div class="tut-trust">
+            <span class="tb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>QC Photos Included</span>
+            <span class="tb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>7–14 Day Shipping</span>
+            <span class="tb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>$50–$500 Coupons</span>
+        </div>
     </div>
 
-    <div class="tut-steps">
+    <div class="tut-timeline">
+        <!-- 1 -->
         <div class="tut-step">
-            <div class="tut-num">1</div>
-            <div class="tut-body">
+            <div class="tut-icon"><span class="tut-step-num">1</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            </div>
+            <div class="tut-card">
                 <h3>Sign Up to {{ site.agent_name }}</h3>
-                <p>Create a free {{ site.agent_name }} account. Using our link gives you Coupons $50–$500 plus the lowest shipping rates.</p>
-                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="tut-link" onclick="trackClick('signup','tutorial-step1','','')">Sign Up — Coupons $50–$500</a>
+                <p>Create a free {{ site.agent_name }} account. Using our link unlocks <b>Coupons $50–$500</b> plus the lowest shipping rates — it takes about 30 seconds.</p>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="tut-link" onclick="trackClick('signup','tutorial-step1','','')">Sign Up — Claim Coupons
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
         </div>
-
+        <!-- 2 -->
         <div class="tut-step">
-            <div class="tut-num">2</div>
-            <div class="tut-body">
-                <h3>Browse Products on {{ site.name }}</h3>
-                <p>Use our curated shop to find products. Every item is hand-picked, organized by category, and priced in your currency of choice. Use the search bar — "yzy slide" or "jordan 4 black" works.</p>
-                <a href="/shop" class="tut-link">Browse Shop</a>
+            <div class="tut-icon"><span class="tut-step-num">2</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <div class="tut-card">
+                <h3>Find It on {{ site.name }}</h3>
+                <p>Browse our curated catalogue — every item is hand-picked, organized by category, and priced in your currency. Search what you want, like <i>"yzy slide"</i> or <i>"jordan 4 black"</i>.</p>
+                <a href="/shop" class="tut-link ghost">Browse the Shop
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
         </div>
-
+        <!-- 3 -->
         <div class="tut-step">
-            <div class="tut-num">3</div>
-            <div class="tut-body">
-                <h3>Click "Buy on {{ site.agent_name }}"</h3>
-                <p>Click any product and you'll be sent to the exact item on {{ site.agent_name }} with our affiliate link applied automatically. No copy-paste, no link conversion — it just works.</p>
+            <div class="tut-icon"><span class="tut-step-num">3</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+            </div>
+            <div class="tut-card">
+                <h3>Tap "Buy on {{ site.agent_name }}"</h3>
+                <p>Open any product and hit buy — you're sent straight to the exact item on {{ site.agent_name }} with our affiliate link applied automatically. No copy-paste, no link converting. Prefer another agent? Switch it on the product page.</p>
             </div>
         </div>
-
+        <!-- 4 -->
         <div class="tut-step">
-            <div class="tut-num">4</div>
-            <div class="tut-body">
-                <h3>Choose Size, Color, Pay {{ site.agent_name }}</h3>
-                <p>On the {{ site.agent_name }} product page, pick your size and color, add to cart, and pay {{ site.agent_name }} the product cost in your local currency. {{ site.agent_name }} buys it from the Chinese seller for you.</p>
+            <div class="tut-icon"><span class="tut-step-num">4</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+            </div>
+            <div class="tut-card">
+                <h3>Pick Size &amp; Pay {{ site.agent_name }}</h3>
+                <p>On the {{ site.agent_name }} page, choose your size and colour, add to cart, and pay the product cost in your local currency. {{ site.agent_name }} buys it from the Chinese seller and holds it in your warehouse.</p>
             </div>
         </div>
-
+        <!-- 5 -->
         <div class="tut-step">
-            <div class="tut-num">5</div>
-            <div class="tut-body">
-                <h3>QC Photos &amp; Ship to You</h3>
-                <p>{{ site.agent_name }} receives your item, takes detailed quality-check photos, and waits for your approval. Once you're happy, submit a shipping request with your address. Average shipping: 7–14 days worldwide.</p>
+            <div class="tut-icon"><span class="tut-step-num">5</span>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div class="tut-card">
+                <h3>Approve QC Photos &amp; Ship</h3>
+                <p>{{ site.agent_name }} takes detailed quality-check photos and waits for your approval. Happy? Submit a ship request with your address and it's on its way — <b>7–14 days</b> worldwide. Combine multiple items into one parcel to save even more.</p>
             </div>
         </div>
     </div>
 
     <div class="tut-cta">
         <h2>Ready to Start?</h2>
-        <p>Sign up with our link to claim Coupons $50–$500.</p>
-        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','tutorial-cta','','')">Claim Your Coupons</a>
+        <p>Sign up with our link and claim Coupons $50–$500 on your first haul.</p>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:15px 34px;font-size:13px;" onclick="trackClick('signup','tutorial-cta','','')">Claim Your Coupons</a>
     </div>
 
     <div class="tut-faq">
         <h2>Frequently Asked Questions</h2>
         <div class="tut-faq-item">
-            <div class="tut-faq-q">Is {{ site.agent_name }} safe and legit?</div>
-            <div class="tut-faq-a">Yes. {{ site.agent_name }} is one of the most trusted shopping agents for buying from China. They've handled millions of orders worldwide.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Is {{ site.agent_name }} safe and legit?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">Yes. {{ site.agent_name }} is one of the most trusted shopping agents for buying from China, having handled millions of orders worldwide with QC photos and buyer protection.</div>
         </div>
         <div class="tut-faq-item">
-            <div class="tut-faq-q">How long does shipping take?</div>
-            <div class="tut-faq-a">Most orders arrive in 7–14 days using standard line-haul shipping. Express options (DHL, FedEx) ship in 3–7 days at a higher rate.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">How long does shipping take?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">Most orders arrive in 7–14 days on standard line-haul shipping. Express options (DHL, FedEx) land in 3–7 days at a higher rate.</div>
         </div>
         <div class="tut-faq-item">
-            <div class="tut-faq-q">What if my item arrives defective?</div>
-            <div class="tut-faq-a">Reject the QC photos before shipping — {{ site.agent_name }} will return it to the seller and get you a replacement or refund. After shipping, contact their support.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">What if my item arrives defective?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">Reject the QC photos before shipping — {{ site.agent_name }} returns it to the seller and gets you a replacement or refund. After shipping, reach out to their support.</div>
         </div>
         <div class="tut-faq-item">
-            <div class="tut-faq-q">Do I pay customs / import tax?</div>
-            <div class="tut-faq-a">Depends on your country and the declared value. {{ site.agent_name }} lets you set a declared value to minimize customs risk.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Do I pay customs / import tax?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">It depends on your country and the declared value. {{ site.agent_name }} lets you set a declared value to minimise customs risk.</div>
         </div>
         <div class="tut-faq-item">
-            <div class="tut-faq-q">Can I combine multiple orders into one shipment?</div>
-            <div class="tut-faq-a">Yes — that's the main reason to use an agent. Add multiple items to your warehouse, then ship them all together to save on shipping.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Can I combine multiple orders?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">Yes — that's the main perk of an agent. Add several items to your warehouse, then ship them together in one parcel to save big on shipping.</div>
         </div>
     </div>
 </div>
