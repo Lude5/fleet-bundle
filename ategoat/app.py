@@ -61,9 +61,9 @@ SITE_CONFIG = {
     'brand_color': os.environ.get('BRAND_COLOR', '#0d9488'),
     'brand_color_shadow': os.environ.get('BRAND_COLOR_SHADOW', '#0f766e'),
     'meta_pixel_id': os.environ.get('META_PIXEL_ID', ''),
-    'coupon_amount': os.environ.get('COUPON_AMOUNT', '400'),
-    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 5,000+ finds. Updated daily.'),
-    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '5,800+'),
+    'coupon_amount': os.environ.get('COUPON_AMOUNT', '500'),
+    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 9,400+ finds. Updated daily.'),
+    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '9,400+'),
     'discord_url': os.environ.get('DISCORD_URL', ''),
 }
 
@@ -285,7 +285,7 @@ def _b_usfans(url, _id, _plat, code):
 # URLs with NO referral code. To enable affiliate income for those, drop the
 # operator's own codes in via env vars or edit the URLs directly.
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register/?affcode=bswes',           'coupon': 'Up to $500 shipping credit'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': SITE_CONFIG['agent_signup_url'],                             'coupon': 'Up to $500 shipping credit'},
     {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=KRLHFHSGL',          'coupon': 'Up to $300 in coupons'},
     {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://hipobuy.com/register?inviteCode=25RXG9B0E',         'coupon': 'Up to $100 in coupons'},
     {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register',               'coupon': 'Up to $300 in coupons'},
@@ -359,8 +359,31 @@ def is_admin_api():
 
 @app.context_processor
 def inject_config():
-    """Make SITE_CONFIG available in all templates as 'site'."""
-    return {'site': SITE_CONFIG}
+    """Make SITE_CONFIG + editable site settings available in all templates."""
+    try:
+        _settings = get_all_settings()
+    except Exception:
+        _settings = {}
+    cfg = SITE_CONFIG
+    from datetime import datetime as _dtnow
+    # Live numbers so the homepage stats / labels / copyright never go stale.
+    extra = {'now_year': _dtnow.now().year, 'product_count': 100, 'category_count': 0}
+    try:
+        n = count_products()
+        if n:
+            extra['product_count'] = (n // 100) * 100 if n >= 100 else n
+            if not os.environ.get('PRODUCT_COUNT_LABEL'):
+                label = '{:,}+'.format(extra['product_count'])
+                cfg = dict(SITE_CONFIG)
+                cfg['product_count_label'] = label
+                cfg['tagline'] = 'A curated catalogue of {} finds. Updated daily.'.format(label)
+    except Exception:
+        pass
+    try:
+        extra['category_count'] = len(get_categories())
+    except Exception:
+        pass
+    return dict({'site': cfg, 'settings': _settings}, **extra)
 
 
 # --- Public Routes ---
@@ -999,6 +1022,49 @@ def _looks_like_seller_url(s: str) -> bool:
         if d in s:
             return True
     return False
+
+
+def _related_products(p, limit=8):
+    """'You might also like' — same brand, then same category, best-seller nudge."""
+    if not p:
+        return []
+    try:
+        from tag_utils import BRANDS
+    except Exception:
+        BRANDS = {}
+    hay = (p.get('name', '') + ' ' + p.get('tags', '')).lower()
+    hay_tokens = set(hay.split())
+    brand_tokens = set()
+    for key, aliases in BRANDS.items():
+        toks = aliases if isinstance(aliases, list) else [aliases]
+        if key in hay or any(t in hay_tokens for t in toks):
+            brand_tokens.update(toks)
+    cat = p.get('category', '')
+    spid = p.get('id')
+    def has_brand(x):
+        xt = (x.get('name', '') + ' ' + x.get('tags', '')).lower()
+        return any(t in xt for t in brand_tokens)
+    def score(x):
+        sc = 0.0
+        if brand_tokens and has_brand(x): sc += 10
+        if x.get('category') == cat: sc += 3
+        sc += min(int(x.get('sales') or 0), 2000) / 2000.0
+        return sc
+    pool = [x for x in get_products()
+            if x.get('id') != spid
+            and (x.get('category') == cat or (brand_tokens and has_brand(x)))]
+    return sorted(pool, key=score, reverse=True)[:limit]
+
+
+@app.route('/product/<pid>')
+def product_page(pid):
+    """Standalone on-site product page (same design as the detail modal) + related."""
+    p = get_product(pid)
+    if not p:
+        return redirect(url_for('shop'))
+    return render_template('product.html', product=p,
+                           related=_related_products(p, 8),
+                           categories=get_categories())
 
 
 @app.route('/api/product/<pid>')
