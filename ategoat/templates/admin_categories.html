@@ -208,12 +208,14 @@
 {% block content %}
 <div class="cat-mgr-wrap">
     <p class="cat-mgr-intro">
-        These categories drive the <b>nav bar on the storefront</b> and the dropdown on every product. Rename a slug and every product in that category is rewritten automatically. Delete a category and its products fall back to uncategorized.
+        These categories drive the <b>nav bar on the storefront</b> and the dropdown on every product. <b>Drag any row up or down (grab the ⋮⋮ grip or anywhere on the row except the text boxes) to reorder them</b> — the order here is exactly the order shoppers see. Rename a slug and every product in that category is rewritten automatically. Delete a category and its products fall back to uncategorized.
     </p>
 
     <!-- Existing categories -->
     <div class="cat-card">
-        <h2>Existing categories</h2>
+        <h2 style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">Existing categories
+            <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--border);border-radius:999px;padding:5px 12px;text-transform:none;">↕ Drag rows to reorder</span>
+        </h2>
         <div class="cat-headers">
             <span></span>
             <span></span>
