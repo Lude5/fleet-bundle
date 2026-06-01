@@ -645,11 +645,13 @@ async function addCategory() {
             }
         } else if (mode === 'product' && dragEl) {
             dragEl.classList.remove('cp-dragging');
-            var dest = null;
-            list.querySelectorAll('.cat-row.drop-target').forEach(function(t){ dest = t; });
             clearTargets();
-            if (moved && dest) {
-                var destSlug = (dest.dataset.slug || '').trim();
+            // Resolve the drop target from the pointer-up position itself (ghost is already
+            // removed above, so elementFromPoint sees the real category row underneath).
+            var under = document.elementFromPoint(e.clientX, e.clientY);
+            var destRow = under ? under.closest('.cat-row') : null;
+            if (moved && destRow) {
+                var destSlug = (destRow.dataset.slug || '').trim();
                 if (destSlug && destSlug !== srcSlug) moveProductToCategory(dragPid, srcSlug, destSlug, dragEl);
             }
         }
