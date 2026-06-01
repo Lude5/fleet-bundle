@@ -774,6 +774,27 @@ function switchTab(name) {
     if (name === 'cat') loadCategoryManager();
     if (name === 'uncat') loadUncategorized();
 }
+// URL hash → tab: /admin/products#categories opens the Categories tab
+// directly. Used by the sidebar Categories link.
+(function autoSwitchFromHash(){
+    var h = (window.location.hash || '').replace('#','').toLowerCase();
+    if (!h) return;
+    var map = { categories: 'cat', uncategorized: 'uncat', products: 'products' };
+    var target = map[h] || h;
+    var btn = document.querySelector('.tab-btn[data-tab="' + target + '"]');
+    if (btn) {
+        switchTab(target);
+        // Bring the tab area into view
+        var panel = document.getElementById('tab-' + target);
+        if (panel) setTimeout(function(){ panel.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
+    }
+})();
+window.addEventListener('hashchange', function(){
+    var h = (window.location.hash || '').replace('#','').toLowerCase();
+    var map = { categories: 'cat', uncategorized: 'uncat', products: 'products' };
+    var target = map[h];
+    if (target) switchTab(target);
+});
 
 // ===== Uncategorized tab =====
 var _ALL_CATEGORIES = {{ categories|tojson }};
