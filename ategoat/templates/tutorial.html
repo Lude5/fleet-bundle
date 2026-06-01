@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}How to Buy on {{ site.agent_name }} — Step by Step Tutorial | {{ site.name }}{% endblock %}
+{% block title %}How to Buy — Step-by-Step Agent Guide | {{ site.name }}{% endblock %}
 
 {% block extra_css %}
 .tut-wrap { max-width: 880px; margin: 0 auto; padding: 120px 24px 80px; }
@@ -71,7 +71,7 @@
     <div class="tut-head">
         <div class="tut-eyebrow">Step-by-step guide</div>
         <h1>How to Buy</h1>
-        <p>Getting designer-quality finds from China is easier than you think. Five simple steps — quality-checked, repackaged, and shipped to your door at the lowest rates.</p>
+        <p>Getting designer-quality finds from China is easier than you think. Five simple steps — quality-checked, repackaged, and shipped to your door through whichever agent you trust.</p>
         <div class="tut-trust">
             <span class="tb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>QC Photos Included</span>
             <span class="tb"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>7–14 Day Shipping</span>
@@ -86,9 +86,9 @@
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
             </div>
             <div class="tut-card">
-                <h3>Sign Up to {{ site.agent_name }}</h3>
-                <p>Create a free {{ site.agent_name }} account. Using our link unlocks <b>Coupons $50–$500</b> plus the lowest shipping rates — it takes about 30 seconds.</p>
-                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="tut-link" onclick="trackClick('signup','tutorial-step1','','')">Sign Up — Claim Coupons
+                <h3>Sign Up to a Shopping Agent</h3>
+                <p>Create a free account with the agent you prefer. We recommend <b>{{ site.agent_name }}</b> — the best coupons (<b>$50–$500</b> with our link) and lowest shipping — but all of our agents work the exact same way, so go with whoever you trust.</p>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="tut-link" onclick="trackClick('signup','tutorial-step1','','')">Sign Up to {{ site.agent_name }}
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             </div>
         </div>
@@ -110,8 +110,8 @@
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
             </div>
             <div class="tut-card">
-                <h3>Tap "Buy on {{ site.agent_name }}"</h3>
-                <p>Open any product and hit buy — you're sent straight to the exact item on {{ site.agent_name }} with our affiliate link applied automatically. No copy-paste, no link converting. Prefer another agent? Switch it on the product page.</p>
+                <h3>Tap "Buy"</h3>
+                <p>Open any product and hit buy — you're sent straight to the exact item on your agent with our link applied automatically. No copy-paste, no link converting. It defaults to {{ site.agent_name }}, but you can switch to Oopbuy, Sugargoo, or any of our agents right on the product page.</p>
             </div>
         </div>
         <!-- 4 -->
@@ -120,8 +120,8 @@
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
             </div>
             <div class="tut-card">
-                <h3>Pick Size &amp; Pay {{ site.agent_name }}</h3>
-                <p>On the {{ site.agent_name }} page, choose your size and colour, add to cart, and pay the product cost in your local currency. {{ site.agent_name }} buys it from the Chinese seller and holds it in your warehouse.</p>
+                <h3>Pick Size &amp; Pay Your Agent</h3>
+                <p>On your agent's page, choose your size and colour, add to cart, and pay the product cost in your local currency. Your agent buys it from the Chinese seller and holds it in your warehouse.</p>
             </div>
         </div>
         <!-- 5 -->
@@ -131,7 +131,7 @@
             </div>
             <div class="tut-card">
                 <h3>Approve QC Photos &amp; Ship</h3>
-                <p>{{ site.agent_name }} takes detailed quality-check photos and waits for your approval. Happy? Submit a ship request with your address and it's on its way — <b>7–14 days</b> worldwide. Combine multiple items into one parcel to save even more.</p>
+                <p>Your agent takes detailed quality-check photos and waits for your approval. Happy? Submit a ship request with your address and it's on its way — <b>7–14 days</b> worldwide. Combine multiple items into one parcel to save even more.</p>
             </div>
         </div>
     </div>
@@ -145,8 +145,8 @@
     <div class="tut-faq">
         <h2>Frequently Asked Questions</h2>
         <div class="tut-faq-item">
-            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Is {{ site.agent_name }} safe and legit?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
-            <div class="tut-faq-a">Yes. {{ site.agent_name }} is one of the most trusted shopping agents for buying from China, having handled millions of orders worldwide with QC photos and buyer protection.</div>
+            <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Are these agents safe and legit?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+            <div class="tut-faq-a">Yes. The agents we link — {{ site.agent_name }}, Oopbuy, Sugargoo and more — are among the most trusted for buying from China, handling millions of orders worldwide with QC photos and buyer protection.</div>
         </div>
         <div class="tut-faq-item">
             <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">How long does shipping take?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
@@ -154,11 +154,11 @@
         </div>
         <div class="tut-faq-item">
             <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">What if my item arrives defective?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
-            <div class="tut-faq-a">Reject the QC photos before shipping — {{ site.agent_name }} returns it to the seller and gets you a replacement or refund. After shipping, reach out to their support.</div>
+            <div class="tut-faq-a">Reject the QC photos before shipping — your agent returns it to the seller for a replacement or refund. After shipping, reach out to their support.</div>
         </div>
         <div class="tut-faq-item">
             <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Do I pay customs / import tax?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
-            <div class="tut-faq-a">It depends on your country and the declared value. {{ site.agent_name }} lets you set a declared value to minimise customs risk.</div>
+            <div class="tut-faq-a">It depends on your country and the declared value. Most agents let you set a declared value to minimise customs risk.</div>
         </div>
         <div class="tut-faq-item">
             <div class="tut-faq-q" onclick="this.parentNode.classList.toggle('open')">Can I combine multiple orders?<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
