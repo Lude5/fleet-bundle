@@ -145,10 +145,17 @@
     text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px;
 }
 .cat-row:hover { border-color: var(--border); }
+/* The whole row is a drag handle (except the editable fields/buttons), so signal it. */
+.cat-row { cursor: grab; }
+.cat-row:active { cursor: grabbing; }
+.cat-row input, .cat-row button, .cat-row .expand-toggle { cursor: auto; }
+.cat-row input { cursor: text; }
+.cat-row button, .cat-row .expand-toggle { cursor: pointer; }
 .cat-row .drag-handle {
-    cursor: grab; color: var(--text-muted); user-select: none;
+    cursor: grab; color: var(--accent); user-select: none;
     text-align: center; font-size: 18px; line-height: 1;
 }
+.cat-row:hover .drag-handle { color: var(--accent); }
 .cat-row .drag-handle:active { cursor: grabbing; }
 .cat-row.dragging { opacity: 0.5; }
 .cat-row .input { padding: 9px 11px; font-size: 13px; }
@@ -578,9 +585,11 @@ async function addCategory() {
 
     function onDown(e){
         if (e.button != null && e.button !== 0) return;          // primary button only
-        var handle = e.target.closest('.drag-handle');
-        if (handle && handle.closest('.cat-row')) {
-            mode = 'cat'; dragEl = handle.closest('.cat-row').closest('.cat-block');
+        // Category: drag from anywhere on the row EXCEPT the editable fields/buttons
+        // (so you can grab the ⋮⋮ handle, the count, or any empty part of the row).
+        var catRow = e.target.closest('.cat-row');
+        if (catRow && !e.target.closest('input, button, select, textarea, a, .expand-toggle')) {
+            mode = 'cat'; dragEl = catRow.closest('.cat-block');
         } else {
             var cp = e.target.closest('.cp-row');
             if (cp && !e.target.closest('select, button, a, input, .cp-select, .cp-edit-btn')) {
