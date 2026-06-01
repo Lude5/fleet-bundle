@@ -125,7 +125,10 @@
 .cat-row.drop-target { border-color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 0 2px var(--accent); }
 .drag-handle { touch-action: none; }
 .cp-row { touch-action: none; }
-.drag-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .92; box-shadow: 0 14px 44px rgba(0,0,0,.55); border-radius: 10px; }
+.drag-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .98; border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5); transform: scale(1) rotate(0);
+    transition: transform .16s cubic-bezier(.2,.9,.25,1), box-shadow .16s ease; }
+.drag-ghost.lifted { transform: scale(1.03) rotate(-1.4deg); box-shadow: 0 28px 64px rgba(0,0,0,.62), 0 0 0 1px var(--accent); }
 .cp-drag { cursor: grab; color: var(--text-muted); text-align: center; font-size: 14px; line-height: 1; letter-spacing: -2px; user-select: none; touch-action: none; }
 .cp-drag:active { cursor: grabbing; }
 .cp-row img {
@@ -157,7 +160,8 @@
 }
 .cat-row:hover .drag-handle { color: var(--accent); }
 .cat-row .drag-handle:active { cursor: grabbing; }
-.cat-row.dragging { opacity: 0.5; }
+/* The gap left where the dragged row was — dashed accent outline, faded. */
+.cat-row.dragging { opacity: 0.35; border-style: dashed; border-color: var(--accent); background: var(--accent-dim); }
 .cat-row .input { padding: 9px 11px; font-size: 13px; }
 .cat-row .cat-count {
     font-family: var(--font-mono); font-size: 10px; font-weight: 700;
@@ -615,8 +619,26 @@ async function addCategory() {
         ghost.style.left = (e.clientX - offX) + 'px';
         ghost.style.top = (e.clientY - offY) + 'px';
         document.body.appendChild(ghost);
+        // pop the ghost into a lifted (scaled + tilted) state on the next frame
+        requestAnimationFrame(function(){ if (ghost) ghost.classList.add('lifted'); });
         document.body.style.userSelect = 'none';
         src.classList.add(mode === 'cat' ? 'dragging' : 'cp-dragging');
+    }
+
+    // FLIP: after a reorder, animate every block sliding from its old position to the new one.
+    function flipReorder(refNode){
+        var blocks = Array.from(list.querySelectorAll('.cat-block'));
+        var firsts = blocks.map(function(b){ return b.getBoundingClientRect().top; });
+        list.insertBefore(dragEl, refNode);
+        blocks.forEach(function(b, i){
+            var dy = firsts[i] - b.getBoundingClientRect().top;
+            if (!dy) return;
+            b.style.transition = 'none';
+            b.style.transform = 'translateY(' + dy + 'px)';
+            b.offsetHeight; // force reflow so the inverted position is applied before we animate
+            b.style.transition = 'transform .22s cubic-bezier(.2,.9,.25,1)';
+            b.style.transform = '';
+        });
     }
 
     function onMove(e){
@@ -634,7 +656,9 @@ async function addCategory() {
             if (overBlock && overBlock !== dragEl && overBlock.parentNode === list) {
                 var r = overBlock.getBoundingClientRect();
                 var after = (e.clientY - r.top) > r.height / 2;
-                list.insertBefore(dragEl, after ? overBlock.nextSibling : overBlock);
+                var refNode = after ? overBlock.nextSibling : overBlock;
+                // only reorder (and animate) when it actually changes the order
+                if (refNode !== dragEl && dragEl.nextSibling !== refNode) flipReorder(refNode);
             }
         } else {
             clearTargets();
@@ -643,27 +667,46 @@ async function addCategory() {
         }
     }
 
+    // Settle the ghost: glide it into the dropped slot (cat) or fade it out (product).
+    function finishGhost(toRect){
+        if (!ghost) return;
+        var g = ghost; ghost = null;
+        g.classList.remove('lifted');
+        if (toRect) {
+            g.style.transition = 'left .2s cubic-bezier(.2,.9,.25,1), top .2s cubic-bezier(.2,.9,.25,1), transform .2s ease, opacity .2s ease';
+            g.style.left = toRect.left + 'px'; g.style.top = toRect.top + 'px';
+            g.style.transform = 'scale(1) rotate(0)'; g.style.opacity = '0';
+            setTimeout(function(){ g.remove(); }, 210);
+        } else {
+            g.style.transition = 'opacity .14s ease, transform .14s ease';
+            g.style.opacity = '0'; g.style.transform = 'scale(.97)';
+            setTimeout(function(){ g.remove(); }, 150);
+        }
+    }
+
     function onUp(e){
         window.removeEventListener('pointermove', onMove);
-        if (ghost) { ghost.remove(); ghost = null; }
         document.body.style.userSelect = '';
         if (mode === 'cat' && dragEl) {
-            var dr = dragEl.querySelector('.cat-row'); if (dr) dr.classList.remove('dragging');
+            var dr = dragEl.querySelector('.cat-row');
+            if (dr) dr.classList.remove('dragging');               // reveal the solid row...
+            finishGhost(moved && dr ? dr.getBoundingClientRect() : null); // ...and snap the ghost onto it
             if (moved) {
                 var rows = Array.from(list.querySelectorAll('.cat-row'));
                 rows.forEach(function(r, i){ var o = r.querySelector('.cat-order'); if (o) o.value = i; });
                 _autoSaveAllRows();
             }
         } else if (mode === 'product' && dragEl) {
-            dragEl.classList.remove('cp-dragging');
+            var pr = dragEl;
+            pr.classList.remove('cp-dragging');
             clearTargets();
-            // Resolve the drop target from the pointer-up position itself (ghost is already
-            // removed above, so elementFromPoint sees the real category row underneath).
+            // Resolve the drop target from the pointer-up position (ghost is pointer-events:none).
             var under = document.elementFromPoint(e.clientX, e.clientY);
             var destRow = under ? under.closest('.cat-row') : null;
+            finishGhost(null);
             if (moved && destRow) {
                 var destSlug = (destRow.dataset.slug || '').trim();
-                if (destSlug && destSlug !== srcSlug) moveProductToCategory(dragPid, srcSlug, destSlug, dragEl);
+                if (destSlug && destSlug !== srcSlug) moveProductToCategory(dragPid, srcSlug, destSlug, pr);
             }
         }
         mode = null; dragEl = null; moved = false; srcSlug = null; dragPid = null;
