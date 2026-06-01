@@ -123,6 +123,9 @@
 .cp-row:active { cursor: grabbing; }
 .cp-row.cp-dragging { opacity: 0.45; }
 .cat-row.drop-target { border-color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 0 2px var(--accent); }
+.drag-handle { touch-action: none; }
+.cp-row { touch-action: none; }
+.drag-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .92; box-shadow: 0 14px 44px rgba(0,0,0,.55); border-radius: 10px; }
 .cp-row img {
     width: 44px; height: 44px; object-fit: contain;
     background: #ffffff !important; padding: 2px; border-radius: 6px;
@@ -215,7 +218,7 @@
         <div id="catManagerList">
             {% for c in categories %}
             <div class="cat-block" data-slug="{{ c.slug }}">
-                <div class="cat-row" data-slug="{{ c.slug }}" draggable="true">
+                <div class="cat-row" data-slug="{{ c.slug }}">
                     <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
                     <button type="button" class="expand-toggle" onclick="toggleCategoryProducts(this)" title="Show items in this category">▶</button>
                     <input class="input cat-name" value="{{ c.name }}" placeholder="Name">
@@ -348,7 +351,7 @@ function renderCategoryProducts(drawer, products, currentSlug) {
             id: p.id, name: p.name||'', price: p.price||'', image: p.image||'',
             url: p.url||'', seller: p.seller||'', category: p.category||'', tags: p.tags||''
         }));
-        return '<div class="cp-row" draggable="true" title="Drag onto a category to move it" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
+        return '<div class="cp-row" title="Drag onto a category to move it" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
              + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
              + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
              + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
@@ -557,44 +560,100 @@ async function addCategory() {
     setTimeout(function(){ location.reload(); }, 500);
 }
 
-// Drag-to-reorder: drop a row to reorder, then auto-save the new sort_order
-// values to the backend. Lower number = leftmost on the storefront nav.
-(function setupDragReorder(){
+// Pointer-based drag (mouse + touch). Native HTML5 drag-and-drop is unreliable when a
+// row contains <input>/<img>, so we drive it ourselves. A CATEGORY is dragged by its
+// ⋮⋮ handle and reorders the .cat-block wrappers (auto-saving sort_order). A PRODUCT is
+// dragged from anywhere on its row (except the controls) and drops onto a category.
+(function setupPointerDrag(){
     var list = document.getElementById('catManagerList');
     if (!list) return;
-    // Each category is a .cat-block (row + its product drawer). Reorder the BLOCKS,
-    // which are the direct children of the list — moving the inner .cat-row fails
-    // because it isn't a direct child of the list.
-    var dragBlock = null;
-    list.addEventListener('dragstart', function(e){
-        var row = e.target.closest('.cat-row');
-        if (!row) return;                 // a product-row drag — handled by setupProductDrag
-        dragBlock = row.closest('.cat-block');
-        row.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    });
-    list.addEventListener('dragend', function(e){
-        if (!dragBlock) return;           // product-row drags are handled by setupProductDrag, don't re-save order
-        var dr = dragBlock.querySelector('.cat-row'); if (dr) dr.classList.remove('dragging');
-        dragBlock = null;
-        // Re-stamp sort_order based on the new visible order, then save all
-        var rows = Array.from(list.querySelectorAll('.cat-row'));
-        rows.forEach(function(r, i){
-            var ord = r.querySelector('.cat-order');
-            if (ord) ord.value = i;
-        });
-        _autoSaveAllRows();
-    });
-    list.addEventListener('dragover', function(e){
-        if (!dragBlock) return;           // only when reordering a category
+    var mode = null, dragEl = null, ghost = null;
+    var startX = 0, startY = 0, offX = 0, offY = 0, moved = false;
+    var srcSlug = null, dragPid = null;
+
+    function clearTargets(){ list.querySelectorAll('.cat-row.drop-target').forEach(function(r){ r.classList.remove('drop-target'); }); }
+
+    function onDown(e){
+        if (e.button != null && e.button !== 0) return;          // primary button only
+        var handle = e.target.closest('.drag-handle');
+        if (handle && handle.closest('.cat-row')) {
+            mode = 'cat'; dragEl = handle.closest('.cat-row').closest('.cat-block');
+        } else {
+            var cp = e.target.closest('.cp-row');
+            if (cp && !e.target.closest('select, button, a, input, .cp-select, .cp-edit-btn')) {
+                mode = 'product'; dragEl = cp;
+                srcSlug = cp.closest('.cat-block').dataset.slug; dragPid = cp.dataset.id;
+            }
+        }
+        if (!mode) return;
+        startX = e.clientX; startY = e.clientY; moved = false;
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp, { once: true });
+    }
+
+    function startGhost(e){
+        var src = (mode === 'cat') ? dragEl.querySelector('.cat-row') : dragEl;
+        var rect = src.getBoundingClientRect();
+        ghost = src.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width = rect.width + 'px';
+        offX = e.clientX - rect.left; offY = e.clientY - rect.top;
+        ghost.style.left = (e.clientX - offX) + 'px';
+        ghost.style.top = (e.clientY - offY) + 'px';
+        document.body.appendChild(ghost);
+        document.body.style.userSelect = 'none';
+        src.classList.add(mode === 'cat' ? 'dragging' : 'cp-dragging');
+    }
+
+    function onMove(e){
+        if (!dragEl) return;
+        if (!moved) {
+            if (Math.abs(e.clientX - startX) < 5 && Math.abs(e.clientY - startY) < 5) return;  // click threshold
+            moved = true; startGhost(e);
+        }
         e.preventDefault();
-        var overRow = e.target.closest('.cat-row');
-        var block = overRow ? overRow.closest('.cat-block') : e.target.closest('.cat-block');
-        if (!block || block === dragBlock || block.parentNode !== list) return;
-        var rect = block.getBoundingClientRect();
-        var after = (e.clientY - rect.top) > rect.height / 2;
-        list.insertBefore(dragBlock, after ? block.nextSibling : block);
-    });
+        if (ghost) { ghost.style.left = (e.clientX - offX) + 'px'; ghost.style.top = (e.clientY - offY) + 'px'; }
+        var under = document.elementFromPoint(e.clientX, e.clientY);
+        if (!under) return;
+        if (mode === 'cat') {
+            var overBlock = under.closest('.cat-block');
+            if (overBlock && overBlock !== dragEl && overBlock.parentNode === list) {
+                var r = overBlock.getBoundingClientRect();
+                var after = (e.clientY - r.top) > r.height / 2;
+                list.insertBefore(dragEl, after ? overBlock.nextSibling : overBlock);
+            }
+        } else {
+            clearTargets();
+            var overRow = under.closest('.cat-row');
+            if (overRow) overRow.classList.add('drop-target');
+        }
+    }
+
+    function onUp(e){
+        window.removeEventListener('pointermove', onMove);
+        if (ghost) { ghost.remove(); ghost = null; }
+        document.body.style.userSelect = '';
+        if (mode === 'cat' && dragEl) {
+            var dr = dragEl.querySelector('.cat-row'); if (dr) dr.classList.remove('dragging');
+            if (moved) {
+                var rows = Array.from(list.querySelectorAll('.cat-row'));
+                rows.forEach(function(r, i){ var o = r.querySelector('.cat-order'); if (o) o.value = i; });
+                _autoSaveAllRows();
+            }
+        } else if (mode === 'product' && dragEl) {
+            dragEl.classList.remove('cp-dragging');
+            var dest = null;
+            list.querySelectorAll('.cat-row.drop-target').forEach(function(t){ dest = t; });
+            clearTargets();
+            if (moved && dest) {
+                var destSlug = (dest.dataset.slug || '').trim();
+                if (destSlug && destSlug !== srcSlug) moveProductToCategory(dragPid, srcSlug, destSlug, dragEl);
+            }
+        }
+        mode = null; dragEl = null; moved = false; srcSlug = null; dragPid = null;
+    }
+
+    list.addEventListener('pointerdown', onDown);
 })();
 
 var _saveTimer = null;
@@ -620,51 +679,6 @@ function _autoSaveAllRows() {
         showToast('Order saved', 'success');
     }, 400);
 }
-
-// Drag a PRODUCT (a .cp-row in an expanded drawer) onto any category row to move it
-// there. Coexists with the category-row reorder above: we only act when a product
-// row is the drag source, and category-row drags are ignored here (and vice-versa).
-(function setupProductDrag(){
-    var list = document.getElementById('catManagerList');
-    if (!list) return;
-    var dragP = null; // { pid, fromSlug, row }
-    function clearTargets(){ list.querySelectorAll('.cat-row.drop-target').forEach(function(r){ r.classList.remove('drop-target'); }); }
-
-    list.addEventListener('dragstart', function(e){
-        var cp = e.target.closest('.cp-row');
-        if (!cp) return;                 // a category-row drag — leave it to setupDragReorder
-        e.stopPropagation();
-        var block = cp.closest('.cat-block');
-        dragP = { pid: cp.dataset.id, fromSlug: block ? block.dataset.slug : '', row: cp };
-        cp.classList.add('cp-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        try { e.dataTransfer.setData('text/plain', cp.dataset.id); } catch(_) {}
-    });
-    list.addEventListener('dragover', function(e){
-        if (!dragP) return;              // not moving a product
-        var target = e.target.closest('.cat-row');
-        if (!target) return;
-        e.preventDefault();              // allow the drop
-        e.stopPropagation();
-        if (!target.classList.contains('drop-target')) { clearTargets(); target.classList.add('drop-target'); }
-    });
-    list.addEventListener('drop', function(e){
-        if (!dragP) return;
-        var target = e.target.closest('.cat-row');
-        if (!target) return;
-        e.preventDefault(); e.stopPropagation();
-        var destSlug = (target.dataset.slug || '').trim();
-        clearTargets();
-        if (destSlug && destSlug !== dragP.fromSlug) moveProductToCategory(dragP.pid, dragP.fromSlug, destSlug, dragP.row);
-    });
-    list.addEventListener('dragend', function(e){
-        if (!dragP) return;
-        e.stopPropagation();
-        if (dragP.row) dragP.row.classList.remove('cp-dragging');
-        clearTargets();
-        dragP = null;
-    });
-})();
 
 function _adjustCatCount(slug, delta){
     if (!slug) return;
