@@ -64,7 +64,7 @@
 }
 .cp-row {
     display: grid;
-    grid-template-columns: 44px 1fr 80px 160px auto;
+    grid-template-columns: 18px 44px 1fr 80px 150px auto;
     gap: 10px; align-items: center;
     padding: 8px 10px; margin-bottom: 6px;
     background: var(--surface-2); border: 1px solid var(--border-subtle);
@@ -126,6 +126,8 @@
 .drag-handle { touch-action: none; }
 .cp-row { touch-action: none; }
 .drag-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .92; box-shadow: 0 14px 44px rgba(0,0,0,.55); border-radius: 10px; }
+.cp-drag { cursor: grab; color: var(--text-muted); text-align: center; font-size: 14px; line-height: 1; letter-spacing: -2px; user-select: none; touch-action: none; }
+.cp-drag:active { cursor: grabbing; }
 .cp-row img {
     width: 44px; height: 44px; object-fit: contain;
     background: #ffffff !important; padding: 2px; border-radius: 6px;
@@ -351,7 +353,8 @@ function renderCategoryProducts(drawer, products, currentSlug) {
             id: p.id, name: p.name||'', price: p.price||'', image: p.image||'',
             url: p.url||'', seller: p.seller||'', category: p.category||'', tags: p.tags||''
         }));
-        return '<div class="cp-row" title="Drag onto a category to move it" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
+        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
+             + '<span class="cp-drag" title="Drag onto a category to move it">⋮⋮</span>'
              + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
              + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
              + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
