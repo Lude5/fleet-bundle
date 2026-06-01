@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
-    <title>{% block title %}{{ settings.page_title or (site.name ~ ' — Curated Finds, Open on Any Agent') }}{% endblock %}</title>
-    <meta name="description" content="{{ settings.meta_description or (site.name ~ ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.') }}">
+    <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
+    <meta name="description" content="{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.">
     <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, kakobuy, joyagoo, cnfans, sugargoo, oopbuy, allchinabuy, mulebuy, hoobuy, acbuy">
     <link rel="canonical" href="https://{{ site.domain }}">
     <meta property="og:type" content="website">
@@ -57,9 +57,9 @@
             --text: #ffffff;
             --text-secondary: rgba(255,255,255,0.6);
             --text-muted: rgba(255,255,255,0.3);
-            --accent: {{ settings.accent_color or site.brand_color }};
-            --accent-hover: {{ settings.accent_color or site.brand_color }}dd;
-            --accent-dim: {{ settings.accent_color or site.brand_color }}1a;
+            --accent: {{ site.brand_color }};
+            --accent-hover: {{ site.brand_color }}dd;
+            --accent-dim: {{ site.brand_color }}1a;
             --accent-glow: {{ site.brand_color }}33;
             --font-display: 'Anton', sans-serif;
             --font-body: 'Inter', sans-serif;
@@ -67,7 +67,7 @@
             --radius: 20px;
             --radius-sm: 12px;
         }
-        html { scroll-behavior: smooth; overflow-x: clip; }
+        html { scroll-behavior: smooth; }
         body { font-family: var(--font-body); font-size: 14px; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; line-height: 1.5; }
         a { color: inherit; text-decoration: none; }
         img { max-width: 100%; display: block; }
@@ -173,7 +173,7 @@
             .side-btn svg { width: 16px; height: 16px; }
             .side-btn .side-tip { display: none; }
         }
-        .nav-hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; }
+        .nav-hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
         .mobile-menu {
             display: flex; position: fixed; inset: 0;
             background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
@@ -321,7 +321,7 @@
         .stat-num { font-family: var(--font-display); font-size: 48px; color: var(--accent); }
         .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
 
-        .cta-section { padding: 80px 24px; text-align: center; position: relative; overflow: hidden; }
+        .cta-section { padding: 80px 24px; text-align: center; position: relative; }
         .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, var(--accent-dim), transparent 70%); filter: blur(60px); pointer-events: none; }
         .cta-section h2 { font-family: var(--font-display); font-size: 48px; text-transform: uppercase; margin-bottom: 12px; position: relative; }
         .cta-section p { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; position: relative; }
@@ -535,8 +535,8 @@
         }
         .signup-featured .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
         .signup-featured .meta { flex: 1; min-width: 0; }
-        .signup-featured .meta .ttl { display: block; font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1; }
-        .signup-featured .meta .sub { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.92); margin-top: 5px; }
+        .signup-featured .meta .ttl { font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1; }
+        .signup-featured .meta .sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.85); margin-top: 4px; }
         .signup-featured .badge {
             position: absolute; top: -8px; right: 14px;
             background: #fff; color: var(--accent);
@@ -678,19 +678,67 @@
         .pd-qc img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 9px; background: #ffffff; cursor: pointer; transition: transform .15s; padding: 4px; }
         .pd-qc img:hover { transform: scale(1.05); }
 
+        /* QC lightbox — full-screen inline viewer for QC photos */
+        .qc-lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: 60px 20px;
+        }
+        .qc-lightbox.open { display: flex; }
+        .qc-lb-img {
+            max-width: 100%; max-height: 100%;
+            background: #ffffff !important; object-fit: contain;
+            border-radius: 8px; padding: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+        .qc-lb-close, .qc-lb-nav {
+            position: absolute; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            cursor: pointer; user-select: none;
+            backdrop-filter: blur(10px); transition: all .15s;
+        }
+        .qc-lb-close {
+            top: 18px; right: 18px;
+            width: 44px; height: 44px; border-radius: 50%;
+            font-size: 24px; line-height: 1;
+        }
+        .qc-lb-nav {
+            top: 50%; transform: translateY(-50%);
+            width: 52px; height: 80px; border-radius: 10px;
+            font-size: 36px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qc-lb-prev { left: 18px; }
+        .qc-lb-next { right: 18px; }
+        .qc-lb-close:hover, .qc-lb-nav:hover {
+            background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4);
+        }
+        .qc-lb-counter {
+            position: absolute; bottom: 18px; left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px; background: rgba(0,0,0,0.6);
+            color: #fff; border-radius: 999px;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+        @media (max-width: 600px) {
+            .qc-lightbox { padding: 40px 8px; }
+            .qc-lb-nav { width: 40px; height: 60px; font-size: 28px; }
+            .qc-lb-prev { left: 6px; }
+            .qc-lb-next { right: 6px; }
+            .qc-lb-close { top: 10px; right: 10px; width: 38px; height: 38px; font-size: 20px; }
+        }
+
         @media (max-width: 860px) {
             .pd-body { grid-template-columns: 1fr; padding: 20px; gap: 22px; }
             .pd-title { font-size: 28px; }
             .pd-price { font-size: 26px; }
-            .pd-buy-row { flex-wrap: wrap; }
         }
 
         .footer { padding: 48px 24px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle); }
         .footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 40px; flex-wrap: wrap; }
         .footer-brand { font-family: var(--font-display); font-size: 30px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .footer-desc { font-size: 12px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
-        .product-card-img-wrap { position: relative; }
-        .product-card-hot { position: absolute; top: 8px; left: 8px; z-index: 3; font-size: 15px; line-height: 1; padding: 4px 6px; border-radius: 8px; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .footer-col h4 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
         .footer-col a { display: block; padding: 3px 0; color: var(--text-secondary); font-size: 12px; transition: color 0.2s; }
         .footer-col a:hover { color: var(--accent); }
@@ -739,7 +787,7 @@
 
         @media (max-width: 768px) {
             .nav-links { display: none; }
-            .nav-hamburger { display: flex; }
+            .nav-hamburger { display: block; }
             .nav-brand { font-size: 20px; letter-spacing: 0; max-width: 38vw; overflow: hidden; }
             .section { padding: 48px 16px; }
             .section-title { font-size: 32px; }
@@ -757,9 +805,8 @@
     <script src="/static/js/preview-mode.js"></script>
 </head>
 <body>
-    {% if settings.announcement_text %}<div class="announce-bar" data-edit="announcement_text" style="background:var(--accent);color:#0b0b0b;text-align:center;padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.3px;">{{ settings.announcement_text }}</div>{% endif %}
     <nav class="nav" id="nav">
-        <a href="/" class="nav-brand" data-edit-brand="1">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></a>
+        <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
         <ul class="nav-links">
             <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
             <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}">Shop</a></li>
@@ -784,7 +831,7 @@
 
     <div class="mobile-menu" id="mob">
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
-        <div class="mobile-menu-brand">{{ settings.brand_part1 or site.name_part1 }}<span class="accent">{{ settings.brand_part2 or site.name_part2 }}</span></div>
+        <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
         <a href="/">Home</a>
         <a href="/shop">Shop</a>
         <a href="/link-converter">Converter</a>
@@ -818,8 +865,8 @@
     <footer class="footer">
         <div class="footer-top">
             <div>
-                <div class="footer-brand">{{ settings.brand_part1 or site.name_part1 }}<span style="color:var(--accent);">{{ settings.brand_part2 or site.name_part2 }}</span></div>
-                <p class="footer-desc" data-edit="footer_text">{{ settings.footer_text or 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.' }}</p>
+                <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--accent);">{{ site.name_part2 }}</span></div>
+                <p class="footer-desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
             </div>
             <div class="footer-col">
                 <h4>Categories</h4>
@@ -839,7 +886,7 @@
                 <a href="/terms">Terms</a>
             </div>
         </div>
-        <div class="footer-bottom">&copy; {{ now_year }} {{ site.name }}. All rights reserved.</div>
+        <div class="footer-bottom">&copy; 2026 {{ site.name }}. All rights reserved.</div>
     </footer>
 
     <!-- Product detail modal -->
@@ -1107,15 +1154,10 @@
             if (btt) btt.classList.toggle('vis', window.scrollY > 500);
         });
 
-        var revealEls = document.querySelectorAll('.reveal');
         var rObs = new IntersectionObserver(function(entries) {
             entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('vis'); rObs.unobserve(e.target); } });
-        }, { threshold: 0, rootMargin: '0px 0px 200px 0px' });
-        revealEls.forEach(function(el) { rObs.observe(el); });
-        // Fallback: guarantee any section near/above the viewport reveals even on fast momentum scroll
-        function revealInView() { revealEls.forEach(function(el) { if (el.getBoundingClientRect().top < window.innerHeight + 200) el.classList.add('vis'); }); }
-        window.addEventListener('scroll', revealInView, { passive: true });
-        window.addEventListener('load', revealInView);
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.reveal').forEach(function(el) { rObs.observe(el); });
 
         var counted = false;
         var sObs = new IntersectionObserver(function(entries) {
@@ -1594,8 +1636,9 @@
                             var photos = (qd && qd.photos) || [];
                             if (photos.length) {
                                 qc.className = 'pd-qc';
-                                qc.innerHTML = photos.map(function(u){
-                                    return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="window.open(this.src)">';
+                                window._qcPhotos = photos;
+                                qc.innerHTML = photos.map(function(u, i){
+                                    return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQcLightbox(' + i + ')">';
                                 }).join('');
                             } else {
                                 qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
@@ -1656,7 +1699,45 @@
                 if (pid) setTimeout(function(){ openProductModal(pid); }, 200);
             } catch(_){}
         })();
+
+        // === QC lightbox — opens QC photos inline, never navigates away ===
+        window._qcIdx = 0;
+        window.openQcLightbox = function(idx) {
+            var photos = window._qcPhotos || [];
+            if (!photos.length) return;
+            window._qcIdx = Math.max(0, Math.min(idx, photos.length - 1));
+            var lb = document.getElementById('qcLightbox');
+            document.getElementById('qcLbImg').src = photos[window._qcIdx];
+            document.getElementById('qcLbCounter').textContent = (window._qcIdx + 1) + ' / ' + photos.length;
+            lb.classList.add('open');
+        };
+        window.closeQcLightbox = function() {
+            document.getElementById('qcLightbox').classList.remove('open');
+        };
+        window.qcLbNext = function(delta) {
+            var photos = window._qcPhotos || [];
+            if (!photos.length) return;
+            window._qcIdx = (window._qcIdx + delta + photos.length) % photos.length;
+            document.getElementById('qcLbImg').src = photos[window._qcIdx];
+            document.getElementById('qcLbCounter').textContent = (window._qcIdx + 1) + ' / ' + photos.length;
+        };
+        document.addEventListener('keydown', function(e){
+            var lb = document.getElementById('qcLightbox');
+            if (!lb || !lb.classList.contains('open')) return;
+            if (e.key === 'Escape') closeQcLightbox();
+            else if (e.key === 'ArrowRight') qcLbNext(1);
+            else if (e.key === 'ArrowLeft') qcLbNext(-1);
+        });
     </script>
+
+    <!-- QC photo lightbox -->
+    <div class="qc-lightbox" id="qcLightbox" onclick="if(event.target===this)closeQcLightbox()">
+        <button class="qc-lb-close" type="button" onclick="closeQcLightbox()" aria-label="Close">&times;</button>
+        <button class="qc-lb-nav qc-lb-prev" type="button" onclick="qcLbNext(-1)" aria-label="Previous">‹</button>
+        <img id="qcLbImg" class="qc-lb-img" src="" alt="QC photo" referrerpolicy="no-referrer">
+        <button class="qc-lb-nav qc-lb-next" type="button" onclick="qcLbNext(1)" aria-label="Next">›</button>
+        <div class="qc-lb-counter" id="qcLbCounter">1 / 1</div>
+    </div>
     <script src="/static/js/currency.js" defer></script>
 </body>
 </html>
