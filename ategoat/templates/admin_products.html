@@ -217,6 +217,9 @@ th.col-trend.active, th.col-stock.active {
 .scrape-card .sb { padding: 8px 10px; }
 .scrape-card .sb-name { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scrape-card .sb-price { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 3px; }
+.scrape-card .sb-url { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); word-break: break-all; margin-top: 3px; line-height: 1.3; }
+.scrape-card .sc-edit { position: absolute; top: 6px; left: 6px; width: 24px; height: 24px; background: rgba(0,0,0,0.6); border: none; border-radius: 5px; color: #fff; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; transition: background .15s; }
+.scrape-card .sc-edit:hover { background: var(--accent); }
 
 /* Edit modal */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
@@ -494,12 +497,16 @@ th.col-trend.active, th.col-stock.active {
                     <input type="text" id="pRetail" class="input" placeholder="190">
                 </div>
                 <div class="field form-full">
-                    <label data-i18n="manual_url">Product URL</label>
-                    <input type="url" id="pUrl" class="input" placeholder="https://weidian.com/...">
+                    <label>Buy link / source URL <span style="color:var(--text-muted);font-weight:400;">— Weidian / Taobao / 1688 or KakoBuy</span></label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="url" id="pUrl" class="input" style="flex:1;" placeholder="https://weidian.com/item.html?itemID=...">
+                        <button type="button" class="btn btn-secondary" style="white-space:nowrap;flex-shrink:0;" onclick="scrapeIntoManual(this)" title="Scrape name, price & image from this link">Auto-fill ↓</button>
+                    </div>
                 </div>
                 <div class="field form-full">
                     <label data-i18n="manual_image">Image URL</label>
-                    <input type="url" id="pImage" class="input" placeholder="https://...">
+                    <input type="url" id="pImage" class="input" placeholder="https://..." oninput="var pr=document.getElementById('pImgPreview');pr.src=this.value;pr.style.display=this.value?'block':'none';">
+                    <img id="pImgPreview" class="edit-preview" style="display:none;margin-top:10px;" onerror="this.style.display='none'">
                 </div>
                 <div class="field">
                     <label data-i18n="manual_seller">Seller</label>
@@ -672,6 +679,64 @@ th.col-trend.active, th.col-stock.active {
             <button type="button" class="page-btn" id="nextPageBtn" onclick="gotoPage(1)" aria-label="Next page">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Scrape review/approve modal — edit a scraped variant before importing -->
+<div class="modal-overlay" id="scrapeApproveModal" onclick="if(event.target===this)closeApprove()">
+    <div class="modal">
+        <button class="modal-close" onclick="closeApprove()">&times;</button>
+        <h2>Review &amp; edit before importing</h2>
+        <p style="color:var(--text-muted);font-size:12px;margin:-6px 0 14px;">Tweak anything the scraper got wrong, then keep it. Nothing is saved until you hit <b>Import selected</b>.</p>
+        <img class="edit-preview" id="approvePreview" alt="Preview" onerror="this.style.display='none'">
+        <input type="hidden" id="approveIndex">
+        <div class="form-grid">
+            <div class="field form-full">
+                <label>Product name</label>
+                <input type="text" id="approveName" class="input">
+            </div>
+            <div class="field">
+                <label>Category</label>
+                <select id="approveCategory" class="select">
+                    <option value="">—</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label>Price (USD)</label>
+                <input type="text" id="approvePrice" class="input">
+            </div>
+            <div class="field">
+                <label>Seller</label>
+                <input type="text" id="approveSeller" class="input">
+            </div>
+            <div class="field form-full">
+                <label>Image URL</label>
+                <input type="url" id="approveImage" class="input" oninput="var p=document.getElementById('approvePreview');p.src=this.value;p.style.display=this.value?'block':'none';">
+            </div>
+            <div class="field form-full">
+                <label>Buy link / source URL</label>
+                <input type="url" id="approveUrl" class="input">
+            </div>
+            <div class="field form-full">
+                <label>KakoBuy affiliate link (auto-generated)</label>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <input type="url" id="approveKakobuy" class="input" readonly style="flex:1;font-size:11px;color:var(--text-muted);">
+                    <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0;" onclick="navigator.clipboard.writeText(document.getElementById('approveKakobuy').value);showToast('Copied','success');">Copy</button>
+                </div>
+            </div>
+            <div class="field form-full">
+                <label>Tags</label>
+                <input type="text" id="approveTags" class="input">
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="saveApprove()" style="flex:1;min-width:120px;">Save &amp; keep</button>
+            <button class="btn btn-secondary" style="color:var(--danger);" onclick="removeApprove()">Drop this one</button>
+            <button class="btn btn-secondary" onclick="closeApprove()">Cancel</button>
         </div>
     </div>
 </div>
@@ -907,7 +972,7 @@ async function saveEdit() {
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeEdit();
+    if (e.key === 'Escape') { closeEdit(); closeApprove(); }
 });
 
 // === SEARCH & FILTER (with pagination) ===
@@ -1663,9 +1728,11 @@ async function scrapeLink() {
                 this.querySelector('.check').style.display = sel ? 'none' : 'flex';
             };
             card.innerHTML = '<div class="check">✓</div>'
+                + '<button class="sc-edit" title="Review & edit this one" onclick="event.stopPropagation();openApprove(' + i + ')">✎</button>'
                 + '<img src="' + (p.image || '') + '" onerror="this.style.background=\'#ffffff\'">'
                 + '<div class="sb"><div class="sb-name">' + (p.name || '—') + '</div>'
-                + '<div class="sb-price">$' + (p.price || '?') + '</div></div>';
+                + '<div class="sb-price">$' + (p.price || '?') + '</div>'
+                + '<div class="sb-url">' + (p.url ? p.url.replace(/^https?:\/\//, '').slice(0, 38) : '') + '</div></div>';
             grid.appendChild(card);
         });
         document.getElementById('scrapeResults').style.display = 'block';
@@ -1689,6 +1756,80 @@ function clearScrape() {
     scrapedProducts = [];
     document.getElementById('scrapeResults').style.display = 'none';
     document.getElementById('scrapeUrl').value = '';
+}
+
+// --- Scrape review/approve: edit a scraped variant in place before import ---
+function openApprove(i) {
+    var p = scrapedProducts[i]; if (!p) return;
+    document.getElementById('approveIndex').value = i;
+    document.getElementById('approveName').value = p.name || '';
+    document.getElementById('approveCategory').value = p.category || '';
+    document.getElementById('approvePrice').value = p.price || '';
+    document.getElementById('approveSeller').value = p.seller || '';
+    document.getElementById('approveUrl').value = p.url || '';
+    document.getElementById('approveKakobuy').value = p.kakobuy_link || '';
+    document.getElementById('approveTags').value = p.tags || '';
+    document.getElementById('approveImage').value = p.image || '';
+    var prev = document.getElementById('approvePreview');
+    if (p.image) { prev.src = p.image; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    document.getElementById('scrapeApproveModal').classList.add('active');
+}
+function saveApprove() {
+    var idx = parseInt(document.getElementById('approveIndex').value);
+    if (isNaN(idx) || !scrapedProducts[idx]) return;
+    var price = document.getElementById('approvePrice').value.trim();
+    scrapedProducts[idx] = Object.assign({}, scrapedProducts[idx], {
+        name:          document.getElementById('approveName').value.trim(),
+        category:      document.getElementById('approveCategory').value,
+        price:         price,
+        price_numeric: parseFloat(price.replace(/[^0-9.]/g, '')) || 0,
+        seller:        document.getElementById('approveSeller').value.trim(),
+        url:           document.getElementById('approveUrl').value.trim(),
+        image:         document.getElementById('approveImage').value.trim(),
+        tags:          document.getElementById('approveTags').value.trim()
+    });
+    var p = scrapedProducts[idx];
+    var card = document.querySelector('.scrape-card[data-index="' + idx + '"]');
+    if (card) {
+        card.querySelector('.sb-name').textContent = p.name || '—';
+        card.querySelector('.sb-price').textContent = '$' + (p.price || '?');
+        var u = card.querySelector('.sb-url'); if (u) u.textContent = p.url ? p.url.replace(/^https?:\/\//, '').slice(0, 38) : '';
+        var im = card.querySelector('img'); if (im) im.src = p.image || '';
+        // make sure an edited card is selected for import
+        card.dataset.selected = 'true'; card.style.opacity = '1';
+        var ck = card.querySelector('.check'); if (ck) ck.style.display = 'flex';
+    }
+    closeApprove();
+    showToast('Updated', 'success');
+}
+function removeApprove() {
+    var idx = parseInt(document.getElementById('approveIndex').value);
+    var card = document.querySelector('.scrape-card[data-index="' + idx + '"]');
+    if (card) { card.dataset.selected = 'false'; card.style.opacity = '0.35'; var ck = card.querySelector('.check'); if (ck) ck.style.display = 'none'; }
+    closeApprove();
+}
+function closeApprove() { document.getElementById('scrapeApproveModal').classList.remove('active'); }
+
+// --- Manual tab: auto-fill the form from a pasted link (reuses /admin/scrape) ---
+async function scrapeIntoManual(btn) {
+    var url = document.getElementById('pUrl').value.trim();
+    if (!url.match(/^https?:\/\//i)) { showToast('Paste a Weidian / Taobao / 1688 link in the field first', 'error'); return; }
+    var orig = btn.textContent; btn.textContent = '…'; btn.disabled = true;
+    try {
+        var res = await fetch('/admin/scrape', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url: url, category: document.getElementById('pCategory').value.trim() }) });
+        var data = await res.json();
+        if (!res.ok || data.error) { showToast(data.error || 'Scrape failed', 'error'); return; }
+        var p = (data.products || [])[0];
+        if (!p) { showToast('Nothing scraped from that link', 'error'); return; }
+        document.getElementById('pName').value = p.name || '';
+        document.getElementById('pPrice').value = p.price || '';
+        document.getElementById('pImage').value = p.image || '';
+        if (p.category) document.getElementById('pCategory').value = p.category;
+        if (p.seller) document.getElementById('pSeller').value = p.seller;
+        var pr = document.getElementById('pImgPreview'); if (p.image) { pr.src = p.image; pr.style.display = 'block'; }
+        showToast('Auto-filled' + (data.total_variants > 1 ? (' — ' + data.total_variants + ' variants found; use the Scrape tab to add them all') : ''), 'success');
+    } catch (e) { showToast('Error: ' + (e.message || e), 'error'); }
+    finally { btn.textContent = orig; btn.disabled = false; }
 }
 
 // === Init ===
