@@ -1569,7 +1569,9 @@ def admin_category_products(slug):
         'count': len(items),
         'products': [
             {'id': p['id'], 'name': p.get('name', ''), 'image': p.get('image', ''),
-             'price': p.get('price', ''), 'category': p.get('category', '')}
+             'price': p.get('price', ''), 'category': p.get('category', ''),
+             'url': p.get('url', ''), 'seller': p.get('seller', ''),
+             'tags': p.get('tags', '')}
             for p in items
         ],
     })

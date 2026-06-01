@@ -64,12 +64,58 @@
 }
 .cp-row {
     display: grid;
-    grid-template-columns: 44px 1fr 80px 160px;
+    grid-template-columns: 44px 1fr 80px 160px auto;
     gap: 10px; align-items: center;
     padding: 8px 10px; margin-bottom: 6px;
     background: var(--surface-2); border: 1px solid var(--border-subtle);
     border-radius: 8px;
     transition: opacity .2s, transform .2s;
+}
+.cp-row .cp-edit-btn { white-space: nowrap; }
+
+/* Edit modal */
+.cat-edit-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+}
+.cat-edit-overlay.open { display: flex; }
+.cat-edit-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+    width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+    position: relative;
+}
+.cat-edit-modal h2 {
+    font-family: var(--font-display); font-size: 16px;
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 18px;
+}
+.cat-edit-modal .em-close {
+    position: absolute; top: 14px; right: 14px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 22px; line-height: 1;
+}
+.cat-edit-modal .em-close:hover { color: var(--text); }
+.cat-edit-modal .em-preview {
+    width: 100%; max-width: 200px; aspect-ratio: 1;
+    background: #ffffff !important; padding: 6px; border-radius: 10px;
+    object-fit: contain; margin: 0 auto 14px; display: block;
+}
+.cat-edit-modal .em-field {
+    margin-bottom: 14px;
+}
+.cat-edit-modal .em-field label {
+    display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+.cat-edit-modal .em-field .input,
+.cat-edit-modal .em-field .select {
+    width: 100%; padding: 10px 12px; font-size: 13px;
+}
+.cat-edit-modal .em-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    margin-top: 20px;
 }
 .cp-row.moving { opacity: 0; transform: translateX(20px); }
 .cp-row img {
@@ -180,6 +226,49 @@
         </div>
     </div>
 
+    <!-- Edit modal -->
+    <div class="cat-edit-overlay" id="catEditOverlay" onclick="if(event.target===this)closeEditModal()">
+        <div class="cat-edit-modal">
+            <button class="em-close" onclick="closeEditModal()" type="button">&times;</button>
+            <h2>Edit product</h2>
+            <img class="em-preview" id="emPreview" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+            <input type="hidden" id="emId">
+            <div class="em-field">
+                <label>Product name</label>
+                <input type="text" id="emName" class="input">
+            </div>
+            <div class="em-field">
+                <label>Price (USD)</label>
+                <input type="text" id="emPrice" class="input">
+            </div>
+            <div class="em-field">
+                <label>Category</label>
+                <select id="emCategory" class="select">
+                    <option value="">— uncategorized —</option>
+                    {% for c in categories %}
+                    <option value="{{ c.slug }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="em-field">
+                <label>Image URL</label>
+                <input type="text" id="emImage" class="input">
+            </div>
+            <div class="em-field">
+                <label>Purchase URL</label>
+                <input type="text" id="emUrl" class="input">
+            </div>
+            <div class="em-field">
+                <label>Seller</label>
+                <input type="text" id="emSeller" class="input">
+            </div>
+            <div class="em-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditModal()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add new -->
     <div class="cat-card">
         <h2>Add a new category</h2>
@@ -249,13 +338,19 @@ function renderCategoryProducts(drawer, products, currentSlug) {
         }).join('');
     var html = '<input type="text" class="cat-products-search" placeholder="Search ' + products.length + ' items…" oninput="filterCatProducts(this)">';
     html += products.map(function(p){
-        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '">'
+        // Stash full record on the row so the edit modal doesn't need a refetch.
+        var rowJson = escapeAttr(JSON.stringify({
+            id: p.id, name: p.name||'', price: p.price||'', image: p.image||'',
+            url: p.url||'', seller: p.seller||'', category: p.category||'', tags: p.tags||''
+        }));
+        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
              + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
              + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
              + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
              + '<select class="select cp-select" onchange="moveProductCategory(this, \'' + p.id + '\')">'
              + catOptions
              + '</select>'
+             + '<button type="button" class="btn btn-secondary btn-xs cp-edit-btn" onclick="openEditModal(this)">Edit</button>'
              + '</div>';
     }).join('');
     drawer.innerHTML = html;
@@ -320,6 +415,90 @@ async function moveProductCategory(sel, pid) {
 
 function escapeHtml(s) { return String(s||'').replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
+
+// === Edit modal — opens from each item in a category drawer ===
+var _editingRow = null;
+function openEditModal(btn) {
+    var row = btn.closest('.cp-row');
+    if (!row) return;
+    var p;
+    try { p = JSON.parse(row.dataset.product || '{}'); } catch(e) { p = {}; }
+    _editingRow = row;
+    document.getElementById('emId').value = p.id || '';
+    document.getElementById('emName').value = p.name || '';
+    document.getElementById('emPrice').value = p.price || '';
+    document.getElementById('emCategory').value = p.category || '';
+    document.getElementById('emImage').value = p.image || '';
+    document.getElementById('emUrl').value = p.url || '';
+    document.getElementById('emSeller').value = p.seller || '';
+    var prev = document.getElementById('emPreview');
+    if (p.image) { prev.src = p.image; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+    document.getElementById('catEditOverlay').classList.add('open');
+}
+function closeEditModal() {
+    document.getElementById('catEditOverlay').classList.remove('open');
+    _editingRow = null;
+}
+async function saveEditModal() {
+    var pid = document.getElementById('emId').value;
+    if (!pid) return;
+    var data = {
+        name:    document.getElementById('emName').value.trim(),
+        price:   document.getElementById('emPrice').value.trim(),
+        category:document.getElementById('emCategory').value,
+        image:   document.getElementById('emImage').value.trim(),
+        url:     document.getElementById('emUrl').value.trim(),
+        seller:  document.getElementById('emSeller').value.trim(),
+    };
+    try {
+        var res = await fetch('/admin/products/update/' + encodeURIComponent(pid), {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(data)
+        });
+        var json = await res.json();
+        if (!json.ok) return showToast(json.error || 'Failed', 'error');
+        showToast('Saved', 'success');
+        // Update the row in place
+        if (_editingRow) {
+            _editingRow.querySelector('.cp-name').textContent = data.name;
+            _editingRow.querySelector('.cp-name').title = data.name;
+            _editingRow.querySelector('.cp-price').textContent = '$' + data.price;
+            var img = _editingRow.querySelector('img');
+            if (img && data.image) { img.src = data.image; img.style.display = ''; }
+            // Refresh stashed payload
+            _editingRow.dataset.product = JSON.stringify(Object.assign({id: pid}, data));
+            _editingRow.dataset.name = data.name.toLowerCase();
+            // If the user changed the category, animate the row out and update counts
+            var currentCat = _editingRow.closest('.cat-block').dataset.slug;
+            if (data.category !== currentCat) {
+                _editingRow.classList.add('moving');
+                var oldCount = _editingRow.closest('.cat-block').querySelector('.cat-count');
+                setTimeout(function(){
+                    _editingRow.remove();
+                    if (oldCount) {
+                        var m = oldCount.textContent.match(/(\d+)/);
+                        var n = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
+                        oldCount.textContent = n + ' products';
+                    }
+                    if (data.category) {
+                        var dest = document.querySelector('.cat-block[data-slug="' + data.category + '"] .cat-count');
+                        if (dest) {
+                            var dm = dest.textContent.match(/(\d+)/);
+                            var dn = dm ? parseInt(dm[1]) + 1 : 1;
+                            dest.textContent = dn + ' products';
+                        }
+                    }
+                }, 200);
+            }
+        }
+        closeEditModal();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+// Close modal on Escape
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && document.getElementById('catEditOverlay').classList.contains('open')) closeEditModal();
+});
 
 async function saveCategoryRow(btn) {
     var row = btn.closest('.cat-row');
