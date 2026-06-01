@@ -562,19 +562,22 @@ async function addCategory() {
 (function setupDragReorder(){
     var list = document.getElementById('catManagerList');
     if (!list) return;
-    var dragRow = null;
+    // Each category is a .cat-block (row + its product drawer). Reorder the BLOCKS,
+    // which are the direct children of the list — moving the inner .cat-row fails
+    // because it isn't a direct child of the list.
+    var dragBlock = null;
     list.addEventListener('dragstart', function(e){
         var row = e.target.closest('.cat-row');
-        if (!row) return;
-        dragRow = row;
+        if (!row) return;                 // a product-row drag — handled by setupProductDrag
+        dragBlock = row.closest('.cat-block');
         row.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
     });
     list.addEventListener('dragend', function(e){
-        if (!dragRow) return;   // product-row drags are handled by setupProductDrag, don't re-save category order
-        dragRow.classList.remove('dragging');
-        dragRow = null;
-        // Re-stamp sort_order based on visible order, then save all
+        if (!dragBlock) return;           // product-row drags are handled by setupProductDrag, don't re-save order
+        var dr = dragBlock.querySelector('.cat-row'); if (dr) dr.classList.remove('dragging');
+        dragBlock = null;
+        // Re-stamp sort_order based on the new visible order, then save all
         var rows = Array.from(list.querySelectorAll('.cat-row'));
         rows.forEach(function(r, i){
             var ord = r.querySelector('.cat-order');
@@ -583,13 +586,14 @@ async function addCategory() {
         _autoSaveAllRows();
     });
     list.addEventListener('dragover', function(e){
+        if (!dragBlock) return;           // only when reordering a category
         e.preventDefault();
-        if (!dragRow) return;
-        var row = e.target.closest('.cat-row');
-        if (!row || row === dragRow) return;
-        var rect = row.getBoundingClientRect();
+        var overRow = e.target.closest('.cat-row');
+        var block = overRow ? overRow.closest('.cat-block') : e.target.closest('.cat-block');
+        if (!block || block === dragBlock || block.parentNode !== list) return;
+        var rect = block.getBoundingClientRect();
         var after = (e.clientY - rect.top) > rect.height / 2;
-        list.insertBefore(dragRow, after ? row.nextSibling : row);
+        list.insertBefore(dragBlock, after ? block.nextSibling : block);
     });
 })();
 
