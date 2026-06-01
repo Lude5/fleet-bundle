@@ -1460,7 +1460,7 @@ async function loadCategoryManager() {
     if (!box) return;
     box.innerHTML = '<div class="loading-block">' + t('loading') + '…</div>';
     try {
-        var res = await fetch('/admin/categories');
+        var res = await fetch('/admin/categories/list');
         var json = await res.json();
         var cats = (json.categories || []).slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
         if (!cats.length) {

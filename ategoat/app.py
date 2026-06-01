@@ -61,9 +61,9 @@ SITE_CONFIG = {
     'brand_color': os.environ.get('BRAND_COLOR', '#0d9488'),
     'brand_color_shadow': os.environ.get('BRAND_COLOR_SHADOW', '#0f766e'),
     'meta_pixel_id': os.environ.get('META_PIXEL_ID', ''),
-    'coupon_amount': os.environ.get('COUPON_AMOUNT', '500'),
-    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 9,400+ finds. Updated daily.'),
-    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '9,400+'),
+    'coupon_amount': os.environ.get('COUPON_AMOUNT', '400'),
+    'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 5,000+ finds. Updated daily.'),
+    'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '5,800+'),
     'discord_url': os.environ.get('DISCORD_URL', ''),
 }
 
@@ -81,8 +81,7 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock,
-            get_all_settings, set_settings, count_products
+            get_top_clicked_products, set_in_stock
         )
     except ImportError:
         from database import (
@@ -92,8 +91,7 @@ try:
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
-            get_top_clicked_products, set_in_stock,
-            get_all_settings, set_settings, count_products
+            get_top_clicked_products, set_in_stock
         )
     init_db()
     check_auto_backup()
@@ -114,22 +112,13 @@ try:
             except Exception:
                 seeded_hash = ''
         if json_hash != seeded_hash:
-            try:
-                from .database import get_db as _get_db
-            except ImportError:
-                from database import get_db as _get_db
-            # Capture operator-edited products FIRST so a reseed never wipes the
-            # owner's work (their edits + any edited listing removed from json).
-            _preserved = []
-            try:
-                _c = _get_db()
-                _preserved = [dict(r) for r in _c.execute('SELECT * FROM products WHERE edited = 1').fetchall()]
-                _c.close()
-            except Exception as _e:
-                print(f"Preserve-read warning: {_e}")
             # Wipe + re-seed. INSERT OR REPLACE on its own would leave stale
             # rows that aren't in the new json — wipe makes this idempotent.
             try:
+                try:
+                    from .database import get_db as _get_db
+                except ImportError:
+                    from database import get_db as _get_db
                 _c = _get_db()
                 _c.execute('DELETE FROM products')
                 _c.commit()
@@ -139,19 +128,6 @@ try:
             with open(products_file, 'r', encoding='utf-8') as _f:
                 _products = json.load(_f)
             add_products_bulk(_products)
-            # Re-apply preserved edits so the operator's version wins over json.
-            if _preserved:
-                try:
-                    _c = _get_db()
-                    _cols = set(r[1] for r in _c.execute('PRAGMA table_info(products)').fetchall())
-                    for _row in _preserved:
-                        _k = [k for k in _row.keys() if k in _cols]
-                        _c.execute('INSERT OR REPLACE INTO products (' + ','.join(_k) + ') VALUES (' + ','.join(['?'] * len(_k)) + ')', [_row[k] for k in _k])
-                    _c.commit()
-                    _c.close()
-                    print(f"Preserved {len(_preserved)} operator-edited products across reseed")
-                except Exception as _e:
-                    print(f"Preserve-write warning: {_e}")
             try:
                 with open(marker_path, 'w', encoding='utf-8') as _mf:
                     _mf.write(json_hash)
@@ -166,16 +142,15 @@ try:
             {'slug': 'trending', 'name': 'Trending', 'sort_order': 0},
             {'slug': 'shoes', 'name': 'Shoes', 'sort_order': 1},
             {'slug': 'shirts', 'name': 'Shirts', 'sort_order': 2},
-            {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 3},
-            {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 4},
-            {'slug': 'tracksuits', 'name': 'Tracksuits', 'sort_order': 5},
-            {'slug': 'pants', 'name': 'Pants', 'sort_order': 6},
-            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 7},
-            {'slug': 'headwear', 'name': 'Headwear', 'sort_order': 8},
-            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 9},
-            {'slug': 'bags', 'name': 'Bags', 'sort_order': 10},
-            {'slug': 'tech', 'name': 'Tech', 'sort_order': 11},
-            {'slug': 'womens', 'name': 'Womens', 'sort_order': 12},
+            {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 3},
+            {'slug': 'pants', 'name': 'Pants', 'sort_order': 4},
+            {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 5},
+            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 6},
+            {'slug': 'headwear', 'name': 'Headwear', 'sort_order': 7},
+            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 8},
+            {'slug': 'bags', 'name': 'Bags', 'sort_order': 9},
+            {'slug': 'tech', 'name': 'Tech', 'sort_order': 10},
+            {'slug': 'womens', 'name': 'Womens', 'sort_order': 11},
         ]
         for c in CATS:
             add_category(c['slug'], c['name'], '', '', c['sort_order'])
@@ -185,7 +160,7 @@ try:
         # seeded before they existed. add_category is INSERT OR REPLACE so
         # this is idempotent and won't clobber renames the operator made.
         existing_slugs = {c['slug'] for c in get_categories()}
-        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7), ('tracksuits', 'Tracksuits', 5)]:
+        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7)]:
             if slug not in existing_slugs:
                 add_category(slug, name, '', '', order)
                 print(f"Backfilled category: {slug}")
@@ -310,7 +285,7 @@ def _b_usfans(url, _id, _plat, code):
 # URLs with NO referral code. To enable affiliate income for those, drop the
 # operator's own codes in via env vars or edit the URLs directly.
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': SITE_CONFIG['agent_signup_url'],           'coupon': 'Up to $500 shipping credit'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': 'https://www.kakobuy.com/register/?affcode=bswes',           'coupon': 'Up to $500 shipping credit'},
     {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=KRLHFHSGL',          'coupon': 'Up to $300 in coupons'},
     {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://hipobuy.com/register?inviteCode=25RXG9B0E',         'coupon': 'Up to $100 in coupons'},
     {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register',               'coupon': 'Up to $300 in coupons'},
@@ -384,31 +359,8 @@ def is_admin_api():
 
 @app.context_processor
 def inject_config():
-    """Make SITE_CONFIG + editable site settings available in all templates."""
-    try:
-        _settings = get_all_settings()
-    except Exception:
-        _settings = {}
-    cfg = SITE_CONFIG
-    from datetime import datetime as _dtnow
-    # Live numbers so the homepage stats / labels / copyright never go stale.
-    extra = {'now_year': _dtnow.now().year, 'product_count': 100, 'category_count': 0}
-    try:
-        n = count_products()
-        if n:
-            extra['product_count'] = (n // 100) * 100 if n >= 100 else n
-            if not os.environ.get('PRODUCT_COUNT_LABEL'):
-                label = '{:,}+'.format(extra['product_count'])
-                cfg = dict(SITE_CONFIG)
-                cfg['product_count_label'] = label
-                cfg['tagline'] = 'A curated catalogue of {} finds. Updated daily.'.format(label)
-    except Exception:
-        pass
-    try:
-        extra['category_count'] = len(get_categories())
-    except Exception:
-        pass
-    return dict({'site': cfg, 'settings': _settings}, **extra)
+    """Make SITE_CONFIG available in all templates as 'site'."""
+    return {'site': SITE_CONFIG}
 
 
 # --- Public Routes ---
@@ -437,23 +389,9 @@ def home():
     sample_pool = products if len(products) <= 500 else random.sample(products, 500)
     shuffled = list(sample_pool)
     random.shuffle(shuffled)
-    # "Best Selling" = an operator-curated, ordered list (home_featured_ids in
-    # site_settings). Falls back to the first 8 by DB order when unset.
-    featured = products[:8]
-    try:
-        ids_str = get_all_settings().get('home_featured_ids', '')
-        if ids_str:
-            import json as _fj
-            ids = _fj.loads(ids_str)
-            idx = {p['id']: p for p in products}
-            featured = [idx[i] for i in ids if i in idx]
-            if not featured:
-                featured = products[:8]
-    except Exception:
-        featured = products[:8]
     resp = make_response(render_template('home.html',
         products=products,
-        featured=featured,
+        featured=products[:8],
         cat_previews=cat_previews,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
@@ -854,17 +792,6 @@ def api_variants(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'variants': [], 'images': []})
-    # Operator-edited variants (from the studio) always win over the scrape.
-    stored = p.get('variants')
-    if stored:
-        try:
-            import json as _sj
-            arr = _sj.loads(stored) if isinstance(stored, str) else stored
-            if isinstance(arr, list) and arr:
-                vs = [{'title': (v.get('name') or v.get('title') or ''), 'image': (v.get('image') or '')} for v in arr if (v.get('image') or v.get('name') or v.get('title'))]
-                return jsonify({'variants': vs, 'images': [v['image'] for v in vs if v['image']]})
-        except Exception:
-            pass
     cached = cache_get(f'variants:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify(cached)
@@ -999,16 +926,6 @@ def api_qc(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'photos': []})
-    # Operator-saved QC photos (edited via the master-admin studio) always win.
-    stored = p.get('qc_photos')
-    if stored:
-        try:
-            import json as _json
-            arr = _json.loads(stored) if isinstance(stored, str) else stored
-            if isinstance(arr, list) and arr:
-                return jsonify({'photos': arr})
-        except Exception:
-            pass
     cached = cache_get(f'qc:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify({'photos': cached})
@@ -1082,49 +999,6 @@ def _looks_like_seller_url(s: str) -> bool:
         if d in s:
             return True
     return False
-
-
-def _related_products(p, limit=8):
-    """'You might also like' — same brand, then same category, best-seller nudge."""
-    if not p:
-        return []
-    try:
-        from tag_utils import BRANDS
-    except Exception:
-        BRANDS = {}
-    hay = (p.get('name', '') + ' ' + p.get('tags', '')).lower()
-    hay_tokens = set(hay.split())
-    brand_tokens = set()
-    for key, aliases in BRANDS.items():
-        toks = aliases if isinstance(aliases, list) else [aliases]
-        if key in hay or any(t in hay_tokens for t in toks):
-            brand_tokens.update(toks)
-    cat = p.get('category', '')
-    spid = p.get('id')
-    def has_brand(x):
-        xt = (x.get('name', '') + ' ' + x.get('tags', '')).lower()
-        return any(t in xt for t in brand_tokens)
-    def score(x):
-        sc = 0.0
-        if brand_tokens and has_brand(x): sc += 10
-        if x.get('category') == cat: sc += 3
-        sc += min(int(x.get('sales') or 0), 2000) / 2000.0
-        return sc
-    pool = [x for x in get_products()
-            if x.get('id') != spid
-            and (x.get('category') == cat or (brand_tokens and has_brand(x)))]
-    return sorted(pool, key=score, reverse=True)[:limit]
-
-
-@app.route('/product/<pid>')
-def product_page(pid):
-    """Standalone on-site product page (same design as the detail modal) + related."""
-    p = get_product(pid)
-    if not p:
-        return redirect(url_for('shop'))
-    return render_template('product.html', product=p,
-                           related=_related_products(p, 8),
-                           categories=get_categories())
 
 
 @app.route('/api/product/<pid>')
@@ -1657,7 +1531,20 @@ def admin_add_category():
 
 
 @app.route('/admin/categories')
+def admin_categories_page():
+    """Dedicated category-manager page (its own sidebar entry)."""
+    if not is_admin():
+        return redirect(url_for('admin_login'))
+    cats = get_categories()
+    for c in cats:
+        c['product_count'] = count_products_in_category(c['slug'])
+    cats.sort(key=lambda x: (x.get('sort_order', 0), x.get('name', '')))
+    return render_template('admin_categories.html', categories=cats)
+
+
+@app.route('/admin/categories/list')
 def admin_list_categories():
+    """JSON endpoint used by the in-page category manager (Products → Categories tab)."""
     if not is_admin():
         return jsonify({'error': 'Unauthorized'}), 401
     cats = get_categories()
@@ -1911,29 +1798,8 @@ def api_admin_add_product():
             data['tags'] = generate_tags(data['name'], data.get('category', ''))
         except ImportError:
             pass
-    _coerce_price(data)  # derive price_numeric so sort/bundles aren't broken
     add_product(data)
     return jsonify({'ok': True, 'id': data['id']})
-
-
-@app.route('/admin/api/products/<pid>', methods=['GET'])
-def api_admin_get_product(pid):
-    """Raw product row (all columns) — used by the studio for duplicate / undo."""
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    p = get_product(pid)
-    if not p:
-        return jsonify({'ok': False, 'error': 'not found'}), 404
-    return jsonify({'ok': True, 'product': dict(p)})
-
-
-def _coerce_price(data):
-    if 'price' in data:
-        import re as _re
-        try:
-            data['price_numeric'] = float(_re.sub(r'[^0-9.]', '', str(data['price'])) or 0)
-        except Exception:
-            data['price_numeric'] = 0
 
 
 @app.route('/admin/api/products/<pid>', methods=['PUT', 'PATCH'])
@@ -1941,30 +1807,11 @@ def api_admin_update_product(pid):
     if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
-    _coerce_price(data)
+    if 'price' in data:
+        try: data['price_numeric'] = float(data['price'] or 0)
+        except ValueError: data['price_numeric'] = 0
     update_product(pid, data)
     return jsonify({'ok': True})
-
-
-@app.route('/admin/api/products/bulk', methods=['POST'])
-def api_admin_bulk_update():
-    """Apply many product edits in ONE request (used by the studio 'Save changes')."""
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    data = request.get_json(silent=True) or {}
-    updates = data.get('updates') or []
-    n = 0
-    for u in updates:
-        pid = u.get('id')
-        if not pid:
-            continue
-        fields = {k: v for k, v in u.items() if k != 'id'}
-        if not fields:
-            continue
-        _coerce_price(fields)
-        update_product(pid, fields)
-        n += 1
-    return jsonify({'ok': True, 'updated': n})
 
 
 @app.route('/admin/api/products/<pid>', methods=['DELETE'])
@@ -1982,104 +1829,6 @@ def api_admin_config():
     # Don't leak secrets — strip token-ish keys
     safe = {k: v for k, v in SITE_CONFIG.items() if 'token' not in k.lower() and 'secret' not in k.lower()}
     return jsonify(safe)
-
-
-def _settings_defaults():
-    """The site's CURRENT effective content — what each editable field shows when
-    it hasn't been customized. Mirrors the template fallbacks so the master-admin
-    editor can prefill every box with the real live text (no guessing)."""
-    name = SITE_CONFIG.get('name', '')
-    return {
-        'brand_part1': SITE_CONFIG.get('name_part1', ''),
-        'brand_part2': SITE_CONFIG.get('name_part2', ''),
-        'accent_color': SITE_CONFIG.get('brand_color', ''),
-        'announcement_text': '',
-        'hero_label': 'The Open Catalogue',
-        'hero_title': 'Every<br><span class="accent">Find.</span><br>Anywhere.',
-        'hero_sub': (str(SITE_CONFIG.get('product_count_label', '')) + ' curated products. Open every listing with the agent you trust — KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.').strip(),
-        'footer_text': 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.',
-        'page_title': name + ' — Curated Finds, Open on Any Agent',
-        'meta_description': name + ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.',
-    }
-
-
-@app.route('/admin/api/settings')
-def api_admin_get_settings():
-    """Return all editable site settings (hero, nav, footer, branding, theme)."""
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    return jsonify({'ok': True, 'settings': get_all_settings(), 'defaults': _settings_defaults()})
-
-
-@app.route('/admin/api/settings', methods=['PUT', 'PATCH', 'POST'])
-def api_admin_update_settings():
-    """Upsert one or more site settings."""
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    data = request.get_json(silent=True) or {}
-    if 'settings' in data and isinstance(data['settings'], dict):
-        data = data['settings']
-    try:
-        n = set_settings(data)
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)[:200]}), 500
-    return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
-
-
-# --- Category management API (token-auth, for the master-admin visual editor) ---
-@app.route('/admin/api/categories')
-def api_admin_categories():
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    return jsonify({'ok': True, 'categories': [dict(c) for c in get_categories()]})
-
-
-@app.route('/admin/api/categories', methods=['POST'])
-def api_admin_category_add():
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    import re as _re
-    d = request.get_json(silent=True) or {}
-    name = (d.get('name') or '').strip()
-    if not name:
-        return jsonify({'ok': False, 'error': 'name required'}), 400
-    slug = (d.get('slug') or name).strip().lower().replace(' ', '-')
-    slug = _re.sub(r'[^a-z0-9\-]', '', slug) or 'category'
-    add_category(slug, name, d.get('icon', ''), d.get('description', ''), int(d.get('sort_order', 999)))
-    return jsonify({'ok': True, 'slug': slug})
-
-
-@app.route('/admin/api/categories/reorder', methods=['POST'])
-def api_admin_category_reorder():
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    d = request.get_json(silent=True) or {}
-    order = d.get('order') or []
-    for i, slug in enumerate(order):
-        try:
-            update_category(slug, {'sort_order': i})
-        except Exception:
-            pass
-    return jsonify({'ok': True, 'n': len(order)})
-
-
-@app.route('/admin/api/categories/<slug>', methods=['PATCH', 'PUT'])
-def api_admin_category_update(slug):
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    d = request.get_json(silent=True) or {}
-    updates = {k: d[k] for k in ('name', 'icon', 'description', 'sort_order', 'slug') if k in d}
-    new_slug = update_category(slug, updates)
-    return jsonify({'ok': True, 'slug': new_slug})
-
-
-@app.route('/admin/api/categories/<slug>', methods=['DELETE'])
-def api_admin_category_delete(slug):
-    if not is_admin_api():
-        return jsonify({'error': 'Unauthorized'}), 401
-    d = request.get_json(silent=True) or {}
-    delete_category(slug, d.get('reassign_to', ''))
-    return jsonify({'ok': True})
 
 
 @app.route('/admin/backup/download')
@@ -2110,10 +1859,8 @@ def serve_upload(fname):
 
 @app.route('/admin/products/upload-image/<pid>', methods=['POST'])
 def admin_upload_image(pid):
-    """Accept a multipart image upload, save to disk, optionally set as the
-    product's primary image (?primary=0 to just store + return the URL, e.g.
-    for QC / variant photos). Token-auth so the master-admin studio can call it."""
-    if not is_admin_api():
+    """Accept a multipart image upload, save to disk, set as product's primary image."""
+    if not is_admin():
         return jsonify({'error': 'Unauthorized'}), 401
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -2134,8 +1881,7 @@ def admin_upload_image(pid):
     full = _os.path.join(UPLOADS_DIR, fname)
     f.save(full)
     new_url = f'/uploads/{fname}'
-    if request.args.get('primary', '1') != '0':
-        update_product(pid, {'image': new_url})
+    update_product(pid, {'image': new_url})
     return jsonify({'ok': True, 'image': new_url, 'pid': pid})
 
 

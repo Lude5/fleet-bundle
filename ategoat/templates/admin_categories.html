@@ -1,0 +1,262 @@
+{% extends "admin_base.html" %}
+{% block crumb %}<span>Catalog</span>{% endblock %}
+{% block heading %}<span>Categories</span>{% endblock %}
+
+{% block topbar_actions %}
+    <span class="pill">{{ categories|length }} total</span>
+    <a href="/" target="_blank" class="pill primary">View site &rarr;</a>
+{% endblock %}
+
+{% block admin_extra_css %}
+.cat-mgr-wrap { max-width: 980px; margin: 0 auto; padding: 24px 0; }
+.cat-mgr-intro {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    margin-bottom: 28px;
+}
+.cat-mgr-intro b { color: var(--text); }
+
+.cat-card {
+    background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: 14px; padding: 24px; margin-bottom: 24px;
+}
+.cat-card h2 {
+    font-family: var(--font-display); font-size: 16px;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin: 0 0 16px;
+}
+
+/* Category list row */
+.cat-row {
+    display: grid;
+    grid-template-columns: 40px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    gap: 10px; align-items: center;
+    padding: 12px 14px; margin-bottom: 8px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    transition: border-color .15s, transform .15s;
+}
+.cat-row:hover { border-color: var(--border); }
+.cat-row .drag-handle {
+    cursor: grab; color: var(--text-muted); user-select: none;
+    text-align: center; font-size: 18px; line-height: 1;
+}
+.cat-row .drag-handle:active { cursor: grabbing; }
+.cat-row.dragging { opacity: 0.5; }
+.cat-row .input { padding: 9px 11px; font-size: 13px; }
+.cat-row .cat-count {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    text-align: right; white-space: nowrap;
+}
+.cat-row .btn { white-space: nowrap; }
+
+@media (max-width: 720px) {
+    .cat-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "handle handle"
+            "name slug"
+            "order count"
+            "save delete";
+    }
+    .cat-row .drag-handle { grid-area: handle; text-align: left; }
+    .cat-row .cat-name { grid-area: name; }
+    .cat-row .cat-slug { grid-area: slug; }
+    .cat-row .cat-order { grid-area: order; }
+    .cat-row .cat-count { grid-area: count; text-align: left; }
+    .cat-row .save-btn { grid-area: save; }
+    .cat-row .delete-btn { grid-area: delete; }
+}
+
+.cat-headers {
+    display: grid;
+    grid-template-columns: 40px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    gap: 10px; padding: 0 14px 8px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.8px;
+}
+@media (max-width: 720px) { .cat-headers { display: none; } }
+
+.add-form {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px;
+    margin-bottom: 14px;
+}
+@media (max-width: 720px) { .add-form { grid-template-columns: 1fr 1fr; } }
+.add-form .field label {
+    display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="cat-mgr-wrap">
+    <p class="cat-mgr-intro">
+        These categories drive the <b>nav bar on the storefront</b> and the dropdown on every product. Rename a slug and every product in that category is rewritten automatically. Delete a category and its products fall back to uncategorized.
+    </p>
+
+    <!-- Existing categories -->
+    <div class="cat-card">
+        <h2>Existing categories</h2>
+        <div class="cat-headers">
+            <span></span>
+            <span>Display name</span>
+            <span>Slug (URL)</span>
+            <span>Sort order</span>
+            <span>Products</span>
+            <span></span>
+            <span></span>
+        </div>
+        <div id="catManagerList">
+            {% for c in categories %}
+            <div class="cat-row" data-slug="{{ c.slug }}" draggable="true">
+                <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                <input class="input cat-name" value="{{ c.name }}" placeholder="Name">
+                <input class="input cat-slug" value="{{ c.slug }}" placeholder="slug">
+                <input class="input cat-order" type="number" value="{{ c.sort_order or 0 }}" title="Lower = leftmost on storefront">
+                <span class="cat-count">{{ c.product_count }} products</span>
+                <button type="button" class="btn btn-secondary btn-xs save-btn" onclick="saveCategoryRow(this)">Save</button>
+                <button type="button" class="btn btn-ghost btn-xs delete-btn" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Add new -->
+    <div class="cat-card">
+        <h2>Add a new category</h2>
+        <div class="add-form">
+            <div class="field">
+                <label>Slug *</label>
+                <input type="text" id="cSlug" class="input" placeholder="shoes">
+            </div>
+            <div class="field">
+                <label>Display name *</label>
+                <input type="text" id="cName" class="input" placeholder="Shoes">
+            </div>
+            <div class="field">
+                <label>Icon (emoji)</label>
+                <input type="text" id="cIcon" class="input" placeholder="👟">
+            </div>
+            <div class="field">
+                <label>Sort order</label>
+                <input type="number" id="cOrder" class="input" value="0">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="addCategory()">+ Add category</button>
+    </div>
+</div>
+
+<script>
+async function saveCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var oldSlug = row.dataset.slug;
+    var data = {
+        name: row.querySelector('.cat-name').value.trim(),
+        slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
+        sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
+    };
+    if (!data.name || !data.slug) return showToast('Slug + name required', 'error');
+    var res = await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Saved', 'success');
+    setTimeout(function(){ location.reload(); }, 500);
+}
+
+async function deleteCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var slug = row.dataset.slug;
+    var count = parseInt((row.querySelector('.cat-count').textContent || '0')) || 0;
+    var msg = count > 0
+        ? 'Delete "' + slug + '"? ' + count + ' product(s) will become uncategorized.'
+        : 'Delete "' + slug + '"?';
+    if (!confirm(msg)) return;
+    var res = await fetch('/admin/categories/delete/' + encodeURIComponent(slug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ reassign_to: '' })
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Deleted', 'success');
+    row.remove();
+}
+
+async function addCategory() {
+    var data = {
+        slug: document.getElementById('cSlug').value.trim().toLowerCase(),
+        name: document.getElementById('cName').value.trim(),
+        icon: document.getElementById('cIcon').value.trim(),
+        sort_order: parseInt(document.getElementById('cOrder').value) || 0,
+    };
+    if (!data.slug || !data.name) return showToast('Slug + name required', 'error');
+    var res = await fetch('/admin/categories/add', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Added', 'success');
+    setTimeout(function(){ location.reload(); }, 500);
+}
+
+// Drag-to-reorder: drop a row to reorder, then auto-save the new sort_order
+// values to the backend. Lower number = leftmost on the storefront nav.
+(function setupDragReorder(){
+    var list = document.getElementById('catManagerList');
+    if (!list) return;
+    var dragRow = null;
+    list.addEventListener('dragstart', function(e){
+        var row = e.target.closest('.cat-row');
+        if (!row) return;
+        dragRow = row;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    list.addEventListener('dragend', function(e){
+        if (dragRow) dragRow.classList.remove('dragging');
+        dragRow = null;
+        // Re-stamp sort_order based on visible order, then save all
+        var rows = Array.from(list.querySelectorAll('.cat-row'));
+        rows.forEach(function(r, i){
+            var ord = r.querySelector('.cat-order');
+            if (ord) ord.value = i;
+        });
+        _autoSaveAllRows();
+    });
+    list.addEventListener('dragover', function(e){
+        e.preventDefault();
+        if (!dragRow) return;
+        var row = e.target.closest('.cat-row');
+        if (!row || row === dragRow) return;
+        var rect = row.getBoundingClientRect();
+        var after = (e.clientY - rect.top) > rect.height / 2;
+        list.insertBefore(dragRow, after ? row.nextSibling : row);
+    });
+})();
+
+var _saveTimer = null;
+function _autoSaveAllRows() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(async function(){
+        var rows = Array.from(document.querySelectorAll('.cat-row'));
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var oldSlug = row.dataset.slug;
+            var data = {
+                name: row.querySelector('.cat-name').value.trim(),
+                slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
+                sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
+            };
+            try {
+                await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(data)
+                });
+            } catch(e) {}
+        }
+        showToast('Order saved', 'success');
+    }, 400);
+}
+</script>
+{% endblock %}
