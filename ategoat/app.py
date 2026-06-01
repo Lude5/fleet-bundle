@@ -1912,6 +1912,134 @@ def api_admin_delete_product(pid):
     return jsonify({'ok': True})
 
 
+def _coerce_price(data):
+    if 'price' in data:
+        import re as _re
+        try:
+            data['price_numeric'] = float(_re.sub(r'[^0-9.]', '', str(data['price'])) or 0)
+        except Exception:
+            data['price_numeric'] = 0
+
+
+def _settings_defaults():
+    """The site's CURRENT effective content — what each editable field shows when
+    it hasn't been customized. Mirrors the template fallbacks so the master-admin
+    editor can prefill every box with the real live text (no guessing)."""
+    name = SITE_CONFIG.get('name', '')
+    return {
+        'brand_part1': SITE_CONFIG.get('name_part1', ''),
+        'brand_part2': SITE_CONFIG.get('name_part2', ''),
+        'accent_color': SITE_CONFIG.get('brand_color', ''),
+        'announcement_text': '',
+        'hero_label': 'The Open Catalogue',
+        'hero_title': 'Every<br><span class="accent">Find.</span><br>Anywhere.',
+        'hero_sub': (str(SITE_CONFIG.get('product_count_label', '')) + ' curated products. Open every listing with the agent you trust — KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.').strip(),
+        'footer_text': 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.',
+        'page_title': name + ' — Curated Finds, Open on Any Agent',
+        'meta_description': name + ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.',
+    }
+
+
+@app.route('/admin/api/products/bulk', methods=['POST'])
+def api_admin_bulk_update():
+    """Apply many product edits in ONE request (used by the studio 'Save changes')."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    updates = data.get('updates') or []
+    n = 0
+    for u in updates:
+        pid = u.get('id')
+        if not pid:
+            continue
+        fields = {k: v for k, v in u.items() if k != 'id'}
+        if not fields:
+            continue
+        _coerce_price(fields)
+        update_product(pid, fields)
+        n += 1
+    return jsonify({'ok': True, 'updated': n})
+
+
+@app.route('/admin/api/settings')
+def api_admin_get_settings():
+    """Return all editable site settings (hero, nav, footer, branding, theme)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'settings': get_all_settings(), 'defaults': _settings_defaults()})
+
+
+@app.route('/admin/api/settings', methods=['PUT', 'PATCH', 'POST'])
+def api_admin_update_settings():
+    """Upsert one or more site settings."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    if 'settings' in data and isinstance(data['settings'], dict):
+        data = data['settings']
+    try:
+        n = set_settings(data)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:200]}), 500
+    return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
+
+
+# --- Category management API (token-auth, for the master-admin visual editor) ---
+@app.route('/admin/api/categories')
+def api_admin_categories():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'categories': [dict(c) for c in get_categories()]})
+
+
+@app.route('/admin/api/categories', methods=['POST'])
+def api_admin_category_add():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import re as _re
+    d = request.get_json(silent=True) or {}
+    name = (d.get('name') or '').strip()
+    if not name:
+        return jsonify({'ok': False, 'error': 'name required'}), 400
+    slug = (d.get('slug') or name).strip().lower().replace(' ', '-')
+    slug = _re.sub(r'[^a-z0-9\-]', '', slug) or 'category'
+    add_category(slug, name, d.get('icon', ''), d.get('description', ''), int(d.get('sort_order', 999)))
+    return jsonify({'ok': True, 'slug': slug})
+
+
+@app.route('/admin/api/categories/reorder', methods=['POST'])
+def api_admin_category_reorder():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    order = d.get('order') or []
+    for i, slug in enumerate(order):
+        try:
+            update_category(slug, {'sort_order': i})
+        except Exception:
+            pass
+    return jsonify({'ok': True, 'n': len(order)})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['PATCH', 'PUT'])
+def api_admin_category_update(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    updates = {k: d[k] for k in ('name', 'icon', 'description', 'sort_order', 'slug') if k in d}
+    new_slug = update_category(slug, updates)
+    return jsonify({'ok': True, 'slug': new_slug})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['DELETE'])
+def api_admin_category_delete(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    delete_category(slug, d.get('reassign_to', ''))
+    return jsonify({'ok': True})
+
+
 @app.route('/admin/api/config')
 def api_admin_config():
     if not is_admin_api():
