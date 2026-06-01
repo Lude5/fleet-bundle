@@ -424,7 +424,6 @@ th.col-trend.active, th.col-stock.active {
         <button class="tab-btn active" data-tab="scrape" onclick="switchTab('scrape')" data-i18n="tab_scrape">Scrape link</button>
         <button class="tab-btn" data-tab="manual" onclick="switchTab('manual')" data-i18n="tab_manual">Add manually</button>
         <button class="tab-btn" data-tab="bulk" onclick="switchTab('bulk')" data-i18n="tab_bulk">Bulk JSON</button>
-        <button class="tab-btn" data-tab="cat" onclick="switchTab('cat')" data-i18n="tab_categories">Categories</button>
         <button class="tab-btn" data-tab="uncat" onclick="switchTab('uncat')">Uncategorized <span class="uncat-pill" id="uncatPill" style="display:none;">0</span></button>
     </div>
 
@@ -523,37 +522,6 @@ th.col-trend.active, th.col-stock.active {
         <textarea id="bulkJson" class="textarea" placeholder='[{"name":"Jordan 4","price":"45","url":"...","image":"...","category":"shoes"}]'></textarea>
         <div style="margin-top:14px;">
             <button class="btn btn-primary" onclick="bulkUpload()" data-i18n="upload">Upload</button>
-        </div>
-    </div>
-
-    <!-- TAB: Categories -->
-    <div class="tab-panel" id="tab-cat">
-        <p class="help-line" data-i18n="cat_manager_help">Rename or delete an existing category, or add a new one. Renaming a slug automatically rewrites every product currently in that category. Deleting a category leaves its products uncategorized.</p>
-
-        <h3 style="font-family:var(--font-display);font-size:14px;text-transform:uppercase;letter-spacing:1.5px;margin:18px 0 10px;" data-i18n="existing_categories">Existing categories</h3>
-        <div id="catManagerList" class="cat-manager-list"><div class="loading-block">Click this tab to load categories…</div></div>
-
-        <h3 style="font-family:var(--font-display);font-size:14px;text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 10px;" data-i18n="add_new_category">Add a new category</h3>
-        <div class="form-grid">
-            <div class="field">
-                <label data-i18n="cat_slug">Slug *</label>
-                <input type="text" id="cSlug" class="input" placeholder="shoes">
-            </div>
-            <div class="field">
-                <label data-i18n="cat_name">Display name *</label>
-                <input type="text" id="cName" class="input" placeholder="Shoes">
-            </div>
-            <div class="field">
-                <label data-i18n="cat_icon">Icon (emoji)</label>
-                <input type="text" id="cIcon" class="input" placeholder="">
-            </div>
-            <div class="field">
-                <label data-i18n="cat_order">Sort order</label>
-                <input type="number" id="cOrder" class="input" value="0">
-            </div>
-        </div>
-        <div style="margin-top:14px;">
-            <button class="btn btn-primary" onclick="addCategory()" data-i18n="add_category_btn">+ Add category</button>
         </div>
     </div>
 
@@ -771,30 +739,22 @@ th.col-trend.active, th.col-stock.active {
 function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === name); });
     document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'tab-' + name); });
-    if (name === 'cat') loadCategoryManager();
     if (name === 'uncat') loadUncategorized();
 }
-// URL hash → tab: /admin/products#categories opens the Categories tab
-// directly. Used by the sidebar Categories link.
+// URL hash → tab: /admin/products#uncategorized opens that tab directly.
 (function autoSwitchFromHash(){
     var h = (window.location.hash || '').replace('#','').toLowerCase();
     if (!h) return;
-    var map = { categories: 'cat', uncategorized: 'uncat', products: 'products' };
-    var target = map[h] || h;
+    var map = { uncategorized: 'uncat' };
+    var target = map[h];
+    if (!target) return;
     var btn = document.querySelector('.tab-btn[data-tab="' + target + '"]');
     if (btn) {
         switchTab(target);
-        // Bring the tab area into view
         var panel = document.getElementById('tab-' + target);
         if (panel) setTimeout(function(){ panel.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
     }
 })();
-window.addEventListener('hashchange', function(){
-    var h = (window.location.hash || '').replace('#','').toLowerCase();
-    var map = { categories: 'cat', uncategorized: 'uncat', products: 'products' };
-    var target = map[h];
-    if (target) switchTab(target);
-});
 
 // ===== Uncategorized tab =====
 var _ALL_CATEGORIES = {{ categories|tojson }};
@@ -1452,70 +1412,6 @@ async function quickSetCategory(sel, pid) {
         sel.classList.remove('saving');
         showToast('Error: ' + e.message, 'error');
     }
-}
-
-// === CATEGORY MANAGEMENT (list / rename / delete) ===
-async function loadCategoryManager() {
-    var box = document.getElementById('catManagerList');
-    if (!box) return;
-    box.innerHTML = '<div class="loading-block">' + t('loading') + '…</div>';
-    try {
-        var res = await fetch('/admin/categories/list');
-        var json = await res.json();
-        var cats = (json.categories || []).slice().sort(function(a,b){return (a.sort_order||0)-(b.sort_order||0);});
-        if (!cats.length) {
-            box.innerHTML = '<div class="empty-table">' + t('no_categories_yet') + '</div>';
-            return;
-        }
-        box.innerHTML = cats.map(function(c){
-            return '<div class="cat-row" data-slug="' + c.slug + '">'
-                + '<input class="input cat-name" value="' + escapeAttr(c.name) + '" placeholder="Name">'
-                + '<input class="input cat-slug" value="' + escapeAttr(c.slug) + '" placeholder="slug">'
-                + '<input class="input cat-order" type="number" value="' + (c.sort_order||0) + '" title="Sort order">'
-                + '<span class="cat-count">' + c.product_count + ' ' + t('products_word') + '</span>'
-                + '<button type="button" class="btn btn-secondary btn-xs" onclick="saveCategoryRow(this)">Save</button>'
-                + '<button type="button" class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>'
-                + '</div>';
-        }).join('');
-    } catch(e) {
-        box.innerHTML = '<div class="empty-table">Failed to load categories</div>';
-    }
-}
-function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
-
-async function saveCategoryRow(btn) {
-    var row = btn.closest('.cat-row');
-    var oldSlug = row.dataset.slug;
-    var data = {
-        name: row.querySelector('.cat-name').value.trim(),
-        slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
-        sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
-    };
-    if (!data.name || !data.slug) return showToast(t('slug_name_required'), 'error');
-    var res = await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
-    });
-    var json = await res.json();
-    if (!json.ok) return showToast(json.error || t('failed'), 'error');
-    showToast(t('saved'), 'success');
-    setTimeout(function(){ location.reload(); }, 600);
-}
-
-async function deleteCategoryRow(btn) {
-    var row = btn.closest('.cat-row');
-    var slug = row.dataset.slug;
-    var count = parseInt((row.querySelector('.cat-count').textContent || '0')) || 0;
-    var msg = count > 0
-        ? t('delete_category_with_products', { slug: slug, n: count })
-        : t('delete_category_confirm', { slug: slug });
-    if (!confirm(msg)) return;
-    var res = await fetch('/admin/categories/delete/' + encodeURIComponent(slug), {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ reassign_to: '' })
-    });
-    var json = await res.json();
-    if (!json.ok) return showToast(json.error || t('failed'), 'error');
-    showToast(t('category_deleted'), 'success');
-    setTimeout(function(){ location.reload(); }, 600);
 }
 
 // === BULK MOVE ===

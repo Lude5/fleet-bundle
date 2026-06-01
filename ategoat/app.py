@@ -1553,6 +1553,28 @@ def admin_list_categories():
     return jsonify({'categories': cats})
 
 
+@app.route('/admin/categories/<slug>/products')
+def admin_category_products(slug):
+    """Return the products in a single category. Used by the Categories
+    page to expand a row and let the user move items to a different bucket."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    if slug == '(uncategorized)':
+        all_products = get_products()
+        items = [p for p in all_products if not (p.get('category') or '').strip()]
+    else:
+        items = get_products(category=slug)
+    return jsonify({
+        'category': slug,
+        'count': len(items),
+        'products': [
+            {'id': p['id'], 'name': p.get('name', ''), 'image': p.get('image', ''),
+             'price': p.get('price', ''), 'category': p.get('category', '')}
+            for p in items
+        ],
+    })
+
+
 @app.route('/admin/categories/update/<slug>', methods=['POST'])
 def admin_update_category(slug):
     if not is_admin():

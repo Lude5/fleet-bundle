@@ -25,15 +25,68 @@
     margin: 0 0 16px;
 }
 
+/* Wrapper so each category row + its expanded product drawer stay together */
+.cat-block { margin-bottom: 8px; }
+
 /* Category list row */
 .cat-row {
     display: grid;
-    grid-template-columns: 40px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    grid-template-columns: 40px 30px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
     gap: 10px; align-items: center;
-    padding: 12px 14px; margin-bottom: 8px;
+    padding: 12px 14px;
     background: var(--surface-2); border: 1px solid var(--border-subtle);
     border-radius: 10px;
     transition: border-color .15s, transform .15s;
+}
+.cat-row .expand-toggle {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 14px; padding: 4px;
+    transition: transform .15s, color .15s;
+}
+.cat-row .expand-toggle:hover { color: var(--text); }
+.cat-row.expanded .expand-toggle { transform: rotate(90deg); color: var(--accent); }
+.cat-row.expanded { border-color: var(--accent); border-radius: 10px 10px 0 0; }
+
+/* Expanded product drawer */
+.cat-products {
+    background: var(--surface); border: 1px solid var(--accent);
+    border-top: none; border-radius: 0 0 10px 10px;
+    padding: 14px; max-height: 480px; overflow-y: auto;
+}
+.cat-products-search {
+    width: 100%; padding: 9px 12px; margin-bottom: 12px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 8px; color: var(--text); font-size: 13px;
+}
+.cat-products-empty {
+    text-align: center; padding: 30px 12px;
+    color: var(--text-muted); font-size: 12px;
+}
+.cp-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 80px 160px;
+    gap: 10px; align-items: center;
+    padding: 8px 10px; margin-bottom: 6px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    transition: opacity .2s, transform .2s;
+}
+.cp-row.moving { opacity: 0; transform: translateX(20px); }
+.cp-row img {
+    width: 44px; height: 44px; object-fit: contain;
+    background: #ffffff !important; padding: 2px; border-radius: 6px;
+}
+.cp-row .cp-name {
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cp-row .cp-price {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted); font-weight: 700;
+}
+.cp-row .cp-select { padding: 7px 10px; font-size: 12px; }
+.cat-products-loading {
+    text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px;
 }
 .cat-row:hover { border-color: var(--border); }
 .cat-row .drag-handle {
@@ -70,7 +123,7 @@
 
 .cat-headers {
     display: grid;
-    grid-template-columns: 40px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    grid-template-columns: 40px 30px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
     gap: 10px; padding: 0 14px 8px;
     font-family: var(--font-mono); font-size: 9px; font-weight: 800;
     color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.8px;
@@ -100,6 +153,7 @@
         <h2>Existing categories</h2>
         <div class="cat-headers">
             <span></span>
+            <span></span>
             <span>Display name</span>
             <span>Slug (URL)</span>
             <span>Sort order</span>
@@ -109,14 +163,18 @@
         </div>
         <div id="catManagerList">
             {% for c in categories %}
-            <div class="cat-row" data-slug="{{ c.slug }}" draggable="true">
-                <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
-                <input class="input cat-name" value="{{ c.name }}" placeholder="Name">
-                <input class="input cat-slug" value="{{ c.slug }}" placeholder="slug">
-                <input class="input cat-order" type="number" value="{{ c.sort_order or 0 }}" title="Lower = leftmost on storefront">
-                <span class="cat-count">{{ c.product_count }} products</span>
-                <button type="button" class="btn btn-secondary btn-xs save-btn" onclick="saveCategoryRow(this)">Save</button>
-                <button type="button" class="btn btn-ghost btn-xs delete-btn" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>
+            <div class="cat-block" data-slug="{{ c.slug }}">
+                <div class="cat-row" data-slug="{{ c.slug }}" draggable="true">
+                    <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                    <button type="button" class="expand-toggle" onclick="toggleCategoryProducts(this)" title="Show items in this category">▶</button>
+                    <input class="input cat-name" value="{{ c.name }}" placeholder="Name">
+                    <input class="input cat-slug" value="{{ c.slug }}" placeholder="slug">
+                    <input class="input cat-order" type="number" value="{{ c.sort_order or 0 }}" title="Lower = leftmost on storefront">
+                    <span class="cat-count">{{ c.product_count }} products</span>
+                    <button type="button" class="btn btn-secondary btn-xs save-btn" onclick="saveCategoryRow(this)">Save</button>
+                    <button type="button" class="btn btn-ghost btn-xs delete-btn" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>
+                </div>
+                <div class="cat-products" data-loaded="0" style="display:none;"></div>
             </div>
             {% endfor %}
         </div>
@@ -148,6 +206,121 @@
 </div>
 
 <script>
+// All categories (for the per-product change dropdown)
+var ALL_CATS = {{ categories|tojson }};
+
+// Click ▶ on a category row to expand its product list. Lazy-loaded.
+// Each product has a category dropdown that moves it on change.
+async function toggleCategoryProducts(btn) {
+    var row = btn.closest('.cat-row');
+    var block = row.closest('.cat-block');
+    var drawer = block.querySelector('.cat-products');
+    var slug = block.dataset.slug;
+    var isOpen = drawer.style.display !== 'none';
+    if (isOpen) {
+        drawer.style.display = 'none';
+        row.classList.remove('expanded');
+        return;
+    }
+    row.classList.add('expanded');
+    drawer.style.display = 'block';
+    if (drawer.dataset.loaded !== '1') {
+        drawer.innerHTML = '<div class="cat-products-loading">Loading…</div>';
+        try {
+            var res = await fetch('/admin/categories/' + encodeURIComponent(slug) + '/products');
+            var json = await res.json();
+            renderCategoryProducts(drawer, json.products || [], slug);
+            drawer.dataset.loaded = '1';
+        } catch(e) {
+            drawer.innerHTML = '<div class="cat-products-empty">Failed to load.</div>';
+        }
+    }
+}
+
+function renderCategoryProducts(drawer, products, currentSlug) {
+    if (!products.length) {
+        drawer.innerHTML = '<div class="cat-products-empty">No products in this category.</div>';
+        return;
+    }
+    var catOptions = '<option value="">— uncategorized —</option>' +
+        ALL_CATS.map(function(c){
+            var sel = (c.slug === currentSlug) ? ' selected' : '';
+            return '<option value="' + c.slug + '"' + sel + '>' + escapeHtml(c.name) + '</option>';
+        }).join('');
+    var html = '<input type="text" class="cat-products-search" placeholder="Search ' + products.length + ' items…" oninput="filterCatProducts(this)">';
+    html += products.map(function(p){
+        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '">'
+             + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+             + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
+             + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
+             + '<select class="select cp-select" onchange="moveProductCategory(this, \'' + p.id + '\')">'
+             + catOptions
+             + '</select>'
+             + '</div>';
+    }).join('');
+    drawer.innerHTML = html;
+}
+
+function filterCatProducts(input) {
+    var q = (input.value || '').toLowerCase().trim();
+    var rows = input.parentNode.querySelectorAll('.cp-row');
+    rows.forEach(function(r){
+        var hit = !q || (r.dataset.name || '').indexOf(q) !== -1;
+        r.style.display = hit ? '' : 'none';
+    });
+}
+
+async function moveProductCategory(sel, pid) {
+    var newCat = sel.value;
+    sel.disabled = true;
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: newCat })
+        });
+        var json = await res.json();
+        if (!json.ok) {
+            sel.disabled = false;
+            showToast(json.error || 'Failed', 'error');
+            return;
+        }
+        // Animate row out of this category's drawer
+        var row = sel.closest('.cp-row');
+        if (row) {
+            row.classList.add('moving');
+            setTimeout(function(){
+                row.remove();
+                // Update the count on the parent category row
+                var block = sel.closest('.cat-block');
+                if (block) {
+                    var countEl = block.querySelector('.cat-count');
+                    if (countEl) {
+                        var m = countEl.textContent.match(/(\d+)/);
+                        var n = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
+                        countEl.textContent = n + ' products';
+                    }
+                }
+                // And the count on the destination category if it's also visible
+                if (newCat) {
+                    var dest = document.querySelector('.cat-block[data-slug="' + newCat + '"] .cat-count');
+                    if (dest) {
+                        var dm = dest.textContent.match(/(\d+)/);
+                        var dn = dm ? parseInt(dm[1]) + 1 : 1;
+                        dest.textContent = dn + ' products';
+                    }
+                }
+            }, 200);
+        }
+        showToast(newCat ? ('Moved to ' + newCat) : 'Uncategorized', 'success');
+    } catch(e) {
+        sel.disabled = false;
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function escapeHtml(s) { return String(s||'').replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
+
 async function saveCategoryRow(btn) {
     var row = btn.closest('.cat-row');
     var oldSlug = row.dataset.slug;
