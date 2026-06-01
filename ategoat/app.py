@@ -1892,6 +1892,17 @@ def api_admin_add_product():
     return jsonify({'ok': True, 'id': data['id']})
 
 
+@app.route('/admin/api/products/<pid>', methods=['GET'])
+def api_admin_get_product(pid):
+    """Raw product row (all columns) — used by the studio for duplicate / undo."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    p = get_product(pid)
+    if not p:
+        return jsonify({'ok': False, 'error': 'not found'}), 404
+    return jsonify({'ok': True, 'product': dict(p)})
+
+
 @app.route('/admin/api/products/<pid>', methods=['PUT', 'PATCH'])
 def api_admin_update_product(pid):
     if not is_admin_api():
