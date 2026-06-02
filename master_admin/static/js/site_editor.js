@@ -434,12 +434,19 @@
         '<label class="se-pl">Price ($)</label><input id="ap-p" class="se-ps">' +
         '<label class="se-pl">Category</label><select id="ap-c" class="se-ps">' + catOpts + '</select>' +
         '<label class="se-pl">Image URL</label><input id="ap-i" class="se-ps" placeholder="https://… (or upload after)">' +
+        '<label class="se-pl">Shop / purchase URL</label><input id="ap-u" class="se-ps" placeholder="https://… kakobuy / weidian / taobao link">' +
         '<div class="se-row"><button class="se-b ghost" id="ap-x">Cancel</button><button class="se-b save" id="ap-s">Create</button></div></div>';
       B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
       bg.querySelector('#ap-x').onclick = function () { bg.remove(); };
       bg.querySelector('#ap-s').onclick = function () {
         var name = bg.querySelector('#ap-n').value.trim(); if (!name) { status('Name is required', 'error'); return; }
-        var body = { name: name, price: bg.querySelector('#ap-p').value.trim(), category: bg.querySelector('#ap-c').value, image: bg.querySelector('#ap-i').value.trim() };
+        var body = {
+          name: name,
+          price: bg.querySelector('#ap-p').value.trim(),
+          category: bg.querySelector('#ap-c').value,
+          image: bg.querySelector('#ap-i').value.trim(),
+          url: bg.querySelector('#ap-u').value.trim(),
+        };
         status('Creating…');
         jfetch('/products/' + SITE + '/new', 'POST', body).then(function (j) { if (j && j.ok && j.id) { bg.remove(); status('Created ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); } else status((j && j.error) || 'Create failed', 'error'); });
       };
