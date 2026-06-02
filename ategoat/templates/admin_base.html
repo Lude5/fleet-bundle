@@ -137,7 +137,37 @@
         table.data td { padding: 14px 8px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
         table.data tbody tr { transition: background .12s; }
         table.data tbody tr:hover { background: var(--surface-2); }
-        table.data .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: #ffffff; padding: 2px; }
+        table.data .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: contain !important; background: #ffffff !important; padding: 2px; }
+
+        /* Nuclear white-bg rule (admin pages don't extend base.html so they
+           need their own copy). Every image whose src is from a product-image
+           CDN gets a white background regardless of class or wrapper. */
+        img[src*="postimg.cc"],
+        img[src*="iili.io"],
+        img[src*="geilicdn.com"],
+        img[src*="googleusercontent.com"],
+        img[src*="alicdn.com"],
+        img[src*="img.kakobuy.com"],
+        img[src*="bcebos.com"],
+        img[src*="dhresource.com"],
+        img[src*="kongfupack.com"],
+        img[src*="weidian.com"],
+        img[src*="taobao.com"],
+        img[src*="alibaba.com"],
+        img[src*="aliimg.com"],
+        img[src*="alipay.com"],
+        img[src*="/uploads/"] {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
+        /* Catch-all for admin product images: anything with these classes
+           regardless of wrapper. */
+        img.thumb, img.uc-img, img.cp-img, img.edit-preview,
+        .thumb-wrap img, .uncat-row img, .cp-row img,
+        .em-preview, #emPreview {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
 
         /* Status pills */
         .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }

@@ -255,16 +255,36 @@
         img[src*="alicdn.com"],
         img[src*="img.kakobuy.com"],
         img[src*="bcebos.com"],
-        img[src*="dhresource.com"] {
+        img[src*="dhresource.com"],
+        img[src*="kongfupack.com"],
+        img[src*="weidian.com"],
+        img[src*="taobao.com"],
+        img[src*="alibaba.com"],
+        img[src*="aliimg.com"],
+        img[src*="/uploads/"] {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
+        /* Wrapper-based catch-all: every img inside any product container,
+           regardless of class on the img itself. Last-resort coverage for
+           JS-injected images that don't carry a recognized class. */
+        .product-card img, .product-grid img,
+        .pd-modal img:not(.agent-icon):not(.lang-flag),
+        .hero-bg-ticker img, .hero-bg-col img,
+        .bundle-card img, .bundle-card-imgs img,
+        .variant-grid img, .pd-variant img,
+        .scrape-card img, .pd-qc img,
+        .hero-search-dropdown img, .hero-search-suggestion img,
+        .conveyor-card img {
             background: #ffffff !important;
             object-fit: contain !important;
         }
         .product-card:hover .product-card-img { transform: scale(1.05); }
         /* Hero ticker keeps cover-fit so the masthead background stays full-bleed */
         .hero-bg-card { background: #ffffff !important; }
-        .hero-bg-card img { aspect-ratio: 4/5; object-fit: contain !important; padding: 4px; background: #ffffff; }
+        .hero-bg-card img { aspect-ratio: 4/5; object-fit: contain !important; padding: 4px; background: #ffffff !important; }
         /* Product detail modal image */
-        #pdMainImage { background: #ffffff; object-fit: contain !important; padding: 12px; }
+        #pdMainImage { background: #ffffff !important; object-fit: contain !important; padding: 12px; }
         .pd-thumbs {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             gap: 6px; margin-top: 8px;
