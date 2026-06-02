@@ -552,7 +552,8 @@
   function enhanceBestSelling() {
     bsGrid = D.querySelector('[data-best-selling]'); if (!bsGrid || bsGrid.__se) return; bsGrid.__se = 1;
     [].forEach.call(bsGrid.querySelectorAll('.product-card'), bsDecorate);
-    bsAddTile = D.createElement('button'); bsAddTile.type = 'button'; bsAddTile.className = 'bs-add'; bsAddTile.textContent = '+ Add product';
+    bsAddTile = D.createElement('button'); bsAddTile.type = 'button'; bsAddTile.className = 'bs-add'; bsAddTile.textContent = '+ Pick existing product';
+    bsAddTile.title = 'Pick a product already in the catalogue to feature in Best Selling';
     bsAddTile.onclick = openBestPicker; bsGrid.appendChild(bsAddTile);
   }
   function bsCard(r) {
@@ -562,9 +563,10 @@
   }
   function openBestPicker() {
     var bg = D.createElement('div'); bg.className = 'se-modal-bg';
-    bg.innerHTML = '<div class="se-modal"><h3>Add to Best Selling</h3><div class="sub">Search the whole catalogue and click a product to add it</div><input id="bsq" class="se-ps" placeholder="Search products…" autocomplete="off"><div id="bsres" style="margin-top:10px;max-height:46vh;overflow:auto;"></div><div class="se-row"><button class="se-b ghost" id="bsdone">Done</button></div></div>';
+    bg.innerHTML = '<div class="se-modal"><h3>Add to Best Selling</h3><div class="sub">Search the catalogue to feature an existing product — or create a brand-new one.</div><input id="bsq" class="se-ps" placeholder="Search products…" autocomplete="off"><div id="bsres" style="margin-top:10px;max-height:46vh;overflow:auto;"></div><div class="se-row"><button class="se-b ghost" id="bsdone">Done</button><button class="se-b save" id="bsnew">+ Create new product</button></div></div>';
     B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
     bg.querySelector('#bsdone').onclick = function () { bg.remove(); };
+    bg.querySelector('#bsnew').onclick = function () { bg.remove(); openAddProduct(); };
     var input = bg.querySelector('#bsq'), res = bg.querySelector('#bsres'), timer = null;
     input.addEventListener('input', function () {
       clearTimeout(timer); var q = input.value.trim(); if (q.length < 2) { res.innerHTML = ''; return; }
