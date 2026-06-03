@@ -165,10 +165,10 @@
         .side-btn:hover .side-tip { opacity: 1; }
         .side-btn.discord:hover { background: #5865F2; border-color: #5865F2; box-shadow: 0 12px 30px rgba(88,101,242,0.35); }
         @media (max-width: 768px) {
-            .side-widget {
-                right: 8px; gap: 8px;
-                top: auto; bottom: 76px; transform: none;
-            }
+            /* The floating How-to-Buy + Discord rail overlapped product BUY buttons
+               on phones; both actions live in the hamburger menu + footer, so the
+               rail is hidden on mobile to keep the right edge of every card tappable. */
+            .side-widget { display: none; }
             .side-btn { width: 40px; height: 40px; border-radius: 10px; }
             .side-btn svg { width: 16px; height: 16px; }
             .side-btn .side-tip { display: none; }
@@ -554,15 +554,16 @@
             overflow: hidden; flex-shrink: 0;
         }
         .signup-featured .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
-        .signup-featured .meta { flex: 1; min-width: 0; }
-        .signup-featured .meta .ttl { font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1; }
-        .signup-featured .meta .sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.85); margin-top: 4px; }
+        .signup-featured .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .signup-featured .meta .ttl { display: block; font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1.05; }
+        .signup-featured .meta .sub { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.85); margin-top: 5px; line-height: 1.3; }
         .signup-featured .badge {
-            position: absolute; top: -8px; right: 14px;
+            position: absolute; top: -10px; right: 12px;
             background: #fff; color: var(--accent);
             font-family: var(--font-mono); font-size: 9px; font-weight: 800;
             letter-spacing: 1.5px; text-transform: uppercase;
-            padding: 3px 8px; border-radius: 4px;
+            padding: 3px 8px; border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
         }
         .signup-featured .go-arrow { font-size: 22px; opacity: 0.8; }
         .signup-other-label {
@@ -799,7 +800,11 @@
         .page-back:hover { color: var(--text); border-color: var(--border); background: rgba(30,30,30,0.92); }
         .page-back svg { width: 14px; height: 14px; }
         @media (max-width: 768px) {
-            .page-back { top: calc(max(env(safe-area-inset-top), 12px) + 60px); padding: 7px 12px 7px 8px; font-size: 10px; }
+            /* Fully opaque on mobile so it reads as solid chrome over scrolling
+               content instead of a translucent layering glitch. */
+            .page-back { top: calc(max(env(safe-area-inset-top), 12px) + 60px); padding: 7px 12px 7px 8px; font-size: 10px; background: rgba(14,14,16,0.96); }
+            /* Hide the "someone just viewed" toast while the mobile menu is open. */
+            #mob.open ~ .sales-notif { display: none !important; }
         }
 
         .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
@@ -816,7 +821,11 @@
             .product-card-body { padding: 12px; }
             .product-card-name { font-size: 11px; }
             .product-card-price { font-size: 14px; }
-            .product-card-buy { padding: 6px 10px; font-size: 8px; }
+            .product-card-buy { padding: 7px 11px; font-size: 11px; }
+            /* Let price + a long buy label ("Buy on KakoBuy" on the spreadsheet)
+               wrap on very narrow cards instead of cramming against each other.
+               Short labels (Buy/View) still sit inline since wrap only triggers on overflow. */
+            .product-card-row { flex-wrap: wrap; row-gap: 6px; }
             .stat-num { font-size: 36px; }
             .cta-section h2 { font-size: 32px; }
             .footer-top { flex-direction: column; }
@@ -1006,6 +1015,20 @@
     {% endif %}
 
     <script>
+        // Gracefully degrade any product image whose external host 404s or blocks
+        // hotlinking — swap to a neutral placeholder tile so a dead link never
+        // renders as a jarring blank white card (error events don't bubble, so we
+        // listen in the capture phase).
+        (function(){
+            var PH = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#f2f2f4"/><g fill="none" stroke="#c7c7cf" stroke-width="3"><rect x="30" y="34" width="40" height="32" rx="3"/><circle cx="41" cy="46" r="4"/><path d="M34 62l12-12 8 8 8-9 8 13"/></g></svg>');
+            document.addEventListener('error', function(e){
+                var t = e.target;
+                if (t && t.tagName === 'IMG' && t.classList && t.classList.contains('product-card-img') && t.src.indexOf('data:image') !== 0){
+                    t.src = PH;
+                }
+            }, true);
+        })();
         // ====================================================================
         // Global recent-searches helper. Any search input can call:
         //   attachRecentSearches({ input, form, autocompleteEl, getResults })
