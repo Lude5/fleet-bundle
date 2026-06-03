@@ -208,7 +208,7 @@ QUERY_SHORTHAND = {
     'am1': ['air max 1'], 'am90': ['air max 90'], 'am95': ['air max 95'],
     'am97': ['air max 97'], 'am270': ['air max 270'], 'am720': ['air max 720'],
     'tn': ['air max plus', 'tn'], 'tns': ['air max plus', 'tn'], 'vapormax': ['vapormax'],
-    'sb': ['nike sb', 'dunk'], 'dunks': ['dunk'],
+    'sb': ['nike sb', 'dunk', 'sb'], 'dunks': ['dunk'],
     'aj': ['jordan'], 'jordans': ['jordan'],
     'yzy': ['yeezy'], 'yeezys': ['yeezy'], 'foams': ['yeezy foam', 'foam runner'],
     'nb': ['new balance'], 'tnf': ['north face'], 'northface': ['north face'],
