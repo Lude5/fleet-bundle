@@ -26,6 +26,13 @@
     _t = _t || 0;
     return fetch(path, { method: method || 'GET', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' })
       .then(function (r) {
+        // The control-plane gate 302s unauthenticated calls to /login; fetch
+        // follows it and we land on the HTML login page. Detect that and tell
+        // the user plainly instead of a confusing "failed" with unparseable HTML.
+        if (r.redirected && /\/login/.test(r.url || '')) {
+          status('Session expired — reload Studio and log in again', 'error');
+          return { ok: false, error: 'Session expired — reload Studio and log in again', _auth: 1 };
+        }
         if (!r.ok && r.status >= 500 && _t < 3) return new Promise(function (res) { setTimeout(res, 1500 * (_t + 1)); }).then(function () { return jfetch(path, method, body, _t + 1); });
         return r.json().catch(function () { return { ok: r.ok }; });
       })

@@ -47,6 +47,14 @@ else:
     app.secret_key = secrets.token_hex(32)
     _SECRET_FILE.write_text(app.secret_key, encoding='utf-8')
 
+# Distinct cookie name so the control-plane session never collides with a
+# site's own 'session' cookie. In the fleet bundle master_admin (/) and each
+# site (e.g. /ategoat) run in one process on one domain; with the default
+# name they'd share the 'session' cookie and clobber each other — logging
+# into a site's /admin would silently kill the master session, breaking
+# Studio's proxied save/create calls (they 302 to /login).
+app.config['SESSION_COOKIE_NAME'] = 'master_session'
+
 MASTER_PASSWORD = os.environ.get('MASTER_PASSWORD', 'lude2026')
 RENDER_API_KEY = os.environ.get('RENDER_API_KEY', '')
 
