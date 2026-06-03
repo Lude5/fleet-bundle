@@ -106,7 +106,17 @@ try:
     if os.path.exists(products_file):
         with open(products_file, 'rb') as _bf:
             json_hash = hashlib.md5(_bf.read()).hexdigest()
-        marker_path = os.path.join(DATA_DIR, '.products_hash')
+        # CRITICAL: the marker MUST live on the same PERSISTENT store as the DB.
+        # DATA_DIR (ATEGOAT_DATA_DIR) resolves to an EPHEMERAL path in this bundle
+        # (wsgi checks /var/data but the disk is mounted at /data), so storing the
+        # marker there made it vanish on every deploy → forced a catalogue-wiping
+        # re-seed each time (nuking every operator edit: colors/QC/featured/order).
+        # Derive the marker from DB_PATH so it sits right next to site.db.
+        try:
+            from .database import DB_PATH as _DBP
+        except ImportError:
+            from database import DB_PATH as _DBP
+        marker_path = os.path.join(os.path.dirname(_DBP) or '.', '.products_hash')
         seeded_hash = ''
         if os.path.exists(marker_path):
             try:
@@ -1848,6 +1858,103 @@ def admin_backup():
     if not is_admin():
         return jsonify({'error': 'Unauthorized'}), 401
     return jsonify({'ok': True, 'path': backup_database()})
+
+
+def _backup_dir():
+    try:
+        from .database import BACKUP_DIR
+    except ImportError:
+        from database import BACKUP_DIR
+    return BACKUP_DIR
+
+
+@app.route('/admin/api/backups')
+def api_admin_backups():
+    """List DB backups with per-backup edit stats so we can pick the one that
+    still has the operator's colors/QC/featured/order (recovery tool)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import sqlite3
+    bdir = _backup_dir()
+    try:
+        files = sorted([f for f in os.listdir(bdir) if f.startswith('backup_') and f.endswith('.db')], reverse=True)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e), 'backups': []})
+    out = []
+    for f in files[:40]:
+        fp = os.path.join(bdir, f)
+        info = {'file': f}
+        try:
+            st = os.stat(fp)
+            info['mtime'] = datetime.fromtimestamp(st.st_mtime).isoformat()
+            info['size_kb'] = round(st.st_size / 1024)
+            c = sqlite3.connect(fp)
+            cols = {r[1] for r in c.execute('PRAGMA table_info(products)').fetchall()}
+            def cnt(sql):
+                try: return c.execute(sql).fetchone()[0]
+                except Exception: return -1
+            info['products'] = cnt('SELECT COUNT(*) FROM products')
+            if 'variants' in cols: info['with_variants'] = cnt("SELECT COUNT(*) FROM products WHERE variants IS NOT NULL AND variants!=''")
+            if 'qc_photos' in cols: info['with_qc'] = cnt("SELECT COUNT(*) FROM products WHERE qc_photos IS NOT NULL AND qc_photos!=''")
+            if 'images' in cols: info['with_images'] = cnt("SELECT COUNT(*) FROM products WHERE images IS NOT NULL AND images!=''")
+            if 'featured' in cols: info['featured'] = cnt('SELECT COUNT(*) FROM products WHERE featured=1')
+            if 'position' in cols: info['curated'] = cnt('SELECT COUNT(*) FROM products WHERE position IS NOT NULL AND position!=999999')
+            c.close()
+        except Exception as e:
+            info['error'] = str(e)[:90]
+        out.append(info)
+    return jsonify({'ok': True, 'backup_dir': bdir, 'backups': out})
+
+
+@app.route('/admin/api/restore-edits', methods=['POST'])
+def api_admin_restore_edits():
+    """Surgically restore operator edits (variants/qc_photos/images/featured/
+    position) from a chosen backup onto the LIVE db — matched by product id, so
+    new products are untouched. Backs up current state first."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import sqlite3
+    data = request.get_json(silent=True) or {}
+    fname = (data.get('file') or '').strip()
+    if not fname.startswith('backup_') or '/' in fname or '\\' in fname or not fname.endswith('.db'):
+        return jsonify({'ok': False, 'error': 'invalid file'}), 400
+    fp = os.path.join(_backup_dir(), fname)
+    if not os.path.exists(fp):
+        return jsonify({'ok': False, 'error': 'backup not found'}), 404
+    try:
+        backup_database()  # snapshot current state before restoring
+    except Exception:
+        pass
+    src = sqlite3.connect(fp)
+    src.row_factory = sqlite3.Row
+    cols = {r[1] for r in src.execute('PRAGMA table_info(products)').fetchall()}
+    fields = [c for c in ('variants', 'qc_photos', 'images', 'featured', 'position') if c in cols]
+    if not fields:
+        src.close()
+        return jsonify({'ok': False, 'error': 'backup has no editable columns'}), 400
+    where = ' OR '.join(
+        ("%s=1" % c) if c == 'featured' else
+        ("(%s IS NOT NULL AND %s!=999999)" % (c, c)) if c == 'position' else
+        ("(%s IS NOT NULL AND %s!='')" % (c, c))
+        for c in fields)
+    rows = src.execute('SELECT id, %s FROM products WHERE %s' % (', '.join(fields), where)).fetchall()
+    src.close()
+    try:
+        from .database import get_db
+    except ImportError:
+        from database import get_db
+    db = get_db()
+    set_clause = ', '.join('%s=?' % c for c in fields) + ', edited=1, updated_at=CURRENT_TIMESTAMP'
+    n = 0
+    for r in rows:
+        try:
+            db.execute('UPDATE products SET %s WHERE id=?' % set_clause, tuple(r[c] for c in fields) + (r['id'],))
+            n += db.cursor().rowcount if False else 1
+        except Exception:
+            pass
+    db.commit()
+    db.close()
+    return jsonify({'ok': True, 'restored_rows': len(rows), 'applied': n, 'fields': fields, 'from': fname})
 
 
 @app.route('/admin/scrape', methods=['POST'])
