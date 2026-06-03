@@ -1155,7 +1155,7 @@
             fetch('/api/signup-agents').then(function(r){ return r.json(); }).then(function(d){
                 var agents = (d && d.agents) || [];
                 if (!agents.length) return;
-                var featured = agents.filter(function(a){ return a.key === 'kakobuy'; })[0] || agents[0];
+                var featured = agents[0];  // the top agent (operator-ordered) is the "Best Option"
                 var others = agents.filter(function(a){ return a.key !== featured.key; });
                 function safe(s){ return String(s).replace(/"/g, '&quot;'); }
                 var html = '<a class="signup-featured" href="' + safe(featured.signup_url) + '" target="_blank" rel="noopener" onclick="trackClick(\'signup\',\'popup_featured_' + featured.key + '\',\'\',\'\',\'\')">'

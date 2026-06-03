@@ -10,12 +10,14 @@
 .ae-intro { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 18px; max-width: 760px; }
 .ae-intro b { color: var(--text); }
 .ae-list { display: flex; flex-direction: column; gap: 10px; max-width: 920px; }
-.ae-row { display: grid; grid-template-columns: 26px 30px 34px 1fr; gap: 12px; align-items: start;
-  background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px 16px;
-  transition: box-shadow .15s, opacity .15s, transform .12s; }
-.ae-row.dragging { opacity: .6; box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+.ae-row { position: relative; display: grid; grid-template-columns: 26px 30px 34px 1fr; gap: 12px; align-items: start;
+  background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px 16px; }
+.ae-row.is-top { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.ae-row.dragging { box-shadow: 0 22px 55px rgba(0,0,0,.6); border-color: var(--accent); z-index: 50; cursor: grabbing; }
 .ae-row.disabled { opacity: .5; }
+.ae-best { position: absolute; top: -9px; left: 46px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 2px 9px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 2; }
 .ae-grip { cursor: grab; color: var(--text-muted); font-size: 17px; line-height: 1; padding-top: 6px; user-select: none; touch-action: none; }
+.ae-grip:hover { color: var(--accent); }
 .ae-grip:active { cursor: grabbing; }
 .ae-logo { width: 34px; height: 34px; border-radius: 8px; background: #fff; object-fit: contain; }
 .ae-toggle { width: 34px; height: 20px; border-radius: 999px; background: var(--surface-3); position: relative; cursor: pointer; border: none; flex-shrink: 0; margin-top: 7px; transition: background .15s; }
@@ -125,11 +127,13 @@ function signupPreview(a){
 
 function render(){
   listEl.innerHTML = '';
+  const topKey = (AGENTS.find(a => a.enabled !== false) || {}).key;  // first enabled = "Best Option"
   AGENTS.forEach((a, i) => {
     const row = document.createElement('div');
-    row.className = 'ae-row' + (a.enabled===false?' disabled':'');
+    row.className = 'ae-row' + (a.enabled===false?' disabled':'') + (a.key===topKey?' is-top':'');
     row.dataset.key = a.key;
     row.innerHTML = `
+      ${a.key===topKey ? '<span class="ae-best">★ Best Option — shown first</span>' : ''}
       <div class="ae-grip" title="Drag to reorder">⋮⋮</div>
       <button type="button" class="ae-toggle ${a.enabled===false?'':'on'}" data-act="toggle"></button>
       <img class="ae-logo" src="${esc(a.logo)}" alt="" referrerpolicy="no-referrer"
@@ -158,35 +162,52 @@ function refreshPreview(row, a){
   if (p) p.innerHTML = 'BUY: <b>'+esc(buyPreview(a))+'</b><br>SIGNUP: <b>'+esc(signupPreview(a))+'</b>';
 }
 
-// pointer-based drag reorder (native DnD breaks with inputs in the row).
-// Listeners live on `document` (NOT the grip) because moving the dragged row in
-// the DOM during a drag releases pointer capture in some browsers, which silently
-// killed the previous implementation.
+// Pointer-based drag reorder with a lifted "follow the cursor" row + FLIP sliding
+// for the rows it passes (native DnD breaks with inputs in the row; document-level
+// listeners survive the DOM moves that broke pointer-capture earlier).
 function attachDrag(row){
   const grip = row.querySelector('.ae-grip');
   grip.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    const grabDy = e.clientY - row.getBoundingClientRect().top;  // grab offset inside the row
     row.classList.add('dragging');
+    row.style.transition = 'none';
     document.body.style.userSelect = 'none';
+    // natural top of `row` with its transform momentarily cleared
+    const naturalTop = () => { const t = row.style.transform; row.style.transform = ''; const y = row.getBoundingClientRect().top; row.style.transform = t; return y; };
+
     const move = (ev) => {
       ev.preventDefault();
-      const under = document.elementFromPoint(ev.clientX, ev.clientY);
-      const overRow = under && under.closest ? under.closest('.ae-row') : null;
-      if (overRow && overRow !== row && overRow.parentElement === listEl) {
-        const rect = overRow.getBoundingClientRect();
-        const after = ev.clientY > rect.top + rect.height / 2;
-        listEl.insertBefore(row, after ? overRow.nextSibling : overRow);
+      // 1) figure out where the row should sit relative to its siblings
+      const sibs = Array.from(listEl.querySelectorAll('.ae-row')).filter(r => r !== row);
+      let ref = null;
+      for (const s of sibs) { const r = s.getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { ref = s; break; } }
+      const needMove = ref ? (row.nextElementSibling !== ref) : (listEl.lastElementChild !== row);
+      if (needMove) {
+        // FLIP: record sibling tops, reorder, then animate them from old→new
+        const before = new Map(sibs.map(s => [s, s.getBoundingClientRect().top]));
+        if (ref) listEl.insertBefore(row, ref); else listEl.appendChild(row);
+        sibs.forEach(s => {
+          const dy = before.get(s) - s.getBoundingClientRect().top;
+          if (dy) { s.style.transition = 'none'; s.style.transform = `translateY(${dy}px)`;
+            requestAnimationFrame(() => { s.style.transition = 'transform .22s cubic-bezier(.2,.7,.3,1)'; s.style.transform = ''; }); }
+        });
       }
+      // 2) pin the dragged row under the cursor
+      row.style.transform = `translateY(${ev.clientY - grabDy - naturalTop()}px)`;
     };
     const up = () => {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
       document.removeEventListener('pointercancel', up);
       document.body.style.userSelect = '';
-      row.classList.remove('dragging');
-      // rebuild AGENTS order from the DOM
+      // settle the dragged row into its slot
+      row.style.transition = 'transform .2s cubic-bezier(.2,.7,.3,1), box-shadow .2s';
+      row.style.transform = '';
+      setTimeout(() => { row.style.transition = ''; row.classList.remove('dragging'); }, 210);
       const order = Array.from(listEl.querySelectorAll('.ae-row')).map(r => r.dataset.key);
       AGENTS.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+      render();   // re-render so the #1 "top = Best Option" badge updates
       dirty();
     };
     document.addEventListener('pointermove', move);
@@ -219,8 +240,8 @@ saveBtn.addEventListener('click', async () => {
 const pvOverlay = document.getElementById('aePvOverlay');
 function buildPopupPreview(){
   const enabled = AGENTS.filter(a => a.enabled !== false);
-  const featured = enabled.filter(a => a.key === 'kakobuy')[0] || enabled[0];
-  const others = enabled.filter(a => !featured || a.key !== featured.key);
+  const featured = enabled[0];          // whatever is at the TOP is the "Best Option"
+  const others = enabled.slice(1);
   const logo = (a) => a && a.logo ? '<span class="lg"><img src="'+esc(a.logo)+'" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'"></span>' : '<span class="lg"></span>';
   let html = '';
   if (featured) {

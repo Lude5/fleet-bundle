@@ -204,7 +204,9 @@ th.col-trend.active, th.col-stock.active {
 .mv-pop label { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 .mv-pop input { width: 60px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 13px; }
 .mv-pop input:focus { outline: none; border-color: var(--accent); }
-.mv-pop .mv-go { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 700; cursor: pointer; font-size: 12px; }
+.mv-pop .mv-go { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 700; cursor: pointer; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; }
+.mv-pop .mv-go.mv-done { background: var(--surface-3); color: var(--text); }
+.mv-pop .mv-ok { font-size: 12px; color: var(--accent); font-weight: 600; margin-right: 4px; max-width: 240px; }
 .mv-pop .mv-hint { color: var(--text-muted); font-size: 10px; }
 
 /* Tabs for the add-methods panel */
@@ -1246,9 +1248,14 @@ function moveToPage(btn) {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: pid, page: page })
         }).then(function (res) { return res.json(); }).then(function (d) {
-            close();
-            if (d.ok) { showToast('Moved “' + name + '” to page ' + d.page + ' — refresh to see the new order', 'success'); }
-            else { showToast(d.error || 'Move failed', 'error'); }
+            if (d.ok) {
+                var safe = (name || 'product').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+                var shopUrl = location.pathname.replace(/\/admin\/.*$/, '') + '/shop?page=' + d.page;
+                pop.innerHTML = '<span class="mv-ok">✓ Moved “' + safe + '” to top of page ' + d.page + '</span>'
+                    + '<a class="mv-go" href="' + shopUrl + '" target="_blank" rel="noopener">View page ' + d.page + ' →</a>'
+                    + '<button type="button" class="mv-go mv-done">Done</button>';
+                pop.querySelector('.mv-done').onclick = close;
+            } else { close(); showToast(d.error || 'Move failed', 'error'); }
         }).catch(function () { close(); showToast('Network error', 'error'); });
     }
     pop.querySelector('#mvGo').onclick = go;

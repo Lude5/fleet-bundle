@@ -723,20 +723,37 @@
   function cardMenu(card, id, btn) {
     var stockLabel = card.classList.contains('out-of-stock') ? '✅ Mark in stock' : '⛔ Mark out of stock';
     var m = mini(btn, '<div class="se-menu"><button data-a="movepage">⇄ Move to page…</button><button data-a="dup">⧉ Duplicate</button><button data-a="stock">' + stockLabel + '</button><button data-a="del" class="danger">🗑 Delete</button></div>');
-    m.querySelector('[data-a=movepage]').onclick = function () { closeMini(); moveToPage(id); };
+    m.querySelector('[data-a=movepage]').onclick = function () { closeMini(); moveToPage(id, btn); };
     m.querySelector('[data-a=dup]').onclick = function () { closeMini(); duplicateProduct(id); };
     m.querySelector('[data-a=stock]').onclick = function () { closeMini(); toggleStock(card, id); };
     m.querySelector('[data-a=del]').onclick = function () { closeMini(); deleteProduct(card, id, btn); };
   }
-  function moveToPage(id) {
-    var ans = prompt('Move this product to which shop page? (1 = front page, 40 products per page)');
-    if (ans === null) return;
-    var page = parseInt(ans, 10);
-    if (!page || page < 1) { status('Enter a valid page number', 'error'); return; }
-    jfetch('/products/' + SITE + '/move-to-page', 'POST', { id: id, page: page }).then(function (r) {
-      if (r && r.ok) { status('Moved to page ' + r.page + ' — reload the shop to see the new order', 'success'); }
-      else { status((r && r.error) || 'Move failed', 'error'); }
-    });
+  // shop URL on THIS site (derives the mount prefix from a real product card href)
+  function shopUrlFor(page) {
+    var c = D.querySelector('.product-card[href*="/product/"]');
+    var href = c ? c.getAttribute('href') : '/shop';
+    return href.replace(/\/product\/.*$/, '') + '/shop?page=' + page;
+  }
+  // In-page "move to shop page" popover (no browser prompt).
+  function moveToPage(id, anchor) {
+    var m = mini(anchor,
+      '<label class="se-pl" style="margin-bottom:6px;display:block;">Move to shop page</label>' +
+      '<input id="se-mvp" type="number" min="1" class="se-ps" placeholder="e.g. 3 (40 per page)">' +
+      '<div class="se-row"><button class="se-b ghost" id="se-mvx">Cancel</button><button class="se-b save ok">Move</button></div>',
+      function (mm) {
+        var page = parseInt((mm.querySelector('#se-mvp') || {}).value, 10);
+        if (!page || page < 1) { status('Enter a valid page number (1 or higher)', 'error'); return; }
+        var okb = mm.querySelector('.ok'); okb.textContent = 'Moving…'; okb.disabled = true;
+        jfetch('/products/' + SITE + '/move-to-page', 'POST', { id: id, page: page }).then(function (r) {
+          if (r && r.ok) {
+            mm.innerHTML = '<div style="font-size:13px;line-height:1.5;margin-bottom:10px;">✓ Moved to the <b>top of page ' + r.page + '</b>.</div>' +
+              '<div class="se-row"><button class="se-b ghost" id="se-mvd">Done</button><button class="se-b save" id="se-mvg">View page ' + r.page + ' →</button></div>';
+            mm.querySelector('#se-mvd').onclick = function () { closeMini(); };
+            mm.querySelector('#se-mvg').onclick = function () { closeMini(); navTo(shopUrlFor(r.page)); };
+          } else { status((r && r.error) || 'Move failed', 'error'); closeMini(); }
+        });
+      });
+    var x = m.querySelector('#se-mvx'); if (x) x.onclick = function () { closeMini(); };
   }
   function toggleStock(card, id) {
     var nowOut = !card.classList.contains('out-of-stock');
