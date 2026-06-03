@@ -162,21 +162,31 @@ fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json()
 }).catch(function(){});
 
 // Photos / versions / QC — same sources the modal uses.
+window.ppGallery = [];
 fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
     if (d.error) return;
     var imgs = [];
     if (d.image) imgs.push(d.image);
+    // Manually-added gallery photos come right after the main image.
+    (d.images || []).forEach(function(u){ if (u && imgs.indexOf(u) < 0) imgs.push(u); });
     (d.variants || []).forEach(function(v){ if (v.image && imgs.indexOf(v.image) < 0) imgs.push(v.image); });
-    var th = document.getElementById('ppThumbs');
+    window.ppGallery = imgs;
+    renderPpThumbs();
+}).catch(function(){});
+window.renderPpThumbs = function() {
+    var imgs = window.ppGallery || [];
+    var th = document.getElementById('ppThumbs'); if (!th) return;
+    th.innerHTML = '';
     if (imgs.length > 1) {
-        imgs.slice(0,12).forEach(function(src,i){
-            var t=document.createElement('div'); t.className='pp-thumb'+(i===0?' active':'');
+        var mainSrc = document.getElementById('ppMain').src;
+        imgs.slice(0,24).forEach(function(src,i){
+            var t=document.createElement('div'); t.className='pp-thumb'+(src===mainSrc?' active':(i===0&&!imgs.some(function(x){return x===mainSrc;})?' active':''));
             t.innerHTML='<img src="'+src+'" referrerpolicy="no-referrer">';
             t.onclick=function(){ document.getElementById('ppMain').src=src; document.querySelectorAll('.pp-thumb').forEach(function(x){x.classList.remove('active');}); t.classList.add('active'); };
             th.appendChild(t);
         });
     }
-}).catch(function(){});
+};
 
 fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(vd){
     var variants=(vd&&vd.variants)||[]; var box=document.getElementById('ppVariants'); var cnt=document.getElementById('ppVariantCount');

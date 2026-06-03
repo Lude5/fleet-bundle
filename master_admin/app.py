@@ -626,6 +626,20 @@ def upload_proxy(site_id, pid):
         return jsonify({'ok': False, 'error': str(e)[:160]}), 502
 
 
+@app.route('/products/<site_id>/gallery/<pid>', methods=['POST'])
+def products_gallery(site_id, pid):
+    """Proxy a product's manual photo-gallery update to the origin site."""
+    sites = {s['id']: s for s in load_sites()}
+    site = sites.get(site_id)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    data, err = _call_site_detailed(site, '/admin/products/gallery/' + pid, method='POST', json_body=body)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
+
+
 @app.route('/products/<site_id>/bulk', methods=['POST'])
 def products_bulk(site_id):
     """Proxy a batch of product edits to the origin site in one request."""

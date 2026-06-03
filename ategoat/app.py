@@ -1188,7 +1188,7 @@ def api_product(pid):
         'go_url': f'/go/{pid}',
         'raw_url': raw_url,
         'agent_url': p.get('url', ''),
-        'images': p.get('images') or [],
+        'images': _parse_gallery(p.get('images')),
         'variants': [
             {
                 'id': v['id'],
@@ -2107,7 +2107,7 @@ def serve_upload(fname):
 @app.route('/admin/products/upload-image/<pid>', methods=['POST'])
 def admin_upload_image(pid):
     """Accept a multipart image upload, save to disk, set as product's primary image."""
-    if not is_admin():
+    if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
@@ -2128,8 +2128,49 @@ def admin_upload_image(pid):
     full = _os.path.join(UPLOADS_DIR, fname)
     f.save(full)
     new_url = f'/uploads/{fname}'
-    update_product(pid, {'image': new_url})
-    return jsonify({'ok': True, 'image': new_url, 'pid': pid})
+    # primary=1 (default) → set as the main product image.
+    # primary=0 → append to the gallery (the `images` JSON list) instead,
+    # leaving the main photo untouched. Powers Studio's "Add photos" button.
+    primary = request.args.get('primary', '1') != '0'
+    if primary:
+        update_product(pid, {'image': new_url})
+    else:
+        prod = get_product(pid) or {}
+        gallery = _parse_gallery(prod.get('images'))
+        if new_url not in gallery:
+            gallery.append(new_url)
+        update_product(pid, {'images': json.dumps(gallery)})
+    return jsonify({'ok': True, 'image': new_url, 'pid': pid, 'primary': primary})
+
+
+def _parse_gallery(raw):
+    """Parse a product's `images` column into a clean list of URLs."""
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [u for u in raw if u]
+    try:
+        val = json.loads(raw)
+        if isinstance(val, list):
+            return [u for u in val if u]
+    except Exception:
+        pass
+    return []
+
+
+@app.route('/admin/products/gallery/<pid>', methods=['POST'])
+def admin_set_gallery(pid):
+    """Replace a product's manual gallery (list of image URLs). Used by the
+    Studio 'Add photos' editor to add URLs by hand or remove existing ones."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    imgs = data.get('images')
+    if not isinstance(imgs, list):
+        return jsonify({'error': 'images must be a list'}), 400
+    clean = [str(u).strip() for u in imgs if str(u).strip()]
+    update_product(pid, {'images': json.dumps(clean)})
+    return jsonify({'ok': True, 'images': clean, 'pid': pid})
 
 
 @app.errorhandler(404)
