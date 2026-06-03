@@ -782,7 +782,9 @@ def _find_ategoat_id(product):
     """Look up the matching ategoat product ID. Cached on disk for 30 days
     since the mapping is effectively permanent per product."""
     pid = product.get('id') or ''
-    cache_key = f'aid:{pid}'
+    # 'aid2:' (not 'aid:') so stale loose-matched mappings from the old matcher
+    # are ignored and every product re-resolves with the strict itemID matcher.
+    cache_key = f'aid2:{pid}'
     cached = cache_get(cache_key, max_age_seconds=30 * 24 * 3600)
     if cached is not None:
         return cached or None
@@ -795,11 +797,19 @@ def _find_ategoat_id(product):
         wid = m.group(1)
         try:
             s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
-                       params={'name': wid, 'limit': 5},
+                       params={'name': wid, 'limit': 10},
                        headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
                        timeout=6)
             items = ((s.json() or {}).get('data') or {}).get('items') or []
-            if items:
+            # The source API exposes no itemID field to verify against, but a
+            # search for a full ~10-digit itemID is precise: a hit means ategoat
+            # indexed that exact listing. Prefer a strict (image) match if any,
+            # else trust the first itemID-search result. This is reliable BECAUSE
+            # the query IS the itemID (unlike the loose name fallback below).
+            match = _strict_ategoat_match(product, items)
+            if match:
+                found = match.get('id')
+            elif items:
                 found = items[0].get('id')
         except Exception:
             pass
@@ -833,7 +843,7 @@ def api_variants(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'variants': [], 'images': []})
-    cached = cache_get(f'variants:{pid}', max_age_seconds=7 * 24 * 3600)
+    cached = cache_get(f'variants2:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify(cached)
     import re as _re
@@ -894,69 +904,45 @@ def api_variants(pid):
                 result['images'] = imgs
     except Exception:
         pass
-    cache_set(f'variants:{pid}', result)
+    cache_set(f'variants2:{pid}', result)
     return jsonify(result)
 
 
 def _strict_ategoat_match(product, candidates):
-    """Pick an ategoat product that is *actually* the same item.
+    """Pick an ategoat.com product that is *provably the same listing*.
 
-    Strict criteria (returns None unless one is met):
-      1) Our primary image URL appears in the candidate's image (strong signal —
-         same source photo means same listing).
-      2) The candidate URL (anywhere we can find one) contains our Weidian
-         itemID.
-      3) Token overlap >= 60% of OUR name tokens AND the candidate title
-         starts with the same first 1-2 tokens (so 'Moncler Down Jacket'
-         doesn't blindly match the first 'Moncler' result).
+    Only two signals are trusted, because anything looser (name/brand token
+    overlap) attaches a DIFFERENT product's variants + QC photos — e.g. every
+    'Denim Tears Tee' would grab the first Denim Tears listing's whole grid.
+
+      1) Our Weidian itemID appears in a candidate field (same listing — exact).
+      2) Our primary image URL equals the candidate's image (same source photo).
+
+    Returns None when neither holds — callers then show NO variants/QC rather
+    than the wrong item's.
     """
     import re as _re
     if not candidates:
         return None
     our_img = (product.get('image') or '').split('?')[0]
-    our_name = (product.get('name') or '').strip().lower()
-    our_tokens = [t for t in _re.split(r'[^a-z0-9]+', our_name) if len(t) > 1]
     our_url = product.get('url') or ''
     wid_m = _re.search(r'itemID(?:%3D|=)(\d+)', our_url, _re.I)
     our_wid = wid_m.group(1) if wid_m else ''
 
-    # 1) Image-URL match
-    if our_img:
-        for it in candidates:
-            cand_img = (it.get('image') or '').split('?')[0]
-            if cand_img and (our_img == cand_img or our_img in cand_img or cand_img in our_img):
-                return it
-
-    # 2) Weidian itemID present in any candidate URL field
+    # 1) Weidian itemID present in any candidate field (strongest — same listing)
     if our_wid:
         for it in candidates:
-            for k in ('source_url', 'url', 'original_url', 'goods_url', 'title'):
-                v = str(it.get(k) or '')
-                if our_wid in v:
+            for k in ('source_url', 'url', 'original_url', 'goods_url', 'sku', 'title', 'name'):
+                if our_wid in str(it.get(k) or ''):
                     return it
 
-    # 2) Token-overlap match — must clear the bar
-    if our_tokens:
-        our_set = set(our_tokens)
-        first_two = ' '.join(our_tokens[:2]).lower()
-        best = None
-        best_score = 0
+    # 2) Exact image-URL match (same source photo => same listing)
+    if our_img and len(our_img) > 20:
         for it in candidates:
-            t = (it.get('title') or '').lower()
-            ct = [x for x in _re.split(r'[^a-z0-9]+', t) if len(x) > 1]
-            if not ct:
-                continue
-            overlap = len(our_set & set(ct))
-            ratio = overlap / max(1, len(our_set))
-            if ratio < 0.6:
-                continue
-            if not t.startswith(our_tokens[0]) and first_two not in t:
-                continue
-            if overlap > best_score:
-                best_score = overlap
-                best = it
-        if best:
-            return best
+            cand_img = (it.get('image') or '').split('?')[0]
+            if cand_img and len(cand_img) > 20 and (our_img == cand_img or our_img in cand_img or cand_img in our_img):
+                return it
+
     return None
 
 
@@ -967,7 +953,7 @@ def api_qc(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'photos': []})
-    cached = cache_get(f'qc:{pid}', max_age_seconds=7 * 24 * 3600)
+    cached = cache_get(f'qc2:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify({'photos': cached})
     import requests as _r
@@ -983,7 +969,7 @@ def api_qc(pid):
             photos = [it.get('image') or it.get('url') for it in qitems if it.get('image') or it.get('url')]
     except Exception:
         photos = []
-    cache_set(f'qc:{pid}', photos)
+    cache_set(f'qc2:{pid}', photos)
     return jsonify({'photos': photos})
 
 
