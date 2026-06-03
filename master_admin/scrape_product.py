@@ -13,12 +13,63 @@ Manual:     qc_photos, sizes, batch, retail_price, quality, weight, seller.
 Ported/condensed from the per-site scraper.py (Weidian Thor API path is the
 gold standard; Taobao/1688 are best-effort HTML).
 """
+import os
 import re
 import json
 import urllib.parse
 import requests
 
 CNY_TO_USD = 0.14
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+AI_CATEGORIES = ['shoes', 'shirts', 'hoodies', 'pants', 'shorts', 'jackets',
+                 'headwear', 'accessories', 'bags', 'tech', 'womens']
+
+
+def _ai_identify(image_url, listing_name=''):
+    """One GPT-4o-mini vision call to clean up a scraped listing into a proper
+    product: real brand+model name, category, search tags. Returns {} on any
+    failure (so scrape still works without AI). Cheap: ONE call per scrape."""
+    if not OPENAI_API_KEY or not image_url:
+        return {}
+    cats = ', '.join(AI_CATEGORIES)
+    sys_prompt = (
+        "You identify replica fashion products. Respond with ONLY valid JSON: "
+        '{"name":"Brand Model Colorway","brand":"Brand","category":"category","tags":"search keywords"}. '
+        "Rules: name = brand + specific model + color, MAX 6 words, use the REAL model name "
+        "(e.g. 'Dunk Low Panda' not 'Sneaker', 'Reverend Hoodie' not 'Hoodie'). "
+        f"category = one of [{cats}]. brand = the fashion house (Nike, Adidas, Jordan, "
+        "Balenciaga, Louis Vuitton, Gucci, Chrome Hearts, Moncler, Yeezy, Off-White, Amiri, "
+        "Represent, Essentials, Stussy, Supreme, Bape, Gallery Dept, Trapstar, Corteiz, etc). "
+        "tags = lowercase space-separated keywords (brand, model, color, material, style). "
+        "Color one word at the end."
+    )
+    try:
+        resp = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers={'Authorization': f'Bearer {OPENAI_API_KEY}', 'Content-Type': 'application/json'},
+            json={
+                'model': 'gpt-4o-mini',
+                'messages': [
+                    {'role': 'system', 'content': sys_prompt},
+                    {'role': 'user', 'content': [
+                        {'type': 'text', 'text': f'Listing title (may be Chinese/messy): "{listing_name}". Identify the product.'},
+                        {'type': 'image_url', 'image_url': {'url': image_url}},
+                    ]},
+                ],
+                'max_tokens': 120,
+                'temperature': 0.1,
+            },
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            content = resp.json()['choices'][0]['message']['content'].strip()
+            content = re.sub(r'^```(?:json)?|```$', '', content, flags=re.I).strip()
+            data = json.loads(content)
+            if isinstance(data, dict):
+                return data
+    except Exception as e:
+        print(f"[AI] identify failed: {e}")
+    return {}
 
 HEADERS_MOBILE = {
     "User-Agent": ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
@@ -193,13 +244,23 @@ def scrape(url):
         '1688':    f"https://detail.1688.com/offer/{item_id}.html",
     }.get(platform, url)
 
+    # ONE AI call to turn the raw listing into a proper product (name/category/
+    # brand/tags). Cheap + fast; degrades gracefully to the raw name if the key
+    # is missing or the call fails.
+    ai = _ai_identify(raw.get("image", ""), raw.get("name", ""))
+
     return {
         "ok": True,
         "platform": platform,
         "item_id": item_id,
         "source_url": source_url,
+        "ai_enabled": bool(OPENAI_API_KEY),
         "scraped": {
-            "name": raw.get("name", ""),
+            "name": (ai.get("name") or raw.get("name", "")),
+            "name_raw": raw.get("name", ""),
+            "brand": ai.get("brand", ""),
+            "category": ai.get("category", ""),
+            "tags": ai.get("tags", ""),
             "price": str(price_usd) if price_usd else "",
             "price_numeric": price_usd,
             "price_cny": price_cny,

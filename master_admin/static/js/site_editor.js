@@ -386,6 +386,7 @@
     };
     if (DRAFT.variants) body.variants = DRAFT.variants;
     if (DRAFT.qc_photos) body.qc_photos = DRAFT.qc_photos;
+    if (DRAFT.tags) body.tags = DRAFT.tags;  // AI search keywords
     var btn = D.getElementById('se-draftadd');
     function reset() { _savingDraft = false; if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } }
     _savingDraft = true; if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
@@ -529,7 +530,7 @@
 
   function openScrape() {
     var bg = D.createElement('div'); bg.className = 'se-modal-bg';
-    bg.innerHTML = '<div class="se-modal"><h3>Scrape product</h3><div class="sub">Paste a Weidian / Taobao / 1688 (or agent) link. We pull the name, price, photos and variants, then fill this page — review before saving.</div>' +
+    bg.innerHTML = '<div class="se-modal"><h3>Scrape product</h3><div class="sub">Paste a Weidian / Taobao / 1688 (or agent) link. AI identifies the brand, name &amp; category and pulls the price, photos and variants, then fills this page — review before saving.</div>' +
       '<label class="se-pl">Product link</label><input id="scu" class="se-ps" placeholder="https://weidian.com/item.html?itemID=…">' +
       '<label class="se-pl" style="margin-top:10px;"><input type="checkbox" id="scphotos" checked style="vertical-align:-1px;"> Import photos into the gallery</label>' +
       '<label class="se-pl"><input type="checkbox" id="scvars" checked style="vertical-align:-1px;"> Import variants / versions</label>' +
@@ -566,6 +567,20 @@
     // Buy link (canonical source url, or what the user pasted)
     var url = r.source_url || s.url || srcUrl;
     if (url) { var bl = D.querySelector('[data-pf="url"]'); if (bl) { var blpen = bl.querySelector('.se-pen'); bl.textContent = url; if (blpen) bl.appendChild(blpen); bl.classList.remove('pf-empty'); } recordProduct(PID, { url: url }); changed.push('link'); }
+    // Category (AI-identified) — set the badge + the source label + record it
+    if (s.category) {
+      var catEl = D.querySelector('[data-pf="category"] .pf-val') || D.querySelector('[data-pf="category"]');
+      if (catEl) { catEl.textContent = s.category; var ce = catEl.closest('[data-pf="category"]') || catEl; if (ce.classList) ce.classList.remove('pf-empty'); }
+      var srcLbl = D.getElementById('ppSource'); if (srcLbl) srcLbl.textContent = String(s.category).toUpperCase();
+      recordProduct(PID, { category: s.category }); changed.push('category');
+    }
+    // Seller = brand, plus search tags (both AI-identified)
+    if (s.brand) {
+      var selEl = D.querySelector('[data-pf="seller"]');
+      if (selEl) { var sp = selEl.querySelector('.se-pen'); selEl.textContent = s.brand; if (sp) selEl.appendChild(sp); selEl.classList.remove('pf-empty'); }
+      recordProduct(PID, { seller: s.brand });
+    }
+    if (s.tags) recordProduct(PID, { tags: s.tags });
     // Main image + gallery
     var gallery = (s.images || []).slice();
     if (s.image && gallery.indexOf(s.image) < 0) gallery = [s.image].concat(gallery);
