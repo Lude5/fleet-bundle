@@ -38,7 +38,17 @@
   function esc(s) { return (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function isPlaceholder(t) { t = (t || '').replace('✎', '').trim(); return t === '' || t === '—' || t === 'Unspecified' || t === '— no buy link set —'; }
   function mkPen() { var p = D.createElement('span'); p.className = 'se-pen'; p.textContent = '✎'; return p; }
-  function imgSrc(u) { return (u && u.charAt(0) === '/') ? (SITEROOT + u) : u; }  // prefix /uploads with the site root for display
+  // prefix /uploads with the site root for DISPLAY; guard against double-prefix
+  function imgSrc(u) {
+    if (!u || u.charAt(0) !== '/') return u;
+    if (SITEROOT && (u === SITEROOT || u.indexOf(SITEROOT + '/') === 0)) return u; // already prefixed
+    return SITEROOT + u;
+  }
+  // strip the site-root prefix so we STORE/persist the raw path the site serves
+  function rawSrc(u) {
+    if (u && SITEROOT && u.indexOf(SITEROOT + '/') === 0) return u.slice(SITEROOT.length);
+    return u;
+  }
   function uploadImg(pid, file, primary) {
     var fd = new FormData(); fd.append('file', file);
     return fetch('/upload/' + SITE + '/' + encodeURIComponent(pid) + (primary === false ? '?primary=0' : ''), { method: 'POST', body: fd, credentials: 'same-origin' })
@@ -121,11 +131,18 @@
     '.se-cat .h{cursor:grab;color:#6b7280;font-size:16px;}.se-cat input{flex:1;background:transparent;border:none;color:#fff;font-size:14px;outline:none;}.se-cat .del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;}',
     '.se-pl{display:block;font-size:11px;color:#9ca3af;margin:12px 0 4px;}.se-ps{width:100%;box-sizing:border-box;background:#0f0f14;border:1px solid #2a2a35;color:#fff;border-radius:8px;padding:9px 10px;font:13px system-ui;outline:none;}',
     '.bs-add{display:flex;align-items:center;justify-content:center;min-height:120px;border:2px dashed #6366f1;border-radius:14px;background:rgba(99,102,241,.08);color:#a5b4fc;font:700 13px system-ui;cursor:pointer;transition:all .12s;}.bs-add:hover{background:rgba(99,102,241,.18);color:#fff;}',
-    '.se-ptoolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px;padding:10px;background:rgba(99,102,241,.07);border:1px dashed rgba(99,102,241,.45);border-radius:12px;}',
-    '.se-tb-btn{display:inline-flex;align-items:center;gap:7px;background:#16161c;color:#e6e6ea;border:1px solid #2a2a35;border-radius:9px;padding:9px 13px;font:700 12px system-ui;cursor:pointer;transition:all .12s;white-space:nowrap;}',
-    '.se-tb-btn:hover{border-color:#6366f1;background:#1d1d27;color:#fff;}',
-    '.se-tb-btn.primary{background:#6366f1;border-color:#6366f1;color:#fff;}.se-tb-btn.primary:hover{background:#5457e0;}',
-    '.se-tb-btn .ico{font-size:14px;line-height:1;}',
+    /* Add-photo tile — sized to match the page thumbnails, sits at the end of the strip */
+    '.pp-thumb.se-addthumb,.se-addthumb{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px dashed #6366f1!important;background:rgba(99,102,241,.10)!important;color:#6366f1;cursor:pointer;transition:all .12s;box-sizing:border-box;}',
+    '.se-addthumb:hover{background:rgba(99,102,241,.22)!important;color:#fff;}',
+    '.se-addthumb .plus{font-size:22px;line-height:1;font-weight:700;}',
+    '.se-addthumb .lbl{font:700 7px system-ui;letter-spacing:.5px;text-transform:uppercase;}',
+    /* Click-to-change main photo: hover hint overlay on the main image */
+    '.se-mainphoto{cursor:pointer!important;}',
+    '.se-mainphoto-hint{position:absolute;left:0;right:0;bottom:0;padding:9px 10px;background:linear-gradient(0deg,rgba(99,102,241,.96),rgba(99,102,241,0));color:#fff;font:700 12px system-ui;letter-spacing:.4px;text-align:center;opacity:0;transition:opacity .14s;pointer-events:none;z-index:5;display:flex;align-items:center;justify-content:center;gap:6px;}',
+    '.se-mainphoto:hover .se-mainphoto-hint{opacity:1;}',
+    /* Scrape button — inline at the top of the product info column */
+    '.se-scrape-btn{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;background:#6366f1;color:#fff;border:none;border-radius:10px;padding:10px 16px;font:700 12px system-ui;cursor:pointer;transition:background .12s;box-shadow:0 4px 14px rgba(99,102,241,.35);}',
+    '.se-scrape-btn:hover{background:#5457e0;}.se-scrape-btn .ico{font-size:15px;line-height:1;}',
     '.se-galgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin:8px 0;max-height:42vh;overflow:auto;}',
     '.se-galcell{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;background:#fff;border:1px solid #2a2a35;}',
     '.se-galcell img{width:100%;height:100%;object-fit:contain;background:#fff;}',
@@ -229,10 +246,14 @@
   function bindProductField(el) {
     var field = el.getAttribute('data-pf'), type = el.getAttribute('data-pf-type') || 'text';
     if (type === 'image') {
+      // Main product image: click anywhere on it to change; hover shows a hint.
       var host = el.closest('.pd-img-wrap') || el.parentElement || el;
-      if (host.__se) return; host.__se = 1; host.classList.add('se-ed-h');
+      if (host.__se) return; host.__se = 1; host.classList.add('se-mainphoto');
       if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
-      var ip = mkPen(); host.appendChild(ip); ip.onclick = function (e) { e.preventDefault(); e.stopPropagation(); editImage(el); };
+      var hint = D.createElement('div'); hint.className = 'se-mainphoto-hint';
+      hint.innerHTML = '<span>🖼</span> Click to change main photo';
+      host.appendChild(hint);
+      host.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); editImage(el); });
       return;
     }
     if (el.__se) return; el.__se = 1; el.classList.add('se-ed-h');
@@ -266,39 +287,89 @@
   }
   function editImage(img) {
     var m = mini(img, '<input id="iu" value="' + esc(img.getAttribute('src')) + '" size="26" placeholder="https://..."><button class="ok">Set</button><label class="se-up">⤴ Upload<input type="file" accept="image/*" hidden></label>', function (mm) {
-      var v = mm.querySelector('#iu').value.trim(); if (!v) return; img.src = imgSrc(v); recordProduct(PID, { image: v }); closeMini();
+      var v = mm.querySelector('#iu').value.trim(); if (!v) return; setMainPhoto(v); closeMini();
     });
     var fi = m.querySelector('input[type=file]');
-    if (fi) fi.onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, true).then(function (j) { if (j && j.ok) { img.src = imgSrc(j.image); status('Image uploaded ✓', 'success'); closeMini(); } else status((j && j.error) || 'Upload failed', 'error'); }); };
+    if (fi) fi.onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, true).then(function (j) { if (j && j.ok) { setMainPhoto(j.image); status('Image uploaded ✓', 'success'); closeMini(); } else status((j && j.error) || 'Upload failed', 'error'); }); };
   }
 
-  /* ---------- PRODUCT PAGE TOOLBAR (change main photo · add photos · scrape) ---------- */
+  /* ---------- PRODUCT PAGE EDITOR CHROME ----------
+     - thumbnail strip owns an "Add photo" tile that matches a real thumbnail
+     - scrape lives as an inline button at the top of the product info column
+     (changing the MAIN photo is handled by clicking the main image — see the
+      type==='image' branch of bindProductField) */
   function bindProductToolbar() {
     var wrap = D.querySelector('.pd-img-wrap'); if (!wrap || wrap.__setb) return; wrap.__setb = 1;
-    var mainImg = D.getElementById('ppMain') || wrap.querySelector('img');
-    var bar = D.createElement('div'); bar.className = 'se-ptoolbar';
-    bar.innerHTML =
-      '<button type="button" class="se-tb-btn" id="se-tb-main"><span class="ico">🖼</span> Change main photo</button>' +
-      '<button type="button" class="se-tb-btn" id="se-tb-add"><span class="ico">＋</span> Add photos</button>' +
-      '<button type="button" class="se-tb-btn primary" id="se-tb-scrape"><span class="ico">⚡</span> Scrape from link</button>';
-    // Insert the toolbar right after the image (before the thumbs strip if present).
-    var thumbs = D.getElementById('ppThumbs');
-    if (thumbs) thumbs.parentNode.insertBefore(bar, thumbs);
-    else wrap.parentNode.insertBefore(bar, wrap.nextSibling);
-    bar.querySelector('#se-tb-main').onclick = function () { editImage(mainImg); };
-    bar.querySelector('#se-tb-add').onclick = openGalleryEditor;
-    bar.querySelector('#se-tb-scrape').onclick = openScrape;
+
+    // 1) Editor owns the thumbnail strip so it can always show every photo
+    //    plus a trailing "+ Add photo" tile (the public render only shows the
+    //    strip when >1 image — in edit mode we always show it).
+    if (!window.__seThumbsOwned) {
+      window.__seThumbsOwned = 1;
+      var origRender = window.renderPpThumbs;
+      window.renderPpThumbs = function () { renderEditorThumbs(); };
+      // render once now (gallery may still be loading; the async fetch will
+      // call window.renderPpThumbs again when ppGallery is populated)
+      renderEditorThumbs();
+      void origRender;
+    }
+
+    // 2) Scrape button at the top of the right-hand info column.
+    var side = D.querySelector('.pd-side');
+    if (side && !side.__sescrape) {
+      side.__sescrape = 1;
+      var sb = D.createElement('button');
+      sb.type = 'button'; sb.className = 'se-scrape-btn';
+      sb.innerHTML = '<span class="ico">⚡</span> Scrape to fill this product';
+      sb.onclick = openScrape;
+      side.insertBefore(sb, side.firstChild);
+    }
   }
 
-  // current gallery = page thumbnails minus the main image (those come from
-  // variants/scrape too, but the editor manages the manual `images` list).
-  function pageGallery() {
-    return (window.ppGallery || []).slice();
+  function renderEditorThumbs() {
+    var th = D.getElementById('ppThumbs'); if (!th) return;
+    var imgs = (window.ppGallery || []).slice();
+    var mainEl = D.getElementById('ppMain');
+    var mainSrc = mainEl ? mainEl.getAttribute('src') : '';
+    th.innerHTML = '';
+    imgs.slice(0, 24).forEach(function (src) {
+      var t = D.createElement('div'); t.className = 'pp-thumb' + (imgSrc(src) === mainSrc ? ' active' : '');
+      t.innerHTML = '<img src="' + esc(imgSrc(src)) + '" referrerpolicy="no-referrer">';
+      t.onclick = function () { if (mainEl) mainEl.src = imgSrc(src); [].forEach.call(th.querySelectorAll('.pp-thumb'), function (x) { x.classList.remove('active'); }); t.classList.add('active'); };
+      th.appendChild(t);
+    });
+    // trailing add-photo tile, styled like a thumbnail
+    var add = D.createElement('div'); add.className = 'pp-thumb se-addthumb';
+    add.innerHTML = '<span class="plus">＋</span><span class="lbl">Add</span>';
+    add.title = 'Add photos to this product';
+    add.onclick = function (e) { e.preventDefault(); e.stopPropagation(); openGalleryEditor(); };
+    th.appendChild(add);
   }
+
+  // The editor manages the MANUAL gallery only (window.ppManualGallery, the
+  // persisted `images` list). All values kept RAW; imgSrc() prefixes for
+  // display, rawSrc() strips for storage. window.ppGallery is the merged
+  // display list (main + manual + variants) rebuilt by window.rebuildPpGallery.
+  function manualGallery() { return (window.ppManualGallery || []).slice(); }
+  function mainRaw() {
+    if (window.ppMainSrc) return rawSrc(window.ppMainSrc);
+    var m = D.getElementById('ppMain'); return m ? rawSrc(m.getAttribute('src')) : '';
+  }
+  function rebuild() { if (typeof window.rebuildPpGallery === 'function') window.rebuildPpGallery(); else if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs(); }
   function setMainPhoto(url) {
+    url = rawSrc(url);
     var img = D.getElementById('ppMain'); if (img) img.src = imgSrc(url);
+    window.ppMainSrc = url;
     recordProduct(PID, { image: url });
-    if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs();
+    rebuild();
+  }
+  function setManualGallery(list) {
+    var clean = (list || []).map(rawSrc).filter(Boolean);
+    // de-dupe
+    var seen = {}, out = []; clean.forEach(function (u) { if (!seen[u]) { seen[u] = 1; out.push(u); } });
+    window.ppManualGallery = out;
+    rebuild();
+    return persistGallery(out);
   }
   function persistGallery(list) {
     // Save the manual gallery via the dedicated endpoint (kept out of the
@@ -308,22 +379,20 @@
 
   function openGalleryEditor() {
     var bg = D.createElement('div'); bg.className = 'se-modal-bg';
-    bg.innerHTML = '<div class="se-modal"><h3>Product photos</h3><div class="sub">Upload or paste image URLs. Click ★ to make one the main photo, ✕ to remove.</div>' +
+    bg.innerHTML = '<div class="se-modal"><h3>Product photos</h3><div class="sub">Upload or paste image URLs. Click ☆ Main to make one the main photo, ✕ to remove.</div>' +
       '<div class="se-galgrid" id="gg"></div>' +
       '<label class="se-pl">Add by URL</label><input id="gu" class="se-ps" placeholder="https://… image url">' +
       '<div class="se-row"><label class="se-up" style="flex:1;justify-content:center;">⤴ Upload photo(s)<input type="file" accept="image/*" multiple hidden></label><button class="se-b ghost" id="gadd">+ Add URL</button></div>' +
       '<div class="se-row"><button class="se-b ghost" id="gclose">Done</button></div></div>';
     B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
     var grid = bg.querySelector('#gg');
-    var gallery = pageGallery();
-    function mainSrc() { var m = D.getElementById('ppMain'); return m ? m.getAttribute('src') : ''; }
     function render() {
       grid.innerHTML = '';
-      var ms = mainSrc();
-      // main image first, then gallery
+      var main = mainRaw();
+      var gallery = manualGallery();
       var all = [];
-      if (ms) all.push({ url: ms, isMain: true });
-      gallery.forEach(function (u) { if (imgSrc(u) !== ms && u !== ms) all.push({ url: u, isMain: false }); });
+      if (main) all.push({ url: main, isMain: true });
+      gallery.forEach(function (u) { if (u !== main) all.push({ url: u, isMain: false }); });
       all.forEach(function (item) {
         var cell = D.createElement('div'); cell.className = 'se-galcell' + (item.isMain ? ' is-main' : '');
         cell.innerHTML = '<img src="' + esc(imgSrc(item.url)) + '" referrerpolicy="no-referrer">' +
@@ -331,21 +400,18 @@
           (item.isMain ? '' : '<button class="gx" title="Remove">✕</button>');
         cell.querySelector('.gmain').onclick = function () {
           if (item.isMain) return;
-          // promote: old main goes into the gallery, this becomes main
-          var oldMain = mainSrc();
-          gallery = gallery.filter(function (u) { return u !== item.url && imgSrc(u) !== imgSrc(item.url); });
-          if (oldMain && gallery.indexOf(oldMain) < 0) gallery.unshift(oldMain);
-          setMainPhoto(item.url);
-          persistGallery(gallery);
-          window.ppGallery = [item.url].concat(gallery);
+          // promote: old main drops into the manual gallery so it isn't lost
+          var oldMain = mainRaw();
+          var g = manualGallery().filter(function (u) { return u !== item.url; });
+          if (oldMain && g.indexOf(oldMain) < 0) g.unshift(oldMain);
+          setMainPhoto(item.url);          // updates ppMainSrc + records image
+          setManualGallery(g);             // persists new gallery + rebuilds
           status('Main photo updated ✓', 'success'); render();
         };
         var gx = cell.querySelector('.gx');
         if (gx) gx.onclick = function () {
-          gallery = gallery.filter(function (u) { return u !== item.url; });
-          persistGallery(gallery).then(function () { status('Photo removed', 'success'); });
-          window.ppGallery = [mainSrc()].concat(gallery);
-          if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs();
+          setManualGallery(manualGallery().filter(function (u) { return u !== item.url; }))
+            .then(function () { status('Photo removed', 'success'); });
           render();
         };
         grid.appendChild(cell);
@@ -354,11 +420,8 @@
     }
     function addUrl(u) {
       u = (u || '').trim(); if (!u) return;
-      if (gallery.indexOf(u) < 0) gallery.push(u);
-      persistGallery(gallery);
-      window.ppGallery = [mainSrc()].concat(gallery);
-      if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs();
-      render();
+      var g = manualGallery(); if (g.indexOf(u) < 0) g.push(u);
+      setManualGallery(g); render();
     }
     bg.querySelector('#gadd').onclick = function () { var i = bg.querySelector('#gu'); addUrl(i.value); i.value = ''; };
     bg.querySelector('#gu').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addUrl(this.value); this.value = ''; } });
@@ -366,19 +429,16 @@
     bg.querySelector('input[type=file]').onchange = function () {
       var files = [].slice.call(this.files); if (!files.length) return;
       status('Uploading ' + files.length + ' photo' + (files.length > 1 ? 's' : '') + '…');
+      var g = manualGallery();
       var chain = Promise.resolve();
       files.forEach(function (f) {
         chain = chain.then(function () {
           return uploadImg(PID, f, false).then(function (j) {
-            if (j && j.ok) { if (gallery.indexOf(j.image) < 0) gallery.push(j.image); }
+            if (j && j.ok && g.indexOf(j.image) < 0) g.push(j.image);
           });
         });
       });
-      chain.then(function () {
-        window.ppGallery = [mainSrc()].concat(gallery);
-        if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs();
-        status('Photos added ✓', 'success'); render();
-      });
+      chain.then(function () { setManualGallery(g); status('Photos added ✓', 'success'); render(); });
     };
     render();
   }
@@ -426,11 +486,8 @@
     var gallery = (s.images || []).slice();
     if (s.image && gallery.indexOf(s.image) < 0) gallery = [s.image].concat(gallery);
     if (wantPhotos && gallery.length) {
-      setMainPhoto(gallery[0]);
-      var extra = gallery.slice(1);
-      window.ppGallery = gallery.slice();
-      persistGallery(extra);
-      if (typeof window.renderPpThumbs === 'function') window.renderPpThumbs();
+      setMainPhoto(gallery[0]);            // first photo becomes the main image
+      setManualGallery(gallery.slice(1));  // the rest go into the manual gallery
       changed.push(gallery.length + ' photos');
     }
     // Variants

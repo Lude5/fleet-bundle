@@ -162,16 +162,28 @@ fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json()
 }).catch(function(){});
 
 // Photos / versions / QC — same sources the modal uses.
+// ppMainSrc      = the main image (raw url)
+// ppManualGallery = manually-added gallery photos (the editable `images` list)
+// ppVariantImgs  = images pulled from variants/scrape (not user-managed)
+// ppGallery      = merged display list (main + manual + variant), deduped
 window.ppGallery = [];
-fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
-    if (d.error) return;
+window.ppManualGallery = [];
+window.ppVariantImgs = [];
+window.ppMainSrc = '';
+window.rebuildPpGallery = function() {
     var imgs = [];
-    if (d.image) imgs.push(d.image);
-    // Manually-added gallery photos come right after the main image.
-    (d.images || []).forEach(function(u){ if (u && imgs.indexOf(u) < 0) imgs.push(u); });
-    (d.variants || []).forEach(function(v){ if (v.image && imgs.indexOf(v.image) < 0) imgs.push(v.image); });
+    var main = window.ppMainSrc || (document.getElementById('ppMain') || {}).getAttribute && document.getElementById('ppMain').getAttribute('src');
+    if (main) imgs.push(main);
+    (window.ppManualGallery || []).forEach(function(u){ if (u && imgs.indexOf(u) < 0) imgs.push(u); });
+    (window.ppVariantImgs || []).forEach(function(u){ if (u && imgs.indexOf(u) < 0) imgs.push(u); });
     window.ppGallery = imgs;
     renderPpThumbs();
+};
+fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
+    if (d.error) return;
+    window.ppMainSrc = d.image || (document.getElementById('ppMain')||{}).getAttribute('src') || '';
+    window.ppManualGallery = (d.images || []).filter(Boolean);
+    window.rebuildPpGallery();
 }).catch(function(){});
 window.renderPpThumbs = function() {
     var imgs = window.ppGallery || [];
@@ -190,6 +202,9 @@ window.renderPpThumbs = function() {
 
 fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(vd){
     var variants=(vd&&vd.variants)||[]; var box=document.getElementById('ppVariants'); var cnt=document.getElementById('ppVariantCount');
+    // feed variant images into the merged thumbnail gallery
+    window.ppVariantImgs = variants.map(function(v){return v.image;}).filter(Boolean);
+    if (typeof window.rebuildPpGallery === 'function') window.rebuildPpGallery();
     if (variants.length) {
         cnt.textContent = variants.length + ' variant' + (variants.length===1?'':'s');
         box.innerHTML = variants.map(function(v){
