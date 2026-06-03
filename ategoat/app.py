@@ -303,18 +303,81 @@ def _b_usfans(url, _id, _plat, code):
 # ategoat.com's public /promos/list endpoint. The other 9 use plain registration
 # URLs with NO referral code. To enable affiliate income for those, drop the
 # operator's own codes in via env vars or edit the URLs directly.
+# Each agent now carries an editable affiliate `code` (one code drives BOTH its
+# buy URLs and its signup link) and a `signup` TEMPLATE with a {code} placeholder
+# so editing the code in one place updates every link site-wide. Only kakobuy/
+# oopbuy/hipobuy ship with verified codes; the rest default to '' (no code) until
+# the operator drops their own in via the master_admin agent editor.
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'signup': SITE_CONFIG['agent_signup_url'],                             'coupon': 'Up to $500 shipping credit'},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'signup': 'https://oopbuy.com/register?inviteCode=KRLHFHSGL',          'coupon': 'Up to $300 in coupons'},
-    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'signup': 'https://hipobuy.com/register?inviteCode=25RXG9B0E',         'coupon': 'Up to $100 in coupons'},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'signup': 'https://www.joyagoo.com/index/user/register',               'coupon': 'Up to $300 in coupons'},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'signup': 'https://www.sugargoo.com/index/user/register',              'coupon': 'Up to $200 in coupons'},
-    {'key': 'hubbuy',      'name': 'HubBuy',      'build': _b_hubbuy,      'color': '#3b82f6', 'domain': 'hubbuycn.com',    'signup': 'https://www.hubbuycn.com/register',                         'coupon': 'Up to $150 in coupons'},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'signup': 'https://mulebuy.com/register',                             'coupon': 'Up to $200 in coupons'},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'signup': 'https://acbuy.com/register',                               'coupon': 'Up to $250 in coupons'},
-    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'signup': 'https://www.litbuy.com/register',                          'coupon': 'Up to $150 in coupons'},
-    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'signup': 'https://www.usfans.com/register',                          'coupon': 'Up to $100 in coupons'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'ategoat'), 'signup': 'https://www.kakobuy.com/register?affcode={code}',   'coupon': 'Up to $500 shipping credit'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'code': 'KRLHFHSGL',                                  'signup': 'https://oopbuy.com/register?inviteCode={code}',     'coupon': 'Up to $300 in coupons'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'code': '25RXG9B0E',                                  'signup': 'https://hipobuy.com/register?inviteCode={code}',    'coupon': 'Up to $100 in coupons'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'code': '',                                           'signup': 'https://www.joyagoo.com/index/user/register',       'coupon': 'Up to $300 in coupons'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'code': '',                                           'signup': 'https://www.sugargoo.com/index/user/register',      'coupon': 'Up to $200 in coupons'},
+    {'key': 'hubbuy',      'name': 'HubBuy',      'build': _b_hubbuy,      'color': '#3b82f6', 'domain': 'hubbuycn.com',    'code': '',                                           'signup': 'https://www.hubbuycn.com/register',                 'coupon': 'Up to $150 in coupons'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'code': '',                                           'signup': 'https://mulebuy.com/register',                      'coupon': 'Up to $200 in coupons'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'code': '',                                           'signup': 'https://acbuy.com/register',                        'coupon': 'Up to $250 in coupons'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'code': '',                                           'signup': 'https://www.litbuy.com/register',                   'coupon': 'Up to $150 in coupons'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'code': '',                                           'signup': 'https://www.usfans.com/register',                   'coupon': 'Up to $100 in coupons'},
 ]
+
+# key -> default agent record, and the default display order.
+AGENT_DEFAULTS = {a['key']: a for a in AGENTS}
+AGENT_DEFAULT_ORDER = [a['key'] for a in AGENTS]
+# Fields an operator may override via the master_admin editor (build fn is code-only).
+AGENT_EDITABLE_FIELDS = ('name', 'color', 'coupon', 'code', 'signup', 'enabled')
+
+
+def _load_agents_config():
+    """Operator overrides from settings: {'order':[keys], 'overrides':{key:{...}}}.
+    Safe on any error (returns empty override set)."""
+    import json
+    try:
+        raw = get_all_settings().get('agents_config', '')
+        if raw:
+            cfg = json.loads(raw)
+            if isinstance(cfg, dict):
+                return {'order': cfg.get('order') or [], 'overrides': cfg.get('overrides') or {}}
+    except Exception:
+        pass
+    return {'order': [], 'overrides': {}}
+
+
+def get_effective_agents(include_disabled=False):
+    """Merge hardcoded AGENTS defaults with operator overrides (code, name, color,
+    coupon, signup, enabled) and order. Each returned entry keeps its build fn so
+    buy URLs still work. This is the single source the whole site reads."""
+    cfg = _load_agents_config()
+    overrides = cfg.get('overrides') or {}
+    order = [k for k in (cfg.get('order') or []) if k in AGENT_DEFAULTS]
+    for k in AGENT_DEFAULT_ORDER:
+        if k not in order:
+            order.append(k)
+    out = []
+    for k in order:
+        base = AGENT_DEFAULTS.get(k)
+        if not base:
+            continue
+        ov = overrides.get(k) or {}
+        enabled = ov.get('enabled', True)
+        if not include_disabled and enabled is False:
+            continue
+        merged = dict(base)
+        for f in ('name', 'color', 'coupon', 'signup'):
+            if ov.get(f):
+                merged[f] = ov[f]
+        if 'code' in ov:           # allow clearing a code to '' explicitly
+            merged['code'] = ov.get('code') or ''
+        merged['enabled'] = enabled
+        out.append(merged)
+    return out
+
+
+def _agent_signup_url(a):
+    """Resolve an agent's signup URL, injecting its code into the {code} template."""
+    tpl = a.get('signup', '') or ''
+    code = a.get('code', '') or ''
+    return tpl.replace('{code}', code) if '{code}' in tpl else tpl
 
 
 @app.route('/api/signup-agents')
@@ -326,20 +389,22 @@ def api_signup_agents():
             'name': a['name'],
             'color': a['color'],
             'domain': a['domain'],
-            'signup_url': a.get('signup', ''),
+            'signup_url': _agent_signup_url(a),
             'coupon': a.get('coupon', 'Welcome credit available'),
             'logo': f'https://www.google.com/s2/favicons?domain={a["domain"]}&sz=64',
-        } for a in AGENTS]
+        } for a in get_effective_agents()]
     })
 
 
-def _agents_for_url(seller_url, affcode=''):
-    """Build a list of {key, name, url, color, letter, logo} agent options."""
+def _agents_for_url(seller_url, affcode=None):
+    """Build a list of {key, name, url, color, letter, logo} agent options.
+    Each agent uses ITS OWN editable affiliate code (the legacy single-affcode
+    arg is ignored — kept only so old callers don't break)."""
     platform, item_id = _parse_item_url(seller_url)
     out = []
-    for a in AGENTS:
+    for a in get_effective_agents():
         try:
-            built = a['build'](seller_url, item_id, platform, affcode)
+            built = a['build'](seller_url, item_id, platform, a.get('code', '') or '')
         except Exception:
             built = None
         if built:
@@ -690,7 +755,9 @@ def affiliate_redirect(product_id):
     agent_domain = (SITE_CONFIG.get('agent_domain') or '').lower()
     parsed = urlparse(url)
     target_host = (parsed.netloc or '').lower()
-    affcode = SITE_CONFIG.get('affiliate_code') or ''
+    # Main buy button wraps the product's KakoBuy URL — use KakoBuy's editable code.
+    _kako = next((a for a in get_effective_agents(include_disabled=True) if a['key'] == 'kakobuy'), None)
+    affcode = (_kako or {}).get('code') or SITE_CONFIG.get('affiliate_code') or ''
     # If the stored URL is already an agent URL (e.g. the spreadsheet shipped
     # kakobuy.com/item/details?url=...), just swap in our own affcode —
     # don't re-wrap it (which used to send KakoBuy a self-referential nested URL).
@@ -981,8 +1048,7 @@ def api_agents(pid):
     if not p:
         return jsonify({'error': 'not found'}), 404
     raw = _unwrap_agent_url(p.get('url', ''))
-    affcode = SITE_CONFIG.get('affiliate_code', '')
-    agents = _agents_for_url(raw, affcode)
+    agents = _agents_for_url(raw)  # each agent applies its own editable code
     platform, item_id = _parse_item_url(raw)
     return jsonify({
         'product_id': pid,
@@ -1007,8 +1073,7 @@ def api_agents_from_url():
     platform, item_id = _parse_item_url(raw)
     if not platform or not item_id:
         return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None, 'raw_url': raw})
-    affcode = SITE_CONFIG.get('affiliate_code', '')
-    agents = _agents_for_url(raw, affcode)
+    agents = _agents_for_url(raw)  # each agent applies its own editable code
     return jsonify({
         'platform': platform,
         'item_id': item_id,
@@ -2027,6 +2092,56 @@ def api_admin_update_settings():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)[:200]}), 500
     return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
+
+
+# --- Agent / invite-code management API (token-auth, for the master-admin editor) ---
+@app.route('/admin/api/agents-config')
+def api_admin_agents_config():
+    """Return the full agent list in effective (merged) form for editing —
+    includes disabled agents so the editor can re-enable them."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    agents = get_effective_agents(include_disabled=True)
+    return jsonify({'ok': True, 'agents': [{
+        'key': a['key'],
+        'name': a.get('name', ''),
+        'domain': a.get('domain', ''),
+        'color': a.get('color', ''),
+        'coupon': a.get('coupon', ''),
+        'code': a.get('code', ''),
+        'signup': a.get('signup', ''),
+        'signup_resolved': _agent_signup_url(a),
+        'enabled': a.get('enabled', True),
+        'code_param': ('{code}' in (a.get('signup', '') or '')),
+        'logo': f'https://www.google.com/s2/favicons?domain={a.get("domain","")}&sz=64',
+    } for a in agents]})
+
+
+@app.route('/admin/api/agents-config', methods=['PUT', 'POST'])
+def api_admin_save_agents_config():
+    """Persist operator agent overrides. Accepts either
+    {order:[keys], overrides:{key:{...}}} or a flat {agents:[{key,...}]} list
+    (the editor sends the flat list, in display order)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import json
+    data = request.get_json(silent=True) or {}
+    order = list(data.get('order') or [])
+    overrides = dict(data.get('overrides') or {})
+    if isinstance(data.get('agents'), list):
+        order, overrides = [], {}
+        for a in data['agents']:
+            k = a.get('key')
+            if not k or k not in AGENT_DEFAULTS:
+                continue
+            order.append(k)
+            overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
+    clean = {
+        'order': [k for k in order if k in AGENT_DEFAULTS],
+        'overrides': {k: v for k, v in overrides.items() if k in AGENT_DEFAULTS},
+    }
+    set_settings({'agents_config': json.dumps(clean)})
+    return jsonify({'ok': True, 'agents_config': clean})
 
 
 # --- Category management API (token-auth, for the master-admin visual editor) ---

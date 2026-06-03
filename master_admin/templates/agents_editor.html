@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Agents & Codes · {{ site.name }}{% endblock %}
+{% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/sites">Sites</a> <span class="sep">›</span> <span class="current">Agents &amp; Codes</span>{% endblock %}
+{% block heading %}Agents &amp; Codes — {{ site.name }}{% endblock %}
+{% block topbar_actions %}
+    <a href="/studio/{{ site.id }}" class="pill">Visual editor</a>
+{% endblock %}
+
+{% block extra_css %}
+.ae-intro { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 18px; max-width: 760px; }
+.ae-intro b { color: var(--text); }
+.ae-list { display: flex; flex-direction: column; gap: 10px; max-width: 920px; }
+.ae-row { display: grid; grid-template-columns: 26px 30px 34px 1fr; gap: 12px; align-items: start;
+  background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px 16px;
+  transition: box-shadow .15s, opacity .15s, transform .12s; }
+.ae-row.dragging { opacity: .6; box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+.ae-row.disabled { opacity: .5; }
+.ae-grip { cursor: grab; color: var(--text-muted); font-size: 17px; line-height: 1; padding-top: 6px; user-select: none; touch-action: none; }
+.ae-grip:active { cursor: grabbing; }
+.ae-logo { width: 34px; height: 34px; border-radius: 8px; background: #fff; object-fit: contain; }
+.ae-toggle { width: 34px; height: 20px; border-radius: 999px; background: var(--surface-3); position: relative; cursor: pointer; border: none; flex-shrink: 0; margin-top: 7px; transition: background .15s; }
+.ae-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+.ae-toggle.on { background: var(--accent); } .ae-toggle.on::after { left: 16px; }
+.ae-fields { display: grid; grid-template-columns: 1.1fr 1fr; gap: 10px 14px; }
+.ae-fields .full { grid-column: 1 / -1; }
+.ae-field label { display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+.ae-field input { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 13px; font-family: var(--font-mono); }
+.ae-field input:focus { outline: none; border-color: var(--accent); }
+.ae-field.code input { color: var(--accent); font-weight: 700; }
+.ae-field input[type=color] { padding: 2px; height: 34px; cursor: pointer; }
+.ae-preview { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); word-break: break-all; line-height: 1.5; }
+.ae-preview b { color: var(--accent); }
+.ae-name-row { display: flex; align-items: center; gap: 8px; }
+.ae-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+.ae-savebar { position: sticky; bottom: 0; margin-top: 22px; padding: 14px 0; background: linear-gradient(transparent, var(--bg) 30%); display: flex; gap: 12px; align-items: center; max-width: 920px; }
+.ae-btn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 11px 22px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.ae-btn:disabled { opacity: .5; cursor: default; }
+.ae-status { font-size: 12px; color: var(--text-muted); }
+.ae-status.ok { color: var(--accent); } .ae-status.err { color: var(--danger); }
+@media (max-width: 640px) { .ae-row { grid-template-columns: 22px 28px 30px 1fr; padding: 12px; } .ae-fields { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<p class="ae-intro">
+  These are the shopping agents shown in the <b>Switch Agent</b> picker on every product, plus the
+  <b>Sign Up</b> links across the site. Edit a code once and it updates <b>everywhere</b> — buy buttons,
+  the agent picker, the agents page, the converter, and signup links. <b>Drag the ⋮⋮ handle</b> to reorder,
+  toggle an agent off to hide it. The code is each agent's affiliate / invite code.
+</p>
+<div class="ae-list" id="aeList"><div class="ae-status">Loading agents…</div></div>
+<div class="ae-savebar">
+  <button class="ae-btn" id="aeSave" disabled>Save changes</button>
+  <span class="ae-status" id="aeStatus"></span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SITE = "{{ site.id }}";
+const listEl = document.getElementById('aeList');
+const saveBtn = document.getElementById('aeSave');
+const statusEl = document.getElementById('aeStatus');
+let AGENTS = [];
+
+function esc(s){ return (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function buyPreview(a){
+  // mirror the server builders just enough to show the operator what a buy link looks like
+  const c = a.code || '';
+  const sample = 'https://weidian.com/item.html?itemID=7717247027';
+  const enc = encodeURIComponent(sample);
+  const m = {
+    kakobuy:`kakobuy.com/item/details?url=…${c?'&affcode='+c:''}`,
+    oopbuy:`oopbuy.com/product/weidian/7717247027${c?'?inviteCode='+c:''}`,
+    hipobuy:`hipobuy.com/order/buy?url=…${c?'&affcode='+c:''}`,
+    sugargoo:`sugargoo.com/index/item/index.html?url=…${c?'&shareCode='+c:''}`,
+    acbuy:`acbuy.com/product?source=weidian&id=7717247027${c?'&u='+c:''}`,
+  };
+  return m[a.key] || (a.domain + (c?(' · code '+c):' · no code'));
+}
+
+function signupPreview(a){
+  if (a.signup && a.signup.indexOf('{code}')>=0) return a.signup.replace('{code}', a.code||'');
+  return a.signup || '';
+}
+
+function render(){
+  listEl.innerHTML = '';
+  AGENTS.forEach((a, i) => {
+    const row = document.createElement('div');
+    row.className = 'ae-row' + (a.enabled===false?' disabled':'');
+    row.dataset.key = a.key;
+    row.innerHTML = `
+      <div class="ae-grip" title="Drag to reorder">⋮⋮</div>
+      <button type="button" class="ae-toggle ${a.enabled===false?'':'on'}" data-act="toggle"></button>
+      <img class="ae-logo" src="${esc(a.logo)}" alt="" referrerpolicy="no-referrer"
+           onerror="this.style.visibility='hidden'">
+      <div class="ae-fields">
+        <div class="ae-field"><label>Name</label><input data-f="name" value="${esc(a.name)}"></div>
+        <div class="ae-field code"><label>Invite / affiliate code</label><input data-f="code" value="${esc(a.code)}" placeholder="(none)"></div>
+        <div class="ae-field full"><label>Sign-up URL ${a.code_param?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}"></div>
+        <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}"></div>
+        <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>
+        <div class="ae-preview">BUY: <b>${esc(buyPreview(a))}</b><br>SIGNUP: <b>${esc(signupPreview(a))}</b></div>
+      </div>`;
+    // field edits
+    row.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.addEventListener('input', () => { a[inp.dataset.f] = inp.value; dirty(); refreshPreview(row, a); });
+    });
+    row.querySelector('[data-act=toggle]').addEventListener('click', () => {
+      a.enabled = (a.enabled===false); render(); dirty();
+    });
+    attachDrag(row);
+    listEl.appendChild(row);
+  });
+}
+function refreshPreview(row, a){
+  const p = row.querySelector('.ae-preview');
+  if (p) p.innerHTML = 'BUY: <b>'+esc(buyPreview(a))+'</b><br>SIGNUP: <b>'+esc(signupPreview(a))+'</b>';
+}
+
+// pointer-based drag reorder (native DnD breaks with inputs in the row)
+let dragKey = null;
+function attachDrag(row){
+  const grip = row.querySelector('.ae-grip');
+  grip.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragKey = row.dataset.key;
+    row.classList.add('dragging');
+    grip.setPointerCapture(e.pointerId);
+    const move = (ev) => {
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      const overRow = under && under.closest ? under.closest('.ae-row') : null;
+      if (overRow && overRow !== row && overRow.parentElement === listEl) {
+        const rect = overRow.getBoundingClientRect();
+        const after = ev.clientY > rect.top + rect.height/2;
+        listEl.insertBefore(row, after ? overRow.nextSibling : overRow);
+      }
+    };
+    const up = (ev) => {
+      grip.releasePointerCapture(e.pointerId);
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', up);
+      row.classList.remove('dragging');
+      // rebuild AGENTS order from DOM
+      const order = Array.from(listEl.querySelectorAll('.ae-row')).map(r => r.dataset.key);
+      AGENTS.sort((a,b) => order.indexOf(a.key) - order.indexOf(b.key));
+      dragKey = null; dirty();
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up);
+  });
+}
+
+let isDirty = false;
+function dirty(){ isDirty = true; saveBtn.disabled = false; statusEl.textContent = 'Unsaved changes'; statusEl.className = 'ae-status'; }
+
+saveBtn.addEventListener('click', async () => {
+  saveBtn.disabled = true; statusEl.textContent = 'Saving…'; statusEl.className = 'ae-status';
+  // send the flat list in display order
+  const payload = { agents: AGENTS.map(a => ({
+    key: a.key, name: a.name, code: a.code, signup: a.signup,
+    coupon: a.coupon, color: a.color, enabled: a.enabled !== false,
+  })) };
+  try {
+    const r = await fetch('/agents/' + SITE + '/save', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (r.ok && d.ok !== false) { statusEl.textContent = 'Saved ✓ — live across the whole site'; statusEl.className = 'ae-status ok'; isDirty = false; }
+    else { statusEl.textContent = 'Error: ' + (d.error || 'save failed'); statusEl.className = 'ae-status err'; saveBtn.disabled = false; }
+  } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.className = 'ae-status err'; saveBtn.disabled = false; }
+});
+
+(async function load(){
+  try {
+    const r = await fetch('/agents/' + SITE + '/data');
+    const d = await r.json();
+    if (!r.ok || d.ok === false) { listEl.innerHTML = '<div class="ae-status err">Could not load agents: ' + esc(d.error||'unreachable') + '</div>'; return; }
+    AGENTS = d.agents || [];
+    render();
+    statusEl.textContent = AGENTS.length + ' agents';
+  } catch (e) { listEl.innerHTML = '<div class="ae-status err">Error: ' + esc(e.message) + '</div>'; }
+})();
+</script>
+{% endblock %}
