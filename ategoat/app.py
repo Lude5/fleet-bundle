@@ -1074,6 +1074,22 @@ def _related_products(p, limit=8):
     return sorted(pool, key=score, reverse=True)[:limit]
 
 
+@app.route('/product/new')
+def product_new():
+    """Blank product page used by the Studio editor's 'Add product' flow.
+    Renders the exact product-page layout with every field empty so the
+    operator can fill it in (or scrape it) and review before saving. The
+    product is NOT created until they hit 'Add product' in the editor —
+    this page holds a client-side draft only."""
+    blank = {
+        'id': '', 'name': '', 'price': '', 'price_numeric': '', 'url': '',
+        'image': '', 'category': '', 'seller': '', 'batch': '', 'weight': '',
+        'quality': '', 'sales': 0, 'retail_price': '', 'in_stock': 1,
+    }
+    return render_template('product.html', product=blank, related=[],
+                           categories=get_categories(), draft=True)
+
+
 @app.route('/product/<pid>')
 def product_page(pid):
     """Standalone on-site product page (same design as the detail modal) + related."""

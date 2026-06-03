@@ -88,7 +88,7 @@
         var win = fr.contentWindow, doc = fr.contentDocument || win.document;
         win.__STUDIO__ = { siteId: SITE_ID };
         var s = doc.createElement('script');
-        s.src = '/static/js/site_editor.js?v=20';
+        s.src = '/static/js/site_editor.js?v=21';
         doc.body.appendChild(s);
         document.getElementById('notice').classList.remove('show');
       } catch (e) {

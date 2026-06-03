@@ -119,6 +119,7 @@
 
 {% block extra_js %}
 var PID = {{ product.id|tojson }};
+window.PP_DRAFT = {{ 'true' if draft else 'false' }};   // blank "Add product" draft page
 var ppAgents = [];
 
 function ppSetAgent(a) {
@@ -139,6 +140,7 @@ window.ppCloseAgents = function() {
     if (o) { o.classList.remove('active'); document.body.style.overflow = ''; }
 };
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') ppCloseAgents(); });
+if (!window.PP_DRAFT)
 fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
     ppAgents = d.agents || d || [];
     if (!ppAgents.length) return;
@@ -191,6 +193,16 @@ window.rebuildPpGallery = function() {
     window.ppGallery = imgs;
     renderPpThumbs();
 };
+if (window.PP_DRAFT) {
+    // Blank draft: no product to fetch. Start with an empty gallery; the
+    // editor (Studio) lets you upload/scrape, and "Add product" creates it.
+    window.ppMainSrc = ''; window.ppManualGallery = []; window.ppVariantImgs = [];
+    (function(){
+        var vb=document.getElementById('ppVariants'); if(vb) vb.innerHTML='<div class="pd-qc-empty">No versions yet</div>';
+        var vc=document.getElementById('ppVariantCount'); if(vc) vc.textContent='Versions';
+        var qb=document.getElementById('ppQc'); if(qb) qb.innerHTML='<div class="pd-qc-empty">No QC photos yet</div>';
+    })();
+} else
 fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
     if (d.error) return;
     window.ppMainSrc = d.image || (document.getElementById('ppMain')||{}).getAttribute('src') || '';
@@ -218,6 +230,7 @@ window.renderPpThumbs = function() {
     }
 };
 
+if (!window.PP_DRAFT)
 fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(vd){
     var variants=(vd&&vd.variants)||[]; var box=document.getElementById('ppVariants'); var cnt=document.getElementById('ppVariantCount');
     // feed variant images into the merged thumbnail gallery
@@ -241,6 +254,7 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
 }).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">No variants available</div>'; });
 
 var qcPhotos = [], qcIdx = 0;
+if (!window.PP_DRAFT)
 fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(qd){
     qcPhotos = (qd&&qd.photos)||[]; var qc=document.getElementById('ppQc');
     if (qcPhotos.length) { qc.className='pd-qc'; qc.innerHTML=qcPhotos.map(function(u,i){return '<img src="'+u+'" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQc('+i+')">';}).join(''); }

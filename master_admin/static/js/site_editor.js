@@ -11,6 +11,10 @@
   var CFG = window.__STUDIO__ || {};
   var SITE = CFG.siteId || '';
   var PID = (typeof window.PID !== 'undefined') ? window.PID : null;
+  // Draft "Add product" page: the full product layout, blank + editable. All
+  // edits accumulate in DRAFT (no PID yet); "Add product" creates it for real.
+  var DRAFT_MODE = !!window.PP_DRAFT;
+  var DRAFT = { images: [] };
   var SITEROOT = (location.pathname.match(/^\/[a-z0-9_-]+/i) || [''])[0]; // e.g. /ategoat
   if (SITEROOT === '/product' || SITEROOT === '/shop') SITEROOT = '';
   var CATS = [];
@@ -57,6 +61,9 @@
     return u;
   }
   function uploadImg(pid, file, primary) {
+    // Draft has no product id yet — store the file under a 'draft' bucket; the
+    // returned /uploads URL is kept in DRAFT and attached when the product is created.
+    pid = pid || (DRAFT_MODE ? 'draft' : '');
     var fd = new FormData(); fd.append('file', file);
     return fetch('/upload/' + SITE + '/' + encodeURIComponent(pid) + (primary === false ? '?primary=0' : ''), { method: 'POST', body: fd, credentials: 'same-origin' })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: 'network error' }; });
@@ -74,7 +81,7 @@
   }
 
   /* ---------- pending changes ---------- */
-  function recordProduct(id, partial) { if (!id) return; var p = pending.products[id] || (pending.products[id] = {}); Object.keys(partial).forEach(function (k) { p[k] = partial[k]; }); refreshBar(); }
+  function recordProduct(id, partial) { if (DRAFT_MODE) { Object.keys(partial).forEach(function (k) { DRAFT[k] = partial[k]; }); return; } if (!id) return; var p = pending.products[id] || (pending.products[id] = {}); Object.keys(partial).forEach(function (k) { p[k] = partial[k]; }); refreshBar(); }
   function recordSetting(key, val) { pending.settings[key] = val; refreshBar(); }
   function dirtyCount() { var n = 0; Object.keys(pending.products).forEach(function (id) { n += Object.keys(pending.products[id]).length; }); return n + Object.keys(pending.settings).length + (pending.order ? 1 : 0); }
   function refreshBar() {
@@ -358,6 +365,35 @@
     }
   }
 
+  // Create the product from the blank "Add product" draft page after review.
+  function saveDraftProduct() {
+    var name = (DRAFT.name || '').trim();
+    if (!name) { status('Add a product name first', 'error'); return; }
+    var body = {
+      name: name,
+      price: DRAFT.price || '',
+      category: DRAFT.category || '',
+      image: DRAFT.image || '',
+      url: DRAFT.url || '',
+      quality: DRAFT.quality || '',
+      batch: DRAFT.batch || '',
+      weight: DRAFT.weight || '',
+      seller: DRAFT.seller || '',
+      retail_price: DRAFT.retail_price || '',
+      sales: DRAFT.sales || 0,
+    };
+    if (DRAFT.variants) body.variants = DRAFT.variants;
+    var btn = D.getElementById('se-draftadd'); if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+    status('Adding product…');
+    jfetch('/products/' + SITE + '/new', 'POST', body).then(function (j) {
+      if (!(j && j.ok && j.id)) { if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } status((j && j.error) || 'Could not add product', 'error'); return; }
+      var imgs = (DRAFT.images || []).filter(Boolean);
+      var done = function () { status('Product added ✓', 'success'); location.href = SITEROOT + '/product/' + j.id; };
+      if (imgs.length) jfetch('/products/' + SITE + '/gallery/' + j.id, 'POST', { images: imgs }).then(done).catch(done);
+      else done();
+    }).catch(function () { if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } status('Network error — not added', 'error'); });
+  }
+
   function absU(u) { try { var a = D.createElement('a'); a.href = u; return a.href; } catch (e) { return u; } }
   function renderEditorThumbs() {
     var th = D.getElementById('ppThumbs'); if (!th) return;
@@ -403,6 +439,7 @@
     var seen = {}, out = []; clean.forEach(function (u) { if (!seen[u]) { seen[u] = 1; out.push(u); } });
     window.ppManualGallery = out;
     rebuild();
+    if (DRAFT_MODE) { DRAFT.images = out; return Promise.resolve({ ok: true }); }  // attached on create
     return persistGallery(out);
   }
   function persistGallery(list) {
@@ -707,33 +744,9 @@
     });
   }
   function openAddProduct() {
-    var build = function () {
-      var bg = D.createElement('div'); bg.className = 'se-modal-bg';
-      var catOpts = '<option value="">— category —</option>' + CATS.map(function (c) { return '<option value="' + c.slug + '">' + esc(c.name) + '</option>'; }).join('');
-      bg.innerHTML = '<div class="se-modal"><h3>Add product</h3><div class="sub">Fill the basics — you can edit the rest on its page after</div>' +
-        '<label class="se-pl">Name *</label><input id="ap-n" class="se-ps">' +
-        '<label class="se-pl">Price ($)</label><input id="ap-p" class="se-ps">' +
-        '<label class="se-pl">Category</label><select id="ap-c" class="se-ps">' + catOpts + '</select>' +
-        '<label class="se-pl">Image URL</label><input id="ap-i" class="se-ps" placeholder="https://… (or upload after)">' +
-        '<label class="se-pl">Shop / purchase URL</label><input id="ap-u" class="se-ps" placeholder="https://… kakobuy / weidian / taobao link">' +
-        '<div class="se-row"><button class="se-b ghost" id="ap-x">Cancel</button><button class="se-b save" id="ap-s">Create</button></div></div>';
-      B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
-      bg.querySelector('#ap-x').onclick = function () { bg.remove(); };
-      bg.querySelector('#ap-s').onclick = function () {
-        var name = bg.querySelector('#ap-n').value.trim(); if (!name) { status('Name is required', 'error'); return; }
-        var body = {
-          name: name,
-          price: bg.querySelector('#ap-p').value.trim(),
-          category: bg.querySelector('#ap-c').value,
-          image: bg.querySelector('#ap-i').value.trim(),
-          url: bg.querySelector('#ap-u').value.trim(),
-        };
-        status('Creating…');
-        jfetch('/products/' + SITE + '/new', 'POST', body).then(function (j) { if (j && j.ok && j.id) { bg.remove(); status('Created ✓', 'success'); navTo(SITEROOT + '/product/' + j.id); } else status((j && j.error) || 'Create failed', 'error'); });
-      };
-      bg.querySelector('#ap-n').focus();
-    };
-    if (CATS.length) build(); else loadCats().then(build);
+    // Open the full blank product page (draft). The operator fills it in / scrapes
+    // it, reviews everything in the real layout, then clicks "Add product".
+    navTo(SITEROOT + '/product/new');
   }
 
   /* ---------- BULK select + actions (shop grid) ---------- */
@@ -947,9 +960,21 @@
     B.classList.add('se-editing');
     D.querySelectorAll('.pf-empty').forEach(function (el) { el.classList.remove('pf-empty'); }); // reveal empty slots so they can be filled (class is the only thing hiding them)
     D.querySelectorAll('[data-edit],[data-edit-brand]').forEach(bindText);
-    if (PID) { D.querySelectorAll('[data-pf]').forEach(bindProductField); D.querySelectorAll('[data-qc-edit]').forEach(bindQc); D.querySelectorAll('[data-variant-edit]').forEach(bindVariants); bindProductToolbar(); }
+    if (PID || DRAFT_MODE) { D.querySelectorAll('[data-pf]').forEach(bindProductField); D.querySelectorAll('[data-qc-edit]').forEach(bindQc); D.querySelectorAll('[data-variant-edit]').forEach(bindVariants); bindProductToolbar(); }
     enhanceBestSelling();
     enhanceCards();
+    if (DRAFT_MODE) {
+      // Draft "Add product" page: a dedicated bar to create the product (no
+      // per-field save — everything is collected into DRAFT and created at once).
+      if (!D.getElementById('se-draftbar')) {
+        var db = D.createElement('div'); db.className = 'se-bar show'; db.id = 'se-draftbar';
+        db.innerHTML = '<span class="cnt">New product — fill it in or scrape, then add it</span><button class="disc" id="se-draftcancel">Cancel</button><button class="save" id="se-draftadd">✓ Add product</button>';
+        B.appendChild(db);
+        db.querySelector('#se-draftadd').onclick = saveDraftProduct;
+        db.querySelector('#se-draftcancel').onclick = function () { location.href = SITEROOT + '/shop'; };
+      }
+      return;  // skip the normal save bar + recovery on the draft page
+    }
     if (!D.getElementById('se-bar')) {
       var bar = D.createElement('div'); bar.className = 'se-bar'; bar.id = 'se-bar';
       bar.innerHTML = '<span class="cnt">● 0 unsaved changes</span><button class="disc">Discard</button><button class="save">Save changes</button>';
@@ -962,7 +987,7 @@
     if (!window.__seRecoverChecked) { window.__seRecoverChecked = 1; try { var saved = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (saved) showRecover(saved); } catch (e) {} }
   }
   window.__seRescan = scan;
-  if (PID) loadCats().finally(scan); else scan();  // categories only needed on the product page
-  var h = D.createElement('div'); h.className = 'se-hint'; h.textContent = 'Edit mode — changes are instant; click “Save changes” when ready';
-  B.appendChild(h); setTimeout(function () { h.style.transition = 'opacity .4s'; h.style.opacity = '0'; setTimeout(function () { h.remove(); }, 500); }, 4000);
+  if (PID || DRAFT_MODE) loadCats().finally(scan); else scan();  // categories needed on the product/draft page
+  var h = D.createElement('div'); h.className = 'se-hint'; h.textContent = DRAFT_MODE ? 'New product — click any field to fill it in, or ⚡ Scrape to auto-fill, then “Add product”' : 'Edit mode — changes are instant; click “Save changes” when ready';
+  B.appendChild(h); setTimeout(function () { h.style.transition = 'opacity .4s'; h.style.opacity = '0'; setTimeout(function () { h.remove(); }, 500); }, 5000);
 })();
