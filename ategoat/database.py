@@ -351,7 +351,11 @@ def search_products(query):
     def run(grps):
         rel_parts, where_parts, rel_params, where_params = [], [], [], []
         for group in grps:
-            likes = ['%' + a.lower() + '%' for a in group]
+            # spaces in a phrase become '_' (LIKE single-char wildcard) so the
+            # separator can be a space, NEWLINE, or hyphen — "jordan 4" still
+            # matches "Jordan\n4" / "off white" matches "off-white" — without the
+            # gap-matching that would wrongly let "jordan 4" hit "Jordan 14".
+            likes = ['%' + a.lower().replace(' ', '_') + '%' for a in group]
             name_or = ' OR '.join('LOWER(name) LIKE ?' for _ in likes)
             tag_or = ' OR '.join('LOWER(tags) LIKE ?' for _ in likes)
             rel_parts.append(f'(CASE WHEN ({name_or}) THEN 3 WHEN ({tag_or}) THEN 1 ELSE 0 END)')

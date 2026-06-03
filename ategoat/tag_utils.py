@@ -205,11 +205,11 @@ SEARCH_TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9'\-]*")
 # sneaker / streetwear / luxury rep market this catalogue covers.
 QUERY_SHORTHAND = {
     'af1': ['air force 1'], 'af': ['air force'], 'forces': ['air force 1'],
-    'am': ['air max'], 'am1': ['air max 1'], 'am90': ['air max 90'], 'am95': ['air max 95'],
+    'am1': ['air max 1'], 'am90': ['air max 90'], 'am95': ['air max 95'],
     'am97': ['air max 97'], 'am270': ['air max 270'], 'am720': ['air max 720'],
     'tn': ['air max plus', 'tn'], 'tns': ['air max plus', 'tn'], 'vapormax': ['vapormax'],
     'sb': ['nike sb', 'dunk'], 'dunks': ['dunk'],
-    'aj': ['jordan'], 'jordans': ['jordan'], 'retro': ['jordan'],
+    'aj': ['jordan'], 'jordans': ['jordan'],
     'yzy': ['yeezy'], 'yeezys': ['yeezy'], 'foams': ['yeezy foam', 'foam runner'],
     'nb': ['new balance'], 'tnf': ['north face'], 'northface': ['north face'],
     'fog': ['fear of god', 'essentials'], 'essentials': ['essentials', 'fear of god'],
@@ -220,7 +220,7 @@ QUERY_SHORTHAND = {
     'sp5der': ['spider', 'sp5der', 'sp5der'], 'spider': ['spider', 'sp5der'],
     'gg': ['golden goose'], 'mm6': ['mm6', 'maison margiela'], 'tabi': ['tabi', 'margiela'],
     'rep': [''], 'reps': [''],   # ignore filler
-    'ap': ['audemars piguet', 'royal oak'], 'pp': ['patek philippe'], 'rm': ['richard mille'],
+    'ap': ['audemars piguet', 'royal oak'], 'pp': ['patek philippe', 'philipp plein', 'pp'], 'rm': ['richard mille'],
     'sammies': ['samba'], 'sambas': ['samba'], 'gazelles': ['gazelle'],
     # concatenated brand / model names (no space)
     'airforce': ['air force'], 'airforce1': ['air force 1'], 'airmax': ['air max'],
@@ -285,9 +285,15 @@ def expand_search_query(query):
             m = pat.match(tok)
             if m:
                 alts.add(tmpl.format(*m.groups()))
+        if not alts and is_shorthand:
+            continue  # mapped to filler only (e.g. "rep"/"reps") → drop the token
+        # COVERAGE GUARANTEE: a token of >=3 chars must always also match itself, so
+        # every product stays findable by its own name words even when a shorthand
+        # expands to something else (e.g. "offwhite" -> "off white", but "OffWhite"
+        # products only contain the literal "offwhite").
+        if len(tok) >= 3 and not tok.isdigit():
+            alts.add(tok)
         if not alts:
-            if is_shorthand:
-                continue  # mapped to filler only (e.g. "rep"/"reps") → drop the token
             alts.add(tok)
         groups.append(sorted(alts))
     return groups
