@@ -330,56 +330,59 @@ def reorder_products(ordered_ids):
 
 
 def search_products(query):
-    """Token-based fuzzy search.
-
-    Splits the query into words and requires every word to appear somewhere in
-    name/tags/seller/category. Relevance prefers matches in the name.
-    Words ≤2 chars are kept (e.g. "lv", "nb") because brand aliases need them.
+    """Extensive fuzzy product search:
+      - shorthand expansion: j4 -> "jordan 4", af1 -> "air force 1", am90 -> "air max 90"
+      - number-aware: "jordan 4" matches Jordan 4s (the old tokenizer dropped bare numbers)
+      - brand aliases (lv, yzy, crtz, tnf, aj, ...) resolved via tags
+      - typo tolerance as a fallback so misspellings ("balencaga") still resolve
+    Each query GROUP (a word or expanded phrase) must appear in name/tags/seller/
+    category (OR within a group, AND across groups); name matches rank highest.
     """
     try:
-        from tag_utils import tokenize_query
-        tokens = tokenize_query(query)
+        from tag_utils import expand_search_query, fuzzy_correct_groups, get_search_vocab, set_search_vocab
     except ImportError:
-        tokens = [t.lower() for t in (query or '').split() if t]
-    if not tokens:
+        from .tag_utils import expand_search_query, fuzzy_correct_groups, get_search_vocab, set_search_vocab
+
+    groups = expand_search_query(query)
+    if not groups:
         return []
-
     conn = get_db()
-    where_clauses = []
-    params = []
-    # Each token must be found somewhere
-    for tok in tokens:
-        like = f'%{tok}%'
-        where_clauses.append('(LOWER(name) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(seller) LIKE ? OR LOWER(category) LIKE ?)')
-        params.extend([like, like, like, like])
-    # Relevance: how many tokens hit the name (strongest signal)
-    relevance_parts = []
-    for tok in tokens:
-        relevance_parts.append('(CASE WHEN LOWER(name) LIKE ? THEN 3 WHEN LOWER(tags) LIKE ? THEN 1 ELSE 0 END)')
-        like = f'%{tok}%'
-        params.extend([like, like])  # used in SELECT below, appended after WHERE params
-    # Reorder: WHERE params first, then SELECT-side relevance params
-    sql_params = []
-    # WHERE params
-    for tok in tokens:
-        like = f'%{tok}%'
-        sql_params.extend([like, like, like, like])
-    # SELECT relevance params
-    for tok in tokens:
-        like = f'%{tok}%'
-        sql_params.extend([like, like])
 
-    relevance_sql = ' + '.join(relevance_parts) if relevance_parts else '0'
-    where_sql = ' AND '.join(where_clauses)
-    sql = f'''
-        SELECT *, ({relevance_sql}) AS relevance
-        FROM products
-        WHERE {where_sql}
-        ORDER BY relevance DESC, {SHOP_ORDER}
-    '''
-    rows = conn.execute(sql, sql_params).fetchall()
+    def run(grps):
+        rel_parts, where_parts, rel_params, where_params = [], [], [], []
+        for group in grps:
+            likes = ['%' + a.lower() + '%' for a in group]
+            name_or = ' OR '.join('LOWER(name) LIKE ?' for _ in likes)
+            tag_or = ' OR '.join('LOWER(tags) LIKE ?' for _ in likes)
+            rel_parts.append(f'(CASE WHEN ({name_or}) THEN 3 WHEN ({tag_or}) THEN 1 ELSE 0 END)')
+            rel_params.extend(likes)   # name ORs
+            rel_params.extend(likes)   # tag ORs
+            field_or = ' OR '.join(
+                '(LOWER(name) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(seller) LIKE ? OR LOWER(category) LIKE ?)'
+                for _ in likes)
+            where_parts.append('(' + field_or + ')')
+            for lk in likes:
+                where_params.extend([lk, lk, lk, lk])
+        sql = (f'SELECT *, ({" + ".join(rel_parts)}) AS relevance FROM products '
+               f'WHERE {" AND ".join(where_parts)} ORDER BY relevance DESC, {SHOP_ORDER}')
+        return [dict(r) for r in conn.execute(sql, rel_params + where_params).fetchall()]
+
+    results = run(groups)
+    # Typo fallback: only when the exact/shorthand pass found very little, correct
+    # unknown words against the product vocabulary and search again.
+    if len(results) < 3:
+        vocab = get_search_vocab()
+        if vocab is None:
+            vocab = set_search_vocab([dict(r) for r in conn.execute('SELECT name, tags FROM products').fetchall()])
+        fz, changed = fuzzy_correct_groups(groups, vocab)
+        if changed:
+            seen = {r['id'] for r in results}
+            for r in run(fz):
+                if r['id'] not in seen:
+                    results.append(r)
+                    seen.add(r['id'])
     conn.close()
-    return [dict(r) for r in rows]
+    return results
 
 
 def get_categories():

@@ -195,6 +195,127 @@ def tokenize_query(q):
 
 
 # ============================================================
+# Extensive fuzzy search: shorthand expansion + number handling + typo tolerance
+# ============================================================
+# Captures words, numbers AND alphanumeric shorthand (j4, am90) — unlike WORD_RE,
+# which drops bare numbers so "jordan 4" used to search only "jordan".
+SEARCH_TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9'\-]*")
+
+# Shorthand → one or more canonical search phrases (OR'd). Curated for the
+# sneaker / streetwear / luxury rep market this catalogue covers.
+QUERY_SHORTHAND = {
+    'af1': ['air force 1'], 'af': ['air force'], 'forces': ['air force 1'],
+    'am': ['air max'], 'am1': ['air max 1'], 'am90': ['air max 90'], 'am95': ['air max 95'],
+    'am97': ['air max 97'], 'am270': ['air max 270'], 'am720': ['air max 720'],
+    'tn': ['air max plus', 'tn'], 'tns': ['air max plus', 'tn'], 'vapormax': ['vapormax'],
+    'sb': ['nike sb', 'dunk'], 'dunks': ['dunk'],
+    'aj': ['jordan'], 'jordans': ['jordan'], 'retro': ['jordan'],
+    'yzy': ['yeezy'], 'yeezys': ['yeezy'], 'foams': ['yeezy foam', 'foam runner'],
+    'nb': ['new balance'], 'tnf': ['north face'], 'northface': ['north face'],
+    'fog': ['fear of god', 'essentials'], 'essentials': ['essentials', 'fear of god'],
+    'bal': ['balenciaga'], 'balys': ['balenciaga'], 'lv': ['louis vuitton', 'lv'],
+    'ch': ['chrome hearts'], 'gd': ['gallery dept', 'gallery department'],
+    'crtz': ['corteiz'], 'ow': ['off white', 'off-white'], 'pa': ['palm angels'],
+    'bbc': ['billionaire boys club'], 'cdg': ['comme des garcons', 'play'],
+    'sp5der': ['spider', 'sp5der', 'sp5der'], 'spider': ['spider', 'sp5der'],
+    'gg': ['golden goose'], 'mm6': ['mm6', 'maison margiela'], 'tabi': ['tabi', 'margiela'],
+    'rep': [''], 'reps': [''],   # ignore filler
+    'ap': ['audemars piguet', 'royal oak'], 'pp': ['patek philippe'], 'rm': ['richard mille'],
+    'sammies': ['samba'], 'sambas': ['samba'], 'gazelles': ['gazelle'],
+    # concatenated brand / model names (no space)
+    'airforce': ['air force'], 'airforce1': ['air force 1'], 'airmax': ['air max'],
+    'airjordan': ['jordan'], 'newbalance': ['new balance'], 'offwhite': ['off white', 'off-white'],
+    'stoneisland': ['stone island'], 'chromehearts': ['chrome hearts'], 'palmangels': ['palm angels'],
+    'fearofgod': ['fear of god', 'essentials'], 'denimtears': ['denim tears'],
+    'gallerydept': ['gallery dept'], 'northface': ['north face'], 'louisvuitton': ['louis vuitton'],
+    'travisscott': ['travis scott', 'cactus jack'], 'cactusjack': ['cactus jack', 'travis scott'],
+    'broken': ['broken planet'], 'syna': ['syna world', 'syna'],
+}
+
+# Model-number shorthand → canonical phrase, e.g. j4 -> "jordan 4", am90 -> "air max 90".
+_MODEL_PATTERNS = [
+    (re.compile(r'^(?:aj|j|jordan)(\d{1,2})$'), 'jordan {0}'),
+    (re.compile(r'^(?:am|airmax)(\d{1,3})$'), 'air max {0}'),
+    (re.compile(r'^nb(\d{2,4})$'), 'new balance {0}'),
+    (re.compile(r'^(?:yzy|yeezy)(\d{3})$'), 'yeezy {0}'),
+]
+
+_SEARCH_VOCAB = None
+
+
+def invalidate_search_vocab():
+    """Drop the cached typo-correction vocabulary (call after product writes)."""
+    global _SEARCH_VOCAB
+    _SEARCH_VOCAB = None
+
+
+def set_search_vocab(rows):
+    """Build the typo-correction vocabulary from product rows ({name, tags})."""
+    global _SEARCH_VOCAB
+    vocab = set()
+    for r in rows or []:
+        for field in ('name', 'tags'):
+            for w in SEARCH_TOKEN_RE.findall((r.get(field) or '').lower()):
+                if len(w) >= 3 and not w.isdigit():
+                    vocab.add(w)
+    _SEARCH_VOCAB = vocab
+    return vocab
+
+
+def get_search_vocab():
+    return _SEARCH_VOCAB
+
+
+def expand_search_query(query):
+    """Turn a query into a list of GROUPS (cheap: shorthand + model + number-merge,
+    NO fuzzy). A product matches if EVERY group has at least one alternative present
+    (OR within a group, AND across groups). Each group is a list of substrings."""
+    toks = [t for t in SEARCH_TOKEN_RE.findall((query or '').lower()) if t not in STOP_WORDS]
+    groups = []
+    for tok in toks:
+        # a bare number right after a plain word → merge into a phrase ("jordan","4" → "jordan 4")
+        if tok.isdigit() and groups and len(groups[-1]) == 1 and groups[-1][0].isalpha():
+            groups[-1] = [groups[-1][0] + ' ' + tok]
+            continue
+        alts = set()
+        is_shorthand = tok in QUERY_SHORTHAND
+        if is_shorthand:
+            alts.update(a for a in QUERY_SHORTHAND[tok] if a)
+        for pat, tmpl in _MODEL_PATTERNS:
+            m = pat.match(tok)
+            if m:
+                alts.add(tmpl.format(*m.groups()))
+        if not alts:
+            if is_shorthand:
+                continue  # mapped to filler only (e.g. "rep"/"reps") → drop the token
+            alts.add(tok)
+        groups.append(sorted(alts))
+    return groups
+
+
+def fuzzy_correct_groups(groups, vocab):
+    """Apply typo correction (only to single plain-word groups whose word is unknown)
+    against the product vocabulary. Returns possibly-corrected groups + whether any
+    changed. Run only as a fallback when the exact search found little."""
+    import difflib
+    if not vocab:
+        return groups, False
+    changed = False
+    out = []
+    for group in groups:
+        if len(group) == 1:
+            w = group[0]
+            if (' ' not in w) and len(w) >= 4 and not w.isdigit() and w not in vocab:
+                close = difflib.get_close_matches(w, vocab, n=4, cutoff=0.78)
+                if close:
+                    out.append(sorted(set(close)))
+                    changed = True
+                    continue
+        out.append(group)
+    return out, changed
+
+
+# ============================================================
 # Auto-categorization
 # ============================================================
 # Maps a name pattern -> canonical category slug. First match wins.
