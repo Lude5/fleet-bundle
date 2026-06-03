@@ -103,6 +103,7 @@ def init_db():
         ('variants',   'ALTER TABLE products ADD COLUMN variants TEXT DEFAULT ""'),
         ('edited',     'ALTER TABLE products ADD COLUMN edited INTEGER DEFAULT 0'),
         ('images',     'ALTER TABLE products ADD COLUMN images TEXT DEFAULT ""'),
+        ('manual',     'ALTER TABLE products ADD COLUMN manual INTEGER DEFAULT 0'),
     ]:
         try:
             conn.execute(ddl)
@@ -208,8 +209,8 @@ def get_listing_variants(product):
 def add_product(product):
     conn = get_db()
     conn.execute('''
-        INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ''', (
         product.get('id', ''),
         product.get('name', ''),
@@ -224,6 +225,7 @@ def add_product(product):
         product.get('retail_price', ''),
         int(product.get('review_count', 0) or 0),
         product.get('tags', ''),
+        int(product.get('manual', 0) or 0),
     ))
     conn.commit()
     conn.close()
@@ -233,8 +235,8 @@ def add_products_bulk(products):
     conn = get_db()
     for p in products:
         conn.execute('''
-            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (
             p.get('id', ''),
             p.get('name', ''),
@@ -249,6 +251,7 @@ def add_products_bulk(products):
             p.get('retail_price', ''),
             int(p.get('review_count', 0) or 0),
             p.get('tags', ''),
+            int(p.get('manual', 0) or 0),
         ))
     conn.commit()
     conn.close()
@@ -256,7 +259,7 @@ def add_products_bulk(products):
 
 def update_product(product_id, updates):
     conn = get_db()
-    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos', 'variants', 'images']
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos', 'variants', 'images', 'manual']
     sets = []
     vals = []
     for key in allowed:

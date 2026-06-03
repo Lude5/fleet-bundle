@@ -114,15 +114,16 @@ try:
             except Exception:
                 seeded_hash = ''
         if json_hash != seeded_hash:
-            # Wipe + re-seed. INSERT OR REPLACE on its own would leave stale
-            # rows that aren't in the new json — wipe makes this idempotent.
+            # Wipe + re-seed the SEED products only (manual=0). PRESERVE any product
+            # added via the admin/scraper (manual=1) — those live only in the DB and
+            # would otherwise be nuked on every re-seed.
             try:
                 try:
                     from .database import get_db as _get_db
                 except ImportError:
                     from database import get_db as _get_db
                 _c = _get_db()
-                _c.execute('DELETE FROM products')
+                _c.execute('DELETE FROM products WHERE COALESCE(manual, 0) = 0')
                 _c.commit()
                 _c.close()
             except Exception as _e:
@@ -1298,6 +1299,7 @@ def admin_add_product():
         data['category'] = auto_category(data['name'], fallback='')
     if not data.get('tags'):
         data['tags'] = generate_tags(data['name'], data.get('category', ''))
+    data['manual'] = 1  # admin-added: survives seed re-wipes
     add_product(data)
     return jsonify({'ok': True, 'id': data['id'], 'category': data.get('category', '')})
 
@@ -1337,6 +1339,7 @@ def admin_bulk():
             p['category'] = auto_category(p.get('name', ''), fallback='')
         if not p.get('tags'):
             p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
+        p['manual'] = 1  # admin/scraper-added: survives seed re-wipes
     add_products_bulk(products)
     return jsonify({'ok': True, 'count': len(products)})
 
@@ -1808,6 +1811,7 @@ def admin_scrape_import():
             p['category'] = auto_category(p.get('name', ''), fallback='')
         if not p.get('tags'):
             p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
+        p['manual'] = 1  # admin/scraper-added: survives seed re-wipes
     add_products_bulk(products)
     return jsonify({'ok': True, 'count': len(products)})
 
@@ -1908,6 +1912,8 @@ def api_admin_add_product():
             data['tags'] = generate_tags(data['name'], data.get('category', ''))
         except ImportError:
             pass
+    if 'manual' not in data:
+        data['manual'] = 1  # API-added: survives seed re-wipes unless caller opts out
     add_product(data)
     # add_product only writes the core columns. Persist any extended fields the
     # caller supplied (quality, weight, sales, qc_photos, variants, images, …)
