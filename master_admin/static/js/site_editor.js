@@ -136,6 +136,13 @@
     '.se-addthumb:hover{background:rgba(99,102,241,.22)!important;color:#fff;}',
     '.se-addthumb .plus{font-size:22px;line-height:1;font-weight:700;}',
     '.se-addthumb .lbl{font:700 7px system-ui;letter-spacing:.5px;text-transform:uppercase;}',
+    /* File drop / picker zone (Change main photo · Add photos) */
+    '.se-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;box-sizing:border-box;padding:26px 16px;margin-bottom:14px;border:2px dashed #6366f1;border-radius:12px;background:rgba(99,102,241,.08);color:#c7d2fe;cursor:pointer;text-align:center;transition:all .12s;}',
+    '.se-drop:hover{background:rgba(99,102,241,.18);color:#fff;border-color:#818cf8;}',
+    '.se-drop.over{background:rgba(99,102,241,.28);color:#fff;border-color:#a5b4fc;transform:scale(1.01);}',
+    '.se-drop .se-drop-ico{font-size:26px;line-height:1;}',
+    '.se-drop .se-drop-main{font:700 14px system-ui;}',
+    '.se-drop .se-drop-sub{font:500 11px system-ui;color:#9ca3af;}',
     /* Click-to-change main photo: hover hint overlay on the main image */
     '.se-mainphoto{cursor:pointer!important;}',
     '.se-mainphoto-hint{position:absolute;left:0;right:0;bottom:0;padding:9px 10px;background:linear-gradient(0deg,rgba(99,102,241,.96),rgba(99,102,241,0));color:#fff;font:700 12px system-ui;letter-spacing:.4px;text-align:center;opacity:0;transition:opacity .14s;pointer-events:none;z-index:5;display:flex;align-items:center;justify-content:center;gap:6px;}',
@@ -286,11 +293,29 @@
     };
   }
   function editImage(img) {
-    var m = mini(img, '<input id="iu" value="' + esc(img.getAttribute('src')) + '" size="26" placeholder="https://..."><button class="ok">Set</button><label class="se-up">⤴ Upload<input type="file" accept="image/*" hidden></label>', function (mm) {
-      var v = mm.querySelector('#iu').value.trim(); if (!v) return; setMainPhoto(v); closeMini();
-    });
-    var fi = m.querySelector('input[type=file]');
-    if (fi) fi.onchange = function () { var f = this.files[0]; if (!f) return; status('Uploading…'); uploadImg(PID, f, true).then(function (j) { if (j && j.ok) { setMainPhoto(j.image); status('Image uploaded ✓', 'success'); closeMini(); } else status((j && j.error) || 'Upload failed', 'error'); }); };
+    var bg = D.createElement('div'); bg.className = 'se-modal-bg';
+    bg.innerHTML = '<div class="se-modal"><h3>Change main photo</h3><div class="sub">Pick a photo from your computer, drag one in, or paste an image URL.</div>' +
+      '<label class="se-drop" id="se-drop"><span class="se-drop-ico">⤴</span><span class="se-drop-main">Choose photo from your computer</span><span class="se-drop-sub">or drag &amp; drop an image here</span><input type="file" accept="image/*" hidden></label>' +
+      '<label class="se-pl">Or paste an image URL</label><input id="iu" class="se-ps" value="' + esc(img.getAttribute('src') || '') + '" placeholder="https://…">' +
+      '<div class="se-row"><button class="se-b ghost" id="ix">Cancel</button><button class="se-b save" id="is">Set URL</button></div></div>';
+    B.appendChild(bg); bg.onclick = function (e) { if (e.target === bg) bg.remove(); };
+    bg.querySelector('#ix').onclick = function () { bg.remove(); };
+    bg.querySelector('#is').onclick = function () { var v = bg.querySelector('#iu').value.trim(); if (!v) return; setMainPhoto(v); bg.remove(); };
+    bg.querySelector('#iu').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); var v = this.value.trim(); if (v) { setMainPhoto(v); bg.remove(); } } });
+    function doUpload(f) {
+      if (!f) return;
+      if (!/^image\//.test(f.type || '')) { status('That file is not an image', 'error'); return; }
+      status('Uploading…');
+      uploadImg(PID, f, true).then(function (j) {
+        if (j && j.ok) { setMainPhoto(j.image); status('Main photo updated ✓', 'success'); bg.remove(); }
+        else status((j && j.error) || 'Upload failed', 'error');
+      });
+    }
+    bg.querySelector('input[type=file]').onchange = function () { doUpload(this.files[0]); };
+    var drop = bg.querySelector('#se-drop');
+    drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+    drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); doUpload((e.dataTransfer.files || [])[0]); });
   }
 
   /* ---------- PRODUCT PAGE EDITOR CHROME ----------
