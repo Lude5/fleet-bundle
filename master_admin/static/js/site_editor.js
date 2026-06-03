@@ -722,10 +722,21 @@
   }
   function cardMenu(card, id, btn) {
     var stockLabel = card.classList.contains('out-of-stock') ? '✅ Mark in stock' : '⛔ Mark out of stock';
-    var m = mini(btn, '<div class="se-menu"><button data-a="dup">⧉ Duplicate</button><button data-a="stock">' + stockLabel + '</button><button data-a="del" class="danger">🗑 Delete</button></div>');
+    var m = mini(btn, '<div class="se-menu"><button data-a="movepage">⇄ Move to page…</button><button data-a="dup">⧉ Duplicate</button><button data-a="stock">' + stockLabel + '</button><button data-a="del" class="danger">🗑 Delete</button></div>');
+    m.querySelector('[data-a=movepage]').onclick = function () { closeMini(); moveToPage(id); };
     m.querySelector('[data-a=dup]').onclick = function () { closeMini(); duplicateProduct(id); };
     m.querySelector('[data-a=stock]').onclick = function () { closeMini(); toggleStock(card, id); };
     m.querySelector('[data-a=del]').onclick = function () { closeMini(); deleteProduct(card, id, btn); };
+  }
+  function moveToPage(id) {
+    var ans = prompt('Move this product to which shop page? (1 = front page, 40 products per page)');
+    if (ans === null) return;
+    var page = parseInt(ans, 10);
+    if (!page || page < 1) { status('Enter a valid page number', 'error'); return; }
+    jfetch('/products/' + SITE + '/move-to-page', 'POST', { id: id, page: page }).then(function (r) {
+      if (r && r.ok) { status('Moved to page ' + r.page + ' — reload the shop to see the new order', 'success'); }
+      else { status((r && r.error) || 'Move failed', 'error'); }
+    });
   }
   function toggleStock(card, id) {
     var nowOut = !card.classList.contains('out-of-stock');

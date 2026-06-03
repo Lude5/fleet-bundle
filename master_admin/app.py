@@ -662,6 +662,19 @@ def products_bulk(site_id):
     return jsonify(data or {'ok': True})
 
 
+@app.route('/products/<site_id>/move-to-page', methods=['POST'])
+def products_move_to_page(site_id):
+    """Proxy a 'move product to shop page N' to the origin site."""
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    body = request.get_json(silent=True) or {}
+    data, err = _call_site_detailed(site, '/admin/products/move-to-page', method='POST', json_body=body)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 502
+    return jsonify(data or {'ok': True})
+
+
 @app.route('/products/<site_id>/<pid>', methods=['GET'])
 def products_get_one(site_id, pid):
     """Fetch the raw product row from the origin site (for duplicate / undo)."""

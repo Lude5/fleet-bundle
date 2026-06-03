@@ -38,6 +38,30 @@
 .ae-status { font-size: 12px; color: var(--text-muted); }
 .ae-status.ok { color: var(--accent); } .ae-status.err { color: var(--danger); }
 @media (max-width: 640px) { .ae-row { grid-template-columns: 22px 28px 30px 1fr; padding: 12px; } .ae-fields { grid-template-columns: 1fr; } }
+.ae-btn-ghost { background: var(--surface-2); color: var(--text); }
+/* ---- signup-popup preview (faithful to the live site popup) ---- */
+.ae-pv-overlay { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 16px; }
+.ae-pv-overlay.open { display: flex; }
+.ae-pv-card { position: relative; width: 380px; max-width: 100%; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 18px; padding: 26px 22px 22px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+.ae-pv-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 26px; line-height: 1; cursor: pointer; }
+.ae-pv-note { font-size: 10px; color: var(--text-muted); text-align: center; margin-bottom: 14px; font-family: var(--font-mono); }
+.ae-pv-headline { text-align: center; margin-bottom: 18px; }
+.ae-pv-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+.ae-pv-headline h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; margin: 6px 0 8px; line-height: 1; }
+.ae-pv-headline p { font-size: 12px; color: var(--text-secondary); }
+.ae-pv-featured { display: flex; align-items: center; gap: 12px; padding: 16px 18px; margin-bottom: 12px; background: var(--accent); border-radius: 12px; color: #fff; position: relative; }
+.ae-pv-featured .lg { width: 40px; height: 40px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.ae-pv-featured .lg img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+.ae-pv-featured .mt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ae-pv-featured .mt .tt { font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1px; line-height: 1.05; }
+.ae-pv-featured .mt .sb { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); margin-top: 5px; }
+.ae-pv-featured .bdg { position: absolute; top: -10px; right: 12px; background: #fff; color: var(--accent); font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; }
+.ae-pv-otherlbl { text-align: center; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin: 14px 0 10px; }
+.ae-pv-other { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 10px; margin-bottom: 8px; }
+.ae-pv-other .lg { width: 30px; height: 30px; border-radius: 7px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.ae-pv-other .lg img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+.ae-pv-other .nm { font-size: 13px; font-weight: 600; }
+.ae-pv-other .cp { font-size: 10px; color: var(--text-muted); }
 {% endblock %}
 
 {% block content %}
@@ -50,7 +74,22 @@
 <div class="ae-list" id="aeList"><div class="ae-status">Loading agents…</div></div>
 <div class="ae-savebar">
   <button class="ae-btn" id="aeSave" disabled>Save changes</button>
+  <button class="ae-btn ae-btn-ghost" id="aePreview" type="button">👁 Preview popup</button>
   <span class="ae-status" id="aeStatus"></span>
+</div>
+
+<!-- Live preview of the real signup popup (built from the current editor state) -->
+<div class="ae-pv-overlay" id="aePvOverlay">
+  <div class="ae-pv-card">
+    <button class="ae-pv-close" id="aePvClose" type="button">&times;</button>
+    <div class="ae-pv-note">Preview — exactly what visitors see in the signup popup (reflects your unsaved edits)</div>
+    <div class="ae-pv-headline">
+      <span class="ae-pv-eyebrow">Welcome</span>
+      <h2>Shipping Coupons <span style="color:var(--accent)">$50–$500</span></h2>
+      <p>Sign up to your agent of choice — claim your welcome credit.</p>
+    </div>
+    <div id="aePvList"></div>
+  </div>
 </div>
 {% endblock %}
 
@@ -119,36 +158,40 @@ function refreshPreview(row, a){
   if (p) p.innerHTML = 'BUY: <b>'+esc(buyPreview(a))+'</b><br>SIGNUP: <b>'+esc(signupPreview(a))+'</b>';
 }
 
-// pointer-based drag reorder (native DnD breaks with inputs in the row)
-let dragKey = null;
+// pointer-based drag reorder (native DnD breaks with inputs in the row).
+// Listeners live on `document` (NOT the grip) because moving the dragged row in
+// the DOM during a drag releases pointer capture in some browsers, which silently
+// killed the previous implementation.
 function attachDrag(row){
   const grip = row.querySelector('.ae-grip');
   grip.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    dragKey = row.dataset.key;
     row.classList.add('dragging');
-    grip.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = 'none';
     const move = (ev) => {
+      ev.preventDefault();
       const under = document.elementFromPoint(ev.clientX, ev.clientY);
       const overRow = under && under.closest ? under.closest('.ae-row') : null;
       if (overRow && overRow !== row && overRow.parentElement === listEl) {
         const rect = overRow.getBoundingClientRect();
-        const after = ev.clientY > rect.top + rect.height/2;
+        const after = ev.clientY > rect.top + rect.height / 2;
         listEl.insertBefore(row, after ? overRow.nextSibling : overRow);
       }
     };
-    const up = (ev) => {
-      grip.releasePointerCapture(e.pointerId);
-      grip.removeEventListener('pointermove', move);
-      grip.removeEventListener('pointerup', up);
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      document.body.style.userSelect = '';
       row.classList.remove('dragging');
-      // rebuild AGENTS order from DOM
+      // rebuild AGENTS order from the DOM
       const order = Array.from(listEl.querySelectorAll('.ae-row')).map(r => r.dataset.key);
-      AGENTS.sort((a,b) => order.indexOf(a.key) - order.indexOf(b.key));
-      dragKey = null; dirty();
+      AGENTS.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+      dirty();
     };
-    grip.addEventListener('pointermove', move);
-    grip.addEventListener('pointerup', up);
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
   });
 }
 
@@ -171,6 +214,32 @@ saveBtn.addEventListener('click', async () => {
     else { statusEl.textContent = 'Error: ' + (d.error || 'save failed'); statusEl.className = 'ae-status err'; saveBtn.disabled = false; }
   } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.className = 'ae-status err'; saveBtn.disabled = false; }
 });
+
+// ---- Live preview of the signup popup, built from the CURRENT editor state ----
+const pvOverlay = document.getElementById('aePvOverlay');
+function buildPopupPreview(){
+  const enabled = AGENTS.filter(a => a.enabled !== false);
+  const featured = enabled.filter(a => a.key === 'kakobuy')[0] || enabled[0];
+  const others = enabled.filter(a => !featured || a.key !== featured.key);
+  const logo = (a) => a && a.logo ? '<span class="lg"><img src="'+esc(a.logo)+'" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'"></span>' : '<span class="lg"></span>';
+  let html = '';
+  if (featured) {
+    html += '<div class="ae-pv-featured"><span class="bdg">Best Option</span>'
+          + logo(featured)
+          + '<span class="mt"><span class="tt">'+esc(featured.name)+'</span><span class="sb">'+esc(featured.coupon||'Welcome credit')+'</span></span>'
+          + '<span style="font-size:22px;opacity:.8">→</span></div>';
+  }
+  if (others.length) html += '<p class="ae-pv-otherlbl">Or choose another agent</p>';
+  others.forEach(a => {
+    html += '<div class="ae-pv-other">'+logo(a)+'<span><span class="nm">'+esc(a.name)+'</span><br><span class="cp">'+esc(a.coupon||'')+'</span></span></div>';
+  });
+  if (!enabled.length) html = '<div class="ae-status">No agents enabled — toggle some on.</div>';
+  document.getElementById('aePvList').innerHTML = html;
+}
+document.getElementById('aePreview').addEventListener('click', () => { buildPopupPreview(); pvOverlay.classList.add('open'); });
+document.getElementById('aePvClose').addEventListener('click', () => pvOverlay.classList.remove('open'));
+pvOverlay.addEventListener('click', (e) => { if (e.target === pvOverlay) pvOverlay.classList.remove('open'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') pvOverlay.classList.remove('open'); });
 
 (async function load(){
   try {
