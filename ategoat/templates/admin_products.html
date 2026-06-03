@@ -199,6 +199,13 @@ th.col-trend.active, th.col-stock.active {
 }
 
 .td-actions { display: flex; gap: 4px; }
+/* "Move to page" mini popover */
+.mv-pop { position: absolute; z-index: 4000; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; box-shadow: 0 14px 40px rgba(0,0,0,0.5); font-size: 13px; }
+.mv-pop label { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
+.mv-pop input { width: 60px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 13px; }
+.mv-pop input:focus { outline: none; border-color: var(--accent); }
+.mv-pop .mv-go { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 700; cursor: pointer; font-size: 12px; }
+.mv-pop .mv-hint { color: var(--text-muted); font-size: 10px; }
 
 /* Tabs for the add-methods panel */
 .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--radius-sm); margin-bottom: 18px; width: max-content; max-width: 100%; flex-wrap: wrap; }
@@ -645,6 +652,7 @@ th.col-trend.active, th.col-stock.active {
                     <td>
                         <div class="td-actions">
                             <a class="btn btn-ghost btn-xs" href="/?preview={{ p.id }}" target="_blank" rel="noopener" title="Open this product on the public storefront">View</a>
+                            <button class="btn btn-ghost btn-xs" onclick="moveToPage(this)" title="Move this product to a specific shop page">⇄ Pg</button>
                             <button class="btn btn-secondary btn-xs" onclick="openEdit(this.closest('tr'))" data-i18n="edit">Edit</button>
                             <button class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
                         </div>
@@ -1210,6 +1218,41 @@ async function deleteProduct(id) {
         showToast(t('product_deleted'), 'success');
         var tr = document.querySelector('tr[data-id="' + id + '"]'); if (tr) tr.remove();
     }
+}
+
+// Move a single product to the top of a chosen shop page (40/page). Opens a small
+// inline popover near the ⇄ Pg button; no dragging across hundreds of rows.
+function moveToPage(btn) {
+    var tr = btn.closest('tr'); var pid = tr && tr.getAttribute('data-id'); if (!pid) return;
+    var existing = document.getElementById('mvPop'); if (existing) existing.remove();
+    var name = (tr.getAttribute('data-name') || 'product').slice(0, 28);
+    var pop = document.createElement('div'); pop.id = 'mvPop'; pop.className = 'mv-pop';
+    pop.innerHTML = '<label>Move to page</label>'
+        + '<input type="number" min="1" id="mvPage" placeholder="#">'
+        + '<button type="button" class="mv-go" id="mvGo">Go</button>';
+    document.body.appendChild(pop);
+    var r = btn.getBoundingClientRect();
+    pop.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    pop.style.left = Math.max(8, window.scrollX + r.right - pop.offsetWidth) + 'px';
+    var inp = pop.querySelector('#mvPage'); inp.focus();
+    function close() { pop.remove(); document.removeEventListener('mousedown', outside, true); }
+    function outside(e) { if (!pop.contains(e.target) && e.target !== btn) close(); }
+    setTimeout(function () { document.addEventListener('mousedown', outside, true); }, 0);
+    function go() {
+        var page = parseInt(inp.value, 10);
+        if (!page || page < 1) { inp.focus(); return; }
+        var goBtn = pop.querySelector('#mvGo'); goBtn.textContent = '…'; goBtn.disabled = true;
+        fetch('/admin/products/move-to-page', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: pid, page: page })
+        }).then(function (res) { return res.json(); }).then(function (d) {
+            close();
+            if (d.ok) { showToast('Moved “' + name + '” to page ' + d.page + ' — refresh to see the new order', 'success'); }
+            else { showToast(d.error || 'Move failed', 'error'); }
+        }).catch(function () { close(); showToast('Network error', 'error'); });
+    }
+    pop.querySelector('#mvGo').onclick = go;
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); else if (e.key === 'Escape') close(); });
 }
 
 // === SELECTION ===

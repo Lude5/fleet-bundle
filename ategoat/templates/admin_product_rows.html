@@ -25,6 +25,7 @@
     <td>
         <div class="td-actions">
             <a class="btn btn-ghost btn-xs" href="/?preview={{ p.id }}" target="_blank" rel="noopener" title="Open this product on the public storefront">View</a>
+            <button class="btn btn-ghost btn-xs" onclick="moveToPage(this)" title="Move this product to a specific shop page">⇄ Pg</button>
             <button class="btn btn-secondary btn-xs" onclick="openEdit(this.closest('tr'))" data-i18n="edit">Edit</button>
             <button class="btn btn-ghost btn-xs" style="color:var(--danger);" onclick="deleteProduct('{{ p.id }}')" data-i18n="del">Del</button>
         </div>

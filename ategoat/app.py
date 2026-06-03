@@ -1462,6 +1462,37 @@ def admin_reorder():
     return jsonify({'ok': True, 'count': n})
 
 
+@app.route('/admin/products/move-to-page', methods=['POST'])
+def admin_move_to_page():
+    """Move one product to the TOP of a specific shop page (40 products/page).
+
+    Renumbers only the curated 'head' up to the insertion point and leaves the
+    long tail's positions untouched — so the front pages get exact ordering while
+    everything below keeps flowing newest-first (newly-added products land right
+    after the curated head instead of being buried at the very end)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    try:
+        page = max(1, int(data.get('page')))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'invalid page'}), 400
+    if not pid:
+        return jsonify({'error': 'id required'}), 400
+    PER_PAGE = 40  # must match the public shop's per_page
+    ordered_ids = [p['id'] for p in get_products()]  # SHOP_ORDER
+    if pid not in ordered_ids:
+        return jsonify({'error': 'product not found'}), 404
+    remaining = [i for i in ordered_ids if i != pid]
+    target_index = min((page - 1) * PER_PAGE, len(remaining))
+    head = remaining[:target_index] + [pid]   # head gets positions 1..target_index+1
+    reorder_products(head)
+    total_pages = (len(ordered_ids) + PER_PAGE - 1) // PER_PAGE
+    return jsonify({'ok': True, 'page': (target_index // PER_PAGE) + 1,
+                    'position': target_index + 1, 'total_pages': total_pages})
+
+
 @app.route('/admin/products')
 def admin_products():
     if not is_admin():
