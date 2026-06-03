@@ -242,8 +242,12 @@ window.renderPpThumbs = function() {
 if (!window.PP_DRAFT)
 fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(vd){
     var variants=(vd&&vd.variants)||[]; var box=document.getElementById('ppVariants'); var cnt=document.getElementById('ppVariantCount');
-    // feed variant images into the merged thumbnail gallery
-    window.ppVariantImgs = variants.map(function(v){return v.image;}).filter(Boolean);
+    // Feed variant images into the left thumbnail strip ONLY for single-product
+    // listings. When a listing has MULTIPLE variants they already render in their
+    // own grid below, so merging them into the top strip just duplicates the same
+    // photos (the cluttered repeated-thumbnails the owner flagged). Multi-variant
+    // listings keep the strip to main + manually-added gallery photos only.
+    window.ppVariantImgs = (variants.length > 1) ? [] : variants.map(function(v){return v.image;}).filter(Boolean);
     if (typeof window.rebuildPpGallery === 'function') window.rebuildPpGallery();
     if (variants.length) {
         cnt.textContent = variants.length + ' variant' + (variants.length===1?'':'s');

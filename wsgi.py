@@ -169,7 +169,7 @@ terminal_wrapped = URLPrefixMiddleware(terminal_app, '/terminal')
 editorial_wrapped = URLPrefixMiddleware(editorial_app, '/editorial')
 ategoat_wrapped = URLPrefixMiddleware(ategoat_app, '/ategoat')
 
-application = DispatcherMiddleware(master_app, {
+_bundle = DispatcherMiddleware(master_app, {
     '/kai': kai_wrapped,
     '/maywood': maywood_wrapped,
     '/minimal': minimal_wrapped,
@@ -179,6 +179,30 @@ application = DispatcherMiddleware(master_app, {
     '/editorial': editorial_wrapped,
     '/ategoat': ategoat_wrapped,
 })
+
+# ============================================================
+# Host-based front controller
+# ============================================================
+# ategoat has its own public domain (repsloot.com). When a request comes in on
+# that host we serve the RAW ategoat app at the root — no '/ategoat' prefix and
+# no URL-prefix rewriting, because the app's own root-relative URLs (/shop,
+# /api/..., /static/...) are already correct at root. SCRIPT_NAME stays '' so
+# Flask's url_for generates clean root URLs on this domain.
+#
+# Every other host keeps the bundle layout unchanged (master_admin at /, ategoat
+# editable at /ategoat). This matters: the master_admin Studio edits ategoat via
+# the SAME-ORIGIN fleet-bundle.onrender.com/ategoat surface, and because that's
+# the same app + same database that repsloot.com serves, edits appear on the
+# public domain instantly. So we deliberately DO NOT redirect /ategoat away.
+ATEGOAT_ROOT_HOSTS = {'repsloot.com', 'www.repsloot.com'}
+
+
+def application(environ, start_response):
+    host = (environ.get('HTTP_HOST') or '').split(':')[0].strip().lower()
+    if host in ATEGOAT_ROOT_HOSTS:
+        return ategoat_app(environ, start_response)
+    return _bundle(environ, start_response)
+
 
 # Gunicorn looks for `app` by default
 app = application
