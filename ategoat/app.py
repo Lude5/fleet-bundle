@@ -1875,6 +1875,7 @@ def api_admin_backups():
     if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
     import sqlite3
+    from datetime import datetime as _dt
     bdir = _backup_dir()
     try:
         files = sorted([f for f in os.listdir(bdir) if f.startswith('backup_') and f.endswith('.db')], reverse=True)
@@ -1886,7 +1887,7 @@ def api_admin_backups():
         info = {'file': f}
         try:
             st = os.stat(fp)
-            info['mtime'] = datetime.fromtimestamp(st.st_mtime).isoformat()
+            info['mtime'] = _dt.fromtimestamp(st.st_mtime).isoformat()
             info['size_kb'] = round(st.st_size / 1024)
             c = sqlite3.connect(fp)
             cols = {r[1] for r in c.execute('PRAGMA table_info(products)').fetchall()}
