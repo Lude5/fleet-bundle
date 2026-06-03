@@ -51,7 +51,8 @@
 .ae-pv-eyebrow { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
 .ae-pv-headline h2 { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; margin: 6px 0 8px; line-height: 1; }
 .ae-pv-headline p { font-size: 12px; color: var(--text-secondary); }
-.ae-pv-featured { display: flex; align-items: center; gap: 12px; padding: 16px 18px; margin-bottom: 12px; background: var(--accent); border-radius: 12px; color: #fff; position: relative; }
+.ae-pv-featured { display: flex; align-items: center; gap: 12px; padding: 16px 18px; margin-bottom: 12px; background: var(--accent); border-radius: 12px; color: #fff; position: relative; text-decoration: none; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.ae-pv-featured:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(0,0,0,.45); }
 .ae-pv-featured .lg { width: 40px; height: 40px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
 .ae-pv-featured .lg img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
 .ae-pv-featured .mt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -59,7 +60,8 @@
 .ae-pv-featured .mt .sb { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); margin-top: 5px; }
 .ae-pv-featured .bdg { position: absolute; top: -10px; right: 12px; background: #fff; color: var(--accent); font-family: var(--font-mono); font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; }
 .ae-pv-otherlbl { text-align: center; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin: 14px 0 10px; }
-.ae-pv-other { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 10px; margin-bottom: 8px; }
+.ae-pv-other { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 10px; margin-bottom: 8px; text-decoration: none; color: inherit; cursor: pointer; transition: border-color .12s, background .12s; }
+.ae-pv-other:hover { border-color: var(--accent); background: var(--surface-2); }
 .ae-pv-other .lg { width: 30px; height: 30px; border-radius: 7px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
 .ae-pv-other .lg img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
 .ae-pv-other .nm { font-size: 13px; font-weight: 600; }
@@ -243,16 +245,17 @@ function buildPopupPreview(){
   const featured = enabled[0];          // whatever is at the TOP is the "Best Option"
   const others = enabled.slice(1);
   const logo = (a) => a && a.logo ? '<span class="lg"><img src="'+esc(a.logo)+'" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'"></span>' : '<span class="lg"></span>';
+  const href = (a) => esc(signupPreview(a) || '#');
   let html = '';
   if (featured) {
-    html += '<div class="ae-pv-featured"><span class="bdg">Best Option</span>'
+    html += '<a class="ae-pv-featured" href="'+href(featured)+'" target="_blank" rel="noopener"><span class="bdg">Best Option</span>'
           + logo(featured)
           + '<span class="mt"><span class="tt">'+esc(featured.name)+'</span><span class="sb">'+esc(featured.coupon||'Welcome credit')+'</span></span>'
-          + '<span style="font-size:22px;opacity:.8">→</span></div>';
+          + '<span style="font-size:22px;opacity:.8">→</span></a>';
   }
   if (others.length) html += '<p class="ae-pv-otherlbl">Or choose another agent</p>';
   others.forEach(a => {
-    html += '<div class="ae-pv-other">'+logo(a)+'<span><span class="nm">'+esc(a.name)+'</span><br><span class="cp">'+esc(a.coupon||'')+'</span></span></div>';
+    html += '<a class="ae-pv-other" href="'+href(a)+'" target="_blank" rel="noopener">'+logo(a)+'<span><span class="nm">'+esc(a.name)+'</span><br><span class="cp">'+esc(a.coupon||'')+'</span></span></a>';
   });
   if (!enabled.length) html = '<div class="ae-status">No agents enabled — toggle some on.</div>';
   document.getElementById('aePvList').innerHTML = html;
