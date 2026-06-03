@@ -214,7 +214,7 @@
     m.style.left = (window.scrollX + Math.max(8, Math.min(r.left, window.innerWidth - m.offsetWidth - 12))) + 'px';
     var ok = m.querySelector('.ok'); if (ok) ok.onclick = function () { onOk(m); };
     var f = m.querySelector('input,textarea,select'); if (f) f.focus();
-    setTimeout(function () { D.addEventListener('mousedown', function off(e) { if (!D.getElementById('se-mini')) { D.removeEventListener('mousedown', off); return; } if (!m.contains(e.target)) { closeMini(); D.removeEventListener('mousedown', off); } }, true); }, 0);
+    setTimeout(function () { D.addEventListener('mousedown', function off(e) { if (!D.getElementById('se-mini')) { D.removeEventListener('mousedown', off); return; } if (!m.contains(e.target) && !(anchor && anchor.contains && anchor.contains(e.target))) { closeMini(); D.removeEventListener('mousedown', off); } }, true); }, 0);
     return m;
   }
 
@@ -326,16 +326,18 @@
     }
   }
 
+  function absU(u) { try { var a = D.createElement('a'); a.href = u; return a.href; } catch (e) { return u; } }
   function renderEditorThumbs() {
     var th = D.getElementById('ppThumbs'); if (!th) return;
     var imgs = (window.ppGallery || []).slice();
     var mainEl = D.getElementById('ppMain');
-    var mainSrc = mainEl ? mainEl.getAttribute('src') : '';
+    var mainAbs = absU(mainEl ? mainEl.src : '');  // .src property = absolute, reliable
     th.innerHTML = '';
     imgs.slice(0, 24).forEach(function (src) {
-      var t = D.createElement('div'); t.className = 'pp-thumb' + (imgSrc(src) === mainSrc ? ' active' : '');
-      t.innerHTML = '<img src="' + esc(imgSrc(src)) + '" referrerpolicy="no-referrer">';
-      t.onclick = function () { if (mainEl) mainEl.src = imgSrc(src); [].forEach.call(th.querySelectorAll('.pp-thumb'), function (x) { x.classList.remove('active'); }); t.classList.add('active'); };
+      var disp = imgSrc(src);
+      var t = D.createElement('div'); t.className = 'pp-thumb' + (absU(disp) === mainAbs ? ' active' : '');
+      var im = D.createElement('img'); im.src = disp; im.referrerPolicy = 'no-referrer'; t.appendChild(im);
+      t.onclick = function () { if (mainEl) mainEl.src = disp; [].forEach.call(th.querySelectorAll('.pp-thumb'), function (x) { x.classList.remove('active'); }); t.classList.add('active'); };
       th.appendChild(t);
     });
     // trailing add-photo tile, styled like a thumbnail
@@ -486,8 +488,11 @@
     var gallery = (s.images || []).slice();
     if (s.image && gallery.indexOf(s.image) < 0) gallery = [s.image].concat(gallery);
     if (wantPhotos && gallery.length) {
-      setMainPhoto(gallery[0]);            // first photo becomes the main image
-      setManualGallery(gallery.slice(1));  // the rest go into the manual gallery
+      var oldMain = mainRaw();             // don't silently lose a custom-uploaded main
+      setMainPhoto(gallery[0]);            // first scraped photo becomes the main image
+      var rest = gallery.slice(1);
+      if (oldMain && oldMain.indexOf('/uploads/') === 0 && oldMain !== gallery[0] && rest.indexOf(oldMain) < 0) rest.unshift(oldMain);
+      setManualGallery(rest);              // the rest (plus any preserved custom main) → gallery
       changed.push(gallery.length + ' photos');
     }
     // Variants

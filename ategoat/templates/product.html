@@ -166,6 +166,18 @@ fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json()
 // ppManualGallery = manually-added gallery photos (the editable `images` list)
 // ppVariantImgs  = images pulled from variants/scrape (not user-managed)
 // ppGallery      = merged display list (main + manual + variant), deduped
+// ppSrc()  — prefix root-relative /uploads paths with the site root so they
+//            resolve in the fleet bundle (/ategoat/...) AND standalone (root='').
+// ppAbs()  — resolve any url to its absolute form for reliable comparison.
+var PP_ROOT = (location.pathname.match(/^\/[a-z0-9_-]+/i) || [''])[0];
+if (PP_ROOT === '/product' || PP_ROOT === '/shop') PP_ROOT = '';
+window.ppSrc = function(u){
+    if (!u || u.charAt(0) !== '/') return u;
+    if (PP_ROOT && (u === PP_ROOT || u.indexOf(PP_ROOT + '/') === 0)) return u;
+    return PP_ROOT + u;
+};
+window.ppAbs = function(u){ try { var a=document.createElement('a'); a.href=u; return a.href; } catch(e){ return u; } };
+window.ppSetMain = function(u){ var m=document.getElementById('ppMain'); if (m) m.src = window.ppSrc(u); };
 window.ppGallery = [];
 window.ppManualGallery = [];
 window.ppVariantImgs = [];
@@ -190,11 +202,17 @@ window.renderPpThumbs = function() {
     var th = document.getElementById('ppThumbs'); if (!th) return;
     th.innerHTML = '';
     if (imgs.length > 1) {
-        var mainSrc = document.getElementById('ppMain').src;
-        imgs.slice(0,24).forEach(function(src,i){
-            var t=document.createElement('div'); t.className='pp-thumb'+(src===mainSrc?' active':(i===0&&!imgs.some(function(x){return x===mainSrc;})?' active':''));
-            t.innerHTML='<img src="'+src+'" referrerpolicy="no-referrer">';
-            t.onclick=function(){ document.getElementById('ppMain').src=src; document.querySelectorAll('.pp-thumb').forEach(function(x){x.classList.remove('active');}); t.classList.add('active'); };
+        var mainEl = document.getElementById('ppMain');
+        var mainAbs = window.ppAbs(mainEl ? mainEl.src : '');
+        imgs.slice(0,24).forEach(function(src){
+            var disp = window.ppSrc(src);
+            var t = document.createElement('div');
+            t.className = 'pp-thumb' + (window.ppAbs(disp) === mainAbs ? ' active' : '');
+            // DOM API (not innerHTML) so a stray quote in a url can't inject markup
+            var im = document.createElement('img');
+            im.src = disp; im.referrerPolicy = 'no-referrer';
+            t.appendChild(im);
+            t.onclick = function(){ if (mainEl) mainEl.src = disp; var ths=document.querySelectorAll('.pp-thumb'); for (var k=0;k<ths.length;k++) ths[k].classList.remove('active'); t.classList.add('active'); };
             th.appendChild(t);
         });
     }
@@ -207,12 +225,18 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
     if (typeof window.rebuildPpGallery === 'function') window.rebuildPpGallery();
     if (variants.length) {
         cnt.textContent = variants.length + ' variant' + (variants.length===1?'':'s');
-        box.innerHTML = variants.map(function(v){
-            var img=(v.image||'').replace(/'/g,"\\'");
-            return '<button type="button" class="pd-variant" title="'+v.title+'" onclick="document.getElementById(\'ppMain\').src=\''+img+'\'">'
-                 + (v.image?'<img src="'+v.image+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'')
-                 + '<span class="pd-variant-lbl">'+v.title+'</span></button>';
-        }).join('');
+        box.innerHTML = '';
+        // Build with DOM API: prefixes /uploads via ppSrc, escapes titles, no markup injection.
+        variants.forEach(function(v){
+            var disp = window.ppSrc(v.image || '');
+            var btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'pd-variant'; btn.title = v.title || '';
+            btn.onclick = function(){ if (disp) window.ppSetMain(v.image || ''); };
+            if (v.image) { var im = document.createElement('img'); im.src = disp; im.alt=''; im.loading='lazy'; im.referrerPolicy='no-referrer'; btn.appendChild(im); }
+            var lbl = document.createElement('span'); lbl.className='pd-variant-lbl'; lbl.textContent = v.title || '';
+            btn.appendChild(lbl);
+            box.appendChild(btn);
+        });
     } else { box.innerHTML='<div class="pd-qc-empty">Single variant</div>'; cnt.textContent='Variants · 1'; }
 }).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">No variants available</div>'; });
 

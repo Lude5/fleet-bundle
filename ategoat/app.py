@@ -2168,7 +2168,18 @@ def admin_set_gallery(pid):
     imgs = data.get('images')
     if not isinstance(imgs, list):
         return jsonify({'error': 'images must be a list'}), 400
-    clean = [str(u).strip() for u in imgs if str(u).strip()]
+    # Only accept http(s) URLs or site-relative paths (/uploads, /static). This
+    # rejects javascript:, data:, and other schemes that could become a stored
+    # XSS/DOM-injection vector when rendered into <img src>.
+    from urllib.parse import urlparse as _urlparse
+    clean = []
+    for u in imgs:
+        u = str(u).strip()
+        if not u:
+            continue
+        parsed = _urlparse(u)
+        if parsed.scheme in ('http', 'https') or (not parsed.scheme and u.startswith('/')):
+            clean.append(u)
     update_product(pid, {'images': json.dumps(clean)})
     return jsonify({'ok': True, 'images': clean, 'pid': pid})
 
