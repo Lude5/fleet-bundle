@@ -1923,6 +1923,14 @@ def api_admin_add_product():
         except ImportError:
             pass
     add_product(data)
+    # add_product only writes the core columns. Persist any extended fields the
+    # caller supplied (quality, weight, sales, qc_photos, variants, images, …)
+    # via update_product so a fully-specified create (e.g. a scraped draft) keeps
+    # everything instead of silently dropping the extras.
+    extended = {k: v for k, v in data.items()
+                if k in ('quality', 'weight', 'sales', 'qc_photos', 'variants', 'images', 'in_stock', 'featured')}
+    if extended:
+        update_product(data['id'], extended)
     return jsonify({'ok': True, 'id': data['id']})
 
 

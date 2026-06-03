@@ -366,7 +366,9 @@
   }
 
   // Create the product from the blank "Add product" draft page after review.
+  var _savingDraft = false;
   function saveDraftProduct() {
+    if (_savingDraft) return;  // guard against double-submit
     var name = (DRAFT.name || '').trim();
     if (!name) { status('Add a product name first', 'error'); return; }
     var body = {
@@ -383,15 +385,26 @@
       sales: DRAFT.sales || 0,
     };
     if (DRAFT.variants) body.variants = DRAFT.variants;
-    var btn = D.getElementById('se-draftadd'); if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+    if (DRAFT.qc_photos) body.qc_photos = DRAFT.qc_photos;
+    var btn = D.getElementById('se-draftadd');
+    function reset() { _savingDraft = false; if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } }
+    _savingDraft = true; if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
     status('Adding product…');
     jfetch('/products/' + SITE + '/new', 'POST', body).then(function (j) {
-      if (!(j && j.ok && j.id)) { if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } status((j && j.error) || 'Could not add product', 'error'); return; }
+      if (j && j._auth) { reset(); return; }  // jfetch already showed "session expired"
+      if (!(j && j.ok && j.id)) { reset(); status((j && j.error) || 'Could not add product', 'error'); return; }
       var imgs = (DRAFT.images || []).filter(Boolean);
-      var done = function () { status('Product added ✓', 'success'); location.href = SITEROOT + '/product/' + j.id; };
-      if (imgs.length) jfetch('/products/' + SITE + '/gallery/' + j.id, 'POST', { images: imgs }).then(done).catch(done);
-      else done();
-    }).catch(function () { if (btn) { btn.disabled = false; btn.textContent = '✓ Add product'; } status('Network error — not added', 'error'); });
+      // product exists now — navigate regardless, but warn if photos didn't save
+      var go = function (photosOk) {
+        status(photosOk ? 'Product added ✓' : 'Product added — but photos didn’t save; add them on the product page', photosOk ? 'success' : 'error');
+        location.href = SITEROOT + '/product/' + j.id;
+      };
+      if (imgs.length) {
+        jfetch('/products/' + SITE + '/gallery/' + j.id, 'POST', { images: imgs })
+          .then(function (gr) { go(!!(gr && gr.ok !== false)); })
+          .catch(function () { go(false); });
+      } else { go(true); }
+    }).catch(function () { reset(); status('Network error — not added', 'error'); });
   }
 
   function absU(u) { try { var a = D.createElement('a'); a.href = u; return a.href; } catch (e) { return u; } }

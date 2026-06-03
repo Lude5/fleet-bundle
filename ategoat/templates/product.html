@@ -120,6 +120,15 @@
 {% block extra_js %}
 var PID = {{ product.id|tojson }};
 window.PP_DRAFT = {{ 'true' if draft else 'false' }};   // blank "Add product" draft page
+// The draft page only makes sense inside the Studio editor. Keep it out of
+// search indexes and bounce any shopper who lands on it directly (no editor
+// injected within a moment → send them to the shop).
+if (window.PP_DRAFT) {
+    try { var _nr=document.createElement('meta'); _nr.name='robots'; _nr.content='noindex,nofollow'; document.head.appendChild(_nr); } catch(e){}
+    var _ppRoot = (location.pathname.match(/^\/[a-z0-9_-]+/i) || [''])[0];
+    if (_ppRoot === '/product' || _ppRoot === '/shop') _ppRoot = '';
+    setTimeout(function(){ if (!window.__STUDIO_EDITOR_LOADED) { try { location.replace(_ppRoot + '/shop'); } catch(e){} } }, 2500);
+}
 var ppAgents = [];
 
 function ppSetAgent(a) {
