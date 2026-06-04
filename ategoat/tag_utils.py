@@ -329,7 +329,45 @@ def fuzzy_correct_groups(groups, vocab):
 # before shoes since some "bag" patterns could match shoe regex if loose).
 import re as _re
 
+# ------------------------------------------------------------------
+# Tracksuits & Sets collection
+# ------------------------------------------------------------------
+# A "feature" category that gathers every co-ord / two-piece / tracksuit /
+# matching set / suit, no matter what single-garment bucket the source data put
+# it in (most arrive mislabelled as 'hoodies'). Used by both auto_category (new
+# products) and a boot-time re-assert in app.py (existing products), so the
+# collection self-heals after every re-seed.
+_TS_STRONG = _re.compile(
+    r'\b(track[ -]?suit|tracksuits?|sweat[ -]?suit|two[ -]?piece|three[ -]?piece|'
+    r'[234][ -]?piece|[234]\s?pc|co[ -]?ord|coord|matching\s+set|'
+    r'training\s+(?:clothes\s+)?suit|vest\s+set)\b', _re.I)
+_TS_WEAK = _re.compile(r'\b(sets?|suits?)\b', _re.I)
+# Nouns that mean a "set"/"suit" is NOT an apparel co-ord (bag suit, jewelry set,
+# suit trousers as standalone dress-pants, tech/homeware sets, …).
+_TS_NOT = _re.compile(
+    r'\b(bag|backpack|cross[ -]?body|tote|handbag|sling|duffel|messenger|wallet|'
+    r'purse|pouch|clutch|satchel|jewel\w*|watch|chess|lego|dinner|tea|coffee|'
+    r'cutlery|knife|knives|dish|towel|bedding|pillow|brush|makeup|cosmetic|nail|'
+    r'lash|stationery|mug|plate|bowl|airpod|earbud|charger|'
+    r'suit\s+trousers?|suit\s+pants?)\b', _re.I)
+
+
+def is_tracksuit(name):
+    """True if the product name reads as a tracksuit / co-ord / matching set / suit.
+    Strong signals (tracksuit, two-piece, training suit, …) always win; the weak
+    standalone 'set'/'suit' is suppressed when a non-apparel noun is present."""
+    if not name:
+        return False
+    strong = bool(_TS_STRONG.search(name))
+    if _TS_NOT.search(name) and not strong:
+        return False
+    return strong or bool(_TS_WEAK.search(name))
+
+
 _AUTO_CATEGORY_RULES = [
+    # Explicit tracksuit/co-ord names win first (e.g. "Nike Tech Tracksuit",
+    # "Trapstar 2-Piece") before brand-only rules below can claim them as shoes.
+    ('tracksuits',  _TS_STRONG),
     ('bags',        _re.compile(r'\b(bag|backpack|tote|handbag|sling|duffel|messenger|crossbody|fanny[- ]?pack|pouch|luggage|suitcase|briefcase|clutch|satchel)\b', _re.I)),
     ('shoes',       _re.compile(r'\b(shoe|shoes|sneaker|sneakers|trainer|trainers|boot|boots|slipper|slippers|slide|slides|sandal|sandals|loafer|mule|flip[- ]?flop|jordan|yeezy|samba|gazelle|campus|forum|stan[ -]?smith|nb[ -]?\d+|new[ -]?balance|asics|nike|adidas|puma|converse|reebok|vans|onitsuka|salomon|hoka|crocs|dunk|af1|air[- ]?force|p6000|9060|1906|nocta|tabi|mm6|moc\b|cleats|runner|kicks|high[ -]?heel|heel|stiletto|pump)\b', _re.I)),
     # Luxury / archive sneaker brand-only names that lack a type word.

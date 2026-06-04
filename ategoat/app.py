@@ -187,6 +187,7 @@ try:
             {'slug': 'shoes', 'name': 'Shoes', 'sort_order': 1},
             {'slug': 'shirts', 'name': 'Shirts', 'sort_order': 2},
             {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 3},
+            {'slug': 'tracksuits', 'name': 'Tracksuits & Sets', 'sort_order': 4},
             {'slug': 'pants', 'name': 'Pants', 'sort_order': 4},
             {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 5},
             {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 6},
@@ -204,10 +205,31 @@ try:
         # seeded before they existed. add_category is INSERT OR REPLACE so
         # this is idempotent and won't clobber renames the operator made.
         existing_slugs = {c['slug'] for c in get_categories()}
-        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7)]:
+        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7),
+                                  ('tracksuits', 'Tracksuits & Sets', 4)]:
             if slug not in existing_slugs:
                 add_category(slug, name, '', '', order)
                 print(f"Backfilled category: {slug}")
+
+    # ---- Tracksuits & Sets collection ------------------------------------
+    # Re-assert on every boot so the collection survives re-seeds (which reload
+    # each product's category straight from products.json). Moves tracksuit /
+    # co-ord / two-piece / matching-set / "<brand> Set" / training-suit names
+    # into the 'tracksuits' category regardless of which single-garment bucket
+    # the seed data placed them in. Idempotent — only touches rows not already
+    # there — and self-healing if a future re-seed reverts them.
+    try:
+        try:
+            from .tag_utils import is_tracksuit as _is_ts
+        except ImportError:
+            from tag_utils import is_tracksuit as _is_ts
+        _ts_ids = [p['id'] for p in get_products()
+                   if _is_ts(p.get('name', '')) and (p.get('category') or '') != 'tracksuits']
+        if _ts_ids:
+            move_category(_ts_ids, 'tracksuits')
+            print(f"Tracksuits collection: categorized {len(_ts_ids)} products")
+    except Exception as _e:
+        print(f"Tracksuit categorize warning: {_e}")
 except Exception as e:
     print(f"DB init warning: {e}")
 
