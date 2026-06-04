@@ -134,6 +134,21 @@
     '.se-pbtn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(17,17,17,.82);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.35);}',
     '.se-pbtn:hover{background:#6366f1;}.se-pbtn.on{background:#f59e0b;}.se-pbtn.grab{cursor:grab;}',
     '.product-card.se-dragging{opacity:.4;}.product-card.se-over{outline:2px solid #6366f1;outline-offset:-2px;}',
+    /* numbered position badge (visible in edit mode; click to set exact position) */
+    '.se-posbadge{position:absolute;top:8px;left:8px;z-index:2147483001;min-width:26px;height:26px;padding:0 7px;border-radius:9px;background:rgba(99,102,241,.96);color:#fff;font:800 13px/26px system-ui;text-align:center;cursor:pointer;box-shadow:0 2px 9px rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.9);user-select:none;display:none;transition:transform .12s,background .12s;}',
+    'body.se-editing .product-card.se-card .se-posbadge{display:block;}',
+    '.se-posbadge:hover{background:#4f46e5;transform:scale(1.08);}',
+    'body.se-selecting .se-posbadge{display:none!important;}',
+    '.se-posbadge input{width:48px;height:24px;border:none;border-radius:6px;background:#0f0f14;color:#fff;font:800 13px system-ui;text-align:center;outline:2px solid #fff;padding:0;-moz-appearance:textfield;}',
+    '.se-posbadge input::-webkit-outer-spin-button,.se-posbadge input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}',
+    /* redesigned "move product" popover */
+    '.se-mvbox{width:236px;display:flex;flex-direction:column;}',
+    '.se-mvbox .mp-h{font:800 15px system-ui;margin-bottom:2px;}',
+    '.se-mvbox .mp-sub{color:#9ca3af;font:600 11px system-ui;margin-bottom:6px;}',
+    '.se-mvbox .mp-l{font:700 11px system-ui;color:#cbd5e1;margin:9px 0 4px;}',
+    '.se-mvbox .mp-opt{color:#6b7280;font-weight:600;}',
+    '.se-mvbox .mp-in{background:#0f0f14;border:1px solid #2a2a35;color:#fff;border-radius:9px;padding:9px 11px;font:14px system-ui;outline:none;width:100%;box-sizing:border-box;}',
+    '.se-mvbox .mp-in:focus{border-color:#6366f1;}',
     '.se-mini{position:absolute;z-index:2147483600;background:#16161c;border:1px solid #2a2a35;border-radius:10px;padding:8px;display:flex;gap:6px;align-items:center;box-shadow:0 14px 40px rgba(0,0,0,.55);}',
     '.se-mini input,.se-mini select,.se-mini textarea{background:#0f0f14;border:1px solid #2a2a35;color:#fff;border-radius:7px;padding:8px 10px;font:13px system-ui;outline:none;}',
     '.se-mini textarea{min-width:300px;min-height:90px;resize:vertical;}',
@@ -692,6 +707,63 @@
 
   /* ---------- PRODUCT cards (shop grid + related) ---------- */
   function pidOf(card) { return card.getAttribute('data-pid') || ((card.getAttribute('href') || '').match(/\/product\/([^/?#]+)/) || [])[1]; }
+
+  /* ---------- position badges + exact-position moves ---------- */
+  var SE_PER_PAGE = 40;
+  function viewCtx() {
+    var q; try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
+    return { page: Math.max(1, (q && parseInt(q.get('page'), 10)) || 1), category: (q && q.get('category')) || '' };
+  }
+  function renumberBadges(grid) {
+    if (!grid) return;
+    var off = (viewCtx().page - 1) * SE_PER_PAGE;
+    [].slice.call(grid.querySelectorAll('.product-card')).forEach(function (c, i) {
+      var b = c.querySelector('.se-posbadge'); if (b && !b.__editing) b.textContent = String(off + i + 1);
+    });
+  }
+  function editPosition(card, id, badge, grid) {
+    if (badge.__editing) return; badge.__editing = 1;
+    var cur = badge.textContent, done = false;
+    badge.innerHTML = '<input type="number" min="1" value="' + cur + '">';
+    var inp = badge.querySelector('input'); inp.focus(); inp.select();
+    function finish(commit) {
+      if (done) return; done = true; var val = parseInt(inp.value, 10);
+      badge.__editing = 0; badge.textContent = cur;
+      if (commit && val >= 1 && String(val) !== cur) applyPositionMove(card, id, val, grid);
+    }
+    inp.onclick = function (e) { e.stopPropagation(); };
+    inp.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
+    inp.onblur = function () { finish(true); };
+  }
+  function applyPositionMove(card, id, position, grid) {
+    var ctx = viewCtx(); status('Moving…');
+    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: position, category: ctx.category }).then(function (r) {
+      if (!r || !r.ok) { status((r && r.error) || 'Move failed', 'error'); return; }
+      if (r.page === ctx.page && grid) {                       // stays on this page → reposition smoothly
+        var targetIdx = r.position - (ctx.page - 1) * SE_PER_PAGE - 1;
+        flip(grid, function () {
+          var others = [].slice.call(grid.querySelectorAll('.product-card')).filter(function (c) { return c !== card; });
+          var ref = others[targetIdx];
+          if (ref) grid.insertBefore(card, ref);
+          else { var add = grid.querySelector('.bs-add'); add ? grid.insertBefore(card, add) : grid.appendChild(card); }
+        });
+        renumberBadges(grid); status('Moved to #' + r.position + ' ✓', 'success');
+      } else {                                                  // left this page
+        if (grid) { flip(grid, function () { card.remove(); }); renumberBadges(grid); }
+        status('Moved to page ' + r.page + ', position ' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
+      }
+    });
+  }
+  function persistDragged(grid, card, id) {
+    renumberBadges(grid);
+    var ctx = viewCtx(), cards = [].slice.call(grid.querySelectorAll('.product-card')), idx = cards.indexOf(card);
+    if (idx < 0) return;
+    var rank = (ctx.page - 1) * SE_PER_PAGE + idx + 1;
+    status('Saving order…');
+    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: rank, category: ctx.category }).then(function (r) {
+      status(r && r.ok ? 'Order saved ✓' : 'Save failed', r && r.ok ? 'success' : 'error');
+    });
+  }
   function enhanceCards() {
     var isShop = /\/shop/.test(location.pathname);
     D.querySelectorAll('.product-card').forEach(function (card) {
@@ -713,9 +785,15 @@
       t.querySelector('.b-edit').onclick = function (e) { e.preventDefault(); e.stopPropagation(); navTo(card.getAttribute('href')); };
       t.querySelector('.b-hot').onclick = function (e) { e.preventDefault(); e.stopPropagation(); toggleHot(card, id, this); };
       t.querySelector('.b-more').onclick = function (e) { e.preventDefault(); e.stopPropagation(); cardMenu(card, id, this); };
-      if (isShop && grid) { var g = t.querySelector('.grab'); if (g) setupDrag(card, g, grid, function () { recordOrder(grid); }); }
+      if (isShop && grid) {
+        var pb = D.createElement('div'); pb.className = 'se-posbadge'; pb.title = 'Position — click to set exactly';
+        pb.onclick = function (e) { e.preventDefault(); e.stopPropagation(); editPosition(card, id, pb, grid); };
+        card.appendChild(pb);
+        var g = t.querySelector('.grab'); if (g) setupDrag(card, g, grid, function () { persistDragged(grid, card, id); });
+      }
     });
     if (isShop) {
+      D.querySelectorAll('.product-grid').forEach(renumberBadges);
       var sg = D.querySelector('.product-grid'); if (sg && !sg.__addtile) { sg.__addtile = 1; var tile = D.createElement('button'); tile.type = 'button'; tile.className = 'bs-add'; tile.textContent = '+ Add product'; tile.onclick = openAddProduct; sg.appendChild(tile); }
       if (!D.getElementById('se-selbtn')) { var sb = D.createElement('button'); sb.id = 'se-selbtn'; sb.className = 'se-selbtn'; sb.textContent = '☑ Select'; sb.onclick = function () { setSelectMode(!selectMode); }; B.appendChild(sb); }
     }
@@ -732,28 +810,41 @@
   function shopUrlFor(page) {
     var c = D.querySelector('.product-card[href*="/product/"]');
     var href = c ? c.getAttribute('href') : '/shop';
-    return href.replace(/\/product\/.*$/, '') + '/shop?page=' + page;
+    var cat = viewCtx().category;
+    return href.replace(/\/product\/.*$/, '') + '/shop?page=' + page + (cat ? '&category=' + encodeURIComponent(cat) : '');
   }
   // In-page "move to shop page" popover (no browser prompt).
   function moveToPage(id, anchor) {
+    var ctx = viewCtx();
     var m = mini(anchor,
-      '<label class="se-pl" style="margin-bottom:6px;display:block;">Move to shop page</label>' +
-      '<input id="se-mvp" type="number" min="1" class="se-ps" placeholder="e.g. 3 (40 per page)">' +
-      '<div class="se-row"><button class="se-b ghost" id="se-mvx">Cancel</button><button class="se-b save ok">Move</button></div>',
+      '<div class="se-mvbox">' +
+        '<div class="mp-h">Move product</div>' +
+        '<div class="mp-sub">' + (ctx.category ? 'In “' + esc(ctx.category) + '” · ' : '') + '40 per page</div>' +
+        '<label class="mp-l">Page</label>' +
+        '<input id="mp-page" type="number" min="1" class="mp-in" placeholder="e.g. 1">' +
+        '<label class="mp-l">Position on page <span class="mp-opt">(optional — defaults to top)</span></label>' +
+        '<input id="mp-pos" type="number" min="1" max="40" class="mp-in" placeholder="Top">' +
+        '<div class="se-row"><button class="se-b ghost" id="mp-x">Cancel</button><button class="se-b save ok">Move</button></div>' +
+      '</div>',
       function (mm) {
-        var page = parseInt((mm.querySelector('#se-mvp') || {}).value, 10);
-        if (!page || page < 1) { status('Enter a valid page number (1 or higher)', 'error'); return; }
+        var page = parseInt((mm.querySelector('#mp-page') || {}).value, 10);
+        if (!page || page < 1) { status('Enter a page number (1 or higher)', 'error'); var p = mm.querySelector('#mp-page'); if (p) p.focus(); return; }
+        var pos = parseInt((mm.querySelector('#mp-pos') || {}).value, 10);
+        if (!(pos >= 1 && pos <= 40)) pos = 1;                       // optional → top of page
+        var abs = (page - 1) * SE_PER_PAGE + pos;
         var okb = mm.querySelector('.ok'); okb.textContent = 'Moving…'; okb.disabled = true;
-        jfetch('/products/' + SITE + '/move-to-page', 'POST', { id: id, page: page }).then(function (r) {
+        jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: abs, category: ctx.category }).then(function (r) {
           if (r && r.ok) {
-            mm.innerHTML = '<div style="font-size:13px;line-height:1.5;margin-bottom:10px;">✓ Moved to the <b>top of page ' + r.page + '</b>.</div>' +
-              '<div class="se-row"><button class="se-b ghost" id="se-mvd">Done</button><button class="se-b save" id="se-mvg">View page ' + r.page + ' →</button></div>';
-            mm.querySelector('#se-mvd').onclick = function () { closeMini(); };
-            mm.querySelector('#se-mvg').onclick = function () { closeMini(); navTo(shopUrlFor(r.page)); };
+            var onPage = (r.position - 1) % SE_PER_PAGE + 1;
+            mm.innerHTML = '<div class="se-mvbox"><div class="mp-h">Moved ✓</div>' +
+              '<div class="mp-sub">Now at <b>page ' + r.page + ', position ' + onPage + '</b>' + (ctx.category ? ' in “' + esc(ctx.category) + '”' : '') + '.</div>' +
+              '<div class="se-row"><button class="se-b ghost" id="mp-d">Done</button><button class="se-b save" id="mp-v">View page ' + r.page + ' →</button></div></div>';
+            mm.querySelector('#mp-d').onclick = function () { closeMini(); };
+            mm.querySelector('#mp-v').onclick = function () { closeMini(); navTo(shopUrlFor(r.page)); };
           } else { status((r && r.error) || 'Move failed', 'error'); closeMini(); }
         });
       });
-    var x = m.querySelector('#se-mvx'); if (x) x.onclick = function () { closeMini(); };
+    var x = m.querySelector('#mp-x'); if (x) x.onclick = function () { closeMini(); };
   }
   function toggleStock(card, id) {
     var nowOut = !card.classList.contains('out-of-stock');
