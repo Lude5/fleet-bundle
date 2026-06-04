@@ -1527,14 +1527,28 @@ def admin_move_to_page():
         return jsonify({'error': 'invalid page'}), 400
     if not pid:
         return jsonify({'error': 'id required'}), 400
-    PER_PAGE = 40  # must match the public shop's per_page
-    ordered_ids = [p['id'] for p in get_products()]  # SHOP_ORDER
+    PER_PAGE = 40       # must match the public shop's per_page
+    DEFAULT_POS = 999999  # the 'uncurated' position (schema default) — bulk flows newest-first
+    all_products = get_products()  # SHOP_ORDER: featured DESC, position ASC, created_at DESC
+    ordered_ids = [p['id'] for p in all_products]
     if pid not in ordered_ids:
         return jsonify({'error': 'product not found'}), 404
-    remaining = [i for i in ordered_ids if i != pid]
-    target_index = min((page - 1) * PER_PAGE, len(remaining))
-    head = remaining[:target_index] + [pid]   # head gets positions 1..target_index+1
-    reorder_products(head)
+
+    def _pos(p):
+        v = p.get('position')
+        return v if isinstance(v, int) else DEFAULT_POS
+
+    # Renumber the CURATED head (products with an explicit, non-default position)
+    # with pid inserted at the target slot. This makes pid land UNIQUELY at the top
+    # of page N and shifts the products it displaces DOWN, instead of leaving a pile
+    # of products tied at the same position (the old code only set pid's position and
+    # never bumped the incumbents, so "move to page 1" buried the product behind
+    # whoever was already at position 1). The uncurated bulk (DEFAULT_POS) is left
+    # alone so it keeps flowing newest-first below the curated head.
+    curated = [p['id'] for p in all_products if p['id'] != pid and _pos(p) < DEFAULT_POS]
+    target_index = min((page - 1) * PER_PAGE, len(curated))
+    new_head = curated[:target_index] + [pid] + curated[target_index:]
+    reorder_products(new_head)   # assigns 1..len(new_head); bulk keeps DEFAULT_POS
     total_pages = (len(ordered_ids) + PER_PAGE - 1) // PER_PAGE
     return jsonify({'ok': True, 'page': (target_index // PER_PAGE) + 1,
                     'position': target_index + 1, 'total_pages': total_pages})
