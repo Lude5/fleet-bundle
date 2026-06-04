@@ -1559,6 +1559,62 @@ def admin_move_to_page():
                     'position': target_index + 1, 'total_pages': total_pages})
 
 
+@app.route('/admin/products/move-to-position', methods=['POST'])
+def admin_move_to_position():
+    """Place a product at an EXACT 1-based position within a view (a category, or
+    the whole shop). Powers the editor's numbered position badges, click-to-set,
+    drag-reorder, and 'move to page + position'. The product lands UNIQUELY at that
+    rank and the products it displaces shift down; the uncurated bulk (position
+    999999) keeps flowing newest-first below the curated head.
+
+    Body: {id, position, category?}  — position is 1-based within the (filtered) view.
+    """
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    category = (data.get('category') or '').strip()
+    try:
+        position = max(1, int(data.get('position')))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'invalid position'}), 400
+    if not pid:
+        return jsonify({'error': 'id required'}), 400
+    PER_PAGE = 40
+    DEFAULT_POS = 999999
+
+    def _pos(p):
+        v = p.get('position')
+        return v if isinstance(v, int) else DEFAULT_POS
+
+    all_products = get_products()                       # global SHOP_ORDER
+    posmap = {p['id']: _pos(p) for p in all_products}
+    if pid not in posmap:
+        return jsonify({'error': 'product not found'}), 404
+    view = get_products(category) if category else all_products
+    view_ids = [p['id'] for p in view]
+    if pid not in view_ids:
+        return jsonify({'error': 'product not in category'}), 404
+
+    # Anchor: the product currently at the requested rank in the view; pid is placed
+    # immediately BEFORE it in the GLOBAL order, then the curated head is renumbered.
+    view_wo = [i for i in view_ids if i != pid]
+    ti = min(position - 1, len(view_wo))
+    anchor = view_wo[ti] if ti < len(view_wo) else None
+
+    glob_wo = [p['id'] for p in all_products if p['id'] != pid]
+    insert_at = glob_wo.index(anchor) if (anchor is not None and anchor in glob_wo) else len(glob_wo)
+    new_glob = glob_wo[:insert_at] + [pid] + glob_wo[insert_at:]
+    new_head = [i for i in new_glob if posmap.get(i, DEFAULT_POS) < DEFAULT_POS or i == pid]
+    reorder_products(new_head)   # global positions 1..len(new_head); bulk keeps DEFAULT_POS
+
+    nv = [p['id'] for p in (get_products(category) if category else get_products())]
+    rank = (nv.index(pid) + 1) if pid in nv else position
+    total = len(view_ids)
+    return jsonify({'ok': True, 'position': rank, 'page': (rank - 1) // PER_PAGE + 1,
+                    'total_pages': max(1, (total + PER_PAGE - 1) // PER_PAGE), 'category': category})
+
+
 @app.route('/admin/products')
 def admin_products():
     if not is_admin():
