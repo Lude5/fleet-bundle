@@ -37,6 +37,14 @@ app.permanent_session_lifetime = _td(hours=24)
 # on link-click). HttpOnly is on by default in Flask.
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
+# Unique cookie NAME so it never clashes with master_admin ('master_session') or the
+# other bundle apps (default 'session'), and PATH='/' so the admin login works on BOTH
+# the bundle mount (fleet-bundle.onrender.com/ategoat) AND the bare custom domain
+# (repsloot.com, where ategoat serves at root). Without PATH='/', the cookie defaulted
+# to APPLICATION_ROOT ('/ategoat') and was never sent on repsloot.com → admin appeared
+# logged-out there and every admin action silently did nothing.
+app.config['SESSION_COOKIE_NAME'] = 'ategoat_session'
+app.config['SESSION_COOKIE_PATH'] = '/'
 CORS(app)
 
 
