@@ -581,6 +581,14 @@
       jfetch('/products/scrape', 'POST', { url: url }).then(function (r) {
         goBtn.disabled = false; goBtn.textContent = '⚡ Scrape';
         if (!r || r.ok === false) { st.textContent = (r && r.error) || 'Scrape failed.'; return; }
+        // ok:true but the listing returned nothing usable (sold out / unsupported
+        // site / wrong id) — tell the operator instead of closing silently.
+        var sd = r.scraped || r;
+        var hasData = !!(sd.name || sd.price || sd.price_numeric || (sd.images && sd.images.length) || (sd.variants && sd.variants.length));
+        if (!hasData) {
+          st.innerHTML = '⚠️ Couldn\'t read product details from that link — it may be sold out, or from a site we can\'t read yet. Paste the original <b>Weidian / Taobao / 1688</b> product link (or a KakoBuy link).';
+          return;  // keep the modal open so they can try another link
+        }
         applyScrape(r, bg.querySelector('#scphotos').checked, bg.querySelector('#scvars').checked, url);
         bg.remove();
       }).catch(function () { goBtn.disabled = false; goBtn.textContent = '⚡ Scrape'; st.textContent = 'Network error.'; });

@@ -88,15 +88,27 @@ MANUAL_FIELDS = ["qc_photos", "sizes", "batch", "retail_price", "quality", "weig
 
 
 def _unwrap_agent_url(url):
-    """If the URL is an agent wrapper (kakobuy?url=, joyagoo?url=, etc.) return the inner seller URL."""
+    """Return the inner Weidian/Taobao/1688 seller URL from any agent wrapper
+    (kakobuy/mulebuy/cnfans/sugargoo/oopbuy/hipobuy/allchinabuy/hagobuy/… ), whether
+    the seller link is carried in a ?url=-style param or embedded in the path/query."""
+    if not url:
+        return url
     try:
-        parsed = urllib.parse.urlparse(url)
-        qs = urllib.parse.parse_qs(parsed.query)
-        for key in ("url", "productUrl", "product_url"):
-            if key in qs and qs[key]:
-                inner = urllib.parse.unquote(qs[key][0])
+        # 1) common params that carry the (possibly double-encoded) seller URL
+        qs = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+        wanted = ("url", "producturl", "product_url", "productlink", "goodsurl",
+                  "goods_url", "targeturl", "target_url", "link", "u")
+        for k in qs:
+            if k.lower() in wanted and qs[k]:
+                inner = urllib.parse.unquote(qs[k][0])
                 if inner.startswith("http"):
-                    return inner
+                    url = inner
+                    break
+        # 2) fallback: a seller URL embedded anywhere in the decoded string
+        dec = urllib.parse.unquote(url)
+        m = re.search(r'https?://[^\s"\'<>]*?(?:weidian\.com/item|(?:taobao|tmall)\.com/item|1688\.com/offer)[^\s"\'<>]*', dec, re.I)
+        if m:
+            return m.group(0)
     except Exception:
         pass
     return url
