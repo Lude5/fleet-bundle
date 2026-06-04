@@ -586,7 +586,12 @@
         var sd = r.scraped || r;
         var hasData = !!(sd.name || sd.price || sd.price_numeric || (sd.images && sd.images.length) || (sd.variants && sd.variants.length));
         if (!hasData) {
-          st.innerHTML = '⚠️ Couldn\'t read product details from that link — it may be sold out, or from a site we can\'t read yet. Paste the original <b>Weidian / Taobao / 1688</b> product link (or a KakoBuy link).';
+          var plat = r.platform || '';
+          if (plat === 'taobao' || plat === '1688') {
+            st.innerHTML = '⚠️ ' + (plat === 'taobao' ? 'Taobao' : '1688') + ' listings can\'t be auto-read — ' + (plat === 'taobao' ? 'Taobao' : '1688') + ' blocks scraping. If the item is also on <b>Weidian</b>, paste that link instead. Otherwise just fill the fields in by hand below — everything on this page is editable.';
+          } else {
+            st.innerHTML = '⚠️ Couldn\'t read product details from that link — it may be sold out, or an unsupported site. Paste the original <b>Weidian</b> link (or a KakoBuy link that wraps one).';
+          }
           return;  // keep the modal open so they can try another link
         }
         applyScrape(r, bg.querySelector('#scphotos').checked, bg.querySelector('#scvars').checked, url);
