@@ -750,33 +750,31 @@
     if (/^\d+$/.test(v)) { var n = Math.max(1, parseInt(v, 10)); return (viewCtx().page - 1) * SE_PER_PAGE + n; }
     return null;
   }
-  // two separate fields:  [ page ] : [ position ]  — click either side, neither navigates
-  function editPosition(card, id, badge, grid) {
-    if (badge.__editing) return; badge.__editing = 1;
-    var cur = badge.textContent, parts = cur.split(':'), done = false;
-    badge.classList.add('editing');
-    badge.innerHTML = '<input class="bp" type="text" inputmode="numeric" value="' + (parts[0] || '1') + '" aria-label="page" title="page">' +
-                      '<span class="bc">:</span>' +
-                      '<input class="bn" type="text" inputmode="numeric" value="' + (parts[1] || '1') + '" aria-label="position on page" title="position on page">';
-    var ip = badge.querySelector('.bp'), inp = badge.querySelector('.bn');
-    inp.focus(); inp.select();
-    function finish(commit) {
-      if (done) return; done = true;
-      var pg = Math.max(1, parseInt(ip.value, 10) || 1);
-      var pos = Math.min(Math.max(parseInt(inp.value, 10) || 1, 1), SE_PER_PAGE);
-      badge.__editing = 0; badge.classList.remove('editing'); badge.textContent = cur;
-      if (commit && (pg + ':' + pos) !== cur) applyPositionMove(card, id, (pg - 1) * SE_PER_PAGE + pos, grid);
-    }
-    function blur() { setTimeout(function () { if (badge.__editing && document.activeElement !== ip && document.activeElement !== inp) finish(true); }, 70); }
-    [ip, inp].forEach(function (el) {
-      el.addEventListener('mousedown', function (e) { e.stopPropagation(); });
-      el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); });
-      el.addEventListener('blur', blur);
-      el.onkeydown = function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
-        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
-      };
-    });
+  // click a badge → a small labeled panel: "Page" field, then "Position" field,
+  // stacked on separate lines (prefilled with where the product is now).
+  function editPosition(card, id, anchor, grid) {
+    var ctx = viewCtx(), curPos = '';
+    if (grid && card) { var ix = [].slice.call(grid.querySelectorAll('.product-card')).indexOf(card); if (ix >= 0) curPos = ix + 1; }
+    var m = mini(anchor,
+      '<div class="se-mvbox">' +
+        '<div class="mp-h">Move product</div>' +
+        '<div class="mp-sub">' + (ctx.category ? 'In “' + esc(ctx.category) + '” · ' : '') + '40 per page</div>' +
+        '<label class="mp-l">Page</label>' +
+        '<input id="mp-page" type="text" inputmode="numeric" class="mp-in" value="' + ctx.page + '">' +
+        '<label class="mp-l">Position <span class="mp-opt">(item # on the page)</span></label>' +
+        '<input id="mp-pos" type="text" inputmode="numeric" class="mp-in" value="' + curPos + '" placeholder="Top">' +
+        '<div class="se-row"><button class="se-b ghost" id="mp-x">Cancel</button><button class="se-b save ok">Move</button></div>' +
+      '</div>',
+      function (mm) {
+        var page = parseInt((mm.querySelector('#mp-page') || {}).value, 10);
+        if (!page || page < 1) { status('Enter a page number (1+)', 'error'); var p = mm.querySelector('#mp-page'); if (p) p.focus(); return; }
+        var pos = parseInt((mm.querySelector('#mp-pos') || {}).value, 10);
+        if (!(pos >= 1 && pos <= SE_PER_PAGE)) pos = 1;
+        closeMini();
+        applyPositionMove(card, id, (page - 1) * SE_PER_PAGE + pos, grid);
+      });
+    var x = m.querySelector('#mp-x'); if (x) x.onclick = closeMini;
+    var pf = m.querySelector('#mp-pos'); if (pf) { pf.focus(); pf.select(); }  // land on Position (the usual tweak)
   }
   function applyPositionMove(card, id, position, grid) {
     var ctx = viewCtx(); status('Moving…');
@@ -844,7 +842,7 @@
   function cardMenu(card, id, btn) {
     var stockLabel = card.classList.contains('out-of-stock') ? '✅ Mark in stock' : '⛔ Mark out of stock';
     var m = mini(btn, '<div class="se-menu"><button data-a="movepage">⇄ Move to page…</button><button data-a="dup">⧉ Duplicate</button><button data-a="stock">' + stockLabel + '</button><button data-a="del" class="danger">🗑 Delete</button></div>');
-    m.querySelector('[data-a=movepage]').onclick = function () { closeMini(); moveToPage(id, btn); };
+    m.querySelector('[data-a=movepage]').onclick = function () { closeMini(); editPosition(card, id, btn, card.closest('.product-grid')); };
     m.querySelector('[data-a=dup]').onclick = function () { closeMini(); duplicateProduct(id); };
     m.querySelector('[data-a=stock]').onclick = function () { closeMini(); toggleStock(card, id); };
     m.querySelector('[data-a=del]').onclick = function () { closeMini(); deleteProduct(card, id, btn); };
