@@ -139,7 +139,7 @@
     'body.se-editing .product-card.se-card .se-posbadge{display:block;}',
     '.se-posbadge:hover{background:#4f46e5;transform:scale(1.08);}',
     'body.se-selecting .se-posbadge{display:none!important;}',
-    '.se-posbadge input{width:48px;height:24px;border:none;border-radius:6px;background:#0f0f14;color:#fff;font:800 13px system-ui;text-align:center;outline:2px solid #fff;padding:0;-moz-appearance:textfield;}',
+    '.se-posbadge input{width:60px;height:24px;border:none;border-radius:6px;background:#0f0f14;color:#fff;font:800 13px system-ui;text-align:center;outline:2px solid #fff;padding:0;-moz-appearance:textfield;}',
     '.se-posbadge input::-webkit-outer-spin-button,.se-posbadge input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}',
     /* redesigned "move product" popover */
     '.se-mvbox{width:236px;display:flex;flex-direction:column;}',
@@ -240,7 +240,17 @@
     el.addEventListener('keydown', kd); el.addEventListener('blur', bl);
   }
 
-  function closeMini() { var m = D.getElementById('se-mini'); if (m) m.remove(); }
+  // single tracked outside-click handler. CRITICAL: when one mini opens another
+  // (e.g. card ⋯ menu -> "Move to page" popover), the FIRST mini's mousedown
+  // listener used to linger and close the SECOND popover the instant you clicked
+  // into it — so move-to-page never worked with a real mouse (only with a
+  // scripted click, which fires no mousedown). closeMini() now always tears the
+  // listener down so exactly one is ever live.
+  var _miniOff = null;
+  function closeMini() {
+    var m = D.getElementById('se-mini'); if (m) m.remove();
+    if (_miniOff) { D.removeEventListener('mousedown', _miniOff, true); _miniOff = null; }
+  }
   function mini(anchor, inner, onOk) {
     closeMini();
     var m = D.createElement('div'); m.className = 'se-mini'; m.id = 'se-mini'; m.innerHTML = inner; B.appendChild(m);
@@ -250,7 +260,13 @@
     m.style.left = (window.scrollX + Math.max(8, Math.min(r.left, window.innerWidth - m.offsetWidth - 12))) + 'px';
     var ok = m.querySelector('.ok'); if (ok) ok.onclick = function () { onOk(m); };
     var f = m.querySelector('input,textarea,select'); if (f) f.focus();
-    setTimeout(function () { D.addEventListener('mousedown', function off(e) { if (!D.getElementById('se-mini')) { D.removeEventListener('mousedown', off); return; } if (!m.contains(e.target) && !(anchor && anchor.contains && anchor.contains(e.target))) { closeMini(); D.removeEventListener('mousedown', off); } }, true); }, 0);
+    setTimeout(function () {
+      _miniOff = function (e) {
+        if (!m.isConnected) { closeMini(); return; }
+        if (!m.contains(e.target) && !(anchor && anchor.contains && anchor.contains(e.target))) closeMini();
+      };
+      D.addEventListener('mousedown', _miniOff, true);
+    }, 0);
     return m;
   }
 
@@ -714,22 +730,32 @@
     var q; try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
     return { page: Math.max(1, (q && parseInt(q.get('page'), 10)) || 1), category: (q && q.get('category')) || '' };
   }
+  // badge label = "page:position" within the current view (e.g. 1:1, 1:2 … 3:10)
   function renumberBadges(grid) {
     if (!grid) return;
-    var off = (viewCtx().page - 1) * SE_PER_PAGE;
+    var pg = viewCtx().page;
     [].slice.call(grid.querySelectorAll('.product-card')).forEach(function (c, i) {
-      var b = c.querySelector('.se-posbadge'); if (b && !b.__editing) b.textContent = String(off + i + 1);
+      var b = c.querySelector('.se-posbadge'); if (b && !b.__editing) b.textContent = pg + ':' + (i + 1);
     });
+  }
+  // accepts "page:position" (e.g. 3:10) OR a bare number (= position on the CURRENT page)
+  function parsePosInput(v) {
+    v = (v || '').trim();
+    var m = v.match(/^(\d+)\s*:\s*(\d+)$/);
+    if (m) { var pg = Math.max(1, parseInt(m[1], 10)); var pos = Math.min(Math.max(parseInt(m[2], 10), 1), SE_PER_PAGE); return (pg - 1) * SE_PER_PAGE + pos; }
+    if (/^\d+$/.test(v)) { var n = Math.max(1, parseInt(v, 10)); return (viewCtx().page - 1) * SE_PER_PAGE + n; }
+    return null;
   }
   function editPosition(card, id, badge, grid) {
     if (badge.__editing) return; badge.__editing = 1;
     var cur = badge.textContent, done = false;
-    badge.innerHTML = '<input type="number" min="1" value="' + cur + '">';
+    badge.innerHTML = '<input type="text" inputmode="numeric" value="' + cur + '" title="page:position — e.g. 3:10">';
     var inp = badge.querySelector('input'); inp.focus(); inp.select();
     function finish(commit) {
-      if (done) return; done = true; var val = parseInt(inp.value, 10);
+      if (done) return; done = true;
+      var abs = parsePosInput(inp.value);
       badge.__editing = 0; badge.textContent = cur;
-      if (commit && val >= 1 && String(val) !== cur) applyPositionMove(card, id, val, grid);
+      if (commit && abs && inp.value.trim() !== cur) applyPositionMove(card, id, abs, grid);
     }
     inp.onclick = function (e) { e.stopPropagation(); };
     inp.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
@@ -747,10 +773,10 @@
           if (ref) grid.insertBefore(card, ref);
           else { var add = grid.querySelector('.bs-add'); add ? grid.insertBefore(card, add) : grid.appendChild(card); }
         });
-        renumberBadges(grid); status('Moved to #' + r.position + ' ✓', 'success');
+        renumberBadges(grid); status('Moved to ' + r.page + ':' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
       } else {                                                  // left this page
         if (grid) { flip(grid, function () { card.remove(); }); renumberBadges(grid); }
-        status('Moved to page ' + r.page + ', position ' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
+        status('Moved to ' + r.page + ':' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
       }
     });
   }
