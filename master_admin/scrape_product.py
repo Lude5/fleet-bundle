@@ -21,6 +21,13 @@ import requests
 
 CNY_TO_USD = 0.14
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+# Taobao/1688 block server-side scraping, so read them via Apify actors (which
+# handle the anti-bot). Weidian stays on the free direct scraper. ~1¢ per item.
+APIFY_TOKEN = os.environ.get('APIFY_TOKEN', '')
+APIFY_ACTORS = {
+    'taobao': 'zen-studio~taobao-detail-scraper',
+    '1688': 'zen-studio~1688-wholesale-scraper',
+}
 AI_CATEGORIES = ['shoes', 'shirts', 'hoodies', 'pants', 'shorts', 'jackets',
                  'headwear', 'accessories', 'bags', 'tech', 'womens']
 
@@ -240,13 +247,92 @@ def _scrape_html_generic(item_id, platform):
     return out
 
 
+def _map_apify_item(p, platform):
+    """Map an Apify Taobao/1688 dataset item into the raw scrape shape."""
+    out = {"name": "", "image": "", "images": [], "variants": [], "sizes": [], "price_cny": 0.0, "brand": ""}
+    out["name"] = (p.get("title") or p.get("titleOriginal") or p.get("subject") or "").strip()
+    pd = p.get("priceDetails") or {}
+    try:
+        out["price_cny"] = float(p.get("price") or pd.get("originalPrice") or 0)
+    except (TypeError, ValueError):
+        pass
+    seen, imgs = set(), []
+    for pic in ([p.get("mainPictureUrl")] + (p.get("pictures") or [])):
+        u = pic.get("url") if isinstance(pic, dict) else pic
+        if u and u not in seen:
+            seen.add(u); imgs.append(u)
+    out["images"] = imgs[:15]
+    if out["images"]:
+        out["image"] = out["images"][0]
+    shop = p.get("shop") or {}
+    out["brand"] = (p.get("brandName") or shop.get("shopName") or shop.get("vendorName") or "").strip()
+    # variants: match each sku's configurator vids to the attribute labels
+    attr, sizes = {}, []
+    for a in (p.get("attributes") or []):
+        if a.get("vid"):
+            attr[str(a["vid"])] = a
+        nm = (a.get("name") or a.get("originalName") or "")
+        if 'size' in nm.lower() or '尺' in nm:
+            sizes.append(a.get("value") or a.get("originalValue") or "")
+    for s in (p.get("skus") or []):
+        names, vimg = [], ""
+        for c in (s.get("configurators") or []):
+            a = attr.get(str(c.get("vid")))
+            if a:
+                names.append(a.get("value") or a.get("originalValue") or "")
+                vimg = vimg or a.get("image") or a.get("imageUrl") or a.get("picUrl") or ""
+        sp = s.get("price") or {}
+        try:
+            vcny = float(sp.get("originalPrice") or out["price_cny"])
+        except (TypeError, ValueError):
+            vcny = out["price_cny"]
+        out["variants"].append({
+            "name": " / ".join([n for n in names if n]) or str(s.get("skuId", "")),
+            "image": vimg or out["image"],
+            "price": round(vcny * CNY_TO_USD, 2) if vcny else "",
+            "price_cny": vcny,
+        })
+    out["variants"] = out["variants"][:48]
+    out["sizes"] = [s for s in dict.fromkeys(sizes) if s][:30]
+    return out
+
+
+def _scrape_apify(platform, item_id):
+    """Read a Taobao/1688 item via an Apify actor. Returns raw dict or None."""
+    actor = APIFY_ACTORS.get(platform)
+    if not (APIFY_TOKEN and actor):
+        return None
+    seller = {
+        'taobao': f"https://item.taobao.com/item.htm?id={item_id}",
+        '1688': f"https://detail.1688.com/offer/{item_id}.html",
+    }.get(platform)
+    try:
+        r = requests.post(
+            f"https://api.apify.com/v2/acts/{actor}/run-sync-get-dataset-items?token={APIFY_TOKEN}",
+            json={"items": [seller], "fetchReviews": False}, timeout=110,
+        )
+        if r.status_code >= 300:
+            print(f"[apify] {platform} HTTP {r.status_code}")
+            return None
+        items = r.json()
+        if isinstance(items, list) and items:
+            mapped = _map_apify_item(items[0], platform)
+            return mapped if mapped.get("name") or mapped.get("images") else None
+    except Exception as e:
+        print(f"[apify] {platform} scrape failed: {str(e)[:120]}")
+    return None
+
+
 def scrape(url):
     """Main entry. Returns a dict the composer UI consumes."""
     platform, item_id = _parse_item_url(url)
     if not platform or not item_id:
         return {"ok": False, "error": "Could not parse a Weidian / Taobao / 1688 link from that URL."}
 
-    raw = _scrape_weidian(item_id) if platform == 'weidian' else _scrape_html_generic(item_id, platform)
+    if platform == 'weidian':
+        raw = _scrape_weidian(item_id)              # free, open
+    else:
+        raw = _scrape_apify(platform, item_id) or _scrape_html_generic(item_id, platform)
     price_cny = raw.get("price_cny") or 0.0
     price_usd = round(price_cny * CNY_TO_USD, 2) if price_cny else 0.0
 

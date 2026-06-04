@@ -577,7 +577,7 @@
     var input = bg.querySelector('#scu'); input.focus();
     bg.querySelector('#scgo').onclick = function () {
       var url = input.value.trim(); if (!url) { st.textContent = 'Paste a link first.'; return; }
-      var goBtn = this; goBtn.disabled = true; goBtn.textContent = 'Scraping…'; st.textContent = 'Fetching listing…';
+      var goBtn = this; goBtn.disabled = true; goBtn.textContent = 'Scraping…'; st.textContent = 'Fetching listing… (Taobao / 1688 can take up to a minute)';
       jfetch('/products/scrape', 'POST', { url: url }).then(function (r) {
         goBtn.disabled = false; goBtn.textContent = '⚡ Scrape';
         if (!r || r.ok === false) { st.textContent = (r && r.error) || 'Scrape failed.'; return; }
