@@ -21,7 +21,7 @@
 
 {% block content %}
 <div class="shop-header">
-    <h1>{% if search_query %}Results for "{{ search_query }}"{% elif current_category %}{{ current_category|title }}{% else %}All Products{% endif %}</h1>
+    <h1>{% if search_query %}Results for "{{ search_query }}"{% elif current_category %}{{ current_category_name or current_category|title }}{% else %}All Products{% endif %}</h1>
     <form class="search-wrap" action="/shop" method="get" autocomplete="off" style="position:relative;">
         <input type="text" name="q" id="shopSearch" placeholder="Search products..." value="{{ search_query or '' }}" autocomplete="off">
         <button type="submit">&#128269;</button>

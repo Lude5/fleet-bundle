@@ -658,6 +658,15 @@ def shop():
     page = request.args.get('page', 1, type=int)
     per_page = 40
 
+    cats = get_categories()
+    cat_by_slug = {c['slug']: c for c in cats}
+    # Unknown category slug → redirect to All instead of rendering a title-cased
+    # junk heading over an empty grid.
+    if category and category != 'trending' and category not in cat_by_slug:
+        return redirect('/shop')
+    category_name = (cat_by_slug.get(category, {}).get('name')
+                     or ('Trending' if category == 'trending' else (category.replace('-', ' ').title() if category else '')))
+
     if q:
         all_products = search_products(q)
         if category == 'trending':
@@ -687,8 +696,8 @@ def shop():
     page = max(1, min(page, total_pages))
     products = all_products[(page - 1) * per_page : page * per_page]
 
-    return render_template('shop.html', products=products, categories=get_categories(),
-        current_category=category, current_sort=sort, search_query=q,
+    return render_template('shop.html', products=products, categories=cats,
+        current_category=category, current_category_name=category_name, current_sort=sort, search_query=q,
         page=page, total_pages=total_pages, total=total)
 
 

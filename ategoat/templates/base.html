@@ -177,7 +177,7 @@
         .mobile-menu {
             display: flex; position: fixed; inset: 0;
             background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
-            z-index: 200;
+            z-index: 600; /* above the signup popup (z-index 500) so they never overlap */
             flex-direction: column; align-items: center; justify-content: center;
             gap: 24px;
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -506,7 +506,8 @@
         .product-card:hover .product-card-agents { opacity: 1; }
         .product-card-agents:hover { background: var(--accent); border-color: var(--accent); }
         @media (hover: none) {
-            .product-card-agents { opacity: 1; background: rgba(0,0,0,0.5); }
+            /* touch devices: always visible + 42px tap target (was 32px, below the 40px min) */
+            .product-card-agents { opacity: 1; background: rgba(0,0,0,0.5); width: 42px; height: 42px; font-size: 18px; }
         }
         .popup-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
         .popup h2 { font-family: var(--font-display); font-size: 32px; text-transform: uppercase; margin-bottom: 12px; }
@@ -814,6 +815,13 @@
         @media (max-width: 768px) {
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
+            /* bigger footer tap targets on mobile (were ~24px, below the 40px min) */
+            .footer-col a { padding: 11px 0; }
+            /* search field inside the mobile menu */
+            .mm-search { width: min(86vw, 360px); margin-bottom: 6px; }
+            .mm-search input { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; color: #fff; font-size: 15px; padding: 13px 15px; outline: none; }
+            .mm-search input:focus { border-color: var(--accent); }
+            .mm-search input::placeholder { color: rgba(255,255,255,0.5); }
             .nav-brand { font-size: 20px; letter-spacing: 0; max-width: 38vw; overflow: hidden; }
             .section { padding: 48px 16px; }
             .section-title { font-size: 32px; }
@@ -856,12 +864,15 @@
             </li>
             <li><a href="/agents" class="nav-cta">Sign Up — Coupons $50–$500</a></li>
         </ul>
-        <button class="nav-hamburger" onclick="document.getElementById('mob').classList.add('open')">&#9776;</button>
+        <button class="nav-hamburger" onclick="var p=document.getElementById('popup');if(p)p.classList.remove('active');document.getElementById('mob').classList.add('open')">&#9776;</button>
     </nav>
 
     <div class="mobile-menu" id="mob">
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
         <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
+        <form class="mm-search" action="/shop" method="get" role="search">
+            <input type="search" name="q" placeholder="Search 9,400+ finds…" aria-label="Search products" autocomplete="off">
+        </form>
         <a href="/">Home</a>
         <a href="/shop">Shop</a>
         <a href="/link-converter">Converter</a>
@@ -1185,10 +1196,13 @@
             try {
                 var until = parseInt(localStorage.getItem('pp_dismiss_until') || '0', 10);
                 if (until && Date.now() < until) return;
-                if (sessionStorage.getItem('pp') === '1') return;
+                if (sessionStorage.getItem('pp') === '1') return;   // once per session, not every page load
                 setTimeout(function() {
+                    var mob = document.getElementById('mob');
+                    if (mob && mob.classList.contains('open')) return;   // never pop over the open mobile menu
                     if (sessionStorage.getItem('pp') !== '1') {
                         document.getElementById('popup').classList.add('active');
+                        try { sessionStorage.setItem('pp', '1'); } catch(e) {}   // mark shown → suppress on later pages this session
                     }
                 }, 2000);
             } catch(e) {}
