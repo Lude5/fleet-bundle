@@ -139,7 +139,11 @@
     'body.se-editing .product-card.se-card .se-posbadge{display:block;}',
     '.se-posbadge:hover{background:#4f46e5;transform:scale(1.08);}',
     'body.se-selecting .se-posbadge{display:none!important;}',
-    '.se-posbadge input{width:60px;height:24px;border:none;border-radius:6px;background:#0f0f14;color:#fff;font:800 13px system-ui;text-align:center;outline:2px solid #fff;padding:0;-moz-appearance:textfield;}',
+    '.se-posbadge.editing{display:inline-flex!important;align-items:center;gap:0;padding:2px 6px;background:#0f0f14;outline:2px solid #fff;cursor:default;}',
+    '.se-posbadge .bp,.se-posbadge .bn{width:22px;height:22px;border:none;background:transparent;color:#fff;font:800 13px system-ui;outline:none;padding:0;-moz-appearance:textfield;}',
+    '.se-posbadge .bp{text-align:right;}.se-posbadge .bn{text-align:left;}',
+    '.se-posbadge .bc{color:#fff;font:800 14px system-ui;padding:0 2px;opacity:.8;}',
+    '.se-posbadge .bp::-webkit-outer-spin-button,.se-posbadge .bp::-webkit-inner-spin-button,.se-posbadge .bn::-webkit-outer-spin-button,.se-posbadge .bn::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}',
     '.se-posbadge input::-webkit-outer-spin-button,.se-posbadge input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}',
     /* redesigned "move product" popover */
     '.se-mvbox{width:236px;display:flex;flex-direction:column;}',
@@ -746,20 +750,33 @@
     if (/^\d+$/.test(v)) { var n = Math.max(1, parseInt(v, 10)); return (viewCtx().page - 1) * SE_PER_PAGE + n; }
     return null;
   }
+  // two separate fields:  [ page ] : [ position ]  — click either side, neither navigates
   function editPosition(card, id, badge, grid) {
     if (badge.__editing) return; badge.__editing = 1;
-    var cur = badge.textContent, done = false;
-    badge.innerHTML = '<input type="text" inputmode="numeric" value="' + cur + '" title="page:position — e.g. 3:10">';
-    var inp = badge.querySelector('input'); inp.focus(); inp.select();
+    var cur = badge.textContent, parts = cur.split(':'), done = false;
+    badge.classList.add('editing');
+    badge.innerHTML = '<input class="bp" type="text" inputmode="numeric" value="' + (parts[0] || '1') + '" aria-label="page" title="page">' +
+                      '<span class="bc">:</span>' +
+                      '<input class="bn" type="text" inputmode="numeric" value="' + (parts[1] || '1') + '" aria-label="position on page" title="position on page">';
+    var ip = badge.querySelector('.bp'), inp = badge.querySelector('.bn');
+    inp.focus(); inp.select();
     function finish(commit) {
       if (done) return; done = true;
-      var abs = parsePosInput(inp.value);
-      badge.__editing = 0; badge.textContent = cur;
-      if (commit && abs && inp.value.trim() !== cur) applyPositionMove(card, id, abs, grid);
+      var pg = Math.max(1, parseInt(ip.value, 10) || 1);
+      var pos = Math.min(Math.max(parseInt(inp.value, 10) || 1, 1), SE_PER_PAGE);
+      badge.__editing = 0; badge.classList.remove('editing'); badge.textContent = cur;
+      if (commit && (pg + ':' + pos) !== cur) applyPositionMove(card, id, (pg - 1) * SE_PER_PAGE + pos, grid);
     }
-    inp.onclick = function (e) { e.stopPropagation(); };
-    inp.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
-    inp.onblur = function () { finish(true); };
+    function blur() { setTimeout(function () { if (badge.__editing && document.activeElement !== ip && document.activeElement !== inp) finish(true); }, 70); }
+    [ip, inp].forEach(function (el) {
+      el.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+      el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); });
+      el.addEventListener('blur', blur);
+      el.onkeydown = function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      };
+    });
   }
   function applyPositionMove(card, id, position, grid) {
     var ctx = viewCtx(); status('Moving…');
@@ -1120,6 +1137,9 @@
 
   /* ---------- navigation guard: save before leaving with unsaved edits ---------- */
   D.addEventListener('click', function (e) {
+    // clicks on editor chrome inside a card (toolbar, position badge) must never
+    // navigate to the product — they sit inside the card's <a>.
+    if (e.target.closest && (e.target.closest('.se-ptools') || e.target.closest('.se-posbadge'))) { e.preventDefault(); e.stopPropagation(); return; }
     var a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
     if (a.classList.contains('se-pen') || a.closest('.se-ptools') || a.closest('.se-bar')) return;
     var href = a.getAttribute('href'); if (!href || href.charAt(0) === '#' || /^(mailto|tel|javascript):/i.test(href)) return;
