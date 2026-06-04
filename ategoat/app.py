@@ -15,7 +15,11 @@ _secret_from_env = os.environ.get('SECRET_KEY')
 if _secret_from_env:
     app.secret_key = _secret_from_env
 else:
-    _data_dir = os.environ.get('ATEGOAT_DATA_DIR') or ('/data' if os.path.exists('/data') else os.path.join(os.path.dirname(__file__), 'data'))
+    # Prefer the PERSISTENT disk (/data) over ATEGOAT_DATA_DIR, which resolves to
+    # an EPHEMERAL path in this bundle (wsgi checks /var/data but the disk is at
+    # /data). Storing the secret key on the ephemeral path regenerated it on every
+    # deploy -> every admin logged out each deploy. Co-locate it with site.db.
+    _data_dir = ('/data' if os.path.isdir('/data') else (os.environ.get('ATEGOAT_DATA_DIR') or os.path.join(os.path.dirname(__file__), 'data')))
     os.makedirs(_data_dir, exist_ok=True)
     _key_path = os.path.join(_data_dir, '.secret_key')
     if os.path.exists(_key_path):
@@ -77,7 +81,10 @@ SITE_CONFIG = {
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'changeme123')
 ADMIN_API_TOKEN = os.environ.get('ADMIN_API_TOKEN', '')  # for cross-site master-admin calls
-DATA_DIR = os.environ.get('ATEGOAT_DATA_DIR') or ('/data' if os.path.exists('/data') else os.path.join(os.path.dirname(__file__), 'data'))
+# Prefer the PERSISTENT disk (/data) over the ephemeral ATEGOAT_DATA_DIR so that
+# uploads (UPLOADS_DIR), the secret key and the seed marker all survive deploys,
+# co-located with site.db. See the long note in the seed block below.
+DATA_DIR = ('/data' if os.path.isdir('/data') else (os.environ.get('ATEGOAT_DATA_DIR') or os.path.join(os.path.dirname(__file__), 'data')))
 os.makedirs(DATA_DIR, exist_ok=True)
 
 try:
