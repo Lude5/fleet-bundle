@@ -1138,8 +1138,10 @@
   /* ---------- navigation guard: save before leaving with unsaved edits ---------- */
   D.addEventListener('click', function (e) {
     // clicks on editor chrome inside a card (toolbar, position badge) must never
-    // navigate to the product — they sit inside the card's <a>.
-    if (e.target.closest && (e.target.closest('.se-ptools') || e.target.closest('.se-posbadge'))) { e.preventDefault(); e.stopPropagation(); return; }
+    // trigger the navigate-to-product guard — they sit inside the card's <a>, but
+    // their own handlers manage nav. Just skip; don't swallow the event (that would
+    // block the badge's own click handler from opening the editor).
+    if (e.target.closest && (e.target.closest('.se-ptools') || e.target.closest('.se-posbadge'))) return;
     var a = e.target.closest && e.target.closest('a[href]'); if (!a) return;
     if (a.classList.contains('se-pen') || a.closest('.se-ptools') || a.closest('.se-bar')) return;
     var href = a.getAttribute('href'); if (!href || href.charAt(0) === '#' || /^(mailto|tel|javascript):/i.test(href)) return;
