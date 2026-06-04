@@ -64,7 +64,7 @@ SITE_CONFIG = {
     'name': os.environ.get('SITE_NAME', 'AteGoat'),
     'name_part1': os.environ.get('SITE_NAME_PART1', 'Ate'),
     'name_part2': os.environ.get('SITE_NAME_PART2', 'Goat'),
-    'domain': os.environ.get('SITE_DOMAIN', 'ategoat.com'),
+    'domain': os.environ.get('SITE_DOMAIN', 'repsloot.com'),  # customer-facing domain (canonical/og/sitemap)
     'agent_name': os.environ.get('AGENT_NAME', 'KakoBuy'),
     'agent_domain': os.environ.get('AGENT_DOMAIN', 'kakobuy.com'),
     'agent_signup_url': os.environ.get('AGENT_SIGNUP_URL', 'https://www.kakobuy.com/register?affcode=ategoat'),
@@ -694,7 +694,12 @@ def shop():
 
 @app.route('/agents')
 def agents_page():
-    return render_template('agents.html', agents=AGENTS)
+    # Use the EFFECTIVE agents (operator overrides + order) and substitute each
+    # agent's {code} into its signup template — otherwise the signup links render
+    # a literal "{code}" and the affiliate/referral attribution is lost (this
+    # broke even the featured KakoBuy register?affcode={code} link).
+    agents = [dict(a, signup=_agent_signup_url(a)) for a in get_effective_agents()]
+    return render_template('agents.html', agents=agents)
 
 
 @app.route('/link-converter')
