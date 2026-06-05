@@ -741,39 +741,48 @@
   /* ---------- PRODUCT cards (shop grid + related) ---------- */
   function pidOf(card) { return card.getAttribute('data-pid') || ((card.getAttribute('href') || '').match(/\/product\/([^/?#]+)/) || [])[1]; }
 
-  /* ---------- position badges + exact-position moves ---------- */
+  /* ---------- position badges + ABSOLUTE exact-position moves ---------- */
+  // Each badge shows the product's ABSOLUTE number in the whole catalogue (#N),
+  // so it's meaningful even inside a search/category filter, and moving always
+  // targets the real shop position. Ranks come from /products/<site>/order.
   var SE_PER_PAGE = 40;
+  var SE_RANK = {};     // pid -> 1-based absolute position in the full shop
+  var SE_TOTAL = 0;
   function viewCtx() {
     var q; try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
     return { page: Math.max(1, (q && parseInt(q.get('page'), 10)) || 1), category: (q && q.get('category')) || '' };
   }
-  // badge label = "page:position" within the current view (e.g. 1:1, 1:2 … 3:10)
-  function renumberBadges(grid) {
-    if (!grid) return;
-    var pg = viewCtx().page;
-    [].slice.call(grid.querySelectorAll('.product-card')).forEach(function (c, i) {
-      var b = c.querySelector('.se-posbadge'); if (b && !b.__editing) b.textContent = pg + ':' + (i + 1);
+  function loadOrder(cb) {
+    jfetch('/products/' + SITE + '/order').then(function (r) {
+      if (r && r.ids) { SE_RANK = {}; r.ids.forEach(function (pid, i) { SE_RANK[pid] = i + 1; }); SE_TOTAL = r.ids.length; }
+      if (cb) cb();
     });
   }
-  // accepts "page:position" (e.g. 3:10) OR a bare number (= position on the CURRENT page)
-  function parsePosInput(v) {
-    v = (v || '').trim();
-    var m = v.match(/^(\d+)\s*:\s*(\d+)$/);
-    if (m) { var pg = Math.max(1, parseInt(m[1], 10)); var pos = Math.min(Math.max(parseInt(m[2], 10), 1), SE_PER_PAGE); return (pg - 1) * SE_PER_PAGE + pos; }
-    if (/^\d+$/.test(v)) { var n = Math.max(1, parseInt(v, 10)); return (viewCtx().page - 1) * SE_PER_PAGE + n; }
-    return null;
+  function absRank(pid) { return SE_RANK[pid] || 0; }
+  function pageOf(rank) { return Math.floor((rank - 1) / SE_PER_PAGE) + 1; }
+  function posOnPage(rank) { return ((rank - 1) % SE_PER_PAGE) + 1; }
+  function refreshRanks() { loadOrder(function () { [].forEach.call(D.querySelectorAll('.product-grid'), renumberBadges); }); }
+  function renumberBadges(grid) {
+    if (!grid) return;
+    [].slice.call(grid.querySelectorAll('.product-card')).forEach(function (c, i) {
+      var b = c.querySelector('.se-posbadge'); if (!b || b.__editing) return;
+      var rank = absRank(pidOf(c));
+      b.textContent = rank ? ('#' + rank) : (viewCtx().page + ':' + (i + 1));
+      b.title = rank ? ('Product #' + rank + ' · page ' + pageOf(rank) + ', pos ' + posOnPage(rank) + ' — click to move') : 'Click to set position';
+    });
   }
-  // click a badge → a small labeled panel: "Page" field, then "Position" field,
-  // stacked on separate lines (prefilled with where the product is now).
+  // click a badge → labeled panel (Page + Position), PREFILLED from the product's
+  // absolute spot; Move sets the absolute catalogue position (whole shop).
   function editPosition(card, id, anchor, grid) {
-    var ctx = viewCtx(), curPos = '';
-    if (grid && card) { var ix = [].slice.call(grid.querySelectorAll('.product-card')).indexOf(card); if (ix >= 0) curPos = ix + 1; }
+    var rank = absRank(id);
+    var curPage = rank ? pageOf(rank) : viewCtx().page;
+    var curPos = rank ? posOnPage(rank) : '';
     var m = mini(anchor,
       '<div class="se-mvbox">' +
         '<div class="mp-h">Move product</div>' +
-        '<div class="mp-sub">' + (ctx.category ? 'In “' + esc(ctx.category) + '” · ' : '') + '40 per page</div>' +
+        '<div class="mp-sub">' + (rank ? ('now #' + rank + ' of ' + SE_TOTAL) : 'whole shop') + ' · 40 per page</div>' +
         '<label class="mp-l">Page</label>' +
-        '<input id="mp-page" type="text" inputmode="numeric" class="mp-in" value="' + ctx.page + '">' +
+        '<input id="mp-page" type="text" inputmode="numeric" class="mp-in" value="' + curPage + '">' +
         '<label class="mp-l">Position <span class="mp-opt">(item # on the page)</span></label>' +
         '<input id="mp-pos" type="text" inputmode="numeric" class="mp-in" value="' + curPos + '" placeholder="Top">' +
         '<div class="se-row"><button class="se-b ghost" id="mp-x">Cancel</button><button class="se-b save ok">Move</button></div>' +
@@ -787,13 +796,17 @@
         applyPositionMove(card, id, (page - 1) * SE_PER_PAGE + pos, grid);
       });
     var x = m.querySelector('#mp-x'); if (x) x.onclick = closeMini;
-    var pf = m.querySelector('#mp-pos'); if (pf) { pf.focus(); pf.select(); }  // land on Position (the usual tweak)
+    var pf = m.querySelector('#mp-pos'); if (pf) { pf.focus(); pf.select(); }
   }
-  function applyPositionMove(card, id, position, grid) {
-    var ctx = viewCtx(); status('Moving…');
-    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: position, category: ctx.category }).then(function (r) {
+  // absPos = absolute catalogue position; move on the WHOLE shop (category:'').
+  function applyPositionMove(card, id, absPos, grid) {
+    status('Moving…');
+    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: absPos, category: '' }).then(function (r) {
       if (!r || !r.ok) { status((r && r.error) || 'Move failed', 'error'); return; }
-      if (r.page === ctx.page && grid) {                       // stays on this page → reposition smoothly
+      var ctx = viewCtx();
+      // In the All view (no search/category) we can reflow the card to its slot on
+      // the current page; otherwise just re-rank the badges in place.
+      if (!ctx.category && !/[?&]q=/.test(location.search) && grid && r.page === ctx.page) {
         var targetIdx = r.position - (ctx.page - 1) * SE_PER_PAGE - 1;
         flip(grid, function () {
           var others = [].slice.call(grid.querySelectorAll('.product-card')).filter(function (c) { return c !== card; });
@@ -801,21 +814,21 @@
           if (ref) grid.insertBefore(card, ref);
           else { var add = grid.querySelector('.bs-add'); add ? grid.insertBefore(card, add) : grid.appendChild(card); }
         });
-        renumberBadges(grid); status('Moved to ' + r.page + ':' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
-      } else {                                                  // left this page
-        if (grid) { flip(grid, function () { card.remove(); }); renumberBadges(grid); }
-        status('Moved to ' + r.page + ':' + ((r.position - 1) % SE_PER_PAGE + 1) + ' ✓', 'success');
       }
+      status('Moved to #' + r.position + ' (page ' + r.page + ':' + posOnPage(r.position) + ') ✓', 'success');
+      refreshRanks();
     });
   }
   function persistDragged(grid, card, id) {
-    renumberBadges(grid);
-    var ctx = viewCtx(), cards = [].slice.call(grid.querySelectorAll('.product-card')), idx = cards.indexOf(card);
-    if (idx < 0) return;
-    var rank = (ctx.page - 1) * SE_PER_PAGE + idx + 1;
+    var cards = [].slice.call(grid.querySelectorAll('.product-card'));
+    var idx = cards.indexOf(card); if (idx < 0) return;
+    // new absolute position = rank of the card now just below the dragged one
+    var below = cards[idx + 1], above = cards[idx - 1];
+    var target = below ? absRank(pidOf(below)) : (above ? absRank(pidOf(above)) + 1 : 0);
+    if (!target) { var ctx = viewCtx(); target = (ctx.page - 1) * SE_PER_PAGE + idx + 1; }
     status('Saving order…');
-    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: rank, category: ctx.category }).then(function (r) {
-      status(r && r.ok ? 'Order saved ✓' : 'Save failed', r && r.ok ? 'success' : 'error');
+    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: target, category: '' }).then(function (r) {
+      if (r && r.ok) { status('Order saved ✓', 'success'); refreshRanks(); } else status('Save failed', 'error');
     });
   }
   function enhanceCards() {
@@ -847,7 +860,9 @@
       }
     });
     if (isShop) {
-      D.querySelectorAll('.product-grid').forEach(renumberBadges);
+      // load the absolute catalogue order once per page, then number the badges
+      if (!window.__se_order) { window.__se_order = 1; loadOrder(function () { [].forEach.call(D.querySelectorAll('.product-grid'), renumberBadges); }); }
+      else [].forEach.call(D.querySelectorAll('.product-grid'), renumberBadges);
       var sg = D.querySelector('.product-grid'); if (sg && !sg.__addtile) { sg.__addtile = 1; var tile = D.createElement('button'); tile.type = 'button'; tile.className = 'bs-add'; tile.textContent = '+ Add product'; tile.onclick = openAddProduct; sg.appendChild(tile); }
       if (!D.getElementById('se-selbtn')) { var sb = D.createElement('button'); sb.id = 'se-selbtn'; sb.className = 'se-selbtn'; sb.textContent = '☑ Select'; sb.onclick = function () { setSelectMode(!selectMode); }; B.appendChild(sb); }
     }

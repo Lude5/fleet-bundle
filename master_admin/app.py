@@ -688,6 +688,15 @@ def products_move_to_position(site_id):
     return jsonify(data or {'ok': True})
 
 
+@app.route('/products/<site_id>/order')
+def products_order(site_id):
+    """Proxy: the site's full-shop product-ID order (for absolute position numbering)."""
+    site = next((s for s in load_sites() if s['id'] == site_id), None)
+    if not site:
+        return jsonify({'ok': False, 'error': 'site not found'}), 404
+    return jsonify(_call_site(site, '/admin/api/order') or {'ok': False, 'ids': []})
+
+
 @app.route('/products/<site_id>/<pid>', methods=['GET'])
 def products_get_one(site_id, pid):
     """Fetch the raw product row from the origin site (for duplicate / undo)."""
