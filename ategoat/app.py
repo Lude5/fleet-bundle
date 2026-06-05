@@ -2221,13 +2221,16 @@ def api_admin_products():
 
 @app.route('/admin/api/order')
 def api_admin_order():
-    """Just the product IDs in full-shop order (SHOP_ORDER). Lets the Studio editor
-    compute each product's ABSOLUTE catalogue position (#N + page) even inside a
-    search/category view. Tiny vs the full product payload."""
+    """Product IDs in order — full-shop (SHOP_ORDER) by default, or a single category's
+    order when ?category=<slug> is passed. Lets the Studio editor number each product:
+    the ABSOLUTE #N in the All view, and its place WITHIN a category in a category view.
+    Both come from the same global order (a category is just the All order filtered), so
+    the two numbers always agree. Tiny vs the full product payload."""
     if not is_admin_api():
         return jsonify({'error': 'Unauthorized'}), 401
-    ids = [p['id'] for p in get_products()]
-    return jsonify({'ok': True, 'ids': ids, 'per_page': 40})
+    category = (request.args.get('category') or '').strip()
+    ids = [p['id'] for p in get_products(category if category else None)]
+    return jsonify({'ok': True, 'ids': ids, 'per_page': 40, 'category': category})
 
 
 @app.route('/admin/api/products', methods=['POST'])
