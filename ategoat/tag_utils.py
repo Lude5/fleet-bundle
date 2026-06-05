@@ -132,7 +132,12 @@ TYPE_SYNONYMS = {
     'jacket':     ['jacket', 'outerwear'],
     'puffer':     ['puffer', 'jacket', 'outerwear'],
     'coat':       ['coat', 'outerwear'],
-    'vest':       ['vest', 'outerwear'],
+    'vest':       ['vest', 'gilet', 'outerwear'],
+    'gilet':      ['gilet', 'vest', 'outerwear'],
+    'tank':       ['tank', 'singlet', 'vest'],
+    'flannel':    ['flannel', 'plaid'],
+    'loafer':     ['loafer', 'moccasin'],
+    'loafers':    ['loafer', 'moccasin'],
 
     'bag':        ['bag', 'accessory'],
     'backpack':   ['backpack', 'bag'],
@@ -144,6 +149,13 @@ TYPE_SYNONYMS = {
     'watch':      ['watch', 'accessory'],
     'glasses':    ['glasses', 'sunglasses', 'accessory'],
     'sunglasses': ['sunglasses', 'glasses', 'accessory'],
+    # jewelry: the catalog names items necklace/bracelet/etc., never "jewelry".
+    # (avoid bare 'ring' — it substring-matches 'tRAINING', 'eaRRING' etc.)
+    'jewelry':    ['necklace', 'bracelet', 'earring', 'pendant', 'chain', 'jewelry'],
+    'jewellery':  ['necklace', 'bracelet', 'earring', 'pendant', 'chain'],
+    'necklace':   ['necklace', 'pendant', 'chain'],
+    'bracelet':   ['bracelet', 'chain'],
+    'earrings':   ['earring'],
 }
 
 STOP_WORDS = {
