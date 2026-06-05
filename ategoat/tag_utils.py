@@ -90,12 +90,22 @@ TYPE_SYNONYMS = {
     'shoes':      ['shoes', 'sneaker', 'sneakers', 'footwear'],
     'sneaker':    ['shoes', 'sneaker', 'sneakers'],
     'sneakers':   ['shoes', 'sneaker', 'sneakers'],
-    'slide':      ['slides', 'sandals'],
-    'slides':     ['slides', 'sandals'],
-    'sandal':     ['sandals'],
-    'sandals':    ['sandals'],
-    'boot':       ['boots'],
-    'boots':      ['boots'],
+    # slip-ons: slides / slippers / sandals / mules / flip-flops are the same thing
+    # to a shopper — treat them as one synonym set so any term finds all of them.
+    'slide':      ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slides':     ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slipper':    ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slippers':   ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'sandal':     ['slide', 'slipper', 'sandal', 'mule'],
+    'sandals':    ['slide', 'slipper', 'sandal', 'mule'],
+    'mule':       ['slide', 'slipper', 'mule'],
+    'slider':     ['slide', 'slipper', 'sandal'],
+    'flipflop':   ['flip flop', 'slide', 'sandal', 'slipper'],
+    'boot':       ['boot', 'boots'],
+    'boots':      ['boot', 'boots'],
+    'trainer':    ['trainer', 'sneaker', 'shoe'],
+    'trainers':   ['trainer', 'sneaker', 'shoe'],
+    'kicks':      ['shoe', 'sneaker'],
 
     'hoodie':     ['hoodie', 'hoodies', 'sweatshirt'],
     'hoodies':    ['hoodie', 'hoodies', 'sweatshirt'],
@@ -285,6 +295,9 @@ def expand_search_query(query):
             m = pat.match(tok)
             if m:
                 alts.add(tmpl.format(*m.groups()))
+        # product-type synonyms so "slipper" finds slides, "trainer" finds sneakers, etc.
+        if tok in TYPE_SYNONYMS:
+            alts.update(TYPE_SYNONYMS[tok])
         if not alts and is_shorthand:
             continue  # mapped to filler only (e.g. "rep"/"reps") → drop the token
         # COVERAGE GUARANTEE: a token of >=3 chars must always also match itself, so
