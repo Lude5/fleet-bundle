@@ -768,15 +768,19 @@
   function loadOrder(cb) {
     jfetch('/products/' + SITE + '/order').then(function (r) {
       if (r && r.ids) { SE_RANK = {}; r.ids.forEach(function (pid, i) { SE_RANK[pid] = i + 1; }); SE_TOTAL = r.ids.length; }
+      if (cb) cb();                                // render #N immediately — NEVER block badges on the category fetch
       var cat = curCat();
-      if (cat) {                                   // also pull this category's own order
-        jfetch('/products/' + SITE + '/order?category=' + encodeURIComponent(cat)).then(function (rc) {
-          SE_CAT = {}; SE_CAT_TOTAL = 0;
-          if (rc && rc.ids) { rc.ids.forEach(function (pid, i) { SE_CAT[pid] = i + 1; }); SE_CAT_TOTAL = rc.ids.length; }
+      SE_CAT = {}; SE_CAT_TOTAL = 0;
+      if (!cat) return;
+      // Best-effort: enrich with this category's own order, then re-render. A failure
+      // here must NOT strand the badges (that was the "#?" bug) — it has its own catch.
+      jfetch('/products/' + SITE + '/order?category=' + encodeURIComponent(cat)).then(function (rc) {
+        if (rc && rc.ids) {
+          SE_CAT = {}; rc.ids.forEach(function (pid, i) { SE_CAT[pid] = i + 1; }); SE_CAT_TOTAL = rc.ids.length;
           if (cb) cb();
-        });
-      } else { SE_CAT = {}; SE_CAT_TOTAL = 0; if (cb) cb(); }
-    });
+        }
+      }).catch(function () {});
+    }).catch(function () { if (cb) cb(); });        // even if the global fetch dies, render with what we have
   }
   function absRank(pid) { return SE_RANK[pid] || 0; }
   function catRank(pid) { return SE_CAT[pid] || 0; }
@@ -790,10 +794,11 @@
       var b = c.querySelector('.se-posbadge'); if (!b || b.__editing) return;
       var abs = absRank(pidOf(c));
       if (cat) {
-        // both numbers: #<overall> · <place in this category>
+        // both numbers: #<overall> · <place in this category>. If the global order
+        // isn't loaded yet, show just the category # (never a literal "#?").
         var cr = catRank(pidOf(c)) || ((viewCtx().page - 1) * SE_PER_PAGE + i + 1);
-        b.textContent = (abs ? ('#' + abs) : '#?') + '·' + cr;
-        b.title = (abs ? ('#' + abs + ' overall') : 'unranked') + ' · ' + cr + ' in ' + cat + ' — click to move';
+        b.textContent = abs ? ('#' + abs + '·' + cr) : ('#' + cr);
+        b.title = (abs ? ('#' + abs + ' overall · ') : '') + cr + ' in ' + cat + ' — click to move';
       } else {
         b.textContent = abs ? ('#' + abs) : (viewCtx().page + ':' + (i + 1));
         b.title = abs ? ('#' + abs + ' of ' + SE_TOTAL + ' · page ' + pageOf(abs) + ', pos ' + posOnPage(abs) + ' — click to move') : 'Click to set position';
