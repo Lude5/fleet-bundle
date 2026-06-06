@@ -741,106 +741,57 @@
   /* ---------- PRODUCT cards (shop grid + related) ---------- */
   function pidOf(card) { return card.getAttribute('data-pid') || ((card.getAttribute('href') || '').match(/\/product\/([^/?#]+)/) || [])[1]; }
 
-  /* ---------- position badges + exact-position moves (dual number) ---------- */
-  // ALL view: each badge is the product's ABSOLUTE number in the whole shop (#N).
-  // CATEGORY view: it shows BOTH — the absolute #N AND its place within that category
-  // (e.g. "#146·20"). Both come from the SAME global order (a category is just the All
-  // order filtered), so the two numbers can never disagree and every category stays in
-  // ascending order. Editing either number moves the one product. Ranks come from
-  // /products/<site>/order  (and /order?category=<slug> for the within-category rank).
+  /* ---------- position badges + exact-position moves ---------- */
+  // Every badge shows the product's ABSOLUTE number in the whole shop (#N) — the SAME
+  // "all" number everywhere, including inside a category (a category is just the All
+  // order filtered, so its products still read their global #N). Click a badge to set
+  // that number. Ranks come from /products/<site>/order.
   var SE_PER_PAGE = 40;
   var SE_RANK = {};     // pid -> 1-based absolute position in the whole shop
   var SE_TOTAL = 0;
-  var SE_CAT = {};      // pid -> 1-based position within the current category view
-  var SE_CAT_TOTAL = 0;
   function viewCtx() {
     var q; try { q = new URLSearchParams(location.search); } catch (e) { q = null; }
     return { page: Math.max(1, (q && parseInt(q.get('page'), 10)) || 1), category: (q && q.get('category')) || '' };
   }
-  // The category badges/moves are scoped to: the filtered category, unless we're in a
-  // search (which spans every category, so it stays global). '' = All / global. Reads
-  // the real ?q= param (not a substring) so a future ?quality= filter can't trip it.
-  function curCat() {
-    var c = viewCtx().category; if (!c) return '';
-    var q; try { q = new URLSearchParams(location.search).get('q'); } catch (e) { q = null; }
-    return (q && q.trim()) ? '' : c;
-  }
   function loadOrder(cb) {
     jfetch('/products/' + SITE + '/order').then(function (r) {
       if (r && r.ids) { SE_RANK = {}; r.ids.forEach(function (pid, i) { SE_RANK[pid] = i + 1; }); SE_TOTAL = r.ids.length; }
-      if (cb) cb();                                // render #N immediately — NEVER block badges on the category fetch
-      var cat = curCat();
-      SE_CAT = {}; SE_CAT_TOTAL = 0;
-      if (!cat) return;
-      // Best-effort: enrich with this category's own order, then re-render. A failure
-      // here must NOT strand the badges (that was the "#?" bug) — it has its own catch.
-      jfetch('/products/' + SITE + '/order?category=' + encodeURIComponent(cat)).then(function (rc) {
-        if (rc && rc.ids) {
-          SE_CAT = {}; rc.ids.forEach(function (pid, i) { SE_CAT[pid] = i + 1; }); SE_CAT_TOTAL = rc.ids.length;
-          if (cb) cb();
-        }
-      }).catch(function () {});
-    }).catch(function () { if (cb) cb(); });        // even if the global fetch dies, render with what we have
+      if (cb) cb();
+    }).catch(function () { if (cb) cb(); });        // even if the order fetch dies, render with what we have
   }
   function absRank(pid) { return SE_RANK[pid] || 0; }
-  function catRank(pid) { return SE_CAT[pid] || 0; }
   function pageOf(rank) { return Math.floor((rank - 1) / SE_PER_PAGE) + 1; }
   function posOnPage(rank) { return ((rank - 1) % SE_PER_PAGE) + 1; }
   function refreshRanks() { loadOrder(function () { [].forEach.call(D.querySelectorAll('.product-grid'), renumberBadges); }); }
   function renumberBadges(grid) {
     if (!grid) return;
-    var cat = curCat();
     [].slice.call(grid.querySelectorAll('.product-card')).forEach(function (c, i) {
       var b = c.querySelector('.se-posbadge'); if (!b || b.__editing) return;
       var abs = absRank(pidOf(c));
-      if (cat) {
-        // both numbers: #<overall> · <place in this category>. If the global order
-        // isn't loaded yet, show just the category # (never a literal "#?").
-        var cr = catRank(pidOf(c)) || ((viewCtx().page - 1) * SE_PER_PAGE + i + 1);
-        b.textContent = abs ? ('#' + abs + '·' + cr) : ('#' + cr);
-        b.title = (abs ? ('#' + abs + ' overall · ') : '') + cr + ' in ' + cat + ' — click to move';
-      } else {
-        b.textContent = abs ? ('#' + abs) : (viewCtx().page + ':' + (i + 1));
-        b.title = abs ? ('#' + abs + ' of ' + SE_TOTAL + ' · page ' + pageOf(abs) + ', pos ' + posOnPage(abs) + ' — click to move') : 'Click to set position';
-      }
+      b.textContent = abs ? ('#' + abs) : (viewCtx().page + ':' + (i + 1));
+      b.title = abs ? ('#' + abs + ' of ' + SE_TOTAL + ' · page ' + pageOf(abs) + ', pos ' + posOnPage(abs) + ' — click to move') : 'Click to set position';
     });
   }
-  // Click a badge → move panel. You just CHANGE THE NUMBER. ALL view: one "Overall #"
-  // field. CATEGORY view: also an "In <category>" field — change whichever you like,
-  // both move the one product (same underlying order), so the numbers stay in sync.
+  // Click a badge → just CHANGE THE NUMBER: type the product's #N to move it in the
+  // whole shop. Same number everywhere, including inside a category.
   function editPosition(card, id, anchor, grid) {
-    var cat = curCat();
     var abs = absRank(id);
-    var cr = cat ? catRank(id) : 0;
     var sub = abs ? ('#' + abs + ' of ' + SE_TOTAL) : 'unranked';
-    if (cat) sub += ' · ' + (cr || '—') + ' in “' + esc(cat) + '”';
     var html = '<div class="se-mvbox">' +
       '<div class="mp-h">Move product</div>' +
       '<div class="mp-sub">' + sub + '</div>' +
-      '<label class="mp-l">Overall # <span class="mp-opt">(whole shop)</span></label>' +
-      '<input id="mp-abs" type="text" inputmode="numeric" class="mp-in" value="' + (abs || '') + '" placeholder="e.g. 5">';
-    if (cat) html +=
-      '<label class="mp-l">In “' + esc(cat) + '” <span class="mp-opt">(this category)</span></label>' +
-      '<input id="mp-cat" type="text" inputmode="numeric" class="mp-in" value="' + (cr || '') + '" placeholder="e.g. 3">';
-    html += '<div class="se-row"><button class="se-b ghost" id="mp-x">Cancel</button><button class="se-b save ok">Move</button></div></div>';
-    var origAbs = String(abs || ''), origCat = String(cr || '');
-    // The two numbers share ONE underlying position, so if both get changed the field
-    // you touched LAST wins (no silent drop). Defaults to the field we focus.
-    var lastEdited = cat ? 'cat' : 'abs';
+      '<label class="mp-l">Number <span class="mp-opt">(its place in the whole shop)</span></label>' +
+      '<input id="mp-abs" type="text" inputmode="numeric" class="mp-in" value="' + (abs || '') + '" placeholder="e.g. 5">' +
+      '<div class="se-row"><button class="se-b ghost" id="mp-x">Cancel</button><button class="se-b save ok">Move</button></div></div>';
+    var origAbs = String(abs || '');
     var m = mini(anchor, html, function (mm) {
-      var aEl = mm.querySelector('#mp-abs'), cEl = mm.querySelector('#mp-cat');
-      var aV = aEl ? aEl.value.trim() : '', cV = cEl ? cEl.value.trim() : '';
-      var aChg = aEl && aV !== origAbs, cChg = cEl && cV !== origCat;
-      var doCat = cat && cChg && (lastEdited === 'cat' || !aChg);
+      var aEl = mm.querySelector('#mp-abs'); var aV = aEl ? aEl.value.trim() : '';
       closeMini();
-      if (doCat) { var n = parseInt(cV, 10); applyCategoryMove(card, id, (n >= 1 ? n : 1), grid); }
-      else if (aChg) { var n2 = parseInt(aV, 10); applyPositionMove(card, id, (n2 >= 1 ? n2 : 1), grid); }
+      if (aEl && aV !== origAbs) { var n = parseInt(aV, 10); applyPositionMove(card, id, (n >= 1 ? n : 1), grid); }
       else status('No change', '');
     });
-    var aI = m.querySelector('#mp-abs'); if (aI) aI.addEventListener('input', function () { lastEdited = 'abs'; });
-    var cI = m.querySelector('#mp-cat'); if (cI) cI.addEventListener('input', function () { lastEdited = 'cat'; });
     var x = m.querySelector('#mp-x'); if (x) x.onclick = closeMini;
-    var f = m.querySelector(cat ? '#mp-cat' : '#mp-abs'); if (f) { f.focus(); f.select(); }
+    var f = m.querySelector('#mp-abs'); if (f) { f.focus(); f.select(); }
   }
   // absPos = absolute catalogue position; move on the WHOLE shop (category:'').
   function applyPositionMove(card, id, absPos, grid) {
@@ -863,40 +814,16 @@
       refreshRanks();
     });
   }
-  // Move WITHIN the current category: the backend anchors the product among that
-  // category's items in the GLOBAL order, so its big number stays ascending too.
-  function applyCategoryMove(card, id, catPos, grid) {
-    var cat = curCat();
-    if (!cat) return applyPositionMove(card, id, catPos, grid);
-    status('Moving…');
-    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: catPos, category: cat }).then(function (r) {
-      if (!r || !r.ok) { status((r && r.error) || 'Move failed', 'error'); return; }
-      var ctx = viewCtx();
-      if (grid && r.page === ctx.page) {           // reflow within the category page
-        var targetIdx = r.position - (ctx.page - 1) * SE_PER_PAGE - 1;
-        flip(grid, function () {
-          var others = [].slice.call(grid.querySelectorAll('.product-card')).filter(function (c) { return c !== card; });
-          var ref = others[targetIdx];
-          if (ref) grid.insertBefore(card, ref);
-          else { var add = grid.querySelector('.bs-add'); add ? grid.insertBefore(card, add) : grid.appendChild(card); }
-        });
-      }
-      status('Moved to ' + r.position + ' in ' + cat + ' (page ' + r.page + ') ✓', 'success');
-      refreshRanks();
-    });
-  }
   function persistDragged(grid, card, id) {
     var cards = [].slice.call(grid.querySelectorAll('.product-card'));
     var idx = cards.indexOf(card); if (idx < 0) return;
-    var cat = curCat();
-    var rankOf = cat ? catRank : absRank;          // scope the neighbour rank to the view
-    // new position = rank of the card now just below the dragged one (within this view)
+    // new position = absolute rank of the card now just below the dragged one
     var below = cards[idx + 1], above = cards[idx - 1];
-    var rb = below ? rankOf(pidOf(below)) : 0, ra = above ? rankOf(pidOf(above)) : 0;
+    var rb = below ? absRank(pidOf(below)) : 0, ra = above ? absRank(pidOf(above)) : 0;
     var target = rb > 0 ? rb : (ra > 0 ? ra + 1 : 0);
     if (!target) { var ctx = viewCtx(); target = (ctx.page - 1) * SE_PER_PAGE + idx + 1; }
     status('Saving order…');
-    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: target, category: cat }).then(function (r) {
+    jfetch('/products/' + SITE + '/move-to-position', 'POST', { id: id, position: target, category: '' }).then(function (r) {
       if (r && r.ok) { status('Order saved ✓', 'success'); refreshRanks(); } else status('Save failed', 'error');
     });
   }
