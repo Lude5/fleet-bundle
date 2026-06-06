@@ -1448,7 +1448,7 @@ def admin_update_product(pid):
 
 @app.route('/admin/products/bulk', methods=['POST'])
 def admin_bulk():
-    if not is_admin():
+    if not is_admin_api():   # token OR session (master-admin / rebuild tooling uses the token)
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
     products = data.get('products', [])
@@ -1480,7 +1480,7 @@ def admin_delete(pid):
 
 @app.route('/admin/products/delete-batch', methods=['POST'])
 def admin_delete_batch():
-    if not is_admin():
+    if not is_admin_api():   # token OR session (master-admin / rebuild tooling uses the token)
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
     ids = data.get('ids', [])
