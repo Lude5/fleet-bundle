@@ -523,7 +523,7 @@ def inject_config():
 def home():
     products = get_products()
     categories = get_categories()
-    import random
+    import random, json as _json
     # Pre-bucket by category in Python so Jinja doesn't run selectattr
     # over 9k+ products N times (was the main rendering bottleneck).
     by_cat = {}
@@ -539,18 +539,26 @@ def home():
         if bucket:
             cat_previews[slug] = {'name': cat['name'], 'slug': slug,
                                   'count': len(bucket), 'picks': bucket[:4]}
+    # "Best Selling" = the curated bestseller list (the spreadsheet's Trending tab),
+    # kept in its given order; falls back to the front of the catalogue if unset.
+    prod_by_id = {p['id']: p for p in products}
+    try:
+        _bs = _json.loads(get_all_settings().get('bestseller_ids') or '[]')
+    except Exception:
+        _bs = []
+    bestsellers = [prod_by_id[i] for i in _bs if i in prod_by_id]
+    featured_list = (bestsellers or products)[:12]
     # Conveyor/hero rows use random picks; sample is O(n) but bounded by 40.
     sample_pool = products if len(products) <= 500 else random.sample(products, 500)
     shuffled = list(sample_pool)
     random.shuffle(shuffled)
     resp = make_response(render_template('home.html',
         products=products,
-        featured=products[:8],
+        featured=featured_list,
         cat_previews=cat_previews,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
-        categories=categories,
-        bundles=_all_bundles_with_picks(products)))
+        categories=categories))
     # Browser caches refreshes for 60s so quick re-loads feel instant.
     # Short window keeps category edits / new products visible quickly.
     resp.headers['Cache-Control'] = 'public, max-age=60'

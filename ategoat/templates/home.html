@@ -277,27 +277,6 @@
     </a>
 </div>
 
-{% if bundles %}
-<div class="section reveal">
-    <div class="sec-header"><h2 class="sec-title">Outfit Bundles</h2></div>
-    <div class="bundle-row">
-        {% for b in bundles %}
-        <a href="/bundle/{{ b.slug }}" class="bundle-card">
-            <div class="bundle-card-imgs">
-                {% for p in b.products[:4] %}<img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">{% endfor %}
-            </div>
-            <div class="bundle-card-body">
-                <div class="bundle-card-name">{{ b.name }}</div>
-                <div class="bundle-card-row">
-                    <span class="bundle-card-count">{{ b.count }} pieces</span>
-                    <span class="bundle-card-price">${{ '%.2f' % b.total }}</span>
-                </div>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
 
 <div class="cat-tabs reveal">
     <a href="/shop" class="cat-tab active">All</a>
