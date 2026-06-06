@@ -970,6 +970,30 @@ def _find_ategoat_id(product):
     return found
 
 
+_VLABEL_MAP = [('浅', 'Light '), ('深', 'Dark '), ('军绿', 'Army Green '), ('藏青', 'Navy '), ('卡其', 'Khaki '),
+               ('酒红', 'Wine '), ('熊猫', 'Panda '), ('北卡', 'UNC '), ('黑', 'Black '), ('白', 'White '),
+               ('灰', 'Grey '), ('红', 'Red '), ('蓝', 'Blue '), ('绿', 'Green '), ('黄', 'Yellow '), ('粉', 'Pink '),
+               ('紫', 'Purple '), ('橙', 'Orange '), ('棕', 'Brown '), ('咖', 'Coffee '), ('米', 'Beige '),
+               ('银', 'Silver '), ('金', 'Gold '), ('色', ''), ('号', ' ')]
+
+
+def _variant_label(t):
+    """Turn a Chinese SKU style label ('1号黑灰') into a readable sub-name
+    ('#1 Black Grey'); leaves unknown text as-is so it's still a usable sub-name."""
+    import re as _re
+    s = str(t or '').strip()
+    if not s:
+        return s
+    m = _re.match(r'\s*(\d+)\s*号\s*(.*)', s)
+    num, rest = (m.group(1), m.group(2)) if m else ('', s)
+    for zh, en in _VLABEL_MAP:
+        rest = rest.replace(zh, en)
+    rest = ' '.join(rest.split())
+    if num:
+        return ('#' + num + (' ' + rest if rest else '')).strip()
+    return rest or s
+
+
 @app.route('/api/variants/<pid>')
 def api_variants(pid):
     """Look up the ategoat product page for this item, extract the SKU/variant
@@ -980,7 +1004,7 @@ def api_variants(pid):
     p = get_product(pid)
     if not p:
         return jsonify({'variants': [], 'images': []})
-    cached = cache_get(f'variants2:{pid}', max_age_seconds=7 * 24 * 3600)
+    cached = cache_get(f'variants3:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify(cached)
     import re as _re
@@ -1016,8 +1040,8 @@ def api_variants(pid):
                             t = str(s.get('title') or '')
                             t_clean = t.split(';')[0].strip() if ';' in t else t
                             deduped.append({
-                                'title': t_clean or t,
-                                'price': s.get('price'),
+                                'title': _variant_label(t_clean or t),
+                                'price': (round(float(s.get('price')) / 6.5, 2) if s.get('price') else None),  # CNY¥ -> USD
                                 'stock': s.get('stock', 0),
                                 'image': img,
                             })
@@ -1041,7 +1065,7 @@ def api_variants(pid):
                 result['images'] = imgs
     except Exception:
         pass
-    cache_set(f'variants2:{pid}', result)
+    cache_set(f'variants3:{pid}', result)
     return jsonify(result)
 
 

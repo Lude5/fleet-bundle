@@ -261,6 +261,7 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
             if (v.image) { var im = document.createElement('img'); im.src = disp; im.alt=''; im.loading='lazy'; im.referrerPolicy='no-referrer'; btn.appendChild(im); }
             var lbl = document.createElement('span'); lbl.className='pd-variant-lbl'; lbl.textContent = v.title || '';
             btn.appendChild(lbl);
+            if (v.price) { var pr = document.createElement('span'); pr.className = 'pd-variant-price'; pr.setAttribute('data-price-usd', v.price); pr.textContent = '$' + v.price; btn.appendChild(pr); }
             box.appendChild(btn);
         });
     } else { box.innerHTML='<div class="pd-qc-empty">Single variant</div>'; cnt.textContent='Variants · 1'; }
