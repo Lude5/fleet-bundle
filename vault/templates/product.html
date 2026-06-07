@@ -135,7 +135,7 @@ function ppSetAgent(a) {
     var buy = document.getElementById('ppBuy');
     buy.href = a.url; buy.textContent = 'Buy on ' + a.name;
     if (window.saveAgent) saveAgent(a.key, a.name);
-    var manual = false; try { manual = !!localStorage.getItem('ategoat_agent'); } catch(e){}
+    var manual = false; try { manual = !!localStorage.getItem('vault_agent'); } catch(e){}
     document.getElementById('ppAgentSub').textContent = a.name + (manual ? ' (selected)' : ' (auto selected)');
     document.querySelectorAll('#ppAgentList .agent-picker-item').forEach(function(c){ c.classList.toggle('selected', c.dataset.key === a.key); });
 }

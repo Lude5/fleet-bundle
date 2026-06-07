@@ -47,7 +47,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 # (repsloot.com, where ategoat serves at root). Without PATH='/', the cookie defaulted
 # to APPLICATION_ROOT ('/ategoat') and was never sent on repsloot.com → admin appeared
 # logged-out there and every admin action silently did nothing.
-app.config['SESSION_COOKIE_NAME'] = 'ategoat_session'
+app.config['SESSION_COOKIE_NAME'] = 'vault_session'
 app.config['SESSION_COOKIE_PATH'] = '/'
 CORS(app)
 
@@ -175,7 +175,7 @@ try:
         from .database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
-            update_category, delete_category, count_products_in_category,
+            update_category, delete_category, count_products_in_category, count_products,
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
@@ -186,7 +186,7 @@ try:
         from database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
-            update_category, delete_category, count_products_in_category,
+            update_category, delete_category, count_products_in_category, count_products,
             cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
             set_featured, move_category, reorder_products, get_listing_variants,
@@ -258,10 +258,10 @@ try:
         except ImportError:
             from database import get_db as _gdb
         _mc = _gdb()
-        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=ategoat') WHERE url LIKE '%affcode=bswes%'").rowcount
+        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=vault') WHERE url LIKE '%affcode=bswes%'").rowcount
         _mc.commit(); _mc.close()
         if _n:
-            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> ategoat)")
+            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> vault)")
     except Exception as _e:
         print(f"Affcode scrub warning: {_e}")
 
@@ -439,7 +439,7 @@ def _b_usfans(url, _id, _plat, code):
 # oopbuy/hipobuy ship with verified codes; the rest default to '' (no code) until
 # the operator drops their own in via the master_admin agent editor.
 AGENTS = [
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'ategoat'), 'signup': 'https://www.kakobuy.com/register?affcode={code}',   'coupon': 'Up to $500 shipping credit'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'vault'), 'signup': 'https://www.kakobuy.com/register?affcode={code}',   'coupon': 'Up to $500 shipping credit'},
     {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'code': 'KRLHFHSGL',                                  'signup': 'https://oopbuy.com/register?inviteCode={code}',     'coupon': 'Up to $300 in coupons'},
     {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'code': '25RXG9B0E',                                  'signup': 'https://hipobuy.com/register?inviteCode={code}',    'coupon': 'Up to $100 in coupons'},
     {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'code': '',                                           'signup': 'https://www.joyagoo.com/index/user/register',       'coupon': 'Up to $300 in coupons'},

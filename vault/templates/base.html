@@ -81,8 +81,8 @@
             --font-serif: 'Playfair Display', Georgia, serif;
             --font-body: 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
-            --radius: 0px;
-            --radius-sm: 0px;
+            --radius: 16px;
+            --radius-sm: 11px;
             --radius-pill: 999px;
             --nav-bg: rgba(251,250,247,0.975);  /* near-solid ivory so dark links read over the black hero */
         }
@@ -865,6 +865,35 @@
             .product-card-name { font-size: 11px; letter-spacing: 0.03em; }
         }
 
+        /* ---- VAULT round 2: softer corners + images fill the card ---- */
+        /* Rounded cards; product fills more of the tile (less padding) */
+        .product-card-img-wrap { border-radius: 18px; aspect-ratio: 1/1; }
+        .product-card-img { padding: 6px; }
+        .btn { border-radius: 10px; }
+        .product-card-badge { border-radius: 8px; }
+
+        /* Product detail page: rounded main image + thumbs, fuller image */
+        .pd-img-wrap { border-radius: 20px; }
+        .pd-img { padding: 10px; }
+        .pd-thumb, .pd-variant, #pdQc img, #ppQc img, .pd-qc img { border-radius: 12px !important; }
+
+        /* Buy row: give "Switch Agent" real room (was squished to ~50px) */
+        .pd-buy-row { gap: 10px; }
+        .pd-buy { border-radius: 12px; flex: 1 1 auto; }
+        .pd-copy, .pd-agent-btn {
+            width: auto !important; flex: 0 0 auto;
+            min-width: 160px; padding: 12px 20px !important;
+            border-left: 1px solid var(--text) !important;
+            border-radius: 12px;
+        }
+        @media (max-width: 560px) {
+            .pd-buy-row { flex-wrap: wrap; }
+            .pd-buy, .pd-copy, .pd-agent-btn { flex: 1 1 100%; min-width: 0; }
+        }
+        /* Agent picker card corners follow the rounded radius */
+        .agent-picker { border-radius: var(--radius); }
+        .agent-picker-item { border-radius: var(--radius-sm); }
+
         /* ---- Agent picker (ported from ategoat; gold-accented via vars) ---- */
         /* ---- Agent picker modal ---- */
         .agent-picker-overlay {
@@ -1238,14 +1267,14 @@
         // ---- Saved-agent helpers (ported from ategoat) ----
         window.getSavedAgent = function() {
             try {
-                var v = localStorage.getItem('ategoat_agent');
+                var v = localStorage.getItem('vault_agent');
                 if (!v) return null;
                 var p = JSON.parse(v);
                 return (p && p.key && p.name) ? p : null;
             } catch (e) { return null; }
         };
         window.saveAgent = function(key, name) {
-            try { localStorage.setItem('ategoat_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
+            try { localStorage.setItem('vault_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
         };
 
         {% block extra_js %}{% endblock %}
