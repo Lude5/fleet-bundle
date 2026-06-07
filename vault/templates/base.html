@@ -84,7 +84,7 @@
             --radius: 0px;
             --radius-sm: 0px;
             --radius-pill: 999px;
-            --nav-bg: rgba(251,250,247,0.88);
+            --nav-bg: rgba(251,250,247,0.975);  /* near-solid ivory so dark links read over the black hero */
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -850,6 +850,20 @@
         /* Stats: gold numerals in serif */
         .stat-num { font-family: var(--font-serif); font-style: italic; color: var(--text); }
         .stat-row { border-color: var(--accent); }
+
+        /* Product DETAIL MODAL images on white too (fleet rule — cards were
+           covered, the modal .pd-img / variant / qc thumbs were not) */
+        .pd-img-wrap { background: #ffffff !important; }
+        .pd-img { background: #ffffff !important; object-fit: contain !important; padding: 14px; }
+        #pdVariants img, #pdQc img, .pd-thumb img { background: #ffffff !important; object-fit: contain !important; }
+
+        /* True-mobile spacing (<480px) — the 900px breakpoint was the last stop */
+        @media (max-width: 480px) {
+            .product-grid { gap: 22px 10px; }
+            .section { padding: 56px 14px; }
+            .sec-title { font-size: 20px; }
+            .product-card-name { font-size: 11px; letter-spacing: 0.03em; }
+        }
 
         {% block extra_css %}{% endblock %}
     </style>
