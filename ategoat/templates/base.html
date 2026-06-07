@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
     <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
-    <meta name="description" content="{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.">
+    <meta name="description" content="{% block description %}{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.{% endblock %}">
     <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, kakobuy, joyagoo, cnfans, sugargoo, oopbuy, allchinabuy, mulebuy, hoobuy, acbuy">
-    <link rel="canonical" href="https://{{ site.domain }}">
-    <meta property="og:type" content="website">
+    <link rel="canonical" href="{% block canonical %}https://{{ site.domain }}{{ request.path }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="{{ site.name }}">
-    <meta property="og:title" content="{{ site.name }} — Curated Finds, Open on Any Agent">
-    <meta property="og:description" content="Curated finds, agent-neutral. Open every listing with the shopping agent you trust.">
-    <meta property="og:url" content="https://{{ site.domain }}">
+    <meta property="og:title" content="{% block og_title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Curated finds, agent-neutral. Open every listing with the shopping agent you trust.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://{{ site.domain }}{{ request.path }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{% block twitter_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
+    <meta name="theme-color" content="#0b0b0b">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -28,6 +32,10 @@
         }
     }
     </script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Organization","name":"{{ site.name }}","url":"https://{{ site.domain }}","logo":"https://{{ site.domain }}/static/og.png"}
+    </script>
+    {% block structured_data %}{% endblock %}
     {% if site.meta_pixel_id %}
     <!-- Meta Pixel -->
     <script>
@@ -44,7 +52,8 @@
     </script>
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=DM+Serif+Display&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -930,7 +939,10 @@
                 <a href="/terms">Terms</a>
             </div>
         </div>
-        <div class="footer-bottom">&copy; 2026 {{ site.name }}. All rights reserved.</div>
+        <div class="footer-bottom">
+            <p style="text-transform:none; letter-spacing:0; line-height:1.6; max-width:720px; margin:0 auto 10px;">{{ site.name }} is a curated catalogue of independent third-party listings. We may earn a commission when you open or buy through our links, at no extra cost to you. {{ site.name }} does not sell, stock, or ship any items.</p>
+            &copy; 2026 {{ site.name }}. All rights reserved.
+        </div>
     </footer>
 
     <!-- Product detail modal -->

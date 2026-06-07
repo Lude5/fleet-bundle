@@ -1,7 +1,7 @@
 import os
 import json
 import secrets
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file, make_response
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file, make_response, abort
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -49,6 +49,8 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 # logged-out there and every admin action silently did nothing.
 app.config['SESSION_COOKIE_NAME'] = 'ategoat_session'
 app.config['SESSION_COOKIE_PATH'] = '/'
+# Long-cache static assets (css/js/img) so repeat visits + Lighthouse don't refetch.
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 CORS(app)
 
 
@@ -798,6 +800,14 @@ def sitemap():
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     for page in pages:
         xml += f'  <url><loc>https://{domain}{page}</loc><changefreq>daily</changefreq><priority>{"1.0" if page == "/" else "0.8"}</priority></url>\n'
+    # Every product page — the actual indexable inventory for organic search.
+    try:
+        for p in get_products():
+            pid = p.get('id')
+            if pid:
+                xml += f'  <url><loc>https://{domain}/product/{pid}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n'
+    except Exception:
+        pass
     xml += '</urlset>'
     return xml, 200, {'Content-Type': 'application/xml'}
 
@@ -1240,7 +1250,7 @@ def product_page(pid):
     """Standalone on-site product page (same design as the detail modal) + related."""
     p = get_product(pid)
     if not p:
-        return redirect(url_for('shop'))
+        abort(404)
     return render_template('product.html', product=p,
                            related=_related_products(p, 8),
                            categories=get_categories())
@@ -2623,7 +2633,10 @@ def admin_set_gallery(pid):
 
 @app.errorhandler(404)
 def not_found(e):
-    return redirect(url_for('home'))
+    try:
+        return render_template('404.html', categories=get_categories()), 404
+    except Exception:
+        return render_template('404.html'), 404
 
 
 if __name__ == '__main__':
