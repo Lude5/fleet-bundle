@@ -90,12 +90,22 @@ TYPE_SYNONYMS = {
     'shoes':      ['shoes', 'sneaker', 'sneakers', 'footwear'],
     'sneaker':    ['shoes', 'sneaker', 'sneakers'],
     'sneakers':   ['shoes', 'sneaker', 'sneakers'],
-    'slide':      ['slides', 'sandals'],
-    'slides':     ['slides', 'sandals'],
-    'sandal':     ['sandals'],
-    'sandals':    ['sandals'],
-    'boot':       ['boots'],
-    'boots':      ['boots'],
+    # slip-ons: slides / slippers / sandals / mules / flip-flops are the same thing
+    # to a shopper — treat them as one synonym set so any term finds all of them.
+    'slide':      ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slides':     ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slipper':    ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'slippers':   ['slide', 'slipper', 'sandal', 'mule', 'flip flop'],
+    'sandal':     ['slide', 'slipper', 'sandal', 'mule'],
+    'sandals':    ['slide', 'slipper', 'sandal', 'mule'],
+    'mule':       ['slide', 'slipper', 'mule'],
+    'slider':     ['slide', 'slipper', 'sandal'],
+    'flipflop':   ['flip flop', 'slide', 'sandal', 'slipper'],
+    'boot':       ['boot', 'boots'],
+    'boots':      ['boot', 'boots'],
+    'trainer':    ['trainer', 'sneaker', 'shoe'],
+    'trainers':   ['trainer', 'sneaker', 'shoe'],
+    'kicks':      ['shoe', 'sneaker'],
 
     'hoodie':     ['hoodie', 'hoodies', 'sweatshirt'],
     'hoodies':    ['hoodie', 'hoodies', 'sweatshirt'],
@@ -122,7 +132,12 @@ TYPE_SYNONYMS = {
     'jacket':     ['jacket', 'outerwear'],
     'puffer':     ['puffer', 'jacket', 'outerwear'],
     'coat':       ['coat', 'outerwear'],
-    'vest':       ['vest', 'outerwear'],
+    'vest':       ['vest', 'gilet', 'outerwear'],
+    'gilet':      ['gilet', 'vest', 'outerwear'],
+    'tank':       ['tank', 'singlet', 'vest'],
+    'flannel':    ['flannel', 'plaid'],
+    'loafer':     ['loafer', 'moccasin'],
+    'loafers':    ['loafer', 'moccasin'],
 
     'bag':        ['bag', 'accessory'],
     'backpack':   ['backpack', 'bag'],
@@ -134,6 +149,13 @@ TYPE_SYNONYMS = {
     'watch':      ['watch', 'accessory'],
     'glasses':    ['glasses', 'sunglasses', 'accessory'],
     'sunglasses': ['sunglasses', 'glasses', 'accessory'],
+    # jewelry: the catalog names items necklace/bracelet/etc., never "jewelry".
+    # (avoid bare 'ring' — it substring-matches 'tRAINING', 'eaRRING' etc.)
+    'jewelry':    ['necklace', 'bracelet', 'earring', 'pendant', 'chain', 'jewelry'],
+    'jewellery':  ['necklace', 'bracelet', 'earring', 'pendant', 'chain'],
+    'necklace':   ['necklace', 'pendant', 'chain'],
+    'bracelet':   ['bracelet', 'chain'],
+    'earrings':   ['earring'],
 }
 
 STOP_WORDS = {
@@ -192,3 +214,208 @@ def tokenize_query(q):
     if not q:
         return []
     return [t for t in WORD_RE.findall(q.lower()) if t not in STOP_WORDS]
+
+
+# ============================================================
+# Extensive fuzzy search: shorthand expansion + number handling + typo tolerance
+# ============================================================
+# Captures words, numbers AND alphanumeric shorthand (j4, am90) — unlike WORD_RE,
+# which drops bare numbers so "jordan 4" used to search only "jordan".
+SEARCH_TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9'\-]*")
+
+# Shorthand → one or more canonical search phrases (OR'd). Curated for the
+# sneaker / streetwear / luxury rep market this catalogue covers.
+QUERY_SHORTHAND = {
+    'af1': ['air force 1'], 'af': ['air force'], 'forces': ['air force 1'],
+    'am1': ['air max 1'], 'am90': ['air max 90'], 'am95': ['air max 95'],
+    'am97': ['air max 97'], 'am270': ['air max 270'], 'am720': ['air max 720'],
+    'tn': ['air max plus', 'tn'], 'tns': ['air max plus', 'tn'], 'vapormax': ['vapormax'],
+    'sb': ['nike sb', 'dunk', 'sb'], 'dunks': ['dunk'],
+    'aj': ['jordan'], 'jordans': ['jordan'],
+    'yzy': ['yeezy'], 'yeezys': ['yeezy'], 'foams': ['yeezy foam', 'foam runner'],
+    'nb': ['new balance'], 'tnf': ['north face'], 'northface': ['north face'],
+    'fog': ['fear of god', 'essentials'], 'essentials': ['essentials', 'fear of god'],
+    'bal': ['balenciaga'], 'balys': ['balenciaga'], 'lv': ['louis vuitton', 'lv'],
+    'ch': ['chrome hearts'], 'gd': ['gallery dept', 'gallery department'],
+    'crtz': ['corteiz'], 'ow': ['off white', 'off-white'], 'pa': ['palm angels'],
+    'bbc': ['billionaire boys club'], 'cdg': ['comme des garcons', 'play'],
+    'sp5der': ['spider', 'sp5der', 'sp5der'], 'spider': ['spider', 'sp5der'],
+    'gg': ['golden goose'], 'mm6': ['mm6', 'maison margiela'], 'tabi': ['tabi', 'margiela'],
+    'rep': [''], 'reps': [''],   # ignore filler
+    'ap': ['audemars piguet', 'royal oak'], 'pp': ['patek philippe', 'philipp plein', 'pp'], 'rm': ['richard mille'],
+    'sammies': ['samba'], 'sambas': ['samba'], 'gazelles': ['gazelle'],
+    # concatenated brand / model names (no space)
+    'airforce': ['air force'], 'airforce1': ['air force 1'], 'airmax': ['air max'],
+    'airjordan': ['jordan'], 'newbalance': ['new balance'], 'offwhite': ['off white', 'off-white'],
+    'stoneisland': ['stone island'], 'chromehearts': ['chrome hearts'], 'palmangels': ['palm angels'],
+    'fearofgod': ['fear of god', 'essentials'], 'denimtears': ['denim tears'],
+    'gallerydept': ['gallery dept'], 'northface': ['north face'], 'louisvuitton': ['louis vuitton'],
+    'travisscott': ['travis scott', 'cactus jack'], 'cactusjack': ['cactus jack', 'travis scott'],
+    'broken': ['broken planet'], 'syna': ['syna world', 'syna'],
+}
+
+# Model-number shorthand → canonical phrase, e.g. j4 -> "jordan 4", am90 -> "air max 90".
+_MODEL_PATTERNS = [
+    (re.compile(r'^(?:aj|j|jordan)(\d{1,2})$'), 'jordan {0}'),
+    (re.compile(r'^(?:am|airmax)(\d{1,3})$'), 'air max {0}'),
+    (re.compile(r'^nb(\d{2,4})$'), 'new balance {0}'),
+    (re.compile(r'^(?:yzy|yeezy)(\d{3})$'), 'yeezy {0}'),
+]
+
+_SEARCH_VOCAB = None
+
+
+def invalidate_search_vocab():
+    """Drop the cached typo-correction vocabulary (call after product writes)."""
+    global _SEARCH_VOCAB
+    _SEARCH_VOCAB = None
+
+
+def set_search_vocab(rows):
+    """Build the typo-correction vocabulary from product rows ({name, tags})."""
+    global _SEARCH_VOCAB
+    vocab = set()
+    for r in rows or []:
+        for field in ('name', 'tags'):
+            for w in SEARCH_TOKEN_RE.findall((r.get(field) or '').lower()):
+                if len(w) >= 3 and not w.isdigit():
+                    vocab.add(w)
+    _SEARCH_VOCAB = vocab
+    return vocab
+
+
+def get_search_vocab():
+    return _SEARCH_VOCAB
+
+
+def expand_search_query(query):
+    """Turn a query into a list of GROUPS (cheap: shorthand + model + number-merge,
+    NO fuzzy). A product matches if EVERY group has at least one alternative present
+    (OR within a group, AND across groups). Each group is a list of substrings."""
+    toks = [t for t in SEARCH_TOKEN_RE.findall((query or '').lower()) if t not in STOP_WORDS]
+    groups = []
+    for tok in toks:
+        # a bare number right after a plain word → merge into a phrase ("jordan","4" → "jordan 4")
+        if tok.isdigit() and groups and len(groups[-1]) == 1 and groups[-1][0].isalpha():
+            groups[-1] = [groups[-1][0] + ' ' + tok]
+            continue
+        alts = set()
+        is_shorthand = tok in QUERY_SHORTHAND
+        if is_shorthand:
+            alts.update(a for a in QUERY_SHORTHAND[tok] if a)
+        for pat, tmpl in _MODEL_PATTERNS:
+            m = pat.match(tok)
+            if m:
+                alts.add(tmpl.format(*m.groups()))
+        # product-type synonyms so "slipper" finds slides, "trainer" finds sneakers, etc.
+        if tok in TYPE_SYNONYMS:
+            alts.update(TYPE_SYNONYMS[tok])
+        if not alts and is_shorthand:
+            continue  # mapped to filler only (e.g. "rep"/"reps") → drop the token
+        # COVERAGE GUARANTEE: a token of >=3 chars must always also match itself, so
+        # every product stays findable by its own name words even when a shorthand
+        # expands to something else (e.g. "offwhite" -> "off white", but "OffWhite"
+        # products only contain the literal "offwhite").
+        if len(tok) >= 3 and not tok.isdigit():
+            alts.add(tok)
+        if not alts:
+            alts.add(tok)
+        groups.append(sorted(alts))
+    return groups
+
+
+def fuzzy_correct_groups(groups, vocab):
+    """Apply typo correction (only to single plain-word groups whose word is unknown)
+    against the product vocabulary. Returns possibly-corrected groups + whether any
+    changed. Run only as a fallback when the exact search found little."""
+    import difflib
+    if not vocab:
+        return groups, False
+    changed = False
+    out = []
+    for group in groups:
+        if len(group) == 1:
+            w = group[0]
+            if (' ' not in w) and len(w) >= 4 and not w.isdigit() and w not in vocab:
+                close = difflib.get_close_matches(w, vocab, n=4, cutoff=0.78)
+                if close:
+                    out.append(sorted(set(close)))
+                    changed = True
+                    continue
+        out.append(group)
+    return out, changed
+
+
+# ============================================================
+# Auto-categorization
+# ============================================================
+# Maps a name pattern -> canonical category slug. First match wins.
+# Order matters: more specific categories before generic ones (e.g. bags
+# before shoes since some "bag" patterns could match shoe regex if loose).
+import re as _re
+
+# ------------------------------------------------------------------
+# Tracksuits & Sets collection
+# ------------------------------------------------------------------
+# A "feature" category that gathers every co-ord / two-piece / tracksuit /
+# matching set / suit, no matter what single-garment bucket the source data put
+# it in (most arrive mislabelled as 'hoodies'). Used by both auto_category (new
+# products) and a boot-time re-assert in app.py (existing products), so the
+# collection self-heals after every re-seed.
+_TS_STRONG = _re.compile(
+    r'\b(track[ -]?suit|tracksuits?|sweat[ -]?suit|two[ -]?piece|three[ -]?piece|'
+    r'[234][ -]?piece|[234]\s?pc|co[ -]?ord|coord|matching\s+set|'
+    r'training\s+(?:clothes\s+)?suit|vest\s+set)\b', _re.I)
+_TS_WEAK = _re.compile(r'\b(sets?|suits?)\b', _re.I)
+# Nouns that mean a "set"/"suit" is NOT an apparel co-ord (bag suit, jewelry set,
+# suit trousers as standalone dress-pants, tech/homeware sets, …).
+_TS_NOT = _re.compile(
+    r'\b(bag|backpack|cross[ -]?body|tote|handbag|sling|duffel|messenger|wallet|'
+    r'purse|pouch|clutch|satchel|jewel\w*|watch|chess|lego|dinner|tea|coffee|'
+    r'cutlery|knife|knives|dish|towel|bedding|pillow|brush|makeup|cosmetic|nail|'
+    r'lash|stationery|mug|plate|bowl|airpod|earbud|charger|'
+    r'suit\s+trousers?|suit\s+pants?)\b', _re.I)
+
+
+def is_tracksuit(name):
+    """True if the product name reads as a tracksuit / co-ord / matching set / suit.
+    Strong signals (tracksuit, two-piece, training suit, …) always win; the weak
+    standalone 'set'/'suit' is suppressed when a non-apparel noun is present."""
+    if not name:
+        return False
+    strong = bool(_TS_STRONG.search(name))
+    if _TS_NOT.search(name) and not strong:
+        return False
+    return strong or bool(_TS_WEAK.search(name))
+
+
+_AUTO_CATEGORY_RULES = [
+    # Explicit tracksuit/co-ord names win first (e.g. "Nike Tech Tracksuit",
+    # "Trapstar 2-Piece") before brand-only rules below can claim them as shoes.
+    ('tracksuits',  _TS_STRONG),
+    ('bags',        _re.compile(r'\b(bag|backpack|tote|handbag|sling|duffel|messenger|crossbody|fanny[- ]?pack|pouch|luggage|suitcase|briefcase|clutch|satchel)\b', _re.I)),
+    ('shoes',       _re.compile(r'\b(shoe|shoes|sneaker|sneakers|trainer|trainers|boot|boots|slipper|slippers|slide|slides|sandal|sandals|loafer|mule|flip[- ]?flop|jordan|yeezy|samba|gazelle|campus|forum|stan[ -]?smith|nb[ -]?\d+|new[ -]?balance|asics|nike|adidas|puma|converse|reebok|vans|onitsuka|salomon|hoka|crocs|dunk|af1|air[- ]?force|p6000|9060|1906|nocta|tabi|mm6|moc\b|cleats|runner|kicks|high[ -]?heel|heel|stiletto|pump)\b', _re.I)),
+    # Luxury / archive sneaker brand-only names that lack a type word.
+    # Common in rep catalogs (e.g. "Dior B22", "Golden Goose Low", "Balenciaga Track").
+    ('shoes',       _re.compile(r'^(?:dior\s*b\s*\d|golden\s*goose|christian\s*loub(?:outin|otin)|birkenstock|maison\s*margiela|alexander\s*mcqueen|lanvin|bape(?:\s*sta)?|off\s*[- ]?white|timberland|loewe|valentino|ysl|balenciaga\s*(?:track|defender|3xl|alaska|speedhunter)|gucci\s*(?:chunky|rhyton|g\s*\d)|prada\s*(?:america|prax|downtown)|amiri|b\s*[1-9]\d?|hermes\s*(?:land|chypre|bouncing)|brunello\s*cucinelli|loro\s*piana|miu\s*miu|north\s*face|the\s*north\s*face|the\s*row|rick\s*owens)\b', _re.I)),
+    ('hoodies',     _re.compile(r'\b(hoodie|hoody|hooded|sweatshirt|crewneck|crew[- ]?neck|pullover|zip[- ]?up|zipup|fleece(?!.*jacket))\b', _re.I)),
+    ('jackets',     _re.compile(r'\b(jacket|coat|parka|puffer|vest|gilet|blazer|windbreaker|bomber|trench|overcoat|outerwear|down[- ]?jacket|quilted|softshell|hardshell|shell(?!\s*(?:tee|shirt)))\b', _re.I)),
+    ('shorts',      _re.compile(r'\b(short|shorts|shortie|shorties|trunks|board[- ]?short)\b', _re.I)),
+    ('pants',       _re.compile(r'\b(pant|pants|trouser|trousers|jean|jeans|denim|sweatpant|sweatpants|jogger|joggers|cargo|cargos|chino|chinos|legging|leggings|track[- ]?pant|track[- ]?pants|slack|slacks|skirt|skort)\b', _re.I)),
+    ('shirts',      _re.compile(r'\b(t[- ]?shirt|tshirt|tee|tees|polo|polos|shirt|shirts|button[- ]?up|button[- ]?down|jersey|tank|top|tops|long[- ]?sleeve|short[- ]?sleeve|knit|knitted(?!\s*hat)|sweater|cardigan)\b', _re.I)),
+    ('tech',        _re.compile(r'\b(iphone|samsung|airpod|airpods|earpod|earbud|earphone|headphone|laptop|macbook|ipad|tablet|charger|cable|speaker|airtag|dyson|stanley|kindle|switch|playstation|xbox|drone|smartwatch)\b', _re.I)),
+    ('headwear',    _re.compile(r'\b(hat|hats|cap|caps|beanie|beanies|bucket[ -]?hat|trucker|snapback|fedora|visor|skull[ -]?cap|knit cap|toque)\b', _re.I)),
+    ('accessories', _re.compile(r'\b(scarf|scarves|glove|gloves|belt|belts|wallet|cardholder|card[- ]?holder|sunglasses?|glasses?|watch|watches|jewel(?:ry|lery)?|necklace|chain|ring|earring|bracelet|brooch|bandana|tie\b|bowtie|cufflink|umbrella|keychain|sock|socks|mask)\b', _re.I)),
+    ('womens',      _re.compile(r'\b(womens?|women\'s|female|ladies|dress|skirt|bra|bralette|crop[- ]?top|romper|jumpsuit|bodysuit)\b', _re.I)),
+]
+
+def auto_category(name, fallback=''):
+    """Return the most likely category slug for a product name, or `fallback`.
+    First-match-wins against the rules above. Used when the operator adds a
+    product without picking a category (or when bulk-importing)."""
+    if not name:
+        return fallback
+    for slug, pat in _AUTO_CATEGORY_RULES:
+        if pat.search(name):
+            return slug
+    return fallback

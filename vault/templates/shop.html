@@ -164,7 +164,7 @@
 <section class="section" style="padding-top: 48px;">
     <div class="product-grid">
         {% for p in products %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card reveal" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" class="product-card reveal" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap">
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
             </div>

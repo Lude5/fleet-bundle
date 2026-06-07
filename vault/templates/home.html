@@ -223,7 +223,7 @@
         <div class="conv-fade-l"></div><div class="conv-fade-r"></div>
         <div class="conveyor-track" id="conv">
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <a href="/product/{{ p.id }}" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
                 <div class="product-card-img-wrap">
                     <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 </div>
@@ -237,7 +237,7 @@
             </a>
             {% endfor %}
             {% for p in conveyor %}
-            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}">
+            <a href="/product/{{ p.id }}" class="product-card" data-product-id="{{ p.id }}">
                 <div class="product-card-img-wrap">
                     <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 </div>
@@ -273,7 +273,7 @@
     </div>
     <div class="product-grid">
         {% for p in featured %}
-        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+        <a href="/product/{{ p.id }}" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap">
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
                 {% if loop.index <= 3 %}

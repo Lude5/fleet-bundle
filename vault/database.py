@@ -76,6 +76,18 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_clicks_category ON clicks(category);
         CREATE INDEX IF NOT EXISTS idx_clicks_page ON clicks(page);
         CREATE INDEX IF NOT EXISTS idx_clicks_element ON clicks(element_type);
+
+        CREATE TABLE IF NOT EXISTS api_cache (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS site_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     ''')
     # Migrations for older DBs
     for col, ddl in [
@@ -87,6 +99,11 @@ def init_db():
         ('quality',    'ALTER TABLE products ADD COLUMN quality TEXT DEFAULT ""'),
         ('sales',      'ALTER TABLE products ADD COLUMN sales INTEGER DEFAULT 0'),
         ('qc_photos',  'ALTER TABLE products ADD COLUMN qc_photos TEXT DEFAULT ""'),
+        ('in_stock',   'ALTER TABLE products ADD COLUMN in_stock INTEGER DEFAULT 1'),
+        ('variants',   'ALTER TABLE products ADD COLUMN variants TEXT DEFAULT ""'),
+        ('edited',     'ALTER TABLE products ADD COLUMN edited INTEGER DEFAULT 0'),
+        ('images',     'ALTER TABLE products ADD COLUMN images TEXT DEFAULT ""'),
+        ('manual',     'ALTER TABLE products ADD COLUMN manual INTEGER DEFAULT 0'),
     ]:
         try:
             conn.execute(ddl)
@@ -95,6 +112,45 @@ def init_db():
     conn.execute('CREATE INDEX IF NOT EXISTS idx_products_order ON products(featured DESC, position ASC, created_at DESC)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_products_listing ON products(listing_id)')
     conn.close()
+
+
+def count_products():
+    """Fast live product count (for the dynamic '<n>+ finds' labels)."""
+    try:
+        conn = get_db()
+        n = conn.execute('SELECT COUNT(*) FROM products').fetchone()[0]
+        conn.close()
+        return int(n or 0)
+    except Exception:
+        return 0
+
+
+# --- Editable site settings (hero, nav, footer, branding, theme) -------------
+def get_all_settings():
+    """Return every site setting as a plain dict (empty dict if none/missing)."""
+    try:
+        conn = get_db()
+        rows = conn.execute('SELECT key, value FROM site_settings').fetchall()
+        conn.close()
+        return {r['key']: r['value'] for r in rows}
+    except Exception:
+        return {}
+
+
+def set_settings(updates):
+    """Upsert a dict of {key: value} settings. Returns count written."""
+    conn = get_db()
+    n = 0
+    for k, v in (updates or {}).items():
+        conn.execute(
+            'INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) '
+            'ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=CURRENT_TIMESTAMP',
+            (str(k), '' if v is None else str(v))
+        )
+        n += 1
+    conn.commit()
+    conn.close()
+    return n
 
 
 SHOP_ORDER = 'featured DESC, position ASC, created_at DESC'
@@ -153,8 +209,8 @@ def get_listing_variants(product):
 def add_product(product):
     conn = get_db()
     conn.execute('''
-        INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ''', (
         product.get('id', ''),
         product.get('name', ''),
@@ -169,6 +225,7 @@ def add_product(product):
         product.get('retail_price', ''),
         int(product.get('review_count', 0) or 0),
         product.get('tags', ''),
+        int(product.get('manual', 0) or 0),
     ))
     conn.commit()
     conn.close()
@@ -178,8 +235,8 @@ def add_products_bulk(products):
     conn = get_db()
     for p in products:
         conn.execute('''
-            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (
             p.get('id', ''),
             p.get('name', ''),
@@ -194,6 +251,7 @@ def add_products_bulk(products):
             p.get('retail_price', ''),
             int(p.get('review_count', 0) or 0),
             p.get('tags', ''),
+            int(p.get('manual', 0) or 0),
         ))
     conn.commit()
     conn.close()
@@ -201,7 +259,7 @@ def add_products_bulk(products):
 
 def update_product(product_id, updates):
     conn = get_db()
-    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position']
+    allowed = ['name', 'price', 'price_numeric', 'url', 'image', 'category', 'seller', 'rating', 'batch', 'retail_price', 'tags', 'featured', 'position', 'in_stock', 'weight', 'quality', 'sales', 'qc_photos', 'variants', 'images', 'manual']
     sets = []
     vals = []
     for key in allowed:
@@ -212,6 +270,7 @@ def update_product(product_id, updates):
         conn.close()
         return
     sets.append('updated_at = CURRENT_TIMESTAMP')
+    sets.append('edited = 1')  # mark operator-edited so a reseed never wipes this product's work
     vals.append(product_id)
     conn.execute(f'UPDATE products SET {", ".join(sets)} WHERE id = ?', vals)
     conn.commit()
@@ -271,59 +330,63 @@ def reorder_products(ordered_ids):
 
 
 def search_products(query):
-    """Token-based fuzzy search.
-
-    Splits the query into words and requires every word to appear somewhere in
-    name/tags/seller/category. Relevance prefers matches in the name.
-    Words ≤2 chars are kept (e.g. "lv", "nb") because brand aliases need them.
+    """Extensive fuzzy product search:
+      - shorthand expansion: j4 -> "jordan 4", af1 -> "air force 1", am90 -> "air max 90"
+      - number-aware: "jordan 4" matches Jordan 4s (the old tokenizer dropped bare numbers)
+      - brand aliases (lv, yzy, crtz, tnf, aj, ...) resolved via tags
+      - typo tolerance as a fallback so misspellings ("balencaga") still resolve
+    Each query GROUP (a word or expanded phrase) must appear in name/tags/seller/
+    category (OR within a group, AND across groups); name matches rank highest.
     """
     try:
-        try:
-            from .tag_utils import tokenize_query
-        except ImportError:
-            from tag_utils import tokenize_query
-        tokens = tokenize_query(query)
+        from tag_utils import expand_search_query, fuzzy_correct_groups, get_search_vocab, set_search_vocab
     except ImportError:
-        tokens = [t.lower() for t in (query or '').split() if t]
-    if not tokens:
+        from .tag_utils import expand_search_query, fuzzy_correct_groups, get_search_vocab, set_search_vocab
+
+    groups = expand_search_query(query)
+    if not groups:
         return []
-
     conn = get_db()
-    where_clauses = []
-    params = []
-    # Each token must be found somewhere
-    for tok in tokens:
-        like = f'%{tok}%'
-        where_clauses.append('(LOWER(name) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(seller) LIKE ? OR LOWER(category) LIKE ?)')
-        params.extend([like, like, like, like])
-    # Relevance: how many tokens hit the name (strongest signal)
-    relevance_parts = []
-    for tok in tokens:
-        relevance_parts.append('(CASE WHEN LOWER(name) LIKE ? THEN 3 WHEN LOWER(tags) LIKE ? THEN 1 ELSE 0 END)')
-        like = f'%{tok}%'
-        params.extend([like, like])  # used in SELECT below, appended after WHERE params
-    # Reorder: WHERE params first, then SELECT-side relevance params
-    sql_params = []
-    # WHERE params
-    for tok in tokens:
-        like = f'%{tok}%'
-        sql_params.extend([like, like, like, like])
-    # SELECT relevance params
-    for tok in tokens:
-        like = f'%{tok}%'
-        sql_params.extend([like, like])
 
-    relevance_sql = ' + '.join(relevance_parts) if relevance_parts else '0'
-    where_sql = ' AND '.join(where_clauses)
-    sql = f'''
-        SELECT *, ({relevance_sql}) AS relevance
-        FROM products
-        WHERE {where_sql}
-        ORDER BY relevance DESC, {SHOP_ORDER}
-    '''
-    rows = conn.execute(sql, sql_params).fetchall()
+    def run(grps):
+        rel_parts, where_parts, rel_params, where_params = [], [], [], []
+        for group in grps:
+            # spaces in a phrase become '_' (LIKE single-char wildcard) so the
+            # separator can be a space, NEWLINE, or hyphen — "jordan 4" still
+            # matches "Jordan\n4" / "off white" matches "off-white" — without the
+            # gap-matching that would wrongly let "jordan 4" hit "Jordan 14".
+            likes = ['%' + a.lower().replace(' ', '_') + '%' for a in group]
+            name_or = ' OR '.join('LOWER(name) LIKE ?' for _ in likes)
+            tag_or = ' OR '.join('LOWER(tags) LIKE ?' for _ in likes)
+            rel_parts.append(f'(CASE WHEN ({name_or}) THEN 3 WHEN ({tag_or}) THEN 1 ELSE 0 END)')
+            rel_params.extend(likes)   # name ORs
+            rel_params.extend(likes)   # tag ORs
+            field_or = ' OR '.join(
+                '(LOWER(name) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(seller) LIKE ? OR LOWER(category) LIKE ?)'
+                for _ in likes)
+            where_parts.append('(' + field_or + ')')
+            for lk in likes:
+                where_params.extend([lk, lk, lk, lk])
+        sql = (f'SELECT *, ({" + ".join(rel_parts)}) AS relevance FROM products '
+               f'WHERE {" AND ".join(where_parts)} ORDER BY relevance DESC, {SHOP_ORDER}')
+        return [dict(r) for r in conn.execute(sql, rel_params + where_params).fetchall()]
+
+    results = run(groups)
+    # Typo fallback: only when the exact/shorthand pass found very little, correct
+    # unknown words against the product vocabulary and search again.
+    if len(results) < 3:
+        vocab = get_search_vocab()
+        if vocab is None:
+            vocab = set_search_vocab([dict(r) for r in conn.execute('SELECT name, tags FROM products').fetchall()])
+        fz, changed = fuzzy_correct_groups(groups, vocab)
+        if changed:
+            seen = {r['id'] for r in results}
+            for r in run(fz):
+                if r['id'] not in seen:
+                    results.append(r)
+                    seen.add(r['id'])
     conn.close()
-    return [dict(r) for r in rows]
+    return results
 
 
 def get_categories():
@@ -339,6 +402,117 @@ def add_category(slug, name, icon='', description='', sort_order=0):
         INSERT OR REPLACE INTO categories (slug, name, icon, description, sort_order)
         VALUES (?, ?, ?, ?, ?)
     ''', (slug, name, icon, description, sort_order))
+    conn.commit()
+    conn.close()
+
+
+def update_category(old_slug, updates):
+    """Update a category's name/icon/sort_order, and optionally rename its slug
+    (which also rewrites every product currently in that category)."""
+    conn = get_db()
+    new_slug = (updates.get('slug') or old_slug).strip().lower()
+    fields, values = [], []
+    if 'slug' in updates and new_slug != old_slug:
+        fields.append('slug = ?'); values.append(new_slug)
+    for k in ('name', 'icon', 'description'):
+        if k in updates:
+            fields.append(f'{k} = ?'); values.append(updates[k])
+    if 'sort_order' in updates:
+        fields.append('sort_order = ?'); values.append(int(updates['sort_order'] or 0))
+    if fields:
+        values.append(old_slug)
+        conn.execute(f'UPDATE categories SET {", ".join(fields)} WHERE slug = ?', tuple(values))
+    if new_slug != old_slug:
+        conn.execute('UPDATE products SET category = ? WHERE category = ?', (new_slug, old_slug))
+    conn.commit()
+    conn.close()
+    return new_slug
+
+
+def delete_category(slug, reassign_to=''):
+    """Delete a category. Products in it get reassigned to reassign_to
+    (default empty string = uncategorized)."""
+    conn = get_db()
+    conn.execute('UPDATE products SET category = ? WHERE category = ?', (reassign_to, slug))
+    conn.execute('DELETE FROM categories WHERE slug = ?', (slug,))
+    conn.commit()
+    conn.close()
+
+
+def count_products_in_category(slug):
+    conn = get_db()
+    row = conn.execute('SELECT COUNT(*) AS n FROM products WHERE category = ?', (slug,)).fetchone()
+    conn.close()
+    return int(row['n']) if row else 0
+
+
+def get_top_clicked_products(limit=75, days=30):
+    """Return the top N products by click count over the last N days.
+    Used by the /shop?category=trending route to derive 'trending' from real
+    user behaviour instead of a manual tag."""
+    conn = get_db()
+    from datetime import datetime, timedelta
+    since = (datetime.now() - timedelta(days=days)).isoformat()
+    rows = conn.execute(f'''
+        SELECT p.*, COUNT(c.id) AS click_count
+        FROM products p
+        JOIN clicks c ON c.product_id = p.id
+        WHERE c.clicked_at >= ?
+        GROUP BY p.id
+        ORDER BY click_count DESC, {SHOP_ORDER}
+        LIMIT ?
+    ''', (since, limit)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def set_in_stock(product_ids, in_stock):
+    """Toggle in_stock for one or many product IDs. Returns count changed."""
+    if not product_ids:
+        return 0
+    conn = get_db()
+    qmarks = ','.join('?' * len(product_ids))
+    conn.execute(
+        f'UPDATE products SET in_stock = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({qmarks})',
+        (1 if in_stock else 0, *product_ids)
+    )
+    n = conn.total_changes
+    conn.commit()
+    conn.close()
+    return n
+
+
+def cache_get(key, max_age_seconds=7 * 24 * 3600):
+    """Return the cached value (JSON-decoded) for `key`, or None if missing
+    or older than max_age_seconds."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT value, created_at FROM api_cache WHERE key = ?", (key,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        created = datetime.fromisoformat(row['created_at'])
+    except Exception:
+        try:
+            created = datetime.strptime(row['created_at'], '%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return None
+    if (datetime.now() - created).total_seconds() > max_age_seconds:
+        return None
+    try:
+        return json.loads(row['value'])
+    except Exception:
+        return None
+
+
+def cache_set(key, value):
+    conn = get_db()
+    conn.execute(
+        "INSERT OR REPLACE INTO api_cache (key, value, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+        (key, json.dumps(value, ensure_ascii=False))
+    )
     conn.commit()
     conn.close()
 

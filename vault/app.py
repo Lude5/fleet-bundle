@@ -1,21 +1,65 @@
 import os
 import json
 import secrets
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for, send_file, make_response
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+# SECRET_KEY: prefer env var, else persist a random key to disk so it survives
+# server restarts (otherwise every restart logs every admin out with a
+# confusing 'Unauthorized' toast).
+_secret_from_env = os.environ.get('SECRET_KEY')
+if _secret_from_env:
+    app.secret_key = _secret_from_env
+else:
+    # Prefer the PERSISTENT disk (/data) over VAULT_DATA_DIR, which resolves to
+    # an EPHEMERAL path in this bundle (wsgi checks /var/data but the disk is at
+    # /data). Storing the secret key on the ephemeral path regenerated it on every
+    # deploy -> every admin logged out each deploy. Co-locate it with site.db.
+    _data_dir = ('/data' if os.path.isdir('/data') else (os.environ.get('VAULT_DATA_DIR') or os.path.join(os.path.dirname(__file__), 'data')))
+    os.makedirs(_data_dir, exist_ok=True)
+    _key_path = os.path.join(_data_dir, '.secret_key')
+    if os.path.exists(_key_path):
+        with open(_key_path, 'r', encoding='utf-8') as _kf:
+            app.secret_key = _kf.read().strip() or secrets.token_hex(32)
+    else:
+        app.secret_key = secrets.token_hex(32)
+        try:
+            with open(_key_path, 'w', encoding='utf-8') as _kf:
+                _kf.write(app.secret_key)
+        except Exception:
+            pass
+# Keep sessions alive for 24 hours so an admin who logs in once stays in
+# across page refreshes / new tabs / browser restarts (matches master_admin).
+from datetime import timedelta as _td
+app.permanent_session_lifetime = _td(hours=24)
+# Belt-and-suspenders cookie flags so the session survives top-level navigation
+# and isn't dropped by browser quirks (Lax = sent on same-site nav, not stripped
+# on link-click). HttpOnly is on by default in Flask.
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+# Unique cookie NAME so it never clashes with master_admin ('master_session') or the
+# other bundle apps (default 'session'), and PATH='/' so the admin login works on BOTH
+# the bundle mount (fleet-bundle.onrender.com/ategoat) AND the bare custom domain
+# (repsloot.com, where ategoat serves at root). Without PATH='/', the cookie defaulted
+# to APPLICATION_ROOT ('/ategoat') and was never sent on repsloot.com → admin appeared
+# logged-out there and every admin action silently did nothing.
+app.config['SESSION_COOKIE_NAME'] = 'ategoat_session'
+app.config['SESSION_COOKIE_PATH'] = '/'
 CORS(app)
 
-# === SITE CONFIG (all customizable via env vars) ===
-# Every visible string and toggle on the Minimal template can be overridden via
-# Render env vars. No code edits needed to deploy a new client — just paste env
-# vars into the Render dashboard.
 
+# Upgrade every admin request's session to permanent — this catches old sessions
+# that were created before the 24h lifetime was set so they stop getting kicked.
+@app.before_request
+def _persist_admin_session():
+    if request.path.startswith('/admin') and session.get('admin_logged_in'):
+        session.permanent = True
+
+# === SITE CONFIG (all customizable via env vars) ===
 def _bool(name, default='1'):
     """Parse '1'/'true'/'yes' as True, anything else as False."""
     return os.environ.get(name, default).strip().lower() in ('1', 'true', 'yes', 'on')
@@ -117,9 +161,13 @@ def _resolve(s):
 for _k in ('index_strip_words', 'footer_desc', 'tagline'):
     SITE_CONFIG[_k] = _resolve(SITE_CONFIG[_k])
 
+
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'changeme123')
 ADMIN_API_TOKEN = os.environ.get('ADMIN_API_TOKEN', '')  # for cross-site master-admin calls
-DATA_DIR = os.environ.get('VAULT_DATA_DIR') or ('/data' if os.path.exists('/data') else os.path.join(os.path.dirname(__file__), 'data'))
+# Prefer the PERSISTENT disk (/data) over the ephemeral VAULT_DATA_DIR so that
+# uploads (UPLOADS_DIR), the secret key and the seed marker all survive deploys,
+# co-located with site.db. See the long note in the seed block below.
+DATA_DIR = ('/data' if os.path.isdir('/data') else (os.environ.get('VAULT_DATA_DIR') or os.path.join(os.path.dirname(__file__), 'data')))
 os.makedirs(DATA_DIR, exist_ok=True)
 
 try:
@@ -127,44 +175,383 @@ try:
         from .database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
+            update_category, delete_category, count_products_in_category,
+            cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
-            set_featured, move_category, reorder_products, get_listing_variants
+            set_featured, move_category, reorder_products, get_listing_variants,
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     except ImportError:
         from database import (
             init_db, get_products, get_product, add_product, add_products_bulk,
             update_product, delete_product, search_products, get_categories, add_category,
+            update_category, delete_category, count_products_in_category,
+            cache_get, cache_set,
             record_click, get_analytics, backup_database, check_auto_backup,
-            set_featured, move_category, reorder_products, get_listing_variants
+            set_featured, move_category, reorder_products, get_listing_variants,
+            get_top_clicked_products, set_in_stock,
+            get_all_settings, set_settings
         )
     init_db()
     check_auto_backup()
 
-    if not get_products():
-        products_file = os.path.join(os.path.dirname(__file__), 'static', 'products.json')
-        if os.path.exists(products_file):
+    # Always seed/refresh from static/products.json when its hash changes.
+    # This keeps the DB in sync with whatever was last committed without
+    # losing user-added products between identical deploys.
+    import hashlib
+    products_file = os.path.join(os.path.dirname(__file__), 'static', 'products.json')
+    if os.path.exists(products_file):
+        with open(products_file, 'rb') as _bf:
+            json_hash = hashlib.md5(_bf.read()).hexdigest()
+        # CRITICAL: the marker MUST live on the same PERSISTENT store as the DB.
+        # DATA_DIR (VAULT_DATA_DIR) resolves to an EPHEMERAL path in this bundle
+        # (wsgi checks /var/data but the disk is mounted at /data), so storing the
+        # marker there made it vanish on every deploy → forced a catalogue-wiping
+        # re-seed each time (nuking every operator edit: colors/QC/featured/order).
+        # Derive the marker from DB_PATH so it sits right next to site.db.
+        try:
+            from .database import DB_PATH as _DBP
+        except ImportError:
+            from database import DB_PATH as _DBP
+        marker_path = os.path.join(os.path.dirname(_DBP) or '.', '.products_hash')
+        seeded_hash = ''
+        if os.path.exists(marker_path):
+            try:
+                seeded_hash = open(marker_path, 'r', encoding='utf-8').read().strip()
+            except Exception:
+                seeded_hash = ''
+        if json_hash != seeded_hash:
+            # Wipe + re-seed the SEED products only (manual=0). PRESERVE any product
+            # added via the admin/scraper (manual=1) — those live only in the DB and
+            # would otherwise be nuked on every re-seed.
+            try:
+                try:
+                    from .database import get_db as _get_db
+                except ImportError:
+                    from database import get_db as _get_db
+                _c = _get_db()
+                _c.execute('DELETE FROM products WHERE COALESCE(manual, 0) = 0')
+                _c.commit()
+                _c.close()
+            except Exception as _e:
+                print(f"Wipe warning: {_e}")
             with open(products_file, 'r', encoding='utf-8') as _f:
                 _products = json.load(_f)
             add_products_bulk(_products)
-            print(f"Loaded {len(_products)} products")
+            try:
+                with open(marker_path, 'w', encoding='utf-8') as _mf:
+                    _mf.write(json_hash)
+            except Exception as _e:
+                print(f"Marker write warning: {_e}")
+            print(f"Re-seeded {len(_products)} products (hash {json_hash[:8]})")
+        else:
+            print(f"Seed up to date ({get_products() and len(get_products()) or 0} products, hash {json_hash[:8]})")
 
+    # Idempotent hygiene: scrub any leftover competitor referral code from stored
+    # product URLs so it can't sit in the data / page source. The live buy flow
+    # (/go, /api/agents) already swaps to our affcode, so this is data cleanliness.
+    # Runs every boot (no-op once clean) and re-runs after a product re-seed.
+    try:
+        try:
+            from .database import get_db as _gdb
+        except ImportError:
+            from database import get_db as _gdb
+        _mc = _gdb()
+        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=ategoat') WHERE url LIKE '%affcode=bswes%'").rowcount
+        _mc.commit(); _mc.close()
+        if _n:
+            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> ategoat)")
+    except Exception as _e:
+        print(f"Affcode scrub warning: {_e}")
+
+    if not get_categories():
         CATS = [
-            {'slug': 'trending', 'name': 'Trending', 'sort_order': 0},
             {'slug': 'shoes', 'name': 'Shoes', 'sort_order': 1},
             {'slug': 'shirts', 'name': 'Shirts', 'sort_order': 2},
             {'slug': 'hoodies', 'name': 'Hoodies', 'sort_order': 3},
+            {'slug': 'tracksuits', 'name': 'Tracksuits & Sets', 'sort_order': 4},
             {'slug': 'pants', 'name': 'Pants', 'sort_order': 4},
-            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 5},
-            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 6},
-            {'slug': 'bags', 'name': 'Bags', 'sort_order': 7},
-            {'slug': 'tech', 'name': 'Tech', 'sort_order': 8},
-            {'slug': 'womens', 'name': 'Womens', 'sort_order': 9},
+            {'slug': 'shorts', 'name': 'Shorts', 'sort_order': 5},
+            {'slug': 'jackets', 'name': 'Jackets', 'sort_order': 6},
+            {'slug': 'headwear', 'name': 'Headwear', 'sort_order': 7},
+            {'slug': 'accessories', 'name': 'Accessories', 'sort_order': 8},
+            {'slug': 'bags', 'name': 'Bags', 'sort_order': 9},
+            {'slug': 'tech', 'name': 'Tech', 'sort_order': 10},
+            {'slug': 'womens', 'name': 'Womens', 'sort_order': 11},
         ]
         for c in CATS:
             add_category(c['slug'], c['name'], '', '', c['sort_order'])
         print("Categories seeded")
+    else:
+        # Ensure newly-introduced categories show up even on DBs that were
+        # seeded before they existed. add_category is INSERT OR REPLACE so
+        # this is idempotent and won't clobber renames the operator made.
+        existing_slugs = {c['slug'] for c in get_categories()}
+        for slug, name, order in [('shorts', 'Shorts', 5), ('headwear', 'Headwear', 7),
+                                  ('tracksuits', 'Tracksuits & Sets', 4)]:
+            if slug not in existing_slugs:
+                add_category(slug, name, '', '', order)
+                print(f"Backfilled category: {slug}")
+
+    # ---- Tracksuits & Sets collection ------------------------------------
+    # Re-assert on every boot so the collection survives re-seeds (which reload
+    # each product's category straight from products.json). Moves tracksuit /
+    # co-ord / two-piece / matching-set / "<brand> Set" / training-suit names
+    # into the 'tracksuits' category regardless of which single-garment bucket
+    # the seed data placed them in. Idempotent — only touches rows not already
+    # there — and self-healing if a future re-seed reverts them.
+    try:
+        try:
+            from .tag_utils import is_tracksuit as _is_ts
+        except ImportError:
+            from tag_utils import is_tracksuit as _is_ts
+        _ts_ids = [p['id'] for p in get_products()
+                   if _is_ts(p.get('name', '')) and (p.get('category') or '') != 'tracksuits']
+        if _ts_ids:
+            move_category(_ts_ids, 'tracksuits')
+            print(f"Tracksuits collection: categorized {len(_ts_ids)} products")
+    except Exception as _e:
+        print(f"Tracksuit categorize warning: {_e}")
 except Exception as e:
     print(f"DB init warning: {e}")
+
+
+# ============================================================
+# Shopping agents — generate per-agent buy URLs for any product
+# ============================================================
+def _parse_item_url(url):
+    """Return (platform, item_id) for a raw seller URL, or (None, None)."""
+    import re
+    if not url:
+        return (None, None)
+    m = re.search(r'weidian\.com/item\.html\?[^"\s]*itemID=(\d+)', url, re.I)
+    if m: return ('weidian', m.group(1))
+    m = re.search(r'taobao\.com/item\.htm\?[^"\s]*id=(\d+)', url, re.I)
+    if m: return ('taobao', m.group(1))
+    m = re.search(r'1688\.com/offer/(\d+)\.html', url, re.I)
+    if m: return ('1688', m.group(1))
+    return (None, None)
+
+
+def _unwrap_agent_url(url):
+    """If url is an agent wrapper (kakobuy?url=..., joyagoo?url=..., etc.)
+    return the inner seller URL, else return as-is."""
+    from urllib.parse import urlparse, parse_qs, unquote
+    if not url:
+        return ''
+    try:
+        p = urlparse(url)
+        qs = parse_qs(p.query)
+        for key in ('url', 'productUrl', 'product_url'):
+            if key in qs and qs[key]:
+                return unquote(qs[key][0])
+    except Exception:
+        pass
+    return url
+
+
+# Each agent has a builder function (raw_url, item_id, platform, affcode) -> url
+# Builders return None when they can't construct a URL (e.g. agents that need
+# an item_id we couldn't parse).
+def _b_kakobuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.kakobuy.com/item/details?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_joyagoo(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.joyagoo.com/index/item/index.html?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_sugargoo(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.sugargoo.com/index/item/index.html?url={quote(url, safe="")}'
+    if code: out += f'&shareCode={code}'
+    return out
+
+def _b_allchinabuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.allchinabuy.com/en/page/buy/?from=search-input&url={quote(url, safe="")}'
+    if code: out += f'&partnercode={code}'
+    return out
+
+def _b_mulebuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://mulebuy.com/product/?shop_type={platform}&id={item_id}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_oopbuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://oopbuy.com/product/{platform}/{item_id}'
+    if code: out += f'?inviteCode={code}'
+    return out
+
+def _b_hubbuy(url, _id, _plat, code):
+    """HubBuy — successor to AllChinaBuy at hubbuycn.com."""
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.hubbuycn.com/order/buy/?from=search-input&url={quote(url, safe="")}'
+    if code: out += f'&partnercode={code}'
+    return out
+
+def _b_acbuy(_url, item_id, platform, code):
+    if not item_id or not platform: return None
+    out = f'https://acbuy.com/product?source={platform}&id={item_id}'
+    if code: out += f'&u={code}'
+    return out
+
+def _b_litbuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.litbuy.com/transmit?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_hipobuy(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.hipobuy.com/order/buy?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+def _b_usfans(url, _id, _plat, code):
+    from urllib.parse import quote
+    if not url: return None
+    out = f'https://www.usfans.com/product/buy?url={quote(url, safe="")}'
+    if code: out += f'&affcode={code}'
+    return out
+
+# Signup URLs: only 3 (KakoBuy, Oopbuy, Hipobuy) are verified — pulled from
+# ategoat.com's public /promos/list endpoint. The other 9 use plain registration
+# URLs with NO referral code. To enable affiliate income for those, drop the
+# operator's own codes in via env vars or edit the URLs directly.
+# Each agent now carries an editable affiliate `code` (one code drives BOTH its
+# buy URLs and its signup link) and a `signup` TEMPLATE with a {code} placeholder
+# so editing the code in one place updates every link site-wide. Only kakobuy/
+# oopbuy/hipobuy ship with verified codes; the rest default to '' (no code) until
+# the operator drops their own in via the master_admin agent editor.
+AGENTS = [
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'ategoat'), 'signup': 'https://www.kakobuy.com/register?affcode={code}',   'coupon': 'Up to $500 shipping credit'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'code': 'KRLHFHSGL',                                  'signup': 'https://oopbuy.com/register?inviteCode={code}',     'coupon': 'Up to $300 in coupons'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'code': '25RXG9B0E',                                  'signup': 'https://hipobuy.com/register?inviteCode={code}',    'coupon': 'Up to $100 in coupons'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'code': '',                                           'signup': 'https://www.joyagoo.com/index/user/register',       'coupon': 'Up to $300 in coupons'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'code': '',                                           'signup': 'https://www.sugargoo.com/index/user/register',      'coupon': 'Up to $200 in coupons'},
+    {'key': 'hubbuy',      'name': 'HubBuy',      'build': _b_hubbuy,      'color': '#3b82f6', 'domain': 'hubbuycn.com',    'code': '',                                           'signup': 'https://www.hubbuycn.com/register',                 'coupon': 'Up to $150 in coupons'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'code': '',                                           'signup': 'https://mulebuy.com/register',                      'coupon': 'Up to $200 in coupons'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'code': '',                                           'signup': 'https://acbuy.com/register',                        'coupon': 'Up to $250 in coupons'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'code': '',                                           'signup': 'https://www.litbuy.com/register',                   'coupon': 'Up to $150 in coupons'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'code': '',                                           'signup': 'https://www.usfans.com/register',                   'coupon': 'Up to $100 in coupons'},
+]
+
+# key -> default agent record, and the default display order.
+AGENT_DEFAULTS = {a['key']: a for a in AGENTS}
+AGENT_DEFAULT_ORDER = [a['key'] for a in AGENTS]
+# Fields an operator may override via the master_admin editor (build fn is code-only).
+AGENT_EDITABLE_FIELDS = ('name', 'color', 'coupon', 'code', 'signup', 'enabled')
+
+
+def _load_agents_config():
+    """Operator overrides from settings: {'order':[keys], 'overrides':{key:{...}}}.
+    Safe on any error (returns empty override set)."""
+    import json
+    try:
+        raw = get_all_settings().get('agents_config', '')
+        if raw:
+            cfg = json.loads(raw)
+            if isinstance(cfg, dict):
+                return {'order': cfg.get('order') or [], 'overrides': cfg.get('overrides') or {}}
+    except Exception:
+        pass
+    return {'order': [], 'overrides': {}}
+
+
+def get_effective_agents(include_disabled=False):
+    """Merge hardcoded AGENTS defaults with operator overrides (code, name, color,
+    coupon, signup, enabled) and order. Each returned entry keeps its build fn so
+    buy URLs still work. This is the single source the whole site reads."""
+    cfg = _load_agents_config()
+    overrides = cfg.get('overrides') or {}
+    order = [k for k in (cfg.get('order') or []) if k in AGENT_DEFAULTS]
+    for k in AGENT_DEFAULT_ORDER:
+        if k not in order:
+            order.append(k)
+    out = []
+    for k in order:
+        base = AGENT_DEFAULTS.get(k)
+        if not base:
+            continue
+        ov = overrides.get(k) or {}
+        enabled = ov.get('enabled', True)
+        if not include_disabled and enabled is False:
+            continue
+        merged = dict(base)
+        for f in ('name', 'color', 'coupon', 'signup'):
+            if ov.get(f):
+                merged[f] = ov[f]
+        if 'code' in ov:           # allow clearing a code to '' explicitly
+            merged['code'] = ov.get('code') or ''
+        merged['enabled'] = enabled
+        out.append(merged)
+    return out
+
+
+def _agent_signup_url(a):
+    """Resolve an agent's signup URL, injecting its code into the {code} template."""
+    tpl = a.get('signup', '') or ''
+    code = a.get('code', '') or ''
+    return tpl.replace('{code}', code) if '{code}' in tpl else tpl
+
+
+@app.route('/api/signup-agents')
+def api_signup_agents():
+    """Returns the full agent list with signup URLs + per-agent coupon text."""
+    return jsonify({
+        'agents': [{
+            'key': a['key'],
+            'name': a['name'],
+            'color': a['color'],
+            'domain': a['domain'],
+            'signup_url': _agent_signup_url(a),
+            'coupon': a.get('coupon', 'Welcome credit available'),
+            'logo': f'https://www.google.com/s2/favicons?domain={a["domain"]}&sz=64',
+        } for a in get_effective_agents()]
+    })
+
+
+def _agents_for_url(seller_url, affcode=None):
+    """Build a list of {key, name, url, color, letter, logo} agent options.
+    Each agent uses ITS OWN editable affiliate code (the legacy single-affcode
+    arg is ignored — kept only so old callers don't break)."""
+    platform, item_id = _parse_item_url(seller_url)
+    out = []
+    for a in get_effective_agents():
+        try:
+            built = a['build'](seller_url, item_id, platform, a.get('code', '') or '')
+        except Exception:
+            built = None
+        if built:
+            domain = a.get('domain', '')
+            out.append({
+                'key': a['key'],
+                'name': a['name'],
+                'url': built,
+                'color': a.get('color', '#444444'),
+                'letter': a['name'][0].upper(),
+                # Google's favicon service serves brand-icon-quality logos for
+                # most domains. Falls back gracefully on the frontend if it
+                # fails to load.
+                'logo': f'https://www.google.com/s2/favicons?domain={domain}&sz=64' if domain else '',
+                'domain': domain,
+            })
+    return out
 
 
 def is_admin():
@@ -186,8 +573,31 @@ def is_admin_api():
 
 @app.context_processor
 def inject_config():
-    """Make SITE_CONFIG available in all templates as 'site'."""
-    return {'site': SITE_CONFIG}
+    """Make SITE_CONFIG + editable site settings available in all templates."""
+    try:
+        _settings = get_all_settings()
+    except Exception:
+        _settings = {}
+    cfg = SITE_CONFIG
+    from datetime import datetime as _dtnow
+    # Live numbers so the homepage stats / labels / copyright never go stale.
+    extra = {'now_year': _dtnow.now().year, 'product_count': 100, 'category_count': 0}
+    try:
+        n = count_products()
+        if n:
+            extra['product_count'] = (n // 100) * 100 if n >= 100 else n
+            if not os.environ.get('PRODUCT_COUNT_LABEL'):
+                label = '{:,}+'.format(extra['product_count'])
+                cfg = dict(SITE_CONFIG)
+                cfg['product_count_label'] = label
+                cfg['tagline'] = 'A curated catalogue of {} finds. Updated daily.'.format(label)
+    except Exception:
+        pass
+    try:
+        extra['category_count'] = len(get_categories())
+    except Exception:
+        pass
+    return dict({'site': cfg, 'settings': _settings}, **extra)
 
 
 # --- Public Routes ---
@@ -196,14 +606,139 @@ def inject_config():
 def home():
     products = get_products()
     categories = get_categories()
-    import random
-    shuffled = list(products)
+    import random, json as _json
+    # Pre-bucket by category in Python so Jinja doesn't run selectattr
+    # over 9k+ products N times (was the main rendering bottleneck).
+    by_cat = {}
+    for p in products:
+        by_cat.setdefault(p.get('category', ''), []).append(p)
+    # Each section only needs the first 4 — slice now to keep payload small.
+    cat_previews = {}
+    for cat in categories:
+        slug = cat['slug'] if isinstance(cat, dict) else cat.get('slug')
+        if slug == 'trending':
+            continue
+        bucket = by_cat.get(slug, [])
+        if bucket:
+            cat_previews[slug] = {'name': cat['name'], 'slug': slug,
+                                  'count': len(bucket), 'picks': bucket[:4]}
+    # "Best Selling" = the curated bestseller list (the spreadsheet's Trending tab),
+    # kept in its given order; falls back to the front of the catalogue if unset.
+    prod_by_id = {p['id']: p for p in products}
+    try:
+        _bs = _json.loads(get_all_settings().get('bestseller_ids') or '[]')
+    except Exception:
+        _bs = []
+    bestsellers = [prod_by_id[i] for i in _bs if i in prod_by_id]
+    featured_list = (bestsellers or products)[:12]
+    # Conveyor/hero rows use random picks; sample is O(n) but bounded by 40.
+    sample_pool = products if len(products) <= 500 else random.sample(products, 500)
+    shuffled = list(sample_pool)
     random.shuffle(shuffled)
-    return render_template('home.html',
+    resp = make_response(render_template('home.html',
         products=products,
+        featured=featured_list,
+        cat_previews=cat_previews,
         conveyor=shuffled[:40],
         hero_products=shuffled[:24],
-        categories=categories)
+        categories=categories))
+    # Browser caches refreshes for 60s so quick re-loads feel instant.
+    # Short window keeps category edits / new products visible quickly.
+    resp.headers['Cache-Control'] = 'public, max-age=60'
+    return resp
+
+
+# ============================================================
+# Outfit bundles — curated multi-piece looks
+# ============================================================
+BUNDLE_RECIPES = [
+    {'slug': 'off-duty',
+     'name': 'Off-duty Sunday',
+     'tagline': 'Easy weekend layer — hoodie, soft pants, sneakers, one accessory.',
+     'cats': ['hoodies', 'pants', 'accessories', 'shoes']},
+    {'slug': 'streetwear',
+     'name': 'Streetwear staples',
+     'tagline': 'The base streetwear kit — tee, hoodie, pants, jacket, sneakers.',
+     'cats': ['shirts', 'hoodies', 'pants', 'jackets', 'shoes']},
+    {'slug': 'refined',
+     'name': 'Refined casual',
+     'tagline': 'Clean lines, neutral palette — shirt, jacket, pants, shoes.',
+     'cats': ['shirts', 'jackets', 'pants', 'shoes']},
+    {'slug': 'layered',
+     'name': 'Layered weekday',
+     'tagline': 'Six-piece layered build — jacket, hoodie, shirt, pants, shoes, accessory.',
+     'cats': ['jackets', 'hoodies', 'shirts', 'pants', 'shoes', 'accessories']},
+]
+
+
+import re as _re_bundle
+# Names to skip when picking for a NON-womens bundle slot — keeps menswear
+# bundles from accidentally picking women's leggings, dresses, etc.
+_BUNDLE_AVOID_PAT = _re_bundle.compile(
+    r'\b(legging|leggings|yoga|alo|sports?\s*bra|bra(?:lette)?|dress|skirt|romper|crop[ -]?top)\b',
+    _re_bundle.I,
+)
+# Also avoid out-of-stock items in bundles
+def _bundle_eligible(p, cat):
+    if p.get('in_stock') == 0:
+        return False
+    if cat != 'womens' and _BUNDLE_AVOID_PAT.search(p.get('name', '')):
+        return False
+    return True
+
+
+def _bundle_products(recipe, all_products):
+    """Pick one product per recipe category, stable across page loads.
+    Filters out items inappropriate for the bundle (e.g. women's leggings in
+    a non-womens menswear pants slot)."""
+    import hashlib
+    by_cat = {}
+    for p in all_products:
+        by_cat.setdefault(p.get('category', ''), []).append(p)
+    # Sort each category bucket so picks are deterministic.
+    for cat in by_cat:
+        by_cat[cat] = sorted(by_cat[cat], key=lambda x: x.get('id', ''))
+    picks = []
+    used_ids = set()
+    for cat in recipe['cats']:
+        cands = [p for p in by_cat.get(cat, [])
+                 if p.get('id') not in used_ids and _bundle_eligible(p, cat)]
+        if not cands:
+            # Fall back to the unfiltered bucket if the filter wiped everything
+            cands = [p for p in by_cat.get(cat, []) if p.get('id') not in used_ids]
+            if not cands:
+                continue
+        # Hash recipe slug + cat for a stable, distinct pick per bundle slot.
+        h = hashlib.md5(f"{recipe['slug']}-{cat}".encode()).hexdigest()
+        idx = int(h, 16) % len(cands)
+        pick = cands[idx]
+        picks.append(pick)
+        used_ids.add(pick.get('id'))
+    return picks
+
+
+def _all_bundles_with_picks(all_products):
+    out = []
+    for r in BUNDLE_RECIPES:
+        picks = _bundle_products(r, all_products)
+        if len(picks) >= 2:
+            total = sum(float(p.get('price_numeric') or 0) for p in picks)
+            out.append({**r, 'products': picks, 'count': len(picks), 'total': total})
+    return out
+
+
+@app.route('/bundle/<slug>')
+def bundle(slug):
+    recipe = next((r for r in BUNDLE_RECIPES if r['slug'] == slug), None)
+    if not recipe:
+        return redirect(url_for('shop'))
+    items = _bundle_products(recipe, get_products())
+    total = sum(float(p.get('price_numeric') or 0) for p in items)
+    return render_template('bundle.html',
+        bundle=recipe,
+        products=items,
+        total=total,
+        categories=get_categories())
 
 
 @app.route('/shop')
@@ -214,10 +749,31 @@ def shop():
     page = request.args.get('page', 1, type=int)
     per_page = 40
 
+    cats = get_categories()
+    cat_by_slug = {c['slug']: c for c in cats}
+    # Unknown category slug → redirect to All instead of rendering a title-cased
+    # junk heading over an empty grid.
+    if category and category != 'trending' and category not in cat_by_slug:
+        return redirect('/shop')
+    category_name = (cat_by_slug.get(category, {}).get('name')
+                     or ('Trending' if category == 'trending' else (category.replace('-', ' ').title() if category else '')))
+
     if q:
         all_products = search_products(q)
-        if category:
+        if category == 'trending':
+            top_ids = {p['id'] for p in get_top_clicked_products(limit=75)}
+            all_products = [p for p in all_products if p['id'] in top_ids]
+        elif category:
             all_products = [p for p in all_products if p.get('category') == category]
+    elif category == 'trending':
+        # Trending = top 75 most-clicked products in the last 30 days (auto-derived
+        # from analytics — no manual tagging needed). Falls back to tag-based
+        # trending if there aren't enough clicks yet to fill 75 slots.
+        all_products = get_top_clicked_products(limit=75)
+        if len(all_products) < 75:
+            top_ids = {p['id'] for p in all_products}
+            tagged = [p for p in get_products() if 'trending' in (p.get('tags') or '').split() and p['id'] not in top_ids]
+            all_products.extend(tagged[: 75 - len(all_products)])
     else:
         all_products = get_products(category if category else None)
 
@@ -231,9 +787,19 @@ def shop():
     page = max(1, min(page, total_pages))
     products = all_products[(page - 1) * per_page : page * per_page]
 
-    return render_template('shop.html', products=products, categories=get_categories(),
-        current_category=category, current_sort=sort, search_query=q,
+    return render_template('shop.html', products=products, categories=cats,
+        current_category=category, current_category_name=category_name, current_sort=sort, search_query=q,
         page=page, total_pages=total_pages, total=total)
+
+
+@app.route('/agents')
+def agents_page():
+    # Use the EFFECTIVE agents (operator overrides + order) and substitute each
+    # agent's {code} into its signup template — otherwise the signup links render
+    # a literal "{code}" and the affiliate/referral attribution is lost (this
+    # broke even the featured KakoBuy register?affcode={code} link).
+    agents = [dict(a, signup=_agent_signup_url(a)) for a in get_effective_agents()]
+    return render_template('agents.html', agents=agents)
 
 
 @app.route('/link-converter')
@@ -335,16 +901,433 @@ def affiliate_redirect(product_id):
     except Exception:
         pass
     url = product.get('url', '')
-    if url:
-        from urllib.parse import quote
+    if not url:
+        return redirect(url_for('shop'))
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote
+    agent_domain = (SITE_CONFIG.get('agent_domain') or '').lower()
+    parsed = urlparse(url)
+    target_host = (parsed.netloc or '').lower()
+    # Main buy button wraps the product's KakoBuy URL — use KakoBuy's editable code.
+    _kako = next((a for a in get_effective_agents(include_disabled=True) if a['key'] == 'kakobuy'), None)
+    affcode = (_kako or {}).get('code') or SITE_CONFIG.get('affiliate_code') or ''
+    # If the stored URL is already an agent URL (e.g. the spreadsheet shipped
+    # kakobuy.com/item/details?url=...), just swap in our own affcode —
+    # don't re-wrap it (which used to send KakoBuy a self-referential nested URL).
+    if agent_domain and agent_domain in target_host:
+        q = parse_qsl(parsed.query, keep_blank_values=True)
+        if affcode:
+            q = [(k, v) for k, v in q if k != 'affcode']
+            q.append(('affcode', affcode))
+        agent_url = urlunparse(parsed._replace(query=urlencode(q)))
+    else:
         agent_url = f"{SITE_CONFIG['agent_product_url']}?url={quote(url)}"
-        if SITE_CONFIG['affiliate_code']:
-            agent_url += f"&affcode={SITE_CONFIG['affiliate_code']}"
-        return redirect(agent_url)
-    return redirect(url_for('shop'))
+        if affcode:
+            agent_url += f"&affcode={affcode}"
+    return redirect(agent_url)
 
 
 # --- API ---
+
+@app.route('/api/search')
+def api_search():
+    """Live search for the hero autocomplete. Returns lightweight rows."""
+    q = (request.args.get('q') or '').strip()
+    limit = min(int(request.args.get('limit', 8) or 8), 20)
+    if len(q) < 2:
+        return jsonify({'results': []})
+    rows = search_products(q)[:limit]
+    out = []
+    for r in rows:
+        out.append({
+            'id': r.get('id'),
+            'name': r.get('name'),
+            'price': r.get('price'),
+            'image': r.get('image'),
+            'category': r.get('category'),
+            'seller': r.get('seller', ''),
+        })
+    return jsonify({'q': q, 'count': len(out), 'results': out})
+
+
+@app.route('/api/images/<pid>')
+def api_images(pid):
+    """Scrape the gallery for a product from its Weidian item page.
+
+    Weidian's HTML embeds a JSON blob with full-resolution
+    pcitem<shopId>-<hash>_<W>_<H>.jpg URLs. We pull all of them out and
+    return as a list. Cached in-memory per pid.
+    """
+    p = get_product(pid)
+    if not p:
+        return jsonify({'images': []})
+    cache = api_images._cache
+    if pid in cache:
+        return jsonify({'images': cache[pid], 'cached': True})
+    import re as _re
+    import requests as _r
+    raw = _unwrap_agent_url(p.get('url', ''))
+    images = []
+    # Always include the primary image we already have
+    primary = p.get('image') or ''
+    if primary:
+        images.append(primary)
+    weidian_id_m = _re.search(r'itemID=(\d+)', raw, _re.I)
+    if weidian_id_m:
+        wid = weidian_id_m.group(1)
+        try:
+            r = _r.get(f'https://weidian.com/item.html?itemID={wid}',
+                       headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36'},
+                       timeout=8)
+            html = r.text
+            # Extract all pcitem<...>_W_H.{jpg,png,webp} URLs (full-res gallery shots)
+            pattern = _re.compile(r'https?://si\.geilicdn\.com/pcitem\d+-[a-f0-9]+_\d+_\d+\.(?:jpg|jpeg|png|webp)', _re.I)
+            for m in pattern.findall(html):
+                u = m.strip()
+                if u not in images:
+                    images.append(u)
+        except Exception:
+            pass
+    # Dedupe while preserving order; cap at 12
+    seen, dedup = set(), []
+    for u in images:
+        if u and u not in seen:
+            seen.add(u); dedup.append(u)
+    dedup = dedup[:12]
+    cache[pid] = dedup
+    return jsonify({'images': dedup, 'cached': False})
+api_images._cache = {}
+
+
+def _find_ategoat_id(product):
+    """Look up the matching ategoat product ID. Cached on disk for 30 days
+    since the mapping is effectively permanent per product."""
+    pid = product.get('id') or ''
+    # 'aid2:' (not 'aid:') so stale loose-matched mappings from the old matcher
+    # are ignored and every product re-resolves with the strict itemID matcher.
+    cache_key = f'aid2:{pid}'
+    cached = cache_get(cache_key, max_age_seconds=30 * 24 * 3600)
+    if cached is not None:
+        return cached or None
+    import re as _re
+    import requests as _r
+    url = product.get('url') or ''
+    found = None
+    m = _re.search(r'itemID(?:%3D|=)(\d+)', url, _re.I)
+    if m:
+        wid = m.group(1)
+        try:
+            s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                       params={'name': wid, 'limit': 10},
+                       headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                       timeout=6)
+            items = ((s.json() or {}).get('data') or {}).get('items') or []
+            # The source API exposes no itemID field to verify against, but a
+            # search for a full ~10-digit itemID is precise: a hit means ategoat
+            # indexed that exact listing. Prefer a strict (image) match if any,
+            # else trust the first itemID-search result. This is reliable BECAUSE
+            # the query IS the itemID (unlike the loose name fallback below).
+            match = _strict_ategoat_match(product, items)
+            if match:
+                found = match.get('id')
+            elif items:
+                found = items[0].get('id')
+        except Exception:
+            pass
+    if not found:
+        name = product.get('name') or ''
+        clean = _re.sub(r'^\s*\d+\s*[、,.]\s*', '', name)
+        clean = _re.sub(r'\[[^\]]+\]', '', clean).strip()[:60]
+        if clean:
+            try:
+                s = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/product/list',
+                           params={'name': clean, 'limit': 20},
+                           headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                           timeout=6)
+                items = ((s.json() or {}).get('data') or {}).get('items') or []
+                match = _strict_ategoat_match(product, items)
+                if match:
+                    found = match.get('id')
+            except Exception:
+                pass
+    cache_set(cache_key, found or '')
+    return found
+
+
+_VLABEL_MAP = [('浅', 'Light '), ('深', 'Dark '), ('军绿', 'Army Green '), ('藏青', 'Navy '), ('卡其', 'Khaki '),
+               ('酒红', 'Wine '), ('熊猫', 'Panda '), ('北卡', 'UNC '), ('黑', 'Black '), ('白', 'White '),
+               ('灰', 'Grey '), ('红', 'Red '), ('蓝', 'Blue '), ('绿', 'Green '), ('黄', 'Yellow '), ('粉', 'Pink '),
+               ('紫', 'Purple '), ('橙', 'Orange '), ('棕', 'Brown '), ('咖', 'Coffee '), ('米', 'Beige '),
+               ('银', 'Silver '), ('金', 'Gold '), ('色', ''), ('号', ' ')]
+
+
+def _variant_label(t):
+    """Turn a Chinese SKU style label ('1号黑灰') into a readable sub-name
+    ('#1 Black Grey'); leaves unknown text as-is so it's still a usable sub-name."""
+    import re as _re
+    s = str(t or '').strip()
+    if not s:
+        return s
+    m = _re.match(r'\s*(\d+)\s*号\s*(.*)', s)
+    num, rest = (m.group(1), m.group(2)) if m else ('', s)
+    for zh, en in _VLABEL_MAP:
+        rest = rest.replace(zh, en)
+    rest = ' '.join(rest.split())
+    if num:
+        return ('#' + num + (' ' + rest if rest else '')).strip()
+    return rest or s
+
+
+@app.route('/api/variants/<pid>')
+def api_variants(pid):
+    """Look up the ategoat product page for this item, extract the SKU/variant
+    list + gallery images. Cached in-memory.
+
+    Returns {variants: [{title, price, stock, image_url}], images: [...]}
+    """
+    p = get_product(pid)
+    if not p:
+        return jsonify({'variants': [], 'images': []})
+    cached = cache_get(f'variants3:{pid}', max_age_seconds=7 * 24 * 3600)
+    if cached is not None:
+        return jsonify(cached)
+    import re as _re
+    import requests as _r
+    import json as _json
+    result = {'variants': [], 'images': []}
+    try:
+        aid = _find_ategoat_id(p)
+        if aid:
+            # Fetch the HTML product page and extract the SKU JSON
+            r = _r.get(f'https://www.ategoat.com/product/{aid}',
+                       headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'},
+                       timeout=10)
+            if r.status_code == 200:
+                html = r.text
+                m = _re.search(r'currentProductSkuItems\s*=\s*(\[.*?\]);', html, _re.S)
+                if m:
+                    try:
+                        skus = _json.loads(m.group(1))
+                        # Dedupe to one SKU per unique image (i.e. per colour/
+                        # style) — strip out per-size duplicates so the user
+                        # sees one button per actual variant, not a button per
+                        # size that all look identical.
+                        seen_imgs = set()
+                        deduped = []
+                        for s in skus:
+                            img = s.get('image_url') or ''
+                            if not img or img in seen_imgs:
+                                continue
+                            seen_imgs.add(img)
+                            # Strip the trailing ";SIZE" off the title so the
+                            # label reads as a colour/style code only.
+                            t = str(s.get('title') or '')
+                            t_clean = t.split(';')[0].strip() if ';' in t else t
+                            deduped.append({
+                                'title': _variant_label(t_clean or t),
+                                'price': (round(float(s.get('price')) / 6.5, 2) if s.get('price') else None),  # CNY¥ -> USD
+                                'stock': s.get('stock', 0),
+                                'image': img,
+                            })
+                            if len(deduped) >= 30:
+                                break
+                        result['variants'] = deduped
+                    except Exception:
+                        pass
+                # Also pull any product images out of the HTML — useful when
+                # the Weidian scrape failed for this product.
+                img_re = _re.compile(r'https?://(?:si|sd)\.geilicdn\.com/[a-zA-Z0-9_/.\-]+\.(?:jpg|jpeg|png|webp)', _re.I)
+                imgs_raw = img_re.findall(html)
+                imgs = []
+                seen = set()
+                for u in imgs_raw:
+                    if any(skip in u for skip in ('hz_img_', 'icon-', '/avatar', 'login_', 'wd_logo', 'common-')):
+                        continue
+                    if u in seen: continue
+                    seen.add(u); imgs.append(u)
+                    if len(imgs) >= 12: break
+                result['images'] = imgs
+    except Exception:
+        pass
+    cache_set(f'variants3:{pid}', result)
+    return jsonify(result)
+
+
+def _strict_ategoat_match(product, candidates):
+    """Pick an ategoat.com product that is *provably the same listing*.
+
+    Only two signals are trusted, because anything looser (name/brand token
+    overlap) attaches a DIFFERENT product's variants + QC photos — e.g. every
+    'Denim Tears Tee' would grab the first Denim Tears listing's whole grid.
+
+      1) Our Weidian itemID appears in a candidate field (same listing — exact).
+      2) Our primary image URL equals the candidate's image (same source photo).
+
+    Returns None when neither holds — callers then show NO variants/QC rather
+    than the wrong item's.
+    """
+    import re as _re
+    if not candidates:
+        return None
+    our_img = (product.get('image') or '').split('?')[0]
+    our_url = product.get('url') or ''
+    wid_m = _re.search(r'itemID(?:%3D|=)(\d+)', our_url, _re.I)
+    our_wid = wid_m.group(1) if wid_m else ''
+
+    # 1) Weidian itemID present in any candidate field (strongest — same listing)
+    if our_wid:
+        for it in candidates:
+            for k in ('source_url', 'url', 'original_url', 'goods_url', 'sku', 'title', 'name'):
+                if our_wid in str(it.get(k) or ''):
+                    return it
+
+    # 2) Exact image-URL match (same source photo => same listing)
+    if our_img and len(our_img) > 20:
+        for it in candidates:
+            cand_img = (it.get('image') or '').split('?')[0]
+            if cand_img and len(cand_img) > 20 and (our_img == cand_img or our_img in cand_img or cand_img in our_img):
+                return it
+
+    return None
+
+
+@app.route('/api/qc/<pid>')
+def api_qc(pid):
+    """QC-photo fetch from ategoat.com — uses itemID-first matcher so we never
+    show QC photos that belong to a different listing."""
+    p = get_product(pid)
+    if not p:
+        return jsonify({'photos': []})
+    cached = cache_get(f'qc2:{pid}', max_age_seconds=7 * 24 * 3600)
+    if cached is not None:
+        return jsonify({'photos': cached})
+    import requests as _r
+    photos = []
+    try:
+        aid = _find_ategoat_id(p)
+        if aid:
+            q = _r.get('https://www.ategoat.com/wp-json/wiligoods/v1/qc/list',
+                       params={'product_id': aid, 'limit': 30},
+                       headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'},
+                       timeout=6)
+            qitems = ((q.json() or {}).get('data') or {}).get('items') or []
+            photos = [it.get('image') or it.get('url') for it in qitems if it.get('image') or it.get('url')]
+    except Exception:
+        photos = []
+    cache_set(f'qc2:{pid}', photos)
+    return jsonify({'photos': photos})
+
+
+@app.route('/api/agents/<pid>')
+def api_agents(pid):
+    """Return per-agent buy URLs for a single product (used by card picker)."""
+    p = get_product(pid)
+    if not p:
+        return jsonify({'error': 'not found'}), 404
+    raw = _unwrap_agent_url(p.get('url', ''))
+    agents = _agents_for_url(raw)  # each agent applies its own editable code
+    platform, item_id = _parse_item_url(raw)
+    return jsonify({
+        'product_id': pid,
+        'product_name': p.get('name', ''),
+        'platform': platform,
+        'item_id': item_id,
+        'default_agent': SITE_CONFIG.get('agent_name', ''),
+        'agents': agents,
+    })
+
+
+@app.route('/api/agents/from-url')
+def api_agents_from_url():
+    """Build agent URLs from any pasted seller URL. ?url=<raw_or_wrapper>"""
+    url = (request.args.get('url') or '').strip()
+    if not url:
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None})
+    # Reject obvious non-URLs early so the converter can show a clear message.
+    if not (url.startswith('http://') or url.startswith('https://')) and not _looks_like_seller_url(url):
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None})
+    raw = _unwrap_agent_url(url)
+    platform, item_id = _parse_item_url(raw)
+    if not platform or not item_id:
+        return jsonify({'error': 'Not a valid URL', 'agents': [], 'platform': None, 'item_id': None, 'raw_url': raw})
+    agents = _agents_for_url(raw)  # each agent applies its own editable code
+    return jsonify({
+        'platform': platform,
+        'item_id': item_id,
+        'raw_url': raw,
+        'agents': agents,
+    })
+
+
+def _looks_like_seller_url(s: str) -> bool:
+    """Loose check for a paste that might be a partial URL (e.g. user dropped
+    the scheme). Accept anything that mentions a known seller/agent domain."""
+    s = s.lower()
+    for d in ('weidian.', 'taobao.', '1688.', 'tmall.', 'kakobuy.', 'oopbuy.',
+              'sugargoo.', 'joyagoo.', 'allchinabuy.', 'hubbuycn.', 'mulebuy.',
+              'acbuy.', 'litbuy.', 'hipobuy.', 'hoobuy.', 'usfans.', 'cnfans.'):
+        if d in s:
+            return True
+    return False
+
+
+def _related_products(p, limit=8):
+    """'You might also like' — same brand, then same category, best-seller nudge."""
+    if not p:
+        return []
+    try:
+        from tag_utils import BRANDS
+    except Exception:
+        BRANDS = {}
+    hay = (p.get('name', '') + ' ' + p.get('tags', '')).lower()
+    hay_tokens = set(hay.split())
+    brand_tokens = set()
+    for key, aliases in BRANDS.items():
+        toks = aliases if isinstance(aliases, list) else [aliases]
+        if key in hay or any(t in hay_tokens for t in toks):
+            brand_tokens.update(toks)
+    cat = p.get('category', '')
+    spid = p.get('id')
+    def has_brand(x):
+        xt = (x.get('name', '') + ' ' + x.get('tags', '')).lower()
+        return any(t in xt for t in brand_tokens)
+    def score(x):
+        sc = 0.0
+        if brand_tokens and has_brand(x): sc += 10
+        if x.get('category') == cat: sc += 3
+        sc += min(int(x.get('sales') or 0), 2000) / 2000.0
+        return sc
+    pool = [x for x in get_products()
+            if x.get('id') != spid
+            and (x.get('category') == cat or (brand_tokens and has_brand(x)))]
+    return sorted(pool, key=score, reverse=True)[:limit]
+
+
+@app.route('/product/new')
+def product_new():
+    """Blank product page used by the Studio editor's 'Add product' flow.
+    Renders the exact product-page layout with every field empty so the
+    operator can fill it in (or scrape it) and review before saving. The
+    product is NOT created until they hit 'Add product' in the editor —
+    this page holds a client-side draft only."""
+    blank = {
+        'id': '', 'name': '', 'price': '', 'price_numeric': '', 'url': '',
+        'image': '', 'category': '', 'seller': '', 'batch': '', 'weight': '',
+        'quality': '', 'sales': 0, 'retail_price': '', 'in_stock': 1,
+    }
+    return render_template('product.html', product=blank, related=[],
+                           categories=get_categories(), draft=True)
+
+
+@app.route('/product/<pid>')
+def product_page(pid):
+    """Standalone on-site product page (same design as the detail modal) + related."""
+    p = get_product(pid)
+    if not p:
+        return redirect(url_for('shop'))
+    return render_template('product.html', product=p,
+                           related=_related_products(p, 8),
+                           categories=get_categories())
+
 
 @app.route('/api/product/<pid>')
 def api_product(pid):
@@ -365,6 +1348,70 @@ def api_product(pid):
             qc_photos = json.loads(p['qc_photos'])
         except (ValueError, TypeError):
             qc_photos = []
+    # Enrich missing fields from what we can derive:
+    #  - seller: a real Weidian shop ID when we can dig it out of the image
+    #    URL (geilicdn embeds it as pcitem<shopId>-...). The catch-all is
+    #    the marketplace name (Weidian / Taobao / 1688) when we can't pin
+    #    a specific shop.
+    #  - batch:  pull out a [XX BATCH] tag baked into many product names
+    #  - weight: per-category estimate when no shipping weight is set
+    import re
+    raw_url = _unwrap_agent_url(p.get('url', ''))
+    img_url = p.get('image', '') or ''
+    # Try to extract a Weidian shop ID. Geilicdn images encode it as the
+    # number after one of several known prefixes (pcitem / open / item /
+    # pccover), e.g. pcitem1809160355-..., open1807578469-1234478995-...
+    shop_id = None
+    sm = re.search(r'geilicdn\.com/(?:pcitem|open|pccover|item|si)(\d{6,})', img_url)
+    if sm:
+        shop_id = sm.group(1)
+    # The shop subdomain pattern shopNNN.v.weidian.com is more reliable when
+    # the saved URL exposes it.
+    if not shop_id:
+        sm2 = re.search(r'shop(\d+)\.v\.weidian', raw_url)
+        if sm2:
+            shop_id = sm2.group(1)
+
+    derived_seller = p.get('seller') or ''
+    seller_url = ''
+    marketplace = ''
+    if 'weidian.com' in raw_url.lower(): marketplace = 'Weidian'
+    elif 'taobao.com' in raw_url.lower() or 'tmall.com' in raw_url.lower(): marketplace = 'Taobao'
+    elif '1688.com' in raw_url.lower(): marketplace = '1688'
+
+    if not derived_seller:
+        if shop_id and marketplace == 'Weidian':
+            derived_seller = f'Weidian shop #{shop_id}'
+            seller_url = f'https://shop{shop_id}.v.weidian.com/'
+        elif marketplace:
+            derived_seller = f'{marketplace} marketplace'
+    derived_batch = p.get('batch') or ''
+    if not derived_batch:
+        m = re.search(r'\[([A-Z]{1,4})\s*BATCH\]', p.get('name', ''), re.I)
+        if m:
+            derived_batch = m.group(1).upper() + ' Batch'
+
+    # Per-category shipping-weight estimates (grams, packed). Pulled from typical
+    # repping community benchmarks — close enough for shipping-cost ballparks.
+    WEIGHT_ESTIMATES = {
+        'shoes':       '900g',
+        'shirts':      '230g',
+        'hoodies':     '650g',
+        'pants':       '550g',
+        'jackets':     '900g',
+        'accessories': '180g',
+        'bags':        '700g',
+        'tech':        '400g',
+        'womens':      '320g',
+        'trending':    '450g',
+    }
+    derived_weight = (p.get('weight') or '').strip()
+    weight_is_estimate = False
+    if not derived_weight:
+        derived_weight = WEIGHT_ESTIMATES.get(p.get('category') or '', '450g')
+        weight_is_estimate = True
+
+    derived_sales = p.get('sales') or 0
     return jsonify({
         'id': p['id'],
         'name': p['name'],
@@ -372,14 +1419,20 @@ def api_product(pid):
         'price_numeric': p.get('price_numeric', 0),
         'image': p['image'],
         'category': p.get('category', ''),
-        'seller': p.get('seller', ''),
-        'batch': p.get('batch', ''),
+        'seller': derived_seller,
+        'seller_url': seller_url,
+        'marketplace': marketplace,
+        'batch': derived_batch,
         'retail_price': p.get('retail_price', ''),
         'tags': p.get('tags', ''),
-        'weight': p.get('weight', ''),
+        'weight': derived_weight,
+        'weight_estimate': weight_is_estimate,
         'quality': p.get('quality', ''),
-        'sales': p.get('sales', 0),
+        'sales': derived_sales,
         'go_url': f'/go/{pid}',
+        'raw_url': raw_url,
+        'agent_url': p.get('url', ''),
+        'images': _parse_gallery(p.get('images')),
         'variants': [
             {
                 'id': v['id'],
@@ -434,6 +1487,7 @@ def admin_login():
     if request.method == 'POST':
         if request.form.get('password') == ADMIN_PASSWORD:
             session['admin_logged_in'] = True
+            session.permanent = True   # honor the 30-day session lifetime
             return redirect(url_for('admin_dashboard'))
         return render_template('admin_login.html', error='Wrong password')
     return render_template('admin_login.html')
@@ -477,14 +1531,18 @@ def admin_add_product():
     if not data.get('name'):
         return jsonify({'error': 'Name required'}), 400
     data['id'] = data.get('id', f"p{secrets.token_hex(4)}")
+    try:
+        from tag_utils import generate_tags, auto_category
+    except ImportError:
+        from .tag_utils import generate_tags, auto_category
+    # Auto-categorize if not set: name 'Stussy Hoodie' -> 'hoodies' etc.
+    if not (data.get('category') or '').strip():
+        data['category'] = auto_category(data['name'], fallback='')
     if not data.get('tags'):
-        try:
-            from .tag_utils import generate_tags
-        except ImportError:
-            from tag_utils import generate_tags
         data['tags'] = generate_tags(data['name'], data.get('category', ''))
+    data['manual'] = 1  # admin-added: survives seed re-wipes
     add_product(data)
-    return jsonify({'ok': True, 'id': data['id']})
+    return jsonify({'ok': True, 'id': data['id'], 'category': data.get('category', '')})
 
 
 @app.route('/admin/products/update/<pid>', methods=['POST'])
@@ -505,21 +1563,24 @@ def admin_update_product(pid):
 
 @app.route('/admin/products/bulk', methods=['POST'])
 def admin_bulk():
-    if not is_admin():
+    if not is_admin_api():   # token OR session (master-admin / rebuild tooling uses the token)
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
     products = data.get('products', [])
     if not products:
         return jsonify({'error': 'No products'}), 400
     try:
-        from .tag_utils import generate_tags
+        from tag_utils import generate_tags, auto_category
     except ImportError:
-        from tag_utils import generate_tags
+        from .tag_utils import generate_tags, auto_category
     for p in products:
         if not p.get('id'):
             p['id'] = f"p{secrets.token_hex(4)}"
+        if not (p.get('category') or '').strip():
+            p['category'] = auto_category(p.get('name', ''), fallback='')
         if not p.get('tags'):
             p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
+        p['manual'] = 1  # admin/scraper-added: survives seed re-wipes
     add_products_bulk(products)
     return jsonify({'ok': True, 'count': len(products)})
 
@@ -534,7 +1595,7 @@ def admin_delete(pid):
 
 @app.route('/admin/products/delete-batch', methods=['POST'])
 def admin_delete_batch():
-    if not is_admin():
+    if not is_admin_api():   # token OR session (master-admin / rebuild tooling uses the token)
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json(silent=True) or {}
     ids = data.get('ids', [])
@@ -577,11 +1638,163 @@ def admin_reorder():
     return jsonify({'ok': True, 'count': n})
 
 
+@app.route('/admin/products/move-to-page', methods=['POST'])
+def admin_move_to_page():
+    """Move one product to the TOP of a specific shop page (40 products/page).
+
+    Renumbers only the curated 'head' up to the insertion point and leaves the
+    long tail's positions untouched — so the front pages get exact ordering while
+    everything below keeps flowing newest-first (newly-added products land right
+    after the curated head instead of being buried at the very end)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    try:
+        page = max(1, int(data.get('page')))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'invalid page'}), 400
+    if not pid:
+        return jsonify({'error': 'id required'}), 400
+    PER_PAGE = 40       # must match the public shop's per_page
+    DEFAULT_POS = 999999  # the 'uncurated' position (schema default) — bulk flows newest-first
+    all_products = get_products()  # SHOP_ORDER: featured DESC, position ASC, created_at DESC
+    ordered_ids = [p['id'] for p in all_products]
+    if pid not in ordered_ids:
+        return jsonify({'error': 'product not found'}), 404
+
+    def _pos(p):
+        v = p.get('position')
+        return v if isinstance(v, int) else DEFAULT_POS
+
+    # Renumber the CURATED head (products with an explicit, non-default position)
+    # with pid inserted at the target slot. This makes pid land UNIQUELY at the top
+    # of page N and shifts the products it displaces DOWN, instead of leaving a pile
+    # of products tied at the same position (the old code only set pid's position and
+    # never bumped the incumbents, so "move to page 1" buried the product behind
+    # whoever was already at position 1). The uncurated bulk (DEFAULT_POS) is left
+    # alone so it keeps flowing newest-first below the curated head.
+    curated = [p['id'] for p in all_products if p['id'] != pid and _pos(p) < DEFAULT_POS]
+    target_index = min((page - 1) * PER_PAGE, len(curated))
+    new_head = curated[:target_index] + [pid] + curated[target_index:]
+    reorder_products(new_head)   # assigns 1..len(new_head); bulk keeps DEFAULT_POS
+    total_pages = (len(ordered_ids) + PER_PAGE - 1) // PER_PAGE
+    return jsonify({'ok': True, 'page': (target_index // PER_PAGE) + 1,
+                    'position': target_index + 1, 'total_pages': total_pages})
+
+
+@app.route('/admin/products/move-to-position', methods=['POST'])
+def admin_move_to_position():
+    """Place a product at an EXACT 1-based position within a view (a category, or
+    the whole shop). Powers the editor's numbered position badges, click-to-set,
+    drag-reorder, and 'move to page + position'. The product lands UNIQUELY at that
+    rank and the products it displaces shift down; the uncurated bulk (position
+    999999) keeps flowing newest-first below the curated head.
+
+    Body: {id, position, category?}  — position is 1-based within the (filtered) view.
+    """
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    category = (data.get('category') or '').strip()
+    try:
+        position = max(1, int(data.get('position')))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'invalid position'}), 400
+    if not pid:
+        return jsonify({'error': 'id required'}), 400
+    PER_PAGE = 40
+    DEFAULT_POS = 999999
+
+    def _pos(p):
+        v = p.get('position')
+        return v if isinstance(v, int) else DEFAULT_POS
+
+    all_products = get_products()                       # global SHOP_ORDER
+    posmap = {p['id']: _pos(p) for p in all_products}
+    if pid not in posmap:
+        return jsonify({'error': 'product not found'}), 404
+    view = get_products(category) if category else all_products
+    view_ids = [p['id'] for p in view]
+    if pid not in view_ids:
+        return jsonify({'error': 'product not in category'}), 404
+
+    # Anchor: the product currently at the requested rank in the view; pid is placed
+    # immediately BEFORE it in the GLOBAL order, then the curated head is renumbered.
+    view_wo = [i for i in view_ids if i != pid]
+    ti = min(position - 1, len(view_wo))
+    anchor = view_wo[ti] if ti < len(view_wo) else None
+
+    glob_wo = [p['id'] for p in all_products if p['id'] != pid]
+    insert_at = glob_wo.index(anchor) if (anchor is not None and anchor in glob_wo) else len(glob_wo)
+    new_glob = glob_wo[:insert_at] + [pid] + glob_wo[insert_at:]
+    new_head = [i for i in new_glob if posmap.get(i, DEFAULT_POS) < DEFAULT_POS or i == pid]
+    reorder_products(new_head)   # global positions 1..len(new_head); bulk keeps DEFAULT_POS
+
+    nv = [p['id'] for p in (get_products(category) if category else get_products())]
+    rank = (nv.index(pid) + 1) if pid in nv else position
+    total = len(view_ids)
+    return jsonify({'ok': True, 'position': rank, 'page': (rank - 1) // PER_PAGE + 1,
+                    'total_pages': max(1, (total + PER_PAGE - 1) // PER_PAGE), 'category': category})
+
+
 @app.route('/admin/products')
 def admin_products():
     if not is_admin():
         return redirect(url_for('admin_login'))
-    return render_template('admin_products.html', products=get_products(), categories=get_categories())
+    # Silent auto-categorize: every product without a category whose name has
+    # a clear hint gets moved into its proper bucket. Idempotent + fast.
+    try:
+        try:
+            from tag_utils import auto_category
+        except ImportError:
+            from .tag_utils import auto_category
+        products = get_products()
+        for p in products:
+            if (p.get('category') or '').strip(): continue
+            guess = auto_category(p.get('name', ''), fallback='')
+            if guess:
+                update_product(p['id'], {'category': guess})
+    except Exception:
+        pass
+    # Render only the first 200 rows server-side; the rest stream in via
+    # /admin/products/rows on demand. This cut admin HTML from ~35MB to
+    # ~800KB for the 9k-product catalogue.
+    all_products = get_products()
+    INITIAL = 200
+    return render_template('admin_products.html',
+        products=all_products[:INITIAL],
+        total_products=len(all_products),
+        initial_count=min(INITIAL, len(all_products)),
+        categories=get_categories())
+
+
+@app.route('/admin/products/rows')
+def admin_products_rows():
+    """Lazy-load additional rows of the admin table beyond the initial 200."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    offset = max(0, int(request.args.get('offset', 200)))
+    limit = min(2000, max(50, int(request.args.get('limit', 1000))))
+    all_products = get_products()
+    chunk = all_products[offset:offset+limit]
+    return render_template('admin_product_rows.html',
+        products=chunk, categories=get_categories())
+
+
+@app.route('/admin/products/uncategorized')
+def admin_list_uncategorized():
+    """Return all products with an empty category. Used by the Uncategorized tab."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    products = get_products()
+    items = [
+        {'id': p['id'], 'name': p.get('name',''), 'image': p.get('image',''),
+         'tags': p.get('tags','')}
+        for p in products if not (p.get('category') or '').strip()
+    ]
+    return jsonify({'count': len(items), 'products': items})
 
 
 @app.route('/admin/analytics')
@@ -748,11 +1961,321 @@ def admin_add_category():
     return jsonify({'ok': True})
 
 
+@app.route('/admin/categories')
+def admin_categories_page():
+    """Dedicated category-manager page (its own sidebar entry)."""
+    if not is_admin():
+        return redirect(url_for('admin_login'))
+    cats = get_categories()
+    for c in cats:
+        c['product_count'] = count_products_in_category(c['slug'])
+    cats.sort(key=lambda x: (x.get('sort_order', 0), x.get('name', '')))
+    return render_template('admin_categories.html', categories=cats)
+
+
+@app.route('/admin/categories/list')
+def admin_list_categories():
+    """JSON endpoint used by the in-page category manager (Products → Categories tab)."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    cats = get_categories()
+    for c in cats:
+        c['product_count'] = count_products_in_category(c['slug'])
+    return jsonify({'categories': cats})
+
+
+@app.route('/admin/categories/<slug>/products')
+def admin_category_products(slug):
+    """Return the products in a single category. Used by the Categories
+    page to expand a row and let the user move items to a different bucket."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    if slug == '(uncategorized)':
+        all_products = get_products()
+        items = [p for p in all_products if not (p.get('category') or '').strip()]
+    else:
+        items = get_products(category=slug)
+    return jsonify({
+        'category': slug,
+        'count': len(items),
+        'products': [
+            {'id': p['id'], 'name': p.get('name', ''), 'image': p.get('image', ''),
+             'price': p.get('price', ''), 'category': p.get('category', ''),
+             'url': p.get('url', ''), 'seller': p.get('seller', ''),
+             'tags': p.get('tags', '')}
+            for p in items
+        ],
+    })
+
+
+@app.route('/admin/categories/update/<slug>', methods=['POST'])
+def admin_update_category(slug):
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    new_slug = update_category(slug, data)
+    return jsonify({'ok': True, 'slug': new_slug})
+
+
+@app.route('/admin/categories/delete/<slug>', methods=['POST'])
+def admin_delete_category(slug):
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    reassign_to = (data.get('reassign_to') or '').strip()
+    delete_category(slug, reassign_to)
+    return jsonify({'ok': True})
+
+
+@app.route('/admin/products/set-category', methods=['POST'])
+def admin_set_one_category():
+    """Quick-set a single product's category from the table dropdown."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    pid = (data.get('id') or '').strip()
+    category = (data.get('category') or '').strip()
+    if not pid:
+        return jsonify({'error': 'Product id required'}), 400
+    update_product(pid, {'category': category})
+    return jsonify({'ok': True, 'id': pid, 'category': category})
+
+
+@app.route('/admin/products/stock', methods=['POST'])
+def admin_set_stock():
+    """Toggle in_stock on one or many products. Body: {ids:[pid,...], in_stock:bool}."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') or []
+    if isinstance(ids, str):
+        ids = [ids]
+    in_stock = bool(data.get('in_stock', True))
+    if not ids:
+        return jsonify({'error': 'No product ids'}), 400
+    n = set_in_stock(ids, in_stock)
+    return jsonify({'ok': True, 'count': n, 'in_stock': in_stock})
+
+
+@app.route('/admin/products/trending', methods=['POST'])
+def admin_trending():
+    """Add or remove the 'trending' tag for one or more products. Products with
+    the tag show up under /shop?category=trending in addition to their real
+    category."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') or []
+    if isinstance(ids, str):
+        ids = [ids]
+    trending = bool(data.get('trending', True))
+    if not ids:
+        return jsonify({'error': 'No product ids'}), 400
+    n = 0
+    for pid in ids:
+        p = get_product(pid)
+        if not p:
+            continue
+        tags = (p.get('tags') or '').split()
+        had = 'trending' in tags
+        if trending and not had:
+            tags.append('trending')
+        elif not trending and had:
+            tags = [t for t in tags if t != 'trending']
+        else:
+            continue
+        update_product(pid, {'tags': ' '.join(tags)})
+        n += 1
+    return jsonify({'ok': True, 'count': n, 'trending': trending})
+
+
 @app.route('/admin/backup', methods=['POST'])
 def admin_backup():
     if not is_admin():
         return jsonify({'error': 'Unauthorized'}), 401
     return jsonify({'ok': True, 'path': backup_database()})
+
+
+def _backup_dir():
+    try:
+        from .database import BACKUP_DIR
+    except ImportError:
+        from database import BACKUP_DIR
+    return BACKUP_DIR
+
+
+@app.route('/admin/api/backups')
+def api_admin_backups():
+    """List DB backups with per-backup edit stats so we can pick the one that
+    still has the operator's colors/QC/featured/order (recovery tool)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import sqlite3
+    from datetime import datetime as _dt
+    bdir = _backup_dir()
+    try:
+        files = sorted([f for f in os.listdir(bdir) if f.startswith('backup_') and f.endswith('.db')], reverse=True)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e), 'backups': []})
+    out = []
+    for f in files[:40]:
+        fp = os.path.join(bdir, f)
+        info = {'file': f}
+        try:
+            st = os.stat(fp)
+            info['mtime'] = _dt.fromtimestamp(st.st_mtime).isoformat()
+            info['size_kb'] = round(st.st_size / 1024)
+            c = sqlite3.connect(fp)
+            cols = {r[1] for r in c.execute('PRAGMA table_info(products)').fetchall()}
+            def cnt(sql):
+                try: return c.execute(sql).fetchone()[0]
+                except Exception: return -1
+            info['products'] = cnt('SELECT COUNT(*) FROM products')
+            if 'variants' in cols: info['with_variants'] = cnt("SELECT COUNT(*) FROM products WHERE variants IS NOT NULL AND variants!=''")
+            if 'qc_photos' in cols: info['with_qc'] = cnt("SELECT COUNT(*) FROM products WHERE qc_photos IS NOT NULL AND qc_photos!=''")
+            if 'images' in cols: info['with_images'] = cnt("SELECT COUNT(*) FROM products WHERE images IS NOT NULL AND images!=''")
+            if 'featured' in cols: info['featured'] = cnt('SELECT COUNT(*) FROM products WHERE featured=1')
+            if 'position' in cols: info['curated'] = cnt('SELECT COUNT(*) FROM products WHERE position IS NOT NULL AND position!=999999')
+            c.close()
+        except Exception as e:
+            info['error'] = str(e)[:90]
+        out.append(info)
+    return jsonify({'ok': True, 'backup_dir': bdir, 'backups': out})
+
+
+@app.route('/admin/api/restore-edits', methods=['POST'])
+def api_admin_restore_edits():
+    """Surgically restore operator edits (variants/qc_photos/images/featured/
+    position) from a chosen backup onto the LIVE db — matched by product id, so
+    new products are untouched. Backs up current state first."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import sqlite3
+    data = request.get_json(silent=True) or {}
+    fname = (data.get('file') or '').strip()
+    if not fname.startswith('backup_') or '/' in fname or '\\' in fname or not fname.endswith('.db'):
+        return jsonify({'ok': False, 'error': 'invalid file'}), 400
+    fp = os.path.join(_backup_dir(), fname)
+    if not os.path.exists(fp):
+        return jsonify({'ok': False, 'error': 'backup not found'}), 404
+    try:
+        backup_database()  # snapshot current state before restoring
+    except Exception:
+        pass
+    src = sqlite3.connect(fp)
+    src.row_factory = sqlite3.Row
+    cols = {r[1] for r in src.execute('PRAGMA table_info(products)').fetchall()}
+    fields = [c for c in ('variants', 'qc_photos', 'images', 'featured', 'position') if c in cols]
+    if not fields:
+        src.close()
+        return jsonify({'ok': False, 'error': 'backup has no editable columns'}), 400
+    where = ' OR '.join(
+        ("%s=1" % c) if c == 'featured' else
+        ("(%s IS NOT NULL AND %s!=999999)" % (c, c)) if c == 'position' else
+        ("(%s IS NOT NULL AND %s!='')" % (c, c))
+        for c in fields)
+    rows = src.execute('SELECT id, %s FROM products WHERE %s' % (', '.join(fields), where)).fetchall()
+    src.close()
+    try:
+        from .database import get_db
+    except ImportError:
+        from database import get_db
+    db = get_db()
+    set_clause = ', '.join('%s=?' % c for c in fields) + ', edited=1, updated_at=CURRENT_TIMESTAMP'
+    n = 0
+    for r in rows:
+        try:
+            db.execute('UPDATE products SET %s WHERE id=?' % set_clause, tuple(r[c] for c in fields) + (r['id'],))
+            n += db.cursor().rowcount if False else 1
+        except Exception:
+            pass
+    db.commit()
+    db.close()
+    return jsonify({'ok': True, 'restored_rows': len(rows), 'applied': n, 'fields': fields, 'from': fname})
+
+
+@app.route('/admin/scrape', methods=['POST'])
+def admin_scrape():
+    """Scrape a single Weidian/Taobao/1688 listing → returns {products, listing_name,
+    total_variants, platform, item_id}. On failure returns {error: '<human msg>'}."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    url = (data.get('url') or '').strip()
+    category = (data.get('category') or '').strip()
+    if not url:
+        return jsonify({'error': 'No URL provided. Paste a Weidian, Taobao, or 1688 product link.'}), 400
+    # Quick sanity: must look like a URL
+    if not (url.startswith('http://') or url.startswith('https://')):
+        return jsonify({'error': 'Not a valid URL. Must start with http:// or https://'}), 400
+    try:
+        try:
+            from .scraper import scrape_listing, detect_platform
+        except ImportError:
+            from scraper import scrape_listing, detect_platform
+        platform, item_id = detect_platform(url)
+        if not platform:
+            return jsonify({'error': 'Could not parse this link. Supported: Weidian, Taobao, 1688. (Looked for itemID=, id=, /offer/N.html.)'}), 400
+        result = scrape_listing(url, category=category, affiliate_code=SITE_CONFIG.get('affiliate_code', ''))
+        if not result or not isinstance(result, dict):
+            return jsonify({'error': f'Scraper returned no data for {platform} item {item_id}. The listing may be private, expired, or geo-blocked.'}), 502
+        if result.get('error'):
+            return jsonify({'error': result['error']}), 502
+        products = result.get('products') or []
+        if not products:
+            return jsonify({'error': f'No products / variants extracted from {platform} item {item_id}. The seller may have deleted the listing or blocked scraping.'}), 502
+        return jsonify(result)
+    except ImportError as e:
+        return jsonify({'error': f'Scraper module not available on the server: {e}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Scrape failed: {type(e).__name__}: {str(e)[:200]}'}), 500
+
+
+@app.route('/admin/scrape/import', methods=['POST'])
+def admin_scrape_import():
+    """Commit selected scraped products into the catalog."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    products = data.get('products') or []
+    if not products:
+        return jsonify({'error': 'Nothing to import'}), 400
+    try:
+        from tag_utils import generate_tags, auto_category
+    except ImportError:
+        from .tag_utils import generate_tags, auto_category
+    for p in products:
+        if not p.get('id'):
+            p['id'] = f"p{secrets.token_hex(4)}"
+        if not (p.get('category') or '').strip():
+            p['category'] = auto_category(p.get('name', ''), fallback='')
+        if not p.get('tags'):
+            p['tags'] = generate_tags(p.get('name', ''), p.get('category', ''))
+        p['manual'] = 1  # admin/scraper-added: survives seed re-wipes
+    add_products_bulk(products)
+    return jsonify({'ok': True, 'count': len(products)})
+
+
+@app.route('/admin/products/auto-categorize', methods=['POST'])
+def admin_auto_categorize_all():
+    """Apply auto_category(name) to every product currently without a category.
+    Returns how many got updated. Idempotent."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        from tag_utils import auto_category
+    except ImportError:
+        from .tag_utils import auto_category
+    products = get_products()
+    updated = 0
+    for p in products:
+        if (p.get('category') or '').strip():
+            continue
+        guess = auto_category(p.get('name', ''), fallback='')
+        if guess:
+            update_product(p['id'], {'category': guess})
+            updated += 1
+    return jsonify({'ok': True, 'updated': updated, 'scanned': len(products)})
 
 
 # ===========================================================================
@@ -811,6 +2334,20 @@ def api_admin_products():
     })
 
 
+@app.route('/admin/api/order')
+def api_admin_order():
+    """Product IDs in order — full-shop (SHOP_ORDER) by default, or a single category's
+    order when ?category=<slug> is passed. Lets the Studio editor number each product:
+    the ABSOLUTE #N in the All view, and its place WITHIN a category in a category view.
+    Both come from the same global order (a category is just the All order filtered), so
+    the two numbers always agree. Tiny vs the full product payload."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    category = (request.args.get('category') or '').strip()
+    ids = [p['id'] for p in get_products(category if category else None)]
+    return jsonify({'ok': True, 'ids': ids, 'per_page': 40, 'category': category})
+
+
 @app.route('/admin/api/products', methods=['POST'])
 def api_admin_add_product():
     if not is_admin_api():
@@ -829,8 +2366,29 @@ def api_admin_add_product():
             data['tags'] = generate_tags(data['name'], data.get('category', ''))
         except ImportError:
             pass
+    if 'manual' not in data:
+        data['manual'] = 1  # API-added: survives seed re-wipes unless caller opts out
     add_product(data)
+    # add_product only writes the core columns. Persist any extended fields the
+    # caller supplied (quality, weight, sales, qc_photos, variants, images, …)
+    # via update_product so a fully-specified create (e.g. a scraped draft) keeps
+    # everything instead of silently dropping the extras.
+    extended = {k: v for k, v in data.items()
+                if k in ('quality', 'weight', 'sales', 'qc_photos', 'variants', 'images', 'in_stock', 'featured')}
+    if extended:
+        update_product(data['id'], extended)
     return jsonify({'ok': True, 'id': data['id']})
+
+
+@app.route('/admin/api/products/<pid>', methods=['GET'])
+def api_admin_get_product(pid):
+    """Raw product row (all columns) — used by the studio for duplicate / undo."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    p = get_product(pid)
+    if not p:
+        return jsonify({'ok': False, 'error': 'not found'}), 404
+    return jsonify({'ok': True, 'product': dict(p)})
 
 
 @app.route('/admin/api/products/<pid>', methods=['PUT', 'PATCH'])
@@ -853,6 +2411,184 @@ def api_admin_delete_product(pid):
     return jsonify({'ok': True})
 
 
+def _coerce_price(data):
+    if 'price' in data:
+        import re as _re
+        try:
+            data['price_numeric'] = float(_re.sub(r'[^0-9.]', '', str(data['price'])) or 0)
+        except Exception:
+            data['price_numeric'] = 0
+
+
+def _settings_defaults():
+    """The site's CURRENT effective content — what each editable field shows when
+    it hasn't been customized. Mirrors the template fallbacks so the master-admin
+    editor can prefill every box with the real live text (no guessing)."""
+    name = SITE_CONFIG.get('name', '')
+    return {
+        'brand_part1': SITE_CONFIG.get('name_part1', ''),
+        'brand_part2': SITE_CONFIG.get('name_part2', ''),
+        'accent_color': SITE_CONFIG.get('brand_color', ''),
+        'announcement_text': '',
+        'hero_label': 'The Open Catalogue',
+        'hero_title': 'Every<br><span class="accent">Find.</span><br>Anywhere.',
+        'hero_sub': (str(SITE_CONFIG.get('product_count_label', '')) + ' curated products. Open every listing with the agent you trust — KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.').strip(),
+        'footer_text': 'An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.',
+        'page_title': name + ' — Curated Finds, Open on Any Agent',
+        'meta_description': name + ' — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.',
+    }
+
+
+@app.route('/admin/api/products/bulk', methods=['POST'])
+def api_admin_bulk_update():
+    """Apply many product edits in ONE request (used by the studio 'Save changes')."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    updates = data.get('updates') or []
+    n = 0
+    for u in updates:
+        pid = u.get('id')
+        if not pid:
+            continue
+        fields = {k: v for k, v in u.items() if k != 'id'}
+        if not fields:
+            continue
+        _coerce_price(fields)
+        update_product(pid, fields)
+        n += 1
+    return jsonify({'ok': True, 'updated': n})
+
+
+@app.route('/admin/api/settings')
+def api_admin_get_settings():
+    """Return all editable site settings (hero, nav, footer, branding, theme)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'settings': get_all_settings(), 'defaults': _settings_defaults()})
+
+
+@app.route('/admin/api/settings', methods=['PUT', 'PATCH', 'POST'])
+def api_admin_update_settings():
+    """Upsert one or more site settings."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    if 'settings' in data and isinstance(data['settings'], dict):
+        data = data['settings']
+    try:
+        n = set_settings(data)
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)[:200]}), 500
+    return jsonify({'ok': True, 'updated': n, 'settings': get_all_settings()})
+
+
+# --- Agent / invite-code management API (token-auth, for the master-admin editor) ---
+@app.route('/admin/api/agents-config')
+def api_admin_agents_config():
+    """Return the full agent list in effective (merged) form for editing —
+    includes disabled agents so the editor can re-enable them."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    agents = get_effective_agents(include_disabled=True)
+    return jsonify({'ok': True, 'agents': [{
+        'key': a['key'],
+        'name': a.get('name', ''),
+        'domain': a.get('domain', ''),
+        'color': a.get('color', ''),
+        'coupon': a.get('coupon', ''),
+        'code': a.get('code', ''),
+        'signup': a.get('signup', ''),
+        'signup_resolved': _agent_signup_url(a),
+        'enabled': a.get('enabled', True),
+        'code_param': ('{code}' in (a.get('signup', '') or '')),
+        'logo': f'https://www.google.com/s2/favicons?domain={a.get("domain","")}&sz=64',
+    } for a in agents]})
+
+
+@app.route('/admin/api/agents-config', methods=['PUT', 'POST'])
+def api_admin_save_agents_config():
+    """Persist operator agent overrides. Accepts either
+    {order:[keys], overrides:{key:{...}}} or a flat {agents:[{key,...}]} list
+    (the editor sends the flat list, in display order)."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import json
+    data = request.get_json(silent=True) or {}
+    order = list(data.get('order') or [])
+    overrides = dict(data.get('overrides') or {})
+    if isinstance(data.get('agents'), list):
+        order, overrides = [], {}
+        for a in data['agents']:
+            k = a.get('key')
+            if not k or k not in AGENT_DEFAULTS:
+                continue
+            order.append(k)
+            overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
+    clean = {
+        'order': [k for k in order if k in AGENT_DEFAULTS],
+        'overrides': {k: v for k, v in overrides.items() if k in AGENT_DEFAULTS},
+    }
+    set_settings({'agents_config': json.dumps(clean)})
+    return jsonify({'ok': True, 'agents_config': clean})
+
+
+# --- Category management API (token-auth, for the master-admin visual editor) ---
+@app.route('/admin/api/categories')
+def api_admin_categories():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({'ok': True, 'categories': [dict(c) for c in get_categories()]})
+
+
+@app.route('/admin/api/categories', methods=['POST'])
+def api_admin_category_add():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    import re as _re
+    d = request.get_json(silent=True) or {}
+    name = (d.get('name') or '').strip()
+    if not name:
+        return jsonify({'ok': False, 'error': 'name required'}), 400
+    slug = (d.get('slug') or name).strip().lower().replace(' ', '-')
+    slug = _re.sub(r'[^a-z0-9\-]', '', slug) or 'category'
+    add_category(slug, name, d.get('icon', ''), d.get('description', ''), int(d.get('sort_order', 999)))
+    return jsonify({'ok': True, 'slug': slug})
+
+
+@app.route('/admin/api/categories/reorder', methods=['POST'])
+def api_admin_category_reorder():
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    order = d.get('order') or []
+    for i, slug in enumerate(order):
+        try:
+            update_category(slug, {'sort_order': i})
+        except Exception:
+            pass
+    return jsonify({'ok': True, 'n': len(order)})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['PATCH', 'PUT'])
+def api_admin_category_update(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    updates = {k: d[k] for k in ('name', 'icon', 'description', 'sort_order', 'slug') if k in d}
+    new_slug = update_category(slug, updates)
+    return jsonify({'ok': True, 'slug': new_slug})
+
+
+@app.route('/admin/api/categories/<slug>', methods=['DELETE'])
+def api_admin_category_delete(slug):
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    d = request.get_json(silent=True) or {}
+    delete_category(slug, d.get('reassign_to', ''))
+    return jsonify({'ok': True})
+
+
 @app.route('/admin/api/config')
 def api_admin_config():
     if not is_admin_api():
@@ -867,6 +2603,105 @@ def admin_download_backup():
     if not is_admin():
         return redirect(url_for('admin_login'))
     return send_file(backup_database(), as_attachment=True)
+
+
+# ===========================================================================
+# Custom image uploads — stored on the persistent disk so they survive deploys
+# ===========================================================================
+UPLOADS_DIR = os.path.join(DATA_DIR, 'uploads')
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+ALLOWED_IMG_EXT = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+
+
+@app.route('/uploads/<path:fname>')
+def serve_upload(fname):
+    """Serve uploaded images from the persistent disk."""
+    # Path-traversal guard
+    safe = os.path.basename(fname)
+    full = os.path.join(UPLOADS_DIR, safe)
+    if not os.path.exists(full):
+        return ('', 404)
+    return send_file(full)
+
+
+@app.route('/admin/products/upload-image/<pid>', methods=['POST'])
+def admin_upload_image(pid):
+    """Accept a multipart image upload, save to disk, set as product's primary image."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    f = request.files['file']
+    if not f or not f.filename:
+        return jsonify({'error': 'Empty filename'}), 400
+    import os as _os
+    ext = _os.path.splitext(f.filename)[1].lower()
+    if ext not in ALLOWED_IMG_EXT:
+        return jsonify({'error': f'Unsupported image type ({ext}). Use jpg/png/webp/gif.'}), 400
+    # Size cap: 8MB
+    f.seek(0, 2); size = f.tell(); f.seek(0)
+    if size > 8 * 1024 * 1024:
+        return jsonify({'error': 'File too large (max 8MB)'}), 400
+    # Save with safe name
+    safe_pid = ''.join(c for c in pid if c.isalnum())[:16] or 'p'
+    fname = f'{safe_pid}-{secrets.token_hex(4)}{ext}'
+    full = _os.path.join(UPLOADS_DIR, fname)
+    f.save(full)
+    new_url = f'/uploads/{fname}'
+    # primary=1 (default) → set as the main product image.
+    # primary=0 → append to the gallery (the `images` JSON list) instead,
+    # leaving the main photo untouched. Powers Studio's "Add photos" button.
+    primary = request.args.get('primary', '1') != '0'
+    if primary:
+        update_product(pid, {'image': new_url})
+    else:
+        prod = get_product(pid) or {}
+        gallery = _parse_gallery(prod.get('images'))
+        if new_url not in gallery:
+            gallery.append(new_url)
+        update_product(pid, {'images': json.dumps(gallery)})
+    return jsonify({'ok': True, 'image': new_url, 'pid': pid, 'primary': primary})
+
+
+def _parse_gallery(raw):
+    """Parse a product's `images` column into a clean list of URLs."""
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [u for u in raw if u]
+    try:
+        val = json.loads(raw)
+        if isinstance(val, list):
+            return [u for u in val if u]
+    except Exception:
+        pass
+    return []
+
+
+@app.route('/admin/products/gallery/<pid>', methods=['POST'])
+def admin_set_gallery(pid):
+    """Replace a product's manual gallery (list of image URLs). Used by the
+    Studio 'Add photos' editor to add URLs by hand or remove existing ones."""
+    if not is_admin_api():
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    imgs = data.get('images')
+    if not isinstance(imgs, list):
+        return jsonify({'error': 'images must be a list'}), 400
+    # Only accept http(s) URLs or site-relative paths (/uploads, /static). This
+    # rejects javascript:, data:, and other schemes that could become a stored
+    # XSS/DOM-injection vector when rendered into <img src>.
+    from urllib.parse import urlparse as _urlparse
+    clean = []
+    for u in imgs:
+        u = str(u).strip()
+        if not u:
+            continue
+        parsed = _urlparse(u)
+        if parsed.scheme in ('http', 'https') or (not parsed.scheme and u.startswith('/')):
+            clean.append(u)
+    update_product(pid, {'images': json.dumps(clean)})
+    return jsonify({'ok': True, 'images': clean, 'pid': pid})
 
 
 @app.errorhandler(404)

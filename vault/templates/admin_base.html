@@ -52,12 +52,12 @@
         .sidebar-brand .name { font-family: var(--font-display); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
         .sidebar-brand .name .accent { color: var(--accent); }
         .sidebar-brand .badge { display: inline-block; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; margin-top: 6px; }
-        .sidebar-nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
-        .sidebar-nav .group { font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 14px 10px 6px; }
-        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 13px; font-weight: 500; transition: all .15s; }
+        .sidebar-nav { padding: 20px 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .sidebar-nav .group { font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; padding: 18px 10px 8px; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 14px; padding: 14px 14px; border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: all .15s; }
         .sidebar-nav a:hover { background: var(--surface-2); color: var(--text); }
         .sidebar-nav a.active { background: var(--accent-dim); color: var(--accent); }
-        .sidebar-nav a .ic { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.9; }
+        .sidebar-nav a .ic { width: 22px; height: 22px; flex-shrink: 0; opacity: 0.9; }
         .sidebar-nav a.active .ic { opacity: 1; }
         .sidebar-foot { padding: 16px 22px; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
@@ -97,31 +97,8 @@
         .stat-card .stat-delta.down { color: var(--danger); }
         .stat-card .stat-icon { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; opacity: 0.15; color: var(--accent); }
 
-        /* View-mode switcher (admin) */
-        .view-switcher { position: relative; }
-        .view-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
-        .view-btn:hover { border-color: var(--border); color: var(--text); }
-        .view-menu { position: absolute; top: calc(100% + 6px); right: 0; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 6px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: none; z-index: 50; }
-        .view-menu.open { display: block; }
-        .view-menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; padding: 11px 14px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; border-radius: 8px; text-align: left; transition: all .15s; }
-        .view-menu button:hover { background: var(--surface-2); color: var(--text); }
-        .view-menu button.active { background: var(--accent-dim); color: var(--accent); }
-        .view-menu button .vm-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .view-menu button .vm-desc { font-size: 11px; color: var(--text-muted); }
-        .view-menu button.active .vm-desc { color: var(--text-secondary); }
-
-        body.view-comfort .content { max-width: 1280px; padding: 40px; }
-        body.view-comfort .card { padding: 32px; border-radius: 20px; }
-        body.view-comfort .stat-card { padding: 32px 28px; border-radius: 20px; }
-        body.view-comfort .stat-card .stat-value { font-size: 52px; }
-        body.view-comfort .topbar { padding: 22px 40px; }
-        body.view-comfort .tb-title h1 { font-size: 28px; }
-        body.view-exec .stat-card { padding: 28px; border-radius: 14px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); }
-        body.view-exec .stat-card .stat-value { font-size: 56px; font-weight: 900; }
-        body.view-exec .stat-card .stat-icon { width: 56px; height: 56px; opacity: 0.18; }
-        body.view-pro .comfort-only, body.view-pro .exec-only { display: none !important; }
-        body.view-comfort .pro-only, body.view-comfort .exec-only { display: none !important; }
-        body.view-exec .pro-only, body.view-exec .comfort-only { display: none !important; }
+        /* Only the Pro view exists now — hide any leftover comfort/exec blocks */
+        .comfort-only, .exec-only { display: none !important; }
 
         /* Language toggle (admin) */
         .admin-lang-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s; user-select: none; }
@@ -160,7 +137,37 @@
         table.data td { padding: 14px 8px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
         table.data tbody tr { transition: background .12s; }
         table.data tbody tr:hover { background: var(--surface-2); }
-        table.data .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--surface-2); }
+        table.data .thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: contain !important; background: #ffffff !important; padding: 2px; }
+
+        /* Nuclear white-bg rule (admin pages don't extend base.html so they
+           need their own copy). Every image whose src is from a product-image
+           CDN gets a white background regardless of class or wrapper. */
+        img[src*="postimg.cc"],
+        img[src*="iili.io"],
+        img[src*="geilicdn.com"],
+        img[src*="googleusercontent.com"],
+        img[src*="alicdn.com"],
+        img[src*="img.kakobuy.com"],
+        img[src*="bcebos.com"],
+        img[src*="dhresource.com"],
+        img[src*="kongfupack.com"],
+        img[src*="weidian.com"],
+        img[src*="taobao.com"],
+        img[src*="alibaba.com"],
+        img[src*="aliimg.com"],
+        img[src*="alipay.com"],
+        img[src*="/uploads/"] {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
+        /* Catch-all for admin product images: anything with these classes
+           regardless of wrapper. */
+        img.thumb, img.uc-img, img.cp-img, img.edit-preview,
+        .thumb-wrap img, .uncat-row img, .cp-row img,
+        .em-preview, #emPreview {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
 
         /* Status pills */
         .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
@@ -213,6 +220,10 @@
                 <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.91 8.84 8.56 21.18a4.24 4.24 0 0 1-3 1.25 4.24 4.24 0 0 1-3-1.25 4.24 4.24 0 0 1 0-6L14.07 3.45a2.83 2.83 0 0 1 4 0 2.83 2.83 0 0 1 0 4L6.16 19.36a1.42 1.42 0 0 1-2 0 1.42 1.42 0 0 1 0-2L13.92 7.6"/></svg>
                 <span data-i18n="sb_products">Products</span>
             </a>
+            <a href="/admin/categories" class="{% if current == '/admin/categories' %}active{% endif %}">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                <span>Categories</span>
+            </a>
             <a href="/admin/analytics" class="{% if '/admin/analytics' in current %}active{% endif %}">
                 <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 <span data-i18n="sb_analytics">Analytics</span>
@@ -250,26 +261,6 @@
             </div>
             <div class="topbar-actions">
                 {% block topbar_actions %}{% endblock %}
-                <div class="view-switcher">
-                    <button class="view-btn" type="button" onclick="toggleAdminViewMenu()" aria-label="Switch view mode">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        <span data-admin-view-label>Pro</span>
-                    </button>
-                    <div class="view-menu" id="adminViewMenu">
-                        <button type="button" data-view="pro" onclick="setAdminView('pro')">
-                            <span class="vm-title" data-i18n="view_pro_title">Pro</span>
-                            <span class="vm-desc" data-i18n="view_pro_desc">Dense tables · power user</span>
-                        </button>
-                        <button type="button" data-view="comfort" onclick="setAdminView('comfort')">
-                            <span class="vm-title" data-i18n="view_comfort_title">Comfort</span>
-                            <span class="vm-desc" data-i18n="view_comfort_desc">Spacious cards · easier to read</span>
-                        </button>
-                        <button type="button" data-view="exec" onclick="setAdminView('exec')">
-                            <span class="vm-title" data-i18n="view_exec_title">Executive</span>
-                            <span class="vm-desc" data-i18n="view_exec_desc">KPI-first · charts &amp; trends</span>
-                        </button>
-                    </div>
-                </div>
                 <button class="admin-lang-btn" type="button" onclick="toggleAdminLang()" aria-label="Switch language" title="Switch language">
                     <span class="lang-cur" data-lang-label>EN</span>
                     <span class="lang-arrow">&#8646;</span>
@@ -303,37 +294,105 @@
         showToast(msg, type === 'success' ? 'success' : (type === 'error' ? 'error' : 'info'));
     };
 
-    // === Admin view mode ===
-    var ADMIN_VIEWS = { pro: 'Pro', comfort: 'Comfort', exec: 'Executive' };
-    var adminView = localStorage.getItem('admin_view') || 'pro';
-    if (!ADMIN_VIEWS[adminView]) adminView = 'pro';
-    function applyAdminView() {
-        document.body.classList.remove('view-pro', 'view-comfort', 'view-exec');
-        document.body.classList.add('view-' + adminView);
-        document.querySelectorAll('[data-admin-view-label]').forEach(function(el){ el.textContent = ADMIN_VIEWS[adminView]; });
-        document.querySelectorAll('#adminViewMenu button[data-view]').forEach(function(b){ b.classList.toggle('active', b.dataset.view === adminView); });
-        try { document.dispatchEvent(new CustomEvent('admin-view-changed', { detail: { mode: adminView } })); } catch(e){}
-    }
-    window.setAdminView = function(mode) {
-        if (!ADMIN_VIEWS[mode]) return;
-        adminView = mode;
-        localStorage.setItem('admin_view', mode);
-        applyAdminView();
-        var menu = document.getElementById('adminViewMenu');
-        if (menu) menu.classList.remove('open');
-    };
-    window.toggleAdminViewMenu = function() {
-        var menu = document.getElementById('adminViewMenu');
-        if (menu) menu.classList.toggle('open');
-    };
-    window.getAdminView = function() { return adminView; };
-    document.addEventListener('click', function(e){
-        var menu = document.getElementById('adminViewMenu');
-        if (!menu) return;
-        if (!e.target.closest('.view-switcher')) menu.classList.remove('open');
-    });
-    applyAdminView();
+    // Always Pro view — Comfort and Executive were removed.
+    document.body.classList.add('view-pro');
+    window.getAdminView = function() { return 'pro'; };
+
+    // ===== Global 401 handler =====
+    // Wrap fetch so any admin AJAX call that returns 401 (session expired)
+    // redirects to /admin/login instead of showing a confusing 'Unauthorized'
+    // toast. Preserves where the user was so they land back here after login.
+    (function(){
+        var origFetch = window.fetch;
+        window.fetch = function(input, init){
+            return origFetch(input, init).then(function(resp){
+                if (resp.status === 401) {
+                    var url = (typeof input === 'string') ? input : (input && input.url);
+                    if (url && (url.indexOf('/admin/') === 0 || url.indexOf('/admin/') > 0)) {
+                        if (window.showToast) showToast('Session expired — redirecting to login', 'error');
+                        setTimeout(function(){
+                            location.href = '/admin/login?next=' + encodeURIComponent(location.pathname + location.search);
+                        }, 800);
+                    }
+                }
+                return resp;
+            });
+        };
+    })();
+
+    // ===== Collapsible cards =====
+    // Any .card with [data-collapsible] gets a minimize button in its head.
+    // State persists in localStorage under 'card_collapsed:<id-or-heading>'.
+    (function(){
+        function keyFor(card) {
+            if (card.id) return 'card_collapsed:' + card.id;
+            var h = card.querySelector('.card-head h2');
+            return 'card_collapsed:' + (h ? h.textContent.trim() : 'unknown');
+        }
+        function applyState(card) {
+            var key = keyFor(card);
+            var collapsed = localStorage.getItem(key) === '1';
+            card.classList.toggle('collapsed', collapsed);
+            var btn = card.querySelector('.card-collapse-btn');
+            if (btn) btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+        function attach(card) {
+            if (card.dataset._collapsibleAttached) return;
+            card.dataset._collapsibleAttached = '1';
+            var head = card.querySelector('.card-head');
+            if (!head) return;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'card-collapse-btn';
+            btn.setAttribute('aria-label', 'Minimize');
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>';
+            btn.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation();
+                var collapsed = !card.classList.contains('collapsed');
+                card.classList.toggle('collapsed', collapsed);
+                localStorage.setItem(keyFor(card), collapsed ? '1' : '0');
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            });
+            head.appendChild(btn);
+            // Also make the head clickable to toggle
+            head.style.cursor = 'pointer';
+            head.addEventListener('click', function(e){
+                if (e.target.closest('button, a, input, select, textarea')) return;
+                btn.click();
+            });
+            applyState(card);
+        }
+        function scan() {
+            document.querySelectorAll('.card[data-collapsible]').forEach(attach);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', scan);
+        } else { scan(); }
+    })();
 </script>
+<style>
+    /* Collapsible card chrome */
+    .card[data-collapsible] .card-head { position: relative; padding-right: 38px; }
+    .card-collapse-btn {
+        position: absolute; top: 50%; right: 0;
+        transform: translateY(-50%);
+        width: 30px; height: 30px;
+        background: transparent; border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--text-secondary); cursor: pointer;
+        transition: all .15s;
+    }
+    .card-collapse-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .card-collapse-btn svg { transition: transform .25s; }
+    .card.collapsed .card-collapse-btn svg { transform: rotate(-90deg); }
+    .card.collapsed .card-head { margin-bottom: 0; border-bottom: none; }
+    /* Hide everything under the head when collapsed (head must be the first .card-head child) */
+    .card.collapsed > *:not(.card-head) { display: none !important; }
+    .card[data-collapsible] .card-head h2::after {
+        content: ''; display: inline-block; width: 6px;
+    }
+</style>
 {% block admin_extra_js %}{% endblock %}
 </body>
 </html>

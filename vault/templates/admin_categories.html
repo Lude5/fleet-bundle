@@ -1,0 +1,774 @@
+{% extends "admin_base.html" %}
+{% block crumb %}<span>Catalog</span>{% endblock %}
+{% block heading %}<span>Categories</span>{% endblock %}
+
+{% block topbar_actions %}
+    <span class="pill">{{ categories|length }} total</span>
+    <a href="/" target="_blank" class="pill primary">View site &rarr;</a>
+{% endblock %}
+
+{% block admin_extra_css %}
+.cat-mgr-wrap { max-width: 980px; margin: 0 auto; padding: 24px 0; }
+.cat-mgr-intro {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    margin-bottom: 28px;
+}
+.cat-mgr-intro b { color: var(--text); }
+
+.cat-card {
+    background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: 14px; padding: 24px; margin-bottom: 24px;
+}
+.cat-card h2 {
+    font-family: var(--font-display); font-size: 16px;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin: 0 0 16px;
+}
+
+/* Wrapper so each category row + its expanded product drawer stay together */
+.cat-block { margin-bottom: 8px; }
+
+/* Category list row */
+.cat-row {
+    display: grid;
+    grid-template-columns: 40px 30px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    gap: 10px; align-items: center;
+    padding: 12px 14px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    transition: border-color .15s, transform .15s;
+}
+.cat-row .expand-toggle {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 14px; padding: 4px;
+    transition: transform .15s, color .15s;
+}
+.cat-row .expand-toggle:hover { color: var(--text); }
+.cat-row.expanded .expand-toggle { transform: rotate(90deg); color: var(--accent); }
+.cat-row.expanded { border-color: var(--accent); border-radius: 10px 10px 0 0; }
+
+/* Expanded product drawer */
+.cat-products {
+    background: var(--surface); border: 1px solid var(--accent);
+    border-top: none; border-radius: 0 0 10px 10px;
+    padding: 14px; max-height: 480px; overflow-y: auto;
+}
+.cat-products-search {
+    width: 100%; padding: 9px 12px; margin-bottom: 12px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 8px; color: var(--text); font-size: 13px;
+}
+.cat-products-empty {
+    text-align: center; padding: 30px 12px;
+    color: var(--text-muted); font-size: 12px;
+}
+.cp-row {
+    display: grid;
+    grid-template-columns: 18px 44px 1fr 80px 150px auto;
+    gap: 10px; align-items: center;
+    padding: 8px 10px; margin-bottom: 6px;
+    background: var(--surface-2); border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    transition: opacity .2s, transform .2s;
+}
+.cp-row .cp-edit-btn { white-space: nowrap; }
+
+/* Edit modal */
+.cat-edit-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+}
+.cat-edit-overlay.open { display: flex; }
+.cat-edit-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+    width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+    position: relative;
+}
+.cat-edit-modal h2 {
+    font-family: var(--font-display); font-size: 16px;
+    text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 18px;
+}
+.cat-edit-modal .em-close {
+    position: absolute; top: 14px; right: 14px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 22px; line-height: 1;
+}
+.cat-edit-modal .em-close:hover { color: var(--text); }
+.cat-edit-modal .em-preview {
+    width: 100%; max-width: 200px; aspect-ratio: 1;
+    background: #ffffff !important; padding: 6px; border-radius: 10px;
+    object-fit: contain; margin: 0 auto 14px; display: block;
+}
+.cat-edit-modal .em-field {
+    margin-bottom: 14px;
+}
+.cat-edit-modal .em-field label {
+    display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+.cat-edit-modal .em-field .input,
+.cat-edit-modal .em-field .select {
+    width: 100%; padding: 10px 12px; font-size: 13px;
+}
+.cat-edit-modal .em-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    margin-top: 20px;
+}
+.cp-row.moving { opacity: 0; transform: translateX(20px); }
+/* Drag a product onto a category row to move it there */
+.cp-row { cursor: grab; }
+.cp-row:active { cursor: grabbing; }
+.cp-row.cp-dragging { opacity: 0.45; }
+.cat-row.drop-target { border-color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 0 2px var(--accent); }
+.drag-handle { touch-action: none; }
+.cp-row { touch-action: none; }
+.drag-ghost { position: fixed; z-index: 9999; pointer-events: none; opacity: .98; border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.5); transform: scale(1) rotate(0);
+    transition: transform .16s cubic-bezier(.2,.9,.25,1), box-shadow .16s ease; }
+.drag-ghost.lifted { transform: scale(1.03) rotate(-1.4deg); box-shadow: 0 28px 64px rgba(0,0,0,.62), 0 0 0 1px var(--accent); }
+.cp-drag { cursor: grab; color: var(--text-muted); text-align: center; font-size: 14px; line-height: 1; letter-spacing: -2px; user-select: none; touch-action: none; }
+.cp-drag:active { cursor: grabbing; }
+.cp-row img {
+    width: 44px; height: 44px; object-fit: contain;
+    background: #ffffff !important; padding: 2px; border-radius: 6px;
+}
+.cp-row .cp-name {
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cp-row .cp-price {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted); font-weight: 700;
+}
+.cp-row .cp-select { padding: 7px 10px; font-size: 12px; }
+.cat-products-loading {
+    text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px;
+}
+.cat-row:hover { border-color: var(--border); }
+/* The whole row is a drag handle (except the editable fields/buttons), so signal it. */
+.cat-row { cursor: grab; }
+.cat-row:active { cursor: grabbing; }
+.cat-row input, .cat-row button, .cat-row .expand-toggle { cursor: auto; }
+.cat-row input { cursor: text; }
+.cat-row button, .cat-row .expand-toggle { cursor: pointer; }
+.cat-row .drag-handle {
+    cursor: grab; color: var(--accent); user-select: none;
+    text-align: center; font-size: 18px; line-height: 1;
+}
+.cat-row:hover .drag-handle { color: var(--accent); }
+.cat-row .drag-handle:active { cursor: grabbing; }
+/* The gap left where the dragged row was — dashed accent outline, faded. */
+.cat-row.dragging { opacity: 0.35; border-style: dashed; border-color: var(--accent); background: var(--accent-dim); }
+.cat-row .input { padding: 9px 11px; font-size: 13px; }
+.cat-row .cat-count {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    text-align: right; white-space: nowrap;
+}
+.cat-row .btn { white-space: nowrap; }
+
+@media (max-width: 720px) {
+    .cat-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "handle handle"
+            "name slug"
+            "order count"
+            "save delete";
+    }
+    .cat-row .drag-handle { grid-area: handle; text-align: left; }
+    .cat-row .cat-name { grid-area: name; }
+    .cat-row .cat-slug { grid-area: slug; }
+    .cat-row .cat-order { grid-area: order; }
+    .cat-row .cat-count { grid-area: count; text-align: left; }
+    .cat-row .save-btn { grid-area: save; }
+    .cat-row .delete-btn { grid-area: delete; }
+}
+
+.cat-headers {
+    display: grid;
+    grid-template-columns: 40px 30px minmax(160px, 1.4fr) minmax(140px, 1fr) 90px 110px auto auto;
+    gap: 10px; padding: 0 14px 8px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.8px;
+}
+@media (max-width: 720px) { .cat-headers { display: none; } }
+
+.add-form {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px;
+    margin-bottom: 14px;
+}
+@media (max-width: 720px) { .add-form { grid-template-columns: 1fr 1fr; } }
+.add-form .field label {
+    display: block; font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="cat-mgr-wrap">
+    <p class="cat-mgr-intro">
+        These categories drive the <b>nav bar on the storefront</b> and the dropdown on every product. <b>Drag any row up or down (grab the ⋮⋮ grip or anywhere on the row except the text boxes) to reorder them</b> — the order here is exactly the order shoppers see. Rename a slug and every product in that category is rewritten automatically. Delete a category and its products fall back to uncategorized.
+    </p>
+
+    <!-- Existing categories -->
+    <div class="cat-card">
+        <h2 style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">Existing categories
+            <span style="font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--border);border-radius:999px;padding:5px 12px;text-transform:none;">↕ Drag rows to reorder</span>
+        </h2>
+        <div class="cat-headers">
+            <span></span>
+            <span></span>
+            <span>Display name</span>
+            <span>Slug (URL)</span>
+            <span>Sort order</span>
+            <span>Products</span>
+            <span></span>
+            <span></span>
+        </div>
+        <div id="catManagerList">
+            {% for c in categories %}
+            <div class="cat-block" data-slug="{{ c.slug }}">
+                <div class="cat-row" data-slug="{{ c.slug }}">
+                    <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+                    <button type="button" class="expand-toggle" onclick="toggleCategoryProducts(this)" title="Show items in this category">▶</button>
+                    <input class="input cat-name" value="{{ c.name }}" placeholder="Name">
+                    <input class="input cat-slug" value="{{ c.slug }}" placeholder="slug">
+                    <input class="input cat-order" type="number" value="{{ c.sort_order or 0 }}" title="Lower = leftmost on storefront">
+                    <span class="cat-count">{{ c.product_count }} products</span>
+                    <button type="button" class="btn btn-secondary btn-xs save-btn" onclick="saveCategoryRow(this)">Save</button>
+                    <button type="button" class="btn btn-ghost btn-xs delete-btn" style="color:var(--danger);" onclick="deleteCategoryRow(this)">Delete</button>
+                </div>
+                <div class="cat-products" data-loaded="0" style="display:none;"></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Edit modal -->
+    <div class="cat-edit-overlay" id="catEditOverlay" onclick="if(event.target===this)closeEditModal()">
+        <div class="cat-edit-modal">
+            <button class="em-close" onclick="closeEditModal()" type="button">&times;</button>
+            <h2>Edit product</h2>
+            <img class="em-preview" id="emPreview" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+            <input type="hidden" id="emId">
+            <div class="em-field">
+                <label>Product name</label>
+                <input type="text" id="emName" class="input">
+            </div>
+            <div class="em-field">
+                <label>Price (USD)</label>
+                <input type="text" id="emPrice" class="input">
+            </div>
+            <div class="em-field">
+                <label>Category</label>
+                <select id="emCategory" class="select">
+                    <option value="">— uncategorized —</option>
+                    {% for c in categories %}
+                    <option value="{{ c.slug }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="em-field">
+                <label>Image URL</label>
+                <input type="text" id="emImage" class="input">
+            </div>
+            <div class="em-field">
+                <label>Purchase URL</label>
+                <input type="text" id="emUrl" class="input">
+            </div>
+            <div class="em-field">
+                <label>Seller</label>
+                <input type="text" id="emSeller" class="input">
+            </div>
+            <div class="em-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditModal()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add new -->
+    <div class="cat-card">
+        <h2>Add a new category</h2>
+        <div class="add-form">
+            <div class="field">
+                <label>Slug *</label>
+                <input type="text" id="cSlug" class="input" placeholder="shoes">
+            </div>
+            <div class="field">
+                <label>Display name *</label>
+                <input type="text" id="cName" class="input" placeholder="Shoes">
+            </div>
+            <div class="field">
+                <label>Icon (emoji)</label>
+                <input type="text" id="cIcon" class="input" placeholder="👟">
+            </div>
+            <div class="field">
+                <label>Sort order</label>
+                <input type="number" id="cOrder" class="input" value="0">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="addCategory()">+ Add category</button>
+    </div>
+</div>
+
+<script>
+// All categories (for the per-product change dropdown)
+var ALL_CATS = {{ categories|tojson }};
+
+// Click ▶ on a category row to expand its product list. Lazy-loaded.
+// Each product has a category dropdown that moves it on change.
+async function toggleCategoryProducts(btn) {
+    var row = btn.closest('.cat-row');
+    var block = row.closest('.cat-block');
+    var drawer = block.querySelector('.cat-products');
+    var slug = block.dataset.slug;
+    var isOpen = drawer.style.display !== 'none';
+    if (isOpen) {
+        drawer.style.display = 'none';
+        row.classList.remove('expanded');
+        return;
+    }
+    row.classList.add('expanded');
+    drawer.style.display = 'block';
+    if (drawer.dataset.loaded !== '1') {
+        drawer.innerHTML = '<div class="cat-products-loading">Loading…</div>';
+        try {
+            var res = await fetch('/admin/categories/' + encodeURIComponent(slug) + '/products');
+            var json = await res.json();
+            renderCategoryProducts(drawer, json.products || [], slug);
+            drawer.dataset.loaded = '1';
+        } catch(e) {
+            drawer.innerHTML = '<div class="cat-products-empty">Failed to load.</div>';
+        }
+    }
+}
+
+function renderCategoryProducts(drawer, products, currentSlug) {
+    if (!products.length) {
+        drawer.innerHTML = '<div class="cat-products-empty">No products in this category.</div>';
+        return;
+    }
+    var catOptions = '<option value="">— uncategorized —</option>' +
+        ALL_CATS.map(function(c){
+            var sel = (c.slug === currentSlug) ? ' selected' : '';
+            return '<option value="' + c.slug + '"' + sel + '>' + escapeHtml(c.name) + '</option>';
+        }).join('');
+    var html = '<input type="text" class="cat-products-search" placeholder="Search ' + products.length + ' items…" oninput="filterCatProducts(this)">';
+    html += products.map(function(p){
+        // Stash full record on the row so the edit modal doesn't need a refetch.
+        var rowJson = escapeAttr(JSON.stringify({
+            id: p.id, name: p.name||'', price: p.price||'', image: p.image||'',
+            url: p.url||'', seller: p.seller||'', category: p.category||'', tags: p.tags||''
+        }));
+        return '<div class="cp-row" data-id="' + p.id + '" data-name="' + escapeAttr((p.name||'').toLowerCase()) + '" data-product="' + rowJson + '">'
+             + '<span class="cp-drag" title="Drag onto a category to move it">⋮⋮</span>'
+             + '<img src="' + escapeAttr(p.image||'') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
+             + '<div class="cp-name" title="' + escapeAttr(p.name||'') + '">' + escapeHtml(p.name||'') + '</div>'
+             + '<div class="cp-price">$' + escapeHtml(p.price||'') + '</div>'
+             + '<select class="select cp-select" onchange="moveProductCategory(this, \'' + p.id + '\')">'
+             + catOptions
+             + '</select>'
+             + '<button type="button" class="btn btn-secondary btn-xs cp-edit-btn" onclick="openEditModal(this)">Edit</button>'
+             + '</div>';
+    }).join('');
+    drawer.innerHTML = html;
+}
+
+function filterCatProducts(input) {
+    var q = (input.value || '').toLowerCase().trim();
+    var rows = input.parentNode.querySelectorAll('.cp-row');
+    rows.forEach(function(r){
+        var hit = !q || (r.dataset.name || '').indexOf(q) !== -1;
+        r.style.display = hit ? '' : 'none';
+    });
+}
+
+async function moveProductCategory(sel, pid) {
+    var newCat = sel.value;
+    sel.disabled = true;
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: newCat })
+        });
+        var json = await res.json();
+        if (!json.ok) {
+            sel.disabled = false;
+            showToast(json.error || 'Failed', 'error');
+            return;
+        }
+        // Animate row out of this category's drawer
+        var row = sel.closest('.cp-row');
+        if (row) {
+            row.classList.add('moving');
+            setTimeout(function(){
+                row.remove();
+                // Update the count on the parent category row
+                var block = sel.closest('.cat-block');
+                if (block) {
+                    var countEl = block.querySelector('.cat-count');
+                    if (countEl) {
+                        var m = countEl.textContent.match(/(\d+)/);
+                        var n = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
+                        countEl.textContent = n + ' products';
+                    }
+                }
+                // And the count on the destination category if it's also visible
+                if (newCat) {
+                    var dest = document.querySelector('.cat-block[data-slug="' + newCat + '"] .cat-count');
+                    if (dest) {
+                        var dm = dest.textContent.match(/(\d+)/);
+                        var dn = dm ? parseInt(dm[1]) + 1 : 1;
+                        dest.textContent = dn + ' products';
+                    }
+                }
+            }, 200);
+        }
+        showToast(newCat ? ('Moved to ' + newCat) : 'Uncategorized', 'success');
+    } catch(e) {
+        sel.disabled = false;
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function escapeHtml(s) { return String(s||'').replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function escapeAttr(s) { return String(s||'').replace(/"/g, '&quot;'); }
+
+// === Edit modal — opens from each item in a category drawer ===
+var _editingRow = null;
+function openEditModal(btn) {
+    var row = btn.closest('.cp-row');
+    if (!row) return;
+    var p;
+    try { p = JSON.parse(row.dataset.product || '{}'); } catch(e) { p = {}; }
+    _editingRow = row;
+    document.getElementById('emId').value = p.id || '';
+    document.getElementById('emName').value = p.name || '';
+    document.getElementById('emPrice').value = p.price || '';
+    document.getElementById('emCategory').value = p.category || '';
+    document.getElementById('emImage').value = p.image || '';
+    document.getElementById('emUrl').value = p.url || '';
+    document.getElementById('emSeller').value = p.seller || '';
+    var prev = document.getElementById('emPreview');
+    if (p.image) { prev.src = p.image; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+    document.getElementById('catEditOverlay').classList.add('open');
+}
+function closeEditModal() {
+    document.getElementById('catEditOverlay').classList.remove('open');
+    _editingRow = null;
+}
+async function saveEditModal() {
+    var pid = document.getElementById('emId').value;
+    if (!pid) return;
+    var data = {
+        name:    document.getElementById('emName').value.trim(),
+        price:   document.getElementById('emPrice').value.trim(),
+        category:document.getElementById('emCategory').value,
+        image:   document.getElementById('emImage').value.trim(),
+        url:     document.getElementById('emUrl').value.trim(),
+        seller:  document.getElementById('emSeller').value.trim(),
+    };
+    try {
+        var res = await fetch('/admin/products/update/' + encodeURIComponent(pid), {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(data)
+        });
+        var json = await res.json();
+        if (!json.ok) return showToast(json.error || 'Failed', 'error');
+        showToast('Saved', 'success');
+        // Update the row in place
+        if (_editingRow) {
+            _editingRow.querySelector('.cp-name').textContent = data.name;
+            _editingRow.querySelector('.cp-name').title = data.name;
+            _editingRow.querySelector('.cp-price').textContent = '$' + data.price;
+            var img = _editingRow.querySelector('img');
+            if (img && data.image) { img.src = data.image; img.style.display = ''; }
+            // Refresh stashed payload
+            _editingRow.dataset.product = JSON.stringify(Object.assign({id: pid}, data));
+            _editingRow.dataset.name = data.name.toLowerCase();
+            // If the user changed the category, animate the row out and update counts
+            var currentCat = _editingRow.closest('.cat-block').dataset.slug;
+            if (data.category !== currentCat) {
+                _editingRow.classList.add('moving');
+                var oldCount = _editingRow.closest('.cat-block').querySelector('.cat-count');
+                setTimeout(function(){
+                    _editingRow.remove();
+                    if (oldCount) {
+                        var m = oldCount.textContent.match(/(\d+)/);
+                        var n = m ? Math.max(0, parseInt(m[1]) - 1) : 0;
+                        oldCount.textContent = n + ' products';
+                    }
+                    if (data.category) {
+                        var dest = document.querySelector('.cat-block[data-slug="' + data.category + '"] .cat-count');
+                        if (dest) {
+                            var dm = dest.textContent.match(/(\d+)/);
+                            var dn = dm ? parseInt(dm[1]) + 1 : 1;
+                            dest.textContent = dn + ' products';
+                        }
+                    }
+                }, 200);
+            }
+        }
+        closeEditModal();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+// Close modal on Escape
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && document.getElementById('catEditOverlay').classList.contains('open')) closeEditModal();
+});
+
+async function saveCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var oldSlug = row.dataset.slug;
+    var data = {
+        name: row.querySelector('.cat-name').value.trim(),
+        slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
+        sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
+    };
+    if (!data.name || !data.slug) return showToast('Slug + name required', 'error');
+    var res = await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Saved', 'success');
+    setTimeout(function(){ location.reload(); }, 500);
+}
+
+async function deleteCategoryRow(btn) {
+    var row = btn.closest('.cat-row');
+    var slug = row.dataset.slug;
+    var count = parseInt((row.querySelector('.cat-count').textContent || '0')) || 0;
+    var msg = count > 0
+        ? 'Delete "' + slug + '"? ' + count + ' product(s) will become uncategorized.'
+        : 'Delete "' + slug + '"?';
+    if (!confirm(msg)) return;
+    var res = await fetch('/admin/categories/delete/' + encodeURIComponent(slug), {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ reassign_to: '' })
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Deleted', 'success');
+    row.remove();
+}
+
+async function addCategory() {
+    var data = {
+        slug: document.getElementById('cSlug').value.trim().toLowerCase(),
+        name: document.getElementById('cName').value.trim(),
+        icon: document.getElementById('cIcon').value.trim(),
+        sort_order: parseInt(document.getElementById('cOrder').value) || 0,
+    };
+    if (!data.slug || !data.name) return showToast('Slug + name required', 'error');
+    var res = await fetch('/admin/categories/add', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    var json = await res.json();
+    if (!json.ok) return showToast(json.error || 'Failed', 'error');
+    showToast('Added', 'success');
+    setTimeout(function(){ location.reload(); }, 500);
+}
+
+// Pointer-based drag (mouse + touch). Native HTML5 drag-and-drop is unreliable when a
+// row contains <input>/<img>, so we drive it ourselves. A CATEGORY is dragged by its
+// ⋮⋮ handle and reorders the .cat-block wrappers (auto-saving sort_order). A PRODUCT is
+// dragged from anywhere on its row (except the controls) and drops onto a category.
+(function setupPointerDrag(){
+    var list = document.getElementById('catManagerList');
+    if (!list) return;
+    var mode = null, dragEl = null, ghost = null;
+    var startX = 0, startY = 0, offX = 0, offY = 0, moved = false;
+    var srcSlug = null, dragPid = null;
+
+    function clearTargets(){ list.querySelectorAll('.cat-row.drop-target').forEach(function(r){ r.classList.remove('drop-target'); }); }
+
+    function onDown(e){
+        if (e.button != null && e.button !== 0) return;          // primary button only
+        // Category: drag from anywhere on the row EXCEPT the editable fields/buttons
+        // (so you can grab the ⋮⋮ handle, the count, or any empty part of the row).
+        var catRow = e.target.closest('.cat-row');
+        if (catRow && !e.target.closest('input, button, select, textarea, a, .expand-toggle')) {
+            mode = 'cat'; dragEl = catRow.closest('.cat-block');
+        } else {
+            var cp = e.target.closest('.cp-row');
+            if (cp && !e.target.closest('select, button, a, input, .cp-select, .cp-edit-btn')) {
+                mode = 'product'; dragEl = cp;
+                srcSlug = cp.closest('.cat-block').dataset.slug; dragPid = cp.dataset.id;
+            }
+        }
+        if (!mode) return;
+        startX = e.clientX; startY = e.clientY; moved = false;
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp, { once: true });
+    }
+
+    function startGhost(e){
+        var src = (mode === 'cat') ? dragEl.querySelector('.cat-row') : dragEl;
+        var rect = src.getBoundingClientRect();
+        ghost = src.cloneNode(true);
+        ghost.classList.add('drag-ghost');
+        ghost.style.width = rect.width + 'px';
+        offX = e.clientX - rect.left; offY = e.clientY - rect.top;
+        ghost.style.left = (e.clientX - offX) + 'px';
+        ghost.style.top = (e.clientY - offY) + 'px';
+        document.body.appendChild(ghost);
+        // pop the ghost into a lifted (scaled + tilted) state on the next frame
+        requestAnimationFrame(function(){ if (ghost) ghost.classList.add('lifted'); });
+        document.body.style.userSelect = 'none';
+        src.classList.add(mode === 'cat' ? 'dragging' : 'cp-dragging');
+    }
+
+    // FLIP: after a reorder, animate every block sliding from its old position to the new one.
+    function flipReorder(refNode){
+        var blocks = Array.from(list.querySelectorAll('.cat-block'));
+        var firsts = blocks.map(function(b){ return b.getBoundingClientRect().top; });
+        list.insertBefore(dragEl, refNode);
+        blocks.forEach(function(b, i){
+            var dy = firsts[i] - b.getBoundingClientRect().top;
+            if (!dy) return;
+            b.style.transition = 'none';
+            b.style.transform = 'translateY(' + dy + 'px)';
+            b.offsetHeight; // force reflow so the inverted position is applied before we animate
+            b.style.transition = 'transform .22s cubic-bezier(.2,.9,.25,1)';
+            b.style.transform = '';
+        });
+    }
+
+    function onMove(e){
+        if (!dragEl) return;
+        if (!moved) {
+            if (Math.abs(e.clientX - startX) < 5 && Math.abs(e.clientY - startY) < 5) return;  // click threshold
+            moved = true; startGhost(e);
+        }
+        e.preventDefault();
+        if (ghost) { ghost.style.left = (e.clientX - offX) + 'px'; ghost.style.top = (e.clientY - offY) + 'px'; }
+        var under = document.elementFromPoint(e.clientX, e.clientY);
+        if (!under) return;
+        if (mode === 'cat') {
+            var overBlock = under.closest('.cat-block');
+            if (overBlock && overBlock !== dragEl && overBlock.parentNode === list) {
+                var r = overBlock.getBoundingClientRect();
+                var after = (e.clientY - r.top) > r.height / 2;
+                var refNode = after ? overBlock.nextSibling : overBlock;
+                // only reorder (and animate) when it actually changes the order
+                if (refNode !== dragEl && dragEl.nextSibling !== refNode) flipReorder(refNode);
+            }
+        } else {
+            clearTargets();
+            var overRow = under.closest('.cat-row');
+            if (overRow) overRow.classList.add('drop-target');
+        }
+    }
+
+    // Settle the ghost: glide it into the dropped slot (cat) or fade it out (product).
+    function finishGhost(toRect){
+        if (!ghost) return;
+        var g = ghost; ghost = null;
+        g.classList.remove('lifted');
+        if (toRect) {
+            g.style.transition = 'left .2s cubic-bezier(.2,.9,.25,1), top .2s cubic-bezier(.2,.9,.25,1), transform .2s ease, opacity .2s ease';
+            g.style.left = toRect.left + 'px'; g.style.top = toRect.top + 'px';
+            g.style.transform = 'scale(1) rotate(0)'; g.style.opacity = '0';
+            setTimeout(function(){ g.remove(); }, 210);
+        } else {
+            g.style.transition = 'opacity .14s ease, transform .14s ease';
+            g.style.opacity = '0'; g.style.transform = 'scale(.97)';
+            setTimeout(function(){ g.remove(); }, 150);
+        }
+    }
+
+    function onUp(e){
+        window.removeEventListener('pointermove', onMove);
+        document.body.style.userSelect = '';
+        if (mode === 'cat' && dragEl) {
+            var dr = dragEl.querySelector('.cat-row');
+            if (dr) dr.classList.remove('dragging');               // reveal the solid row...
+            finishGhost(moved && dr ? dr.getBoundingClientRect() : null); // ...and snap the ghost onto it
+            if (moved) {
+                var rows = Array.from(list.querySelectorAll('.cat-row'));
+                rows.forEach(function(r, i){ var o = r.querySelector('.cat-order'); if (o) o.value = i; });
+                _autoSaveAllRows();
+            }
+        } else if (mode === 'product' && dragEl) {
+            var pr = dragEl;
+            pr.classList.remove('cp-dragging');
+            clearTargets();
+            // Resolve the drop target from the pointer-up position (ghost is pointer-events:none).
+            var under = document.elementFromPoint(e.clientX, e.clientY);
+            var destRow = under ? under.closest('.cat-row') : null;
+            finishGhost(null);
+            if (moved && destRow) {
+                var destSlug = (destRow.dataset.slug || '').trim();
+                if (destSlug && destSlug !== srcSlug) moveProductToCategory(dragPid, srcSlug, destSlug, pr);
+            }
+        }
+        mode = null; dragEl = null; moved = false; srcSlug = null; dragPid = null;
+    }
+
+    list.addEventListener('pointerdown', onDown);
+})();
+
+var _saveTimer = null;
+function _autoSaveAllRows() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(async function(){
+        var rows = Array.from(document.querySelectorAll('.cat-row'));
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var oldSlug = row.dataset.slug;
+            var data = {
+                name: row.querySelector('.cat-name').value.trim(),
+                slug: row.querySelector('.cat-slug').value.trim().toLowerCase(),
+                sort_order: parseInt(row.querySelector('.cat-order').value) || 0,
+            };
+            try {
+                await fetch('/admin/categories/update/' + encodeURIComponent(oldSlug), {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(data)
+                });
+            } catch(e) {}
+        }
+        showToast('Order saved', 'success');
+    }, 400);
+}
+
+function _adjustCatCount(slug, delta){
+    if (!slug) return;
+    var el = document.querySelector('.cat-block[data-slug="' + slug + '"] .cat-count');
+    if (!el) return;
+    var m = el.textContent.match(/(\d+)/);
+    var n = Math.max(0, (m ? parseInt(m[1]) : 0) + delta);
+    el.textContent = n + ' products';
+}
+
+async function moveProductToCategory(pid, fromSlug, destSlug, rowEl){
+    try {
+        var res = await fetch('/admin/products/set-category', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id: pid, category: destSlug })
+        });
+        var json = await res.json();
+        if (!json.ok) { showToast(json.error || 'Failed', 'error'); return; }
+        if (rowEl) {
+            rowEl.classList.add('moving');
+            setTimeout(function(){
+                rowEl.remove();
+                _adjustCatCount(fromSlug, -1);
+                _adjustCatCount(destSlug, +1);
+            }, 200);
+        }
+        // If the destination drawer is open, drop a fresh copy in so it shows immediately.
+        var destDrawer = document.querySelector('.cat-block[data-slug="' + destSlug + '"] .cat-products');
+        if (destDrawer && destDrawer.dataset.loaded === '1' && destDrawer.style.display !== 'none') destDrawer.dataset.loaded = '0';
+        showToast('Moved to ' + destSlug, 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+</script>
+{% endblock %}
