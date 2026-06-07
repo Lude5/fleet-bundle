@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ site.agent_name }} Link Converter — Switch Any Agent | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.converter { max-width: 600px; margin: 0 auto; padding: 120px 24px 80px; }
+.converter h1 { font-family: var(--font-display); font-size: 36px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
+.converter-sub { text-align: center; color: var(--text-secondary); font-size: 13px; margin-bottom: 32px; }
+.converter-input { display: flex; gap: 8px; margin-bottom: 24px; }
+.converter-input input { flex: 1; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none; font-family: var(--font-body); }
+.converter-input input:focus { border-color: var(--border); }
+.converter-input input::placeholder { color: var(--text-muted); }
+.converter-input button { padding: 14px 24px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+.converter-input button:hover { background: var(--accent-hover); }
+.result { display: none; }
+.result.active { display: block; }
+.result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; }
+.result-label { font-family: var(--font-mono); font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+.result-from { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; word-break: break-all; }
+.result-from span { color: var(--accent); font-weight: 700; }
+.result-link-wrap { display: flex; gap: 8px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 4px 4px 4px 14px; align-items: center; margin-bottom: 16px; }
+.result-link { flex: 1; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.result-copy { padding: 10px 18px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+.result-copy.copied { background: #22c55e; }
+.result-open { display: inline-flex; padding: 12px 24px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; }
+.error-msg { display: none; text-align: center; color: var(--accent); font-family: var(--font-mono); font-size: 11px; margin-top: 16px; padding: 12px; background: var(--accent-dim); border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.error-msg.active { display: block; }
+.supported { margin-top: 48px; text-align: center; }
+.supported h3 { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 3px; }
+.supported-grid { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.supported-tag { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+@media (max-width: 768px) { .converter { padding: 90px 16px 60px; } .converter h1 { font-size: 28px; } .converter-input { flex-direction: column; } }
+{% endblock %}
+
+{% block content %}
+<div class="converter">
+    <h1>Link Converter</h1>
+    <p class="converter-sub">Paste any agent link — we'll convert it to {{ site.agent_name }}.</p>
+    <div class="converter-input">
+        <input type="text" id="linkInput" placeholder="Paste any agent link, Weidian, Taobao, or 1688 link...">
+        <button onclick="convertLink()">Convert</button>
+    </div>
+    <div class="result" id="result">
+        <div class="result-card">
+            <p class="result-label">Converted to {{ site.agent_name }}</p>
+            <p class="result-from" id="resultFrom"></p>
+            <div class="result-link-wrap"><span class="result-link" id="resultLink"></span><button class="result-copy" onclick="copyResult()">Copy</button></div>
+            <a href="#" id="resultOpen" target="_blank" rel="noopener" class="result-open">Open in {{ site.agent_name }}</a>
+        </div>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="supported">
+        <h3>Supported Sources</h3>
+        <div class="supported-grid">
+            <span class="supported-tag">CNFans</span><span class="supported-tag">Sugargoo</span><span class="supported-tag">CSSBuy</span><span class="supported-tag">Oopbuy</span><span class="supported-tag">JoyaGoo</span><span class="supported-tag">KakoBuy</span><span class="supported-tag">AllChinaBuy</span><span class="supported-tag">Superbuy</span><span class="supported-tag">HagoBuy</span><span class="supported-tag">Hoobuy</span><span class="supported-tag">Mulebuy</span><span class="supported-tag">PandaBuy</span><span class="supported-tag">Weidian</span><span class="supported-tag">Taobao</span><span class="supported-tag">1688</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+var AGENT_URL = '{{ site.agent_product_url }}';
+var AFF = '{{ site.affiliate_code }}';
+var AGENT_NAME = '{{ site.agent_name }}';
+
+function extractProductUrl(input) {
+    try {
+        var url = new URL(input);
+        var inner = url.searchParams.get('url') || url.searchParams.get('productUrl') || url.searchParams.get('product_url');
+        if (inner) return { product: inner, agent: url.hostname.replace('www.','') };
+        if (input.includes('cssbuy.com/item-')) { var match = input.match(/item-micro-(.*?)\.html/); if (match) return { product: decodeURIComponent(match[1]), agent: 'cssbuy.com' }; }
+        if (input.includes('hoobuy.com/product/')) { var parts = input.split('/product/0/'); if (parts[1]) return { product: decodeURIComponent(parts[1]), agent: 'hoobuy.com' }; }
+        if (input.includes('weidian.com') || input.includes('taobao.com') || input.includes('1688.com') || input.includes('tmall.com')) { return { product: input, agent: 'direct' }; }
+        var encoded = input.match(/(https?%3A%2F%2F[^\s&]+(?:weidian|taobao|1688|tmall)[^\s&]*)/i);
+        if (encoded) return { product: decodeURIComponent(encoded[1]), agent: url.hostname.replace('www.','') };
+    } catch(e) {}
+    return null;
+}
+function convertLink() {
+    var input = document.getElementById('linkInput').value.trim();
+    if (!input) return;
+    var extracted = extractProductUrl(input);
+    document.getElementById('result').classList.remove('active');
+    document.getElementById('errorMsg').classList.remove('active');
+    if (!extracted) { document.getElementById('errorMsg').textContent = 'Could not extract product URL.'; document.getElementById('errorMsg').classList.add('active'); return; }
+    var convertedUrl = AGENT_URL + '?url=' + encodeURIComponent(extracted.product);
+    if (AFF) convertedUrl += '&affcode=' + AFF;
+    document.getElementById('resultFrom').innerHTML = extracted.agent === 'direct' ? 'Direct link' : 'Converted from <span>' + extracted.agent + '</span>';
+    document.getElementById('resultLink').textContent = convertedUrl;
+    document.getElementById('resultOpen').href = convertedUrl;
+    document.getElementById('result').classList.add('active');
+    trackClick('tool', 'link_converter', '', '', 'convert_to_' + AGENT_NAME.toLowerCase());
+}
+function copyResult() {
+    var link = document.getElementById('resultLink').textContent;
+    navigator.clipboard.writeText(link).then(function() {
+        var btn = document.querySelector('.result-copy');
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+document.getElementById('linkInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') convertLink(); });
+{% endblock %}

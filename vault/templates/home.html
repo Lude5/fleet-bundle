@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} — {{ site.agent_name }} Finds{% endblock %}
+
+{% block extra_css %}
+/* ---- VAULT hero: full-bleed black band, ivory serif, gold accents ---- */
+.hero {
+    background: var(--ink);
+    color: var(--ink-text);
+    padding: 200px 32px 120px;
+    margin: 0;
+}
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 80px;
+    align-items: end;
+    max-width: 1320px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--ink-border);
+    padding-bottom: 64px;
+}
+.hero-eyebrow {
+    font-family: var(--font-body);
+    font-size: 11px; font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.34em;
+    margin-bottom: 28px;
+    animation: fadeUp .6s ease both;
+}
+.hero h1 {
+    font-family: var(--font-serif);
+    font-weight: 600; font-style: italic;
+    font-size: clamp(64px, 10vw, 150px);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    color: var(--ink-text);
+    animation: fadeUp .7s ease .1s both;
+}
+.hero h1 .gold { color: var(--accent); }
+.hero-meta {
+    font-family: var(--font-body);
+    font-size: 14px; color: var(--ink-muted);
+    line-height: 1.7;
+    max-width: 360px;
+    margin-bottom: 32px;
+    animation: fadeUp .7s ease .2s both;
+}
+.hero-actions {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    animation: fadeUp .7s ease .3s both;
+}
+.hero-actions .btn-outline { color: var(--ink-text); border-color: var(--ink-border); }
+.hero-actions .btn-outline:hover { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
+
+@media (max-width: 900px) {
+    .hero { padding: 130px 18px 64px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 32px; padding-bottom: 36px; }
+}
+
+/* INDEX strip — minimal version of brand-strip */
+.index-strip {
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 18px 32px;
+    overflow: hidden;
+    display: flex; align-items: center;
+    background: var(--bg);
+}
+.index-strip-track {
+    display: flex; gap: 48px;
+    animation: marquee 50s linear infinite;
+    white-space: nowrap;
+}
+.index-strip-item {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* CONVEYOR — kept but minimal-ified */
+.conveyor-section { padding: 48px 0; overflow: hidden; }
+.conveyor-wrap { overflow: hidden; position: relative; padding: 0 32px; }
+.conveyor-track {
+    display: flex; gap: 20px;
+    width: max-content;
+    cursor: grab;
+    user-select: none;
+}
+.conveyor-track:active { cursor: grabbing; }
+.conv-fade-l, .conv-fade-r {
+    position: absolute; top: 0; bottom: 0; width: 60px; z-index: 5; pointer-events: none;
+}
+.conv-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.conv-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+.conveyor-track .product-card { flex: 0 0 220px; }
+
+@media (max-width: 768px) { .conveyor-track .product-card { flex: 0 0 170px; } }
+
+/* Index of categories */
+.cat-index {
+    padding: 96px 32px;
+    max-width: 1320px;
+    margin: 0 auto;
+}
+.cat-index-list {
+    border-top: 1px solid var(--border-subtle);
+}
+.cat-index-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto auto;
+    gap: 24px;
+    align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    color: inherit; text-decoration: none;
+    transition: background 0.15s ease;
+}
+.cat-index-row:hover { background: var(--surface); }
+.cat-index-num {
+    font-family: var(--font-body);
+    font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+}
+.cat-index-name {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text);
+}
+.cat-index-count {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.cat-index-arrow {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--text-muted);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+.cat-index-row:hover .cat-index-arrow { color: var(--text); transform: translateX(4px); }
+
+.about-block {
+    padding: 96px 32px;
+    max-width: 720px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border-subtle);
+}
+.about-block h2 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    line-height: 1.05;
+    color: var(--text);
+}
+.about-block p {
+    color: var(--text-secondary);
+    font-size: 14px; line-height: 1.75;
+    margin-bottom: 14px;
+}
+{% endblock %}
+
+{% block content %}
+<!-- ============================================================ HERO ============================================================ -->
+<section class="hero">
+    <div class="hero-grid">
+        <div>
+            <p class="hero-eyebrow">{{ site.hero_eyebrow if site.hero_eyebrow else (site.name ~ ' · ' ~ site.product_count_label ~ ' finds') }}</p>
+            <h1>{{ site.hero_headline|safe }}</h1>
+        </div>
+        <div>
+            <p class="hero-meta">{{ site.hero_meta if site.hero_meta else (site.name ~ ' is a curated index of ' ~ site.agent_name ~ ' finds. ' ~ site.tagline) }}</p>
+            <div class="hero-actions">
+                <a href="/shop" class="btn btn-primary">{{ site.hero_cta_primary }}</a>
+                <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" onclick="trackClick('signup','hero','','')">{{ site.hero_cta_signup if site.hero_cta_signup else ('Sign up · $' ~ site.coupon_amount) }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================ INDEX STRIP ============================================================ -->
+{% if site.enable_index_strip %}
+<div class="index-strip" aria-hidden="true">
+    <div class="index-strip-track">
+        {% set strip_words = site.index_strip_words.split(' · ') %}
+        {# render words twice for seamless marquee loop #}
+        {% for w in strip_words %}<span class="index-strip-item">{{ w }}</span>{% if not loop.last %}<span class="index-strip-item">·</span>{% endif %}{% endfor %}
+        <span class="index-strip-item">·</span>
+        {% for w in strip_words %}<span class="index-strip-item">{{ w }}</span>{% if not loop.last %}<span class="index-strip-item">·</span>{% endif %}{% endfor %}
+        <span class="index-strip-item">·</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ LATEST DROPS CONVEYOR ============================================================ -->
+{% if conveyor and site.enable_conveyor %}
+<section class="conveyor-section reveal">
+    <div class="section" style="padding: 96px 32px 0;">
+        <div class="sec-header">
+            <h2 class="sec-title">{{ site.label_latest }}</h2>
+            <a href="/shop" class="sec-link">{{ site.label_view_all }}</a>
+        </div>
+    </div>
+    <div class="conveyor-wrap">
+        <div class="conv-fade-l"></div><div class="conv-fade-r"></div>
+        <div class="conveyor-track" id="conv">
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                <div class="product-card-img-wrap">
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">View</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+            {% for p in conveyor %}
+            <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}">
+                <div class="product-card-img-wrap">
+                    <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-name">{{ p.name }}</div>
+                    <div class="product-card-row">
+                        <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                        <span class="product-card-buy">View</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================ MID CTA ============================================================ -->
+{% if site.enable_mid_cta %}
+<a class="mid-cta reveal" href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" onclick="trackClick('signup','mid-cta','','')">
+    <span class="big">{{ site.mid_cta_big if site.mid_cta_big else ('$' ~ site.coupon_amount ~ ' in welcome coupons') }}</span>
+    <span class="small">{{ site.mid_cta_small if site.mid_cta_small else ('Sign up to ' ~ site.agent_name ~ ' · lowest shipping rates') }}</span>
+</a>
+{% endif %}
+
+<!-- ============================================================ BEST SELLING ============================================================ -->
+{% if products %}
+{% set featured = products[:8] %}
+<section class="section reveal">
+    <div class="sec-header">
+        <h2 class="sec-title">{{ site.label_featured }}</h2>
+        <a href="/shop" class="sec-link">{{ site.label_view_all }}</a>
+    </div>
+    <div class="product-grid">
+        {% for p in featured %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card" data-product-id="{{ p.id }}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                {% if loop.index <= 3 %}
+                <span class="product-card-badge">{% if loop.index == 1 %}01{% elif loop.index == 2 %}02{% else %}03{% endif %}</span>
+                {% endif %}
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">View</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================ CATEGORY INDEX (numbered list) ============================================================ -->
+{% if categories %}
+<section class="cat-index reveal">
+    <div class="sec-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 24px;">
+        <h2 class="sec-title">{{ site.label_index }}</h2>
+        <span class="sec-link">{{ categories|length }} categories</span>
+    </div>
+    <div class="cat-index-list">
+        {% for cat in categories %}
+        {% set cp = products|selectattr('category', 'equalto', cat.slug)|list if products else [] %}
+        <a href="/shop?category={{ cat.slug }}" class="cat-index-row">
+            <span class="cat-index-num">{{ '%02d' % loop.index }}</span>
+            <span class="cat-index-name">{{ cat.name }}</span>
+            <span class="cat-index-count">{{ cp|length }} items</span>
+            <span class="cat-index-arrow">&rarr;</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ============================================================ STATS BLOCK ============================================================ -->
+<div class="stat-row reveal">
+    <div class="stat">
+        <div class="stat-num"><span data-count="{{ products|length if products else 100 }}">0</span></div>
+        <div class="stat-label">Curated finds</div>
+    </div>
+    <div class="stat">
+        <div class="stat-num"><span data-count="{{ site.coupon_amount }}" data-prefix="$">$0</span></div>
+        <div class="stat-label">In coupons</div>
+    </div>
+    <div class="stat">
+        <div class="stat-num">{{ categories|length if categories else 8 }}</div>
+        <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat">
+        <div class="stat-num">01</div>
+        <div class="stat-label">Sheet</div>
+    </div>
+</div>
+
+<!-- ============================================================ ABOUT ============================================================ -->
+{% if site.enable_about %}
+<section class="about-block reveal">
+    <h2>{{ site.about_headline if site.about_headline else ('An index of ' ~ site.agent_name ~ ' finds.') }}</h2>
+    <p>{{ site.about_body_1 if site.about_body_1 else (site.name ~ ' is a single black-and-white sheet of ' ~ site.agent_name ~ ' finds. Each product is curated from trusted Weidian, Taobao, and 1688 sellers — nothing automated, nothing volume-driven, nothing extra.') }}</p>
+    <p>{{ site.about_body_2 if site.about_body_2 else ('Use our free link converter to switch from any other shopping agent directly to ' ~ site.agent_name ~ '. Sign up through ' ~ site.name ~ ' to unlock $' ~ site.coupon_amount ~ ' in welcome coupons and the lowest shipping rates available.') }}</p>
+</section>
+{% endif %}
+
+<!-- ============================================================ CLOSING CTA ============================================================ -->
+{% if site.enable_closing_cta %}
+<section class="cta-section reveal">
+    <p class="section-eyebrow">{{ site.closing_eyebrow }}</p>
+    <h2>{{ site.closing_headline if site.closing_headline else ('$' ~ site.coupon_amount ~ ' in coupons.') }}</h2>
+    <p>{{ site.closing_body if site.closing_body else ('Sign up to ' ~ site.agent_name ~ ' through ' ~ site.name ~ ' and unlock welcome coupons plus the lowest shipping rates.') }}</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" onclick="trackClick('signup','cta','','')">Sign up to {{ site.agent_name }}</a>
+</section>
+{% endif %}
+{% endblock %}

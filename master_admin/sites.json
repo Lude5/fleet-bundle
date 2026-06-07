@@ -131,5 +131,24 @@
     "product_count": 0,
     "ga_measurement_id": "",
     "ga_property_id": ""
+  },
+  {
+    "id": "vault",
+    "name": "VAULT",
+    "slug": "vault",
+    "url": "http://127.0.0.1:5012",
+    "admin_url": "http://127.0.0.1:5012/admin",
+    "admin_password": "changeme123",
+    "admin_token": "vault_bc1ef9a71ba546977be5a58409c4b38c0b13bd00",
+    "render_service_id": "",
+    "agent": "KakoBuy",
+    "agent_signup": "https://www.kakobuy.com/register?affcode=vault",
+    "affiliate_code": "vault",
+    "color": "#b08d4f",
+    "tag": "wip",
+    "description": "Luxury template — black, white & gold. Designer-house minimalism.",
+    "product_count": 0,
+    "ga_measurement_id": "",
+    "ga_property_id": ""
   }
 ]
