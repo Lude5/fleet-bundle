@@ -55,6 +55,12 @@ from editorial.app import app as editorial_app  # noqa: E402
 from ategoat.app import app as ategoat_app  # noqa: E402
 from vault.app import app as vault_app  # noqa: E402
 
+# --- security hardening: cookies, headers, login throttle for every sub-app ---
+from security import harden as _harden  # noqa: E402
+for _sub_app in (master_app, kai_app, maywood_app, minimal_app, future_app,
+                 volume_app, terminal_app, editorial_app, ategoat_app, vault_app):
+    _harden(_sub_app)
+
 kai_app.config['APPLICATION_ROOT'] = '/kai'
 maywood_app.config['APPLICATION_ROOT'] = '/maywood'
 minimal_app.config['APPLICATION_ROOT'] = '/minimal'

@@ -2628,4 +2628,4 @@ def not_found(e):
 
 if __name__ == '__main__':
     os.makedirs(DATA_DIR, exist_ok=True)
-    app.run(debug=True, port=int(os.environ.get('PORT', 5010)))
+    app.run(debug=False, port=int(os.environ.get('PORT', 5010)))
