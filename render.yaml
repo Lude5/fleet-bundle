@@ -26,11 +26,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ADMIN_PASSWORD
-        value: lude2026          # master_admin login password
+        sync: false              # set in Render dashboard (bundle /admin login)
       - key: KAI_ADMIN_PASSWORD
-        value: changeme123       # kai's /kai/admin login
+        sync: false              # set in Render dashboard (kai /kai/admin)
       - key: MAYWOOD_ADMIN_PASSWORD
-        value: changeme123       # maywood's /maywood/admin login
+        sync: false              # set in Render dashboard (maywood /maywood/admin)
       - key: KAI_DATA_DIR
         value: /var/data/kai
       - key: MAYWOOD_DATA_DIR

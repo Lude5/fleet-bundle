@@ -55,7 +55,7 @@ else:
 # Studio's proxied save/create calls (they 302 to /login).
 app.config['SESSION_COOKIE_NAME'] = 'master_session'
 
-MASTER_PASSWORD = os.environ.get('MASTER_PASSWORD', 'lude2026')
+MASTER_PASSWORD = os.environ.get('MASTER_PASSWORD', 'change-me')
 RENDER_API_KEY = os.environ.get('RENDER_API_KEY', '')
 
 # Google Analytics on master admin itself — set MASTER_GA_ID to enable
@@ -107,7 +107,7 @@ DEFAULT_SITES = [
         'slug': 'jake',
         'url': 'https://kakobuy.locker',
         'admin_url': 'https://kakobuy.locker/admin',
-        'admin_password': 'jakeisgay',
+        'admin_password': '',
         'admin_token': '',
         'render_service_id': '',
         'agent': 'KakoBuy',
@@ -155,20 +155,48 @@ DEFAULT_SITES = [
 ]
 
 
+# Admin tokens + passwords are kept OUT of the committed sites.json and injected
+# from the SITE_SECRETS env var (JSON: {site_id: {admin_token, admin_password}}).
+# Keeps the (public) repo credential-free while persisting secrets on Render.
+try:
+    SITE_SECRETS = json.loads(os.environ.get('SITE_SECRETS', '') or '{}')
+except (ValueError, TypeError):
+    SITE_SECRETS = {}
+
+
+def _overlay_secrets(sites):
+    """Fill admin_token / admin_password from SITE_SECRETS (env), not from git."""
+    for s in sites:
+        sec = SITE_SECRETS.get(s.get('id')) or {}
+        if sec.get('admin_token'):
+            s['admin_token'] = sec['admin_token']
+        if sec.get('admin_password'):
+            s['admin_password'] = sec['admin_password']
+    return sites
+
+
 def load_sites():
     if not SITES_FILE.exists():
         save_sites(DEFAULT_SITES)
-        return list(DEFAULT_SITES)
+        return _overlay_secrets([dict(s) for s in DEFAULT_SITES])
     try:
         with open(SITES_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            return _overlay_secrets(json.load(f))
     except (json.JSONDecodeError, OSError):
-        return list(DEFAULT_SITES)
+        return _overlay_secrets([dict(s) for s in DEFAULT_SITES])
 
 
 def save_sites(sites):
+    # Never persist secrets to the tracked file — they live in SITE_SECRETS (env).
+    # Strip on write so UI edits can't re-leak credentials into git.
+    safe = []
+    for s in sites:
+        c = dict(s)
+        c['admin_token'] = ''
+        c['admin_password'] = ''
+        safe.append(c)
     with open(SITES_FILE, 'w', encoding='utf-8') as f:
-        json.dump(sites, f, indent=2, ensure_ascii=False)
+        json.dump(safe, f, indent=2, ensure_ascii=False)
 
 
 def find_site(sid):

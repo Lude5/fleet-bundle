@@ -19,7 +19,7 @@ pip install -r requirements.txt
 python wsgi.py            # serves the bundle at http://localhost:5000
 ```
 
-- Master admin: <http://localhost:5000/> (password: `lude2026`)
+- Master admin: <http://localhost:5000/> (password: set via the `MASTER_PASSWORD` env var)
 - Kai template: <http://localhost:5000/kai/>
 - Maywood template: <http://localhost:5000/maywood/>
 
