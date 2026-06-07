@@ -840,12 +840,34 @@
         .cta-section .section-eyebrow { color: var(--accent); }
 
         /* Footer → black ink band, gold brand accent */
-        .footer { background: var(--ink); color: var(--ink-muted); border-top: 1px solid var(--ink-border); }
+        /* Footer → framed black panel with gold borders + accents (premium) */
+        .footer {
+            background: var(--ink); color: var(--ink-muted);
+            border: 1px solid var(--ink-border);          /* faint gold frame all around */
+            border-top: 2px solid var(--accent);          /* strong gold rule on top */
+            border-radius: 22px;
+            margin: 0 auto 36px; padding: 72px 56px 32px;
+            position: relative;
+        }
+        /* gold hairline glow centered on the top edge */
+        .footer::before {
+            content: ''; position: absolute; left: 24%; right: 24%; top: -2px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
         .footer a { color: var(--ink-muted); transition: color .15s ease; }
         .footer a:hover { color: var(--accent); }
-        .footer-brand { color: var(--ink-text); font-style: italic; }
+        .footer-brand { color: var(--ink-text); font-style: italic; letter-spacing: 0.30em; }
         .footer-brand .accent { color: var(--accent); }
-        .footer h4 { color: var(--ink-text); }
+        /* gold underline under the wordmark */
+        .footer-brand { position: relative; }
+        .footer-brand-rule { display: block; width: 46px; height: 2px; background: var(--accent); margin: 16px 0 18px; opacity: .9; }
+        .footer-desc { color: var(--ink-muted); }
+        .footer-col h4 { color: var(--accent); letter-spacing: 0.22em; }
+        .footer-col a { color: var(--ink-text); opacity: .82; }
+        .footer-col a:hover { opacity: 1; color: var(--accent); }
+        .footer-bottom { border-top: 1px solid var(--ink-border); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .footer-bottom span:last-child { color: var(--accent); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; }
+        @media (max-width: 768px) { .footer { padding: 56px 22px 26px; margin: 0 14px 24px; border-radius: 18px; } }
 
         /* Stats: gold numerals in serif */
         .stat-num { font-family: var(--font-serif); font-style: italic; color: var(--text); }
@@ -1064,6 +1086,7 @@
         <div class="footer-top">
             <div>
                 <div class="footer-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
+                <span class="footer-brand-rule"></span>
                 <p class="footer-desc">{{ site.footer_desc }}</p>
             </div>
             <div class="footer-col">
