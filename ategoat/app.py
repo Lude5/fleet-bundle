@@ -75,6 +75,7 @@ SITE_CONFIG = {
     'brand_color': os.environ.get('BRAND_COLOR', '#0d9488'),
     'brand_color_shadow': os.environ.get('BRAND_COLOR_SHADOW', '#0f766e'),
     'meta_pixel_id': os.environ.get('META_PIXEL_ID', ''),
+    'ga_measurement_id': os.environ.get('GA_MEASUREMENT_ID', ''),
     'coupon_amount': os.environ.get('COUPON_AMOUNT', '500'),
     'tagline': os.environ.get('TAGLINE', 'A curated catalogue of 9,400+ finds. Updated daily.'),
     'product_count_label': os.environ.get('PRODUCT_COUNT_LABEL', '9,400+'),

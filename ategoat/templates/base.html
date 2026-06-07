@@ -36,6 +36,16 @@
     {"@context":"https://schema.org","@type":"Organization","name":"{{ site.name }}","url":"https://{{ site.domain }}","logo":"https://{{ site.domain }}/static/og.png"}
     </script>
     {% block structured_data %}{% endblock %}
+    {% if site.ga_measurement_id %}
+    <!-- Google Analytics 4 (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.ga_measurement_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ site.ga_measurement_id }}');
+    </script>
+    {% endif %}
     {% if site.meta_pixel_id %}
     <!-- Meta Pixel -->
     <script>
