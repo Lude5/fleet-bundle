@@ -945,6 +945,79 @@ def api_images(pid):
 api_images._cache = {}
 
 
+# ============================================================================
+# Shared QC / variants cache (cross-site sync)
+# ----------------------------------------------------------------------------
+# We only have one source for QC photos (the ategoat.com wiligoods API), but the
+# fleet's sites all sell the SAME physical products. So a QC/variants result
+# fetched on one site can be reused by every other site instead of each site
+# re-resolving + re-scraping the same listing.
+#
+# The cross-site identity is the Weidian SOURCE itemID (the `itemID=` in the
+# product's buy URL) — it is identical on every site for the same product, while
+# the internal product `id` (pid) is per-site. We cache by that itemID on the
+# SHARED persistent disk (/data on Render is one disk mounted into every bundled
+# site), so all sites read/write the same store. One file per (itemID, kind)
+# keeps writes lock-free and atomic (write-temp + os.replace).
+# ============================================================================
+import tempfile as _tempfile
+import time as _time
+
+_SHARED_ROOT = '/data' if os.path.isdir('/data') else os.path.join(_tempfile.gettempdir(), 'fleet_shared')
+SHARED_QC_DIR = os.path.join(_SHARED_ROOT, '_shared_qc')
+try:
+    os.makedirs(SHARED_QC_DIR, exist_ok=True)
+except Exception:
+    pass
+
+
+def _source_item_id(product):
+    """The Weidian/source itemID from a product's buy URL — stable across every
+    site that lists this product. Returns None when the URL has no itemID."""
+    import re as _re
+    m = _re.search(r'itemID(?:%3D|=)(\d+)', product.get('url') or '', _re.I)
+    return m.group(1) if m else None
+
+
+def _shared_qc_path(wid, kind):
+    import re as _re
+    safe = _re.sub(r'[^0-9A-Za-z_]', '', str(wid))
+    return os.path.join(SHARED_QC_DIR, f'{safe}.{kind}.json')
+
+
+def shared_qc_get(wid, kind, max_age_seconds=None):
+    """Read a cross-site cached value. kind: 'aid' | 'qc' | 'var'. None on miss."""
+    if not wid:
+        return None
+    try:
+        path = _shared_qc_path(wid, kind)
+        if not os.path.exists(path):
+            return None
+        import json as _json
+        with open(path, 'r', encoding='utf-8') as f:
+            rec = _json.load(f)
+        if max_age_seconds is not None and (_time.time() - (rec.get('ts') or 0)) > max_age_seconds:
+            return None
+        return rec.get('data')
+    except Exception:
+        return None
+
+
+def shared_qc_set(wid, kind, data):
+    """Write a cross-site cached value atomically. Best-effort; never raises."""
+    if not wid:
+        return
+    try:
+        import json as _json
+        path = _shared_qc_path(wid, kind)
+        tmp = f'{path}.{os.getpid()}.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            _json.dump({'ts': _time.time(), 'data': data}, f)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+
 def _find_ategoat_id(product):
     """Look up the matching ategoat product ID. Cached on disk for 30 days
     since the mapping is effectively permanent per product."""
@@ -955,6 +1028,13 @@ def _find_ategoat_id(product):
     cached = cache_get(cache_key, max_age_seconds=30 * 24 * 3600)
     if cached is not None:
         return cached or None
+    # Cross-site: another site may have already resolved this source itemID.
+    _wid = _source_item_id(product)
+    if _wid:
+        _shared_aid = shared_qc_get(_wid, 'aid', max_age_seconds=30 * 24 * 3600)
+        if _shared_aid is not None:
+            cache_set(cache_key, _shared_aid or '')
+            return _shared_aid or None
     import re as _re
     import requests as _r
     url = product.get('url') or ''
@@ -997,6 +1077,9 @@ def _find_ategoat_id(product):
             except Exception:
                 pass
     cache_set(cache_key, found or '')
+    # Share the resolution so sibling sites skip the lookup network calls.
+    if _wid and found:
+        shared_qc_set(_wid, 'aid', found)
     return found
 
 
@@ -1037,6 +1120,13 @@ def api_variants(pid):
     cached = cache_get(f'variants3:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify(cached)
+    # Cross-site: reuse variants another site already scraped for this product.
+    _wid = _source_item_id(p)
+    if _wid:
+        _shared = shared_qc_get(_wid, 'var', max_age_seconds=7 * 24 * 3600)
+        if _shared is not None:
+            cache_set(f'variants3:{pid}', _shared)  # warm this site's local cache
+            return jsonify(_shared)
     import re as _re
     import requests as _r
     import json as _json
@@ -1096,6 +1186,9 @@ def api_variants(pid):
     except Exception:
         pass
     cache_set(f'variants3:{pid}', result)
+    # Publish to the shared store so sibling sites reuse it (only if non-empty).
+    if _wid and (result.get('variants') or result.get('images')):
+        shared_qc_set(_wid, 'var', result)
     return jsonify(result)
 
 
@@ -1147,6 +1240,13 @@ def api_qc(pid):
     cached = cache_get(f'qc2:{pid}', max_age_seconds=7 * 24 * 3600)
     if cached is not None:
         return jsonify({'photos': cached})
+    # Cross-site: serve QC photos another site already fetched for this product.
+    _wid = _source_item_id(p)
+    if _wid:
+        _shared = shared_qc_get(_wid, 'qc', max_age_seconds=7 * 24 * 3600)
+        if _shared is not None:
+            cache_set(f'qc2:{pid}', _shared)  # warm this site's local cache
+            return jsonify({'photos': _shared})
     import requests as _r
     photos = []
     try:
@@ -1161,6 +1261,9 @@ def api_qc(pid):
     except Exception:
         photos = []
     cache_set(f'qc2:{pid}', photos)
+    # Publish to the shared store so sibling sites reuse it (only if non-empty).
+    if _wid and photos:
+        shared_qc_set(_wid, 'qc', photos)
     return jsonify({'photos': photos})
 
 
