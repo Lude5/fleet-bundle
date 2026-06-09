@@ -104,7 +104,7 @@
         <div class="agent-picker">
           <button type="button" class="agent-picker-close" onclick="ppCloseAgents()" aria-label="Close">&times;</button>
           <div class="agent-picker-head">
-            <div class="agent-picker-title" data-i18n="ap_choose">Choose your agent</div>
+            <div class="agent-picker-title" data-i18n="ap_choose">Choose an agent</div>
             <div class="agent-picker-sub" data-i18n="pp_agent_sub">Same product — open it on whichever agent you trust. Your pick is remembered.</div>
           </div>
           <div class="agent-picker-list" id="ppAgentList"></div>
@@ -125,17 +125,17 @@
       <div class="pd-meta">
         <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_weight">Weight</div><div class="val" data-pf="weight">{{ product.weight or '—' }}</div></div>
         <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_batch">Batch</div><div class="val" data-pf="batch">{{ product.batch or 'Unspecified' }}</div></div>
-        <div class="pd-meta-cell{% if not (product.sales and product.sales|int > 0) %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_sales">Sales</div><div class="val">🔥 <span data-pf="sales" data-pf-type="int">{{ product.sales|int if product.sales else 0 }}</span> sold</div></div>
+        <div class="pd-meta-cell{% if not (product.sales and product.sales|int > 0) %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_sales">Sales</div><div class="val">🔥 <span data-pf="sales" data-pf-type="int">{{ product.sales|int if product.sales else 0 }}</span> <span data-i18n="pd_sold">sold</span></div></div>
         <div class="pd-meta-cell{% if not product.retail_price %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_retail">Retail</div><div class="val retail-val" data-pf="retail_price" data-pf-type="money">{{ ('$' ~ product.retail_price) if product.retail_price else '—' }}</div></div>
         <div class="pd-meta-cell{% if not product.seller %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_seller">Seller</div><div class="val" data-pf="seller">{{ product.seller or '—' }}</div></div>
       </div>
       <div>
         <div class="pd-sec-head" data-variant-edit="1"><span id="ppVariantCount" data-i18n="pd_versions">Versions</span></div>
-        <div class="pd-variants" id="ppVariants"><div class="pd-qc-empty">Loading variants…</div></div>
+        <div class="pd-variants" id="ppVariants"><div class="pd-qc-empty" data-i18n="pd_loading_variants">Loading variants…</div></div>
       </div>
       <div>
         <div class="pd-sec-head" data-qc-edit="1" data-i18n="pd_qc">QC photos</div>
-        <div id="ppQc"><div class="pd-qc-empty">Looking for QC photos…</div></div>
+        <div id="ppQc"><div class="pd-qc-empty" data-i18n="qc_looking">Looking for QC photos…</div></div>
       </div>
     </div>
   </div>
@@ -249,9 +249,9 @@ if (window.PP_DRAFT) {
     // editor (Studio) lets you upload/scrape, and "Add product" creates it.
     window.ppMainSrc = ''; window.ppManualGallery = []; window.ppVariantImgs = [];
     (function(){
-        var vb=document.getElementById('ppVariants'); if(vb) vb.innerHTML='<div class="pd-qc-empty">No versions yet</div>';
-        var vc=document.getElementById('ppVariantCount'); if(vc) vc.textContent='Versions';
-        var qb=document.getElementById('ppQc'); if(qb) qb.innerHTML='<div class="pd-qc-empty">No QC photos yet</div>';
+        var vb=document.getElementById('ppVariants'); if(vb) vb.innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('pd_no_variants'))||'No variants available')+'</div>';
+        var vc=document.getElementById('ppVariantCount'); if(vc) vc.textContent=(window.i18nT&&i18nT('pd_versions'))||'Versions';
+        var qb=document.getElementById('ppQc'); if(qb) qb.innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('qc_none'))||'No QC photos available for this listing yet.')+'</div>';
     })();
 } else
 fetch('/api/product/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(d){
@@ -292,7 +292,7 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
     window.ppVariantImgs = (variants.length > 1) ? [] : variants.map(function(v){return v.image;}).filter(Boolean);
     if (typeof window.rebuildPpGallery === 'function') window.rebuildPpGallery();
     if (variants.length) {
-        cnt.textContent = variants.length + ' variant' + (variants.length===1?'':'s');
+        cnt.textContent = ((window.i18nT&&i18nT('pd_versions'))||'Versions') + ' · ' + variants.length;
         box.innerHTML = '';
         // Build with DOM API: prefixes /uploads via ppSrc, escapes titles, no markup injection.
         variants.forEach(function(v){
@@ -306,16 +306,16 @@ fetch('/api/variants/' + encodeURIComponent(PID)).then(function(r){return r.json
             if (v.price) { var pr = document.createElement('span'); pr.className = 'pd-variant-price'; pr.setAttribute('data-price-usd', v.price); pr.textContent = '$' + v.price; btn.appendChild(pr); }
             box.appendChild(btn);
         });
-    } else { box.innerHTML='<div class="pd-qc-empty">Single variant</div>'; cnt.textContent='Variants · 1'; }
-}).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">No variants available</div>'; });
+    } else { box.innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('pd_single_variant'))||'Single variant')+'</div>'; cnt.textContent=((window.i18nT&&i18nT('pd_versions'))||'Versions')+' · 1'; }
+}).catch(function(){ document.getElementById('ppVariants').innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('pd_no_variants'))||'No variants available')+'</div>'; });
 
 var qcPhotos = [], qcIdx = 0;
 if (!window.PP_DRAFT)
 fetch('/api/qc/' + encodeURIComponent(PID)).then(function(r){return r.json();}).then(function(qd){
     qcPhotos = (qd&&qd.photos)||[]; var qc=document.getElementById('ppQc');
     if (qcPhotos.length) { qc.className='pd-qc'; qc.innerHTML=qcPhotos.map(function(u,i){return '<img src="'+u+'" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQc('+i+')">';}).join(''); }
-    else { qc.innerHTML='<div class="pd-qc-empty">No QC photos available for this listing yet.</div>'; }
-}).catch(function(){ document.getElementById('ppQc').innerHTML='<div class="pd-qc-empty">Couldn\'t load QC photos.</div>'; });
+    else { qc.innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('qc_none'))||'No QC photos available for this listing yet.')+'</div>'; }
+}).catch(function(){ document.getElementById('ppQc').innerHTML='<div class="pd-qc-empty">'+((window.i18nT&&i18nT('qc_failed'))||"Couldn't load QC photos.")+'</div>'; });
 
 // In-page QC lightbox: click a photo to open, arrow left/right (or ←/→ keys) to compare.
 (function(){

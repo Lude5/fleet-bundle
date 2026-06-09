@@ -165,8 +165,10 @@
         .nav-wishlist:hover, .nav-wishlist.active { color: var(--accent); }
         .nav-wish-count { position: absolute; top: 11px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; background: var(--accent); color: #fff; border-radius: 999px; font-family: var(--font-mono); font-size: 9px; font-weight: 800; line-height: 16px; text-align: center; display: none; }
         .nav-wish-count.show { display: inline-block; }
+        /* Bottom-left so it never collides with the "Best Selling" badge (top-left)
+           or the agent ⇄ button (top-right). */
         .product-card-wish {
-            position: absolute; top: 8px; left: 8px; z-index: 4;
+            position: absolute; bottom: 8px; left: 8px; z-index: 5;
             width: 32px; height: 32px; border-radius: 999px;
             background: rgba(255,255,255,0.92); border: 1px solid var(--border-subtle);
             color: var(--text-muted); display: flex; align-items: center; justify-content: center;
@@ -174,6 +176,10 @@
         }
         .product-card-wish:hover { color: #e0245e; border-color: #e0245e; transform: scale(1.08); }
         .product-card-wish.on { color: #e0245e; border-color: #e0245e; background: #fff; }
+        @media (hover: none) {
+            /* touch devices: 42px tap target (CLAUDE.md: min 44px), matches agent btn */
+            .product-card-wish { width: 42px; height: 42px; font-size: 18px; }
+        }
 
         /* Currency switcher */
         .currency-switcher { position: relative; margin-right: 4px; }
@@ -854,9 +860,15 @@
         .reveal.vis { opacity: 1; transform: translateY(0); }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
-        @media (max-width: 768px) {
+        /* Collapse the desktop nav to the hamburger at 900px — below that the full
+           link row + language + currency + wishlist + the long Sign-Up CTA no longer
+           fit and the rightmost item would clip (everything stays reachable in the
+           hamburger menu, which also carries language + currency + wishlist). */
+        @media (max-width: 900px) {
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
+        }
+        @media (max-width: 768px) {
             /* bigger footer tap targets on mobile (were ~24px, below the 40px min) */
             .footer-col a { padding: 11px 0; }
             /* search field inside the mobile menu */
@@ -932,7 +944,7 @@
         <a href="/shop" data-i18n="nav_shop">Shop</a>
         <a href="/link-converter" data-i18n="nav_converter">Converter</a>
         <a href="/tutorial" data-i18n="nav_howtobuy">How to Buy</a>
-        <a href="/wishlist" data-i18n="wishlist">Wishlist</a>
+        <a href="/wishlist"><span data-i18n="wishlist">Wishlist</span><span id="mobWishCount"></span></a>
         <a href="/agents" class="mobile-menu-cta">
             <span class="mm-cta-line1" data-i18n="mm_signup">Sign Up</span>
             <span class="mm-cta-line2" data-i18n="mm_coupons">Coupons $50–$500</span>
@@ -1423,7 +1435,7 @@
                 .then(function(d){
                     if (d.product_name) name.textContent = d.product_name;
                     if (!d.agents || !d.agents.length) {
-                        list.innerHTML = '<div class="agent-picker-empty">No agents available for this product.</div>';
+                        list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_none')) || 'No agents available for this product.') + '</div>';
                         return;
                     }
                     var saved = getSavedAgent();
@@ -1453,7 +1465,7 @@
                     }
                 })
                 .catch(function(){
-                    list.innerHTML = '<div class="agent-picker-empty">Failed to load agents.</div>';
+                    list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_failed')) || 'Failed to load agents.') + '</div>';
                 });
         };
         window.selectAgent = function(btn) {
@@ -1683,9 +1695,9 @@
                     var badges = document.getElementById('pdBadges');
                     badges.innerHTML = '';
                     if (data.quality) {
-                        badges.insertAdjacentHTML('beforeend', '<span class="pd-badge quality">QUALITY ' + data.quality + '</span>');
+                        badges.insertAdjacentHTML('beforeend', '<span class="pd-badge quality">' + ((window.i18nT && i18nT('badge_quality')) || 'Quality') + ' ' + data.quality + '</span>');
                     }
-                    badges.insertAdjacentHTML('beforeend', '<span class="pd-badge verified">VERIFIED</span>');
+                    badges.insertAdjacentHTML('beforeend', '<span class="pd-badge verified">' + ((window.i18nT && i18nT('badge_verified')) || 'Verified') + '</span>');
                     if (data.category) {
                         badges.insertAdjacentHTML('beforeend', '<span class="pd-badge cat">' + data.category + '</span>');
                     }
@@ -1695,7 +1707,7 @@
                     vWrap.innerHTML = '';
                     var vCount = document.getElementById('pdVariantCount');
                     if (data.variants && data.variants.length > 1) {
-                        vCount.textContent = 'Versions · ' + data.variants.length;
+                        vCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · ' + data.variants.length;
                         data.variants.forEach(function(v) {
                             var btn = document.createElement('button');
                             btn.type = 'button';
@@ -1717,8 +1729,8 @@
                             vWrap.appendChild(btn);
                         });
                     } else {
-                        vCount.textContent = 'Versions · 1';
-                        vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">Only one version</div>';
+                        vCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · 1';
+                        vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">' + ((window.i18nT && i18nT('pd_only_one')) || 'Only one version') + '</div>';
                     }
 
                     // (Thumb strip removed per operator request — variant tiles
@@ -1728,8 +1740,8 @@
                     var variantsBox = document.getElementById('pdVariants');
                     var variantCount = document.getElementById('pdVariantCount');
                     if (variantsBox) {
-                        variantsBox.innerHTML = '<div class="pd-qc-empty">Loading variants…</div>';
-                        if (variantCount) variantCount.textContent = 'Variants';
+                        variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_loading_variants')) || 'Loading variants…') + '</div>';
+                        if (variantCount) variantCount.textContent = (window.i18nT && i18nT('pd_versions')) || 'Versions';
                         fetch('/api/variants/' + encodeURIComponent(data.id))
                             .then(function(r){ return r.json(); })
                             .then(function(vd){
@@ -1737,7 +1749,7 @@
                                 var extraImgs = (vd && vd.images) || [];
                                 // Render variant buttons
                                 if (variants.length) {
-                                    if (variantCount) variantCount.textContent = variants.length + ' variant' + (variants.length === 1 ? '' : 's');
+                                    if (variantCount) variantCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · ' + variants.length;
                                     variantsBox.innerHTML = variants.map(function(v, i){
                                         var img = (v.image || '').replace(/'/g, "\\'");
                                         return '<button type="button" class="pd-variant" title="' + v.title + '"'
@@ -1747,19 +1759,19 @@
                                              + '</button>';
                                     }).join('');
                                 } else {
-                                    variantsBox.innerHTML = '<div class="pd-qc-empty">Single variant</div>';
+                                    variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_single_variant')) || 'Single variant') + '</div>';
                                     if (variantCount) variantCount.textContent = 'Variants · 1';
                                 }
                             })
                             .catch(function(){
-                                variantsBox.innerHTML = '<div class="pd-qc-empty">No variants available</div>';
+                                variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_no_variants')) || 'No variants available') + '</div>';
                             });
                     }
 
                     // QC photos — async fetch on modal open.
                     var qc = document.getElementById('pdQc');
                     qc.className = '';
-                    qc.innerHTML = '<div class="pd-qc-empty">Looking for QC photos…</div>';
+                    qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_looking')) || 'Looking for QC photos…') + '</div>';
                     fetch('/api/qc/' + encodeURIComponent(data.id))
                         .then(function(r){ return r.json(); })
                         .then(function(qd){
@@ -1771,10 +1783,10 @@
                                     return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQcLightbox(' + i + ')">';
                                 }).join('');
                             } else {
-                                qc.innerHTML = '<div class="pd-qc-empty">No QC photos available for this listing yet.</div>';
+                                qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_none')) || 'No QC photos available for this listing yet.') + '</div>';
                             }
                         })
-                        .catch(function(){ qc.innerHTML = '<div class="pd-qc-empty">Couldn\'t load QC photos.</div>'; });
+                        .catch(function(){ qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_failed')) || "Couldn't load QC photos.") + '</div>'; });
 
                     if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
                     document.getElementById('pdModal').classList.add('active');
@@ -1883,6 +1895,10 @@
             if (i > -1) a.splice(i,1); else a.push(id);
             try { localStorage.setItem(WL_KEY, JSON.stringify(a)); } catch(e){}
             window.wlSyncUI();
+            // Let an interested page (e.g. /wishlist) react to add/remove. The
+            // heart's own handler stops propagation, so this hook is how the
+            // wishlist grid stays in sync without relying on event bubbling.
+            if (typeof window.onWishlistChange === 'function') { try { window.onWishlistChange(id); } catch(e){} }
             return a.indexOf(id) > -1;
         };
         window.wlSyncUI = function(){
@@ -1894,7 +1910,7 @@
                 var on = window.wlHas(h.dataset.wish);
                 h.classList.toggle('on', on);
                 h.innerHTML = on ? '&#9829;' : '&#9825;';
-                h.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Add to wishlist');
+                h.setAttribute('aria-label', on ? ((window.i18nT && i18nT('wl_remove')) || 'Remove from wishlist') : ((window.i18nT && i18nT('wl_add')) || 'Add to wishlist'));
             });
         };
         // Inject a heart onto every product card (avoids editing each card markup).

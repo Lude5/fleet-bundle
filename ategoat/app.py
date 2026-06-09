@@ -963,7 +963,7 @@ api_images._cache = {}
 import tempfile as _tempfile
 import time as _time
 
-_SHARED_ROOT = '/data' if os.path.isdir('/data') else os.path.join(_tempfile.gettempdir(), 'fleet_shared')
+_SHARED_ROOT = next((d for d in ('/data', '/var/data') if os.path.isdir(d)), os.path.join(_tempfile.gettempdir(), 'fleet_shared'))
 SHARED_QC_DIR = os.path.join(_SHARED_ROOT, '_shared_qc')
 try:
     os.makedirs(SHARED_QC_DIR, exist_ok=True)

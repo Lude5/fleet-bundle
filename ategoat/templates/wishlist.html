@@ -19,7 +19,7 @@
 {% block content %}
 <div class="wl-wrap">
   <div class="wl-head">
-    <h1 class="wl-title" data-i18n="wishlist_title">Wish<span class="accent">list</span></h1>
+    <h1 class="wl-title"><span class="accent" data-i18n="wishlist_title">Wishlist</span></h1>
     <span class="wl-count" id="wlPageCount"></span>
   </div>
   <div class="wl-loading" id="wlLoading" data-i18n="wishlist_loading">Loading your saved finds…</div>
@@ -38,16 +38,63 @@
   // base.html defines window.wlGet / wlInjectHearts further down the page, so
   // wait for DOMContentLoaded (by which point all inline scripts have parsed).
   function startWishlist(){
-    var ids = (window.wlGet ? window.wlGet() : []);
     var grid = document.getElementById('wishlistGrid');
     var loading = document.getElementById('wlLoading');
     var empty = document.getElementById('wlEmpty');
     var countEl = document.getElementById('wlPageCount');
+    var ids = (window.wlGet ? window.wlGet() : []);
 
+    function t(key, fb){ return (window.i18nT && window.i18nT(key)) || fb; }
     function showEmpty(){ loading.style.display='none'; grid.style.display='none'; empty.style.display='block'; if(countEl) countEl.textContent=''; }
-    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    function updateCount(){
+      var n = grid.querySelectorAll('.product-card').length;
+      if (!n) { showEmpty(); return; }
+      if (countEl) countEl.textContent = n + ' ' + t('wl_unit', 'items');
+    }
 
     if (!ids.length) { showEmpty(); return; }
+
+    // Build a product card with DOM APIs only — never string-concatenate
+    // scraped fields into markup or inline handlers (avoids HTML/JS injection).
+    function buildCard(p){
+      var a = document.createElement('a');
+      a.className = 'product-card';
+      a.href = '/product/' + p.id;
+      a.addEventListener('click', function(){
+        try { trackClick('view','wishlist', p.id, p.category||'', p.name||''); } catch(e){}
+      });
+
+      var wrap = document.createElement('div');
+      wrap.className = 'product-card-img-wrap';
+      var img = document.createElement('img');
+      img.className = 'product-card-img';
+      img.loading = 'lazy';
+      img.setAttribute('referrerpolicy','no-referrer');
+      img.src = p.image || '';
+      img.alt = p.name || '';
+      wrap.appendChild(img);
+
+      var body = document.createElement('div');
+      body.className = 'product-card-body';
+      var name = document.createElement('div');
+      name.className = 'product-card-name';
+      name.textContent = p.name || '';
+      var row = document.createElement('div');
+      row.className = 'product-card-row';
+      var price = document.createElement('span');
+      price.className = 'product-card-price';
+      price.setAttribute('data-price-usd', (p.price_numeric || p.price || ''));
+      price.textContent = '$' + (p.price != null ? p.price : '');
+      var view = document.createElement('span');
+      view.className = 'product-card-buy';
+      view.textContent = t('card_view', 'View');
+      row.appendChild(price); row.appendChild(view);
+      body.appendChild(name); body.appendChild(row);
+
+      a.appendChild(wrap); a.appendChild(body);
+      a.dataset.pid = String(p.id);
+      return a;
+    }
 
     // Fetch each saved product; drop any that no longer exist.
     Promise.all(ids.map(function(id){
@@ -60,24 +107,21 @@
         if (!items.length) { showEmpty(); return; }
         loading.style.display = 'none';
         grid.style.display = '';
-        grid.innerHTML = items.map(function(p){
-            var price = (p.price_numeric || p.price || '');
-            return '<a href="/product/' + esc(p.id) + '" class="product-card" onclick="trackClick(\'view\',\'wishlist\',\'' + esc(p.id) + '\',\'' + esc(p.category||'') + '\',\'' + esc(p.name||'') + '\')">'
-                 + '<div class="product-card-img-wrap"><img class="product-card-img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" referrerpolicy="no-referrer"></div>'
-                 + '<div class="product-card-body"><div class="product-card-name">' + esc(p.name) + '</div>'
-                 + '<div class="product-card-row"><span class="product-card-price" data-price-usd="' + esc(price) + '">$' + esc(p.price) + '</span>'
-                 + '<span class="product-card-buy">' + ((window.i18nT && i18nT('card_view')) || 'View') + '</span></div></div></a>';
-        }).join('');
-        if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' item' : ' items');
+        grid.innerHTML = '';
+        items.forEach(function(p){ grid.appendChild(buildCard(p)); });
+        updateCount();
         // wire hearts + currency on the freshly-rendered cards
         if (window.wlInjectHearts) window.wlInjectHearts();
         if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
-        // when a heart removes the last item, fall back to empty state on reload
-        grid.addEventListener('click', function(e){
-            var h = e.target.closest && e.target.closest('.product-card-wish');
-            if (h) { setTimeout(function(){ if (!window.wlCount()) showEmpty(); else { var c=document.getElementById('wlPageCount'); if(c) c.textContent=window.wlCount()+' items'; } }, 50); }
-        });
     });
+
+    // When a heart toggles anywhere, wlToggle (base.html) calls this hook.
+    // On the wishlist page a removal should drop the card + resync the count.
+    window.onWishlistChange = function(id){
+      var card = grid.querySelector('.product-card[data-pid="' + String(id).replace(/"/g,'') + '"]');
+      if (card && !window.wlHas(id)) card.parentNode && card.remove();
+      updateCount();
+    };
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startWishlist);
   else startWishlist();

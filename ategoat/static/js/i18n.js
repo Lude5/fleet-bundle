@@ -182,7 +182,42 @@
     fr: { shop_search_ph: "Rechercher des produits...", sort_price_low: "Prix : croissant", sort_price_high: "Prix : décroissant", shop_none: "Aucun produit trouvé", pg_prev: "← Préc.", pg_next: "Suivant →",
           pd_switch_agent: "Changer d'agent", pd_retail: "Prix de détail", pd_seller: "Vendeur", pp_agent_sub: "Même produit — ouvrez-le sur l'agent de votre choix. Votre choix est mémorisé.", related_title: "Vous aimerez aussi" }
   };
+  // Dynamic strings injected by JS at runtime (agent picker / product modal /
+  // variants / QC / wishlist). Looked up via window.i18nT() where they're built.
+  var EXTRA2 = {
+    en: { ap_none: "No agents available for this product.", ap_failed: "Failed to load agents.",
+          pd_only_one: "Only one version", pd_single_variant: "Single variant", pd_no_variants: "No variants available",
+          pd_loading_variants: "Loading variants…", qc_looking: "Looking for QC photos…",
+          qc_none: "No QC photos available for this listing yet.", qc_failed: "Couldn't load QC photos.",
+          pd_sold: "sold", badge_verified: "Verified", badge_quality: "Quality",
+          wl_unit: "items", wl_add: "Add to wishlist", wl_remove: "Remove from wishlist" },
+    de: { ap_none: "Für dieses Produkt sind keine Agents verfügbar.", ap_failed: "Agents konnten nicht geladen werden.",
+          pd_only_one: "Nur eine Version", pd_single_variant: "Eine Variante", pd_no_variants: "Keine Varianten verfügbar",
+          pd_loading_variants: "Varianten werden geladen…", qc_looking: "Suche nach QC-Fotos…",
+          qc_none: "Für dieses Listing sind noch keine QC-Fotos verfügbar.", qc_failed: "QC-Fotos konnten nicht geladen werden.",
+          pd_sold: "verkauft", badge_verified: "Geprüft", badge_quality: "Qualität",
+          wl_unit: "Artikel", wl_add: "Zur Merkliste hinzufügen", wl_remove: "Von Merkliste entfernen" },
+    pl: { ap_none: "Brak dostępnych agentów dla tego produktu.", ap_failed: "Nie udało się załadować agentów.",
+          pd_only_one: "Tylko jedna wersja", pd_single_variant: "Jeden wariant", pd_no_variants: "Brak dostępnych wariantów",
+          pd_loading_variants: "Ładowanie wariantów…", qc_looking: "Szukanie zdjęć QC…",
+          qc_none: "Brak zdjęć QC dla tej oferty.", qc_failed: "Nie udało się załadować zdjęć QC.",
+          pd_sold: "sprzedano", badge_verified: "Zweryfikowano", badge_quality: "Jakość",
+          wl_unit: "produktów", wl_add: "Dodaj do listy życzeń", wl_remove: "Usuń z listy życzeń" },
+    es: { ap_none: "No hay agentes disponibles para este producto.", ap_failed: "No se pudieron cargar los agentes.",
+          pd_only_one: "Solo una versión", pd_single_variant: "Una sola variante", pd_no_variants: "No hay variantes disponibles",
+          pd_loading_variants: "Cargando variantes…", qc_looking: "Buscando fotos QC…",
+          qc_none: "Aún no hay fotos QC para este producto.", qc_failed: "No se pudieron cargar las fotos QC.",
+          pd_sold: "vendidos", badge_verified: "Verificado", badge_quality: "Calidad",
+          wl_unit: "artículos", wl_add: "Añadir a favoritos", wl_remove: "Quitar de favoritos" },
+    fr: { ap_none: "Aucun agent disponible pour ce produit.", ap_failed: "Échec du chargement des agents.",
+          pd_only_one: "Une seule version", pd_single_variant: "Variante unique", pd_no_variants: "Aucune variante disponible",
+          pd_loading_variants: "Chargement des variantes…", qc_looking: "Recherche de photos QC…",
+          qc_none: "Pas encore de photos QC pour cette annonce.", qc_failed: "Impossible de charger les photos QC.",
+          pd_sold: "vendus", badge_verified: "Vérifié", badge_quality: "Qualité",
+          wl_unit: "articles", wl_add: "Ajouter aux favoris", wl_remove: "Retirer des favoris" }
+  };
   for (var _lc in EXTRA) { if (I18N[_lc]) { for (var _k in EXTRA[_lc]) I18N[_lc][_k] = EXTRA[_lc][_k]; } }
+  for (var _lc2 in EXTRA2) { if (I18N[_lc2]) { for (var _k2 in EXTRA2[_lc2]) I18N[_lc2][_k2] = EXTRA2[_lc2][_k2]; } }
 
   function getLang() {
     try { var l = localStorage.getItem(LANG_KEY); if (l && SUPPORTED.indexOf(l) > -1) return l; } catch (e) {}
