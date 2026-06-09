@@ -154,9 +154,24 @@
 }
 .hero-search-recent-x:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
 .hero-browse-btn {
-    margin: 18px auto 0;
-    display: inline-flex;
-    animation: fadeUp 0.5s ease 0.5s both;
+    margin: 22px auto 0;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 18px 46px !important;
+    background: var(--accent) !important; color: #fff !important; border: none !important;
+    font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    border-radius: 14px;
+    box-shadow: 0 12px 34px var(--accent-dim);
+    animation: fadeUp 0.5s ease 0.5s both, heroBrowsePulse 2.6s ease-in-out 1s infinite;
+}
+.hero-browse-btn:hover { background: var(--accent-hover) !important; transform: translateY(-2px); box-shadow: 0 16px 44px var(--accent-glow); }
+@keyframes heroBrowsePulse {
+    0%, 100% { box-shadow: 0 12px 34px var(--accent-dim); }
+    50% { box-shadow: 0 12px 40px var(--accent-glow), 0 0 0 6px var(--accent-dim); }
+}
+/* Best Sellers — centered + roomier so they read clearly */
+.product-grid[data-best-selling="1"] {
+    justify-content: center;
+    max-width: 1060px; margin-left: auto; margin-right: auto;
 }
 .hero-scroll { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 36px; animation: fadeUp 0.5s ease 0.6s both; }
 
@@ -238,7 +253,7 @@
             <button type="submit" class="hero-search-go">Search</button>
             <div class="hero-search-dropdown" id="heroSearchDropdown" role="listbox"></div>
         </form>
-        <a href="/shop" class="btn btn-outline hero-browse-btn">Browse Catalogue</a>
+        <a href="/shop" class="btn hero-browse-btn">Browse All Products &rarr;</a>
         <p class="hero-scroll">Scroll Down</p>
     </div>
 </section>

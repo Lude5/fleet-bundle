@@ -55,6 +55,8 @@
 .pp-agentchip { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 8px 12px; border-radius: 9px; background: var(--surface-2); border: 1.5px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; transition: all .15s; }
 .pp-agentchip:hover { color: var(--text); border-color: var(--border); }
 .pp-agentchip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.agent-rec-badge { display:inline-block; margin-left:6px; padding:2px 7px; background: var(--accent); color:#fff; border-radius:999px; font-family: var(--font-mono); font-size:8px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; vertical-align:middle; }
+.agent-picker-item.recommended { border-color: var(--accent); }
 /* Switch-Agent button: stack its label + selected-agent sublabel (the intended 2-line design)
    so it can't blow out the single-column grid on mobile; long agent names ellipsis-truncate. */
 .pd-agent-btn { flex-direction: column; gap: 3px; padding: 12px 14px; line-height: 1.2; overflow: hidden; }
@@ -199,11 +201,11 @@ fetch('/api/agents/' + encodeURIComponent(PID)).then(function(r){return r.json()
         var letter = (a.letter || a.name[0]).toUpperCase();
         var bg = a.color || '#444';
         var el = document.createElement('button');
-        el.type='button'; el.className='agent-picker-item'; el.dataset.key=a.key;
+        el.type='button'; el.className='agent-picker-item' + (a.recommended ? ' recommended' : ''); el.dataset.key=a.key;
         el.innerHTML = (a.logo
             ? '<span class="logo"><img src="' + a.logo + '" alt="' + a.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=&quot;' + letter + '&quot;;this.parentNode.classList.add(&quot;letter&quot;);this.parentNode.style.background=&quot;' + bg + '&quot;;"></span>'
             : '<span class="logo letter" style="background:' + bg + '">' + letter + '</span>')
-            + '<span class="name">' + a.name + '</span>';
+            + '<span class="name">' + a.name + (a.recommended ? ' <span class="agent-rec-badge">Recommended</span>' : '') + '</span>';
         el.onclick=function(){ ppSetAgent(a); ppCloseAgents(); };
         box.appendChild(el);
     });

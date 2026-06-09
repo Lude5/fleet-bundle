@@ -1044,7 +1044,7 @@
     <button class="back-top" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
 
     {% if request.path != '/' and not request.path.startswith('/admin') %}
-    <button type="button" class="page-back" onclick="if(document.referrer&&document.referrer.indexOf(location.host)>-1){history.back();}else{location.href='/';}" aria-label="Go back">
+    <button type="button" class="page-back" onclick="if(window.history.length>1){history.back();}else{location.href='/shop';}" aria-label="Go back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         Back
     </button>
