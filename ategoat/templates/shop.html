@@ -25,7 +25,7 @@
 <div class="shop-header">
     <h1>{% if search_query %}Results for "{{ search_query }}"{% elif current_category %}{{ current_category_name or current_category|title }}{% else %}All Products{% endif %}</h1>
     <form class="search-wrap" action="/shop" method="get" autocomplete="off" style="position:relative;">
-        <input type="text" name="q" id="shopSearch" placeholder="Search products..." value="{{ search_query or '' }}" autocomplete="off">
+        <input type="text" name="q" id="shopSearch" placeholder="Search products..." value="{{ search_query or '' }}" autocomplete="off" data-i18n-ph="shop_search_ph">
         <button type="submit">&#128269;</button>
     </form>
     <script>
@@ -37,7 +37,7 @@
         })();
     </script>
     <div class="filter-row">
-        <a href="/shop" class="filter-tab {% if not current_category %}active{% endif %}">All</a>
+        <a href="/shop" class="filter-tab {% if not current_category %}active{% endif %}" data-i18n="cat_all">All</a>
         {% for cat in categories if cat.slug != 'trending' %}
         <a href="/shop?category={{ cat.slug }}" class="filter-tab {% if current_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
         {% endfor %}
@@ -47,9 +47,9 @@
 <div class="shop-bar">
     <span class="shop-count">{{ total }} products — page {{ page }}/{{ total_pages }}</span>
     <select class="shop-sort" onchange="window.location.href='/shop?category={{ current_category }}&sort='+this.value{% if search_query %}+'&q={{ search_query }}'{% endif %}">
-        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Best Selling</option>
-        <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
-        <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %} data-i18n="sec_best">Best Selling</option>
+        <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %} data-i18n="sort_price_low">Price: Low to High</option>
+        <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %} data-i18n="sort_price_high">Price: High to Low</option>
     </select>
 </div>
 
@@ -61,21 +61,21 @@
             <div class="product-card-body">
                 <div class="product-card-name">{{ p.name }}</div>
                 {% if p.seller %}<div class="product-card-seller">{{ p.seller }}</div>{% endif %}
-                <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div>
+                <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div>
             </div>
         </a>
         {% endfor %}
     </div>
-    {% if not products %}<div style="text-align:center;padding:80px 20px;"><p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;">No products found</p></div>{% endif %}
+    {% if not products %}<div style="text-align:center;padding:80px 20px;"><p style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;" data-i18n="shop_none">No products found</p></div>{% endif %}
     {% if total_pages > 1 %}
     <div style="display:flex;justify-content:center;gap:6px;padding:40px 0 0;flex-wrap:wrap;">
-        {% if page > 1 %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page - 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline" style="padding:10px 18px;font-size:10px;">&larr; Prev</a>{% endif %}
+        {% if page > 1 %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page - 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline" style="padding:10px 18px;font-size:10px;" data-i18n="pg_prev">&larr; Prev</a>{% endif %}
         {% for p_num in range(1, total_pages + 1) %}
         {% if p_num == page or p_num == 1 or p_num == total_pages or (p_num >= page - 2 and p_num <= page + 2) %}
         <a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ p_num }}{% if search_query %}&q={{ search_query }}{% endif %}" style="padding:10px 14px;border:1px solid {% if p_num == page %}var(--accent){% else %}var(--border-subtle){% endif %};border-radius:8px;font-family:var(--font-mono);font-size:11px;font-weight:700;{% if p_num == page %}color:#fff;background:var(--accent);{% else %}color:var(--text-muted);{% endif %}">{{ p_num }}</a>
         {% elif p_num == page - 3 or p_num == page + 3 %}<span style="padding:10px 6px;color:var(--text-muted);font-size:11px;">...</span>{% endif %}
         {% endfor %}
-        {% if page < total_pages %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page + 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline" style="padding:10px 18px;font-size:10px;">Next &rarr;</a>{% endif %}
+        {% if page < total_pages %}<a href="/shop?category={{ current_category }}&sort={{ current_sort }}&page={{ page + 1 }}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline" style="padding:10px 18px;font-size:10px;" data-i18n="pg_next">Next &rarr;</a>{% endif %}
     </div>
     {% endif %}
 </section>

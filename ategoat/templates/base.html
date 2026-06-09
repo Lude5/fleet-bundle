@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="referrer" content="no-referrer">
     <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
-    <meta name="description" content="{% block description %}{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.{% endblock %}">
+    <meta name="description" content="{% block description %}{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on Litbuy, Hipobuy, Mulebuy, USFANS, Oopbuy, KakoBuy, ACBuy, JoyaGoo, Sugargoo, or Lovegobuy.{% endblock %}">
     <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, kakobuy, joyagoo, cnfans, sugargoo, oopbuy, allchinabuy, mulebuy, hoobuy, acbuy">
     <link rel="canonical" href="{% block canonical %}https://{{ site.domain }}{{ request.path }}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
@@ -185,8 +185,15 @@
         .currency-menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 6px; text-align: left; }
         .currency-menu button:hover { background: var(--surface-2); color: var(--text); }
         .currency-menu button .sym { color: var(--text-muted); font-size: 11px; }
+        /* Language switcher reuses the currency-switcher styling */
+        .lang-switcher { position: relative; margin-right: 4px; }
+        .lang-menu { min-width: 150px; }
+        /* Mobile language row inside the slide-out menu */
+        .mm-lang { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 4px; }
+        .mm-lang button { flex: 0 0 auto; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .mm-lang button.active { border-color: var(--accent); color: var(--accent); }
         @media (max-width: 768px) {
-            .currency-switcher { display: none; }
+            .currency-switcher, .lang-switcher { display: none; }
         }
 
         /* Floating right-side widget (Discord + Tutorial + Back-to-top) */
@@ -881,10 +888,22 @@
     <nav class="nav" id="nav">
         <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
         <ul class="nav-links">
-            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
-            <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}">Shop</a></li>
-            <li><a href="/link-converter" class="{% if request.path == '/link-converter' %}active{% endif %}">Converter</a></li>
-            <li><a href="/tutorial" class="{% if request.path == '/tutorial' %}active{% endif %}">How to Buy</a></li>
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}" data-i18n="nav_home">Home</a></li>
+            <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}" data-i18n="nav_shop">Shop</a></li>
+            <li><a href="/link-converter" class="{% if request.path == '/link-converter' %}active{% endif %}" data-i18n="nav_converter">Converter</a></li>
+            <li><a href="/tutorial" class="{% if request.path == '/tutorial' %}active{% endif %}" data-i18n="nav_howtobuy">How to Buy</a></li>
+            <li class="lang-switcher">
+                <button class="currency-btn" type="button" onclick="toggleLangMenu()" aria-label="Change language">
+                    <span data-lang-label>EN</span><span class="caret">&#9662;</span>
+                </button>
+                <div class="currency-menu lang-menu" id="langMenu">
+                    <button type="button" onclick="setLang('en')">English <span class="sym">EN</span></button>
+                    <button type="button" onclick="setLang('de')">Deutsch <span class="sym">DE</span></button>
+                    <button type="button" onclick="setLang('pl')">Polski <span class="sym">PL</span></button>
+                    <button type="button" onclick="setLang('es')">Español <span class="sym">ES</span></button>
+                    <button type="button" onclick="setLang('fr')">Français <span class="sym">FR</span></button>
+                </div>
+            </li>
             <li class="currency-switcher">
                 <button class="currency-btn" type="button" onclick="toggleCurrencyMenu()" aria-label="Change currency">
                     <span data-currency-label>USD</span><span class="caret">&#9662;</span>
@@ -907,16 +926,24 @@
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
         <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
         <form class="mm-search" action="/shop" method="get" role="search">
-            <input type="search" name="q" placeholder="Search 9,400+ finds…" aria-label="Search products" autocomplete="off">
+            <input type="search" name="q" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off" data-i18n-ph="search_ph" data-i18n-n="{{ site.product_count_label }}">
         </form>
-        <a href="/">Home</a>
-        <a href="/shop">Shop</a>
-        <a href="/link-converter">Converter</a>
-        <a href="/tutorial">How to Buy</a>
+        <a href="/" data-i18n="nav_home">Home</a>
+        <a href="/shop" data-i18n="nav_shop">Shop</a>
+        <a href="/link-converter" data-i18n="nav_converter">Converter</a>
+        <a href="/tutorial" data-i18n="nav_howtobuy">How to Buy</a>
+        <a href="/wishlist" data-i18n="wishlist">Wishlist</a>
         <a href="/agents" class="mobile-menu-cta">
-            <span class="mm-cta-line1">Sign Up</span>
-            <span class="mm-cta-line2">Coupons $50–$500</span>
+            <span class="mm-cta-line1" data-i18n="mm_signup">Sign Up</span>
+            <span class="mm-cta-line2" data-i18n="mm_coupons">Coupons $50–$500</span>
         </a>
+        <div class="mm-lang">
+            <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+            <button type="button" data-lang="de" onclick="setLang('de')">DE</button>
+            <button type="button" data-lang="pl" onclick="setLang('pl')">PL</button>
+            <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
+            <button type="button" data-lang="fr" onclick="setLang('fr')">FR</button>
+        </div>
     </div>
 
     <!-- Floating right-side widget -->
@@ -925,14 +952,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
             </svg>
-            <span class="side-tip">How to Buy</span>
+            <span class="side-tip" data-i18n="side_howtobuy">How to Buy</span>
         </a>
         {% if site.discord_url %}
         <a href="{{ site.discord_url }}" target="_blank" rel="noopener" class="side-btn discord" aria-label="Join our Discord" onclick="trackClick('social','side-discord','','')">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
             </svg>
-            <span class="side-tip">Join Discord</span>
+            <span class="side-tip" data-i18n="side_discord">Join Discord</span>
         </a>
         {% endif %}
     </div>
@@ -943,29 +970,29 @@
         <div class="footer-top">
             <div>
                 <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--accent);">{{ site.name_part2 }}</span></div>
-                <p class="footer-desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
+                <p class="footer-desc" data-i18n="footer_desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
             </div>
             <div class="footer-col">
-                <h4>Categories</h4>
-                <a href="/shop?category=shoes">Shoes</a>
-                <a href="/shop?category=tracksuits">Tracksuits &amp; Sets</a>
-                <a href="/shop?category=hoodies">Hoodies</a>
-                <a href="/shop?category=jackets">Jackets</a>
+                <h4 data-i18n="footer_categories">Categories</h4>
+                <a href="/shop?category=shoes" data-i18n="footer_shoes">Shoes</a>
+                <a href="/shop?category=tracksuits" data-i18n="footer_tracksuits">Tracksuits &amp; Sets</a>
+                <a href="/shop?category=hoodies" data-i18n="footer_hoodies">Hoodies</a>
+                <a href="/shop?category=jackets" data-i18n="footer_jackets">Jackets</a>
             </div>
             <div class="footer-col">
-                <h4>Tools</h4>
-                <a href="/shop">All Products</a>
-                <a href="/link-converter">Link Converter</a>
-                <a href="/tutorial">How to Buy</a>
+                <h4 data-i18n="footer_tools">Tools</h4>
+                <a href="/shop" data-i18n="footer_allproducts">All Products</a>
+                <a href="/link-converter" data-i18n="footer_linkconverter">Link Converter</a>
+                <a href="/tutorial" data-i18n="nav_howtobuy">How to Buy</a>
             </div>
             <div class="footer-col">
-                <h4>Legal</h4>
-                <a href="/privacy">Privacy</a>
-                <a href="/terms">Terms</a>
+                <h4 data-i18n="footer_legal">Legal</h4>
+                <a href="/privacy" data-i18n="footer_privacy">Privacy</a>
+                <a href="/terms" data-i18n="footer_terms">Terms</a>
             </div>
         </div>
         <div class="footer-bottom">
-            <p style="text-transform:none; letter-spacing:0; line-height:1.6; max-width:720px; margin:0 auto 10px;">{{ site.name }} is a curated catalogue of independent third-party listings. We may earn a commission when you open or buy through our links, at no extra cost to you. {{ site.name }} does not sell, stock, or ship any items.</p>
+            <p style="text-transform:none; letter-spacing:0; line-height:1.6; max-width:720px; margin:0 auto 10px;" data-i18n="footer_disclaimer" data-i18n-name="{{ site.name }}">{{ site.name }} is a curated catalogue of independent third-party listings. We may earn a commission when you open or buy through our links, at no extra cost to you. {{ site.name }} does not sell, stock, or ship any items.</p>
             &copy; 2026 {{ site.name }}. All rights reserved.
         </div>
     </footer>
@@ -978,16 +1005,16 @@
                 <div>
                     <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
                     <div class="pd-buy-row">
-                        <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)">Buy</a>
+                        <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)" data-i18n="pd_buy">Buy</a>
                         <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-                            <span id="pdAgentBtnLabel">Choose Agent</span>
+                            <span id="pdAgentBtnLabel" data-i18n="pd_choose_agent">Choose Agent</span>
                         </button>
                     </div>
-                    <div class="pd-agent-pickprompt" id="pdAgentPickWarn">Pick an agent first ↑</div>
+                    <div class="pd-agent-pickprompt" id="pdAgentPickWarn" data-i18n="pd_pick_first">Pick an agent first ↑</div>
                     <button type="button" id="pdRawCopy" onclick="copyRawSellerUrl()" class="pd-raw-copy" title="Copy raw seller link (no agent)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        <span id="pdRawCopyLabel">Copy raw seller link</span>
+                        <span id="pdRawCopyLabel" data-i18n="pd_copy_raw">Copy raw seller link</span>
                     </button>
                 </div>
                 <div class="pd-side">
@@ -996,17 +1023,17 @@
                     <div class="pd-badges" id="pdBadges"></div>
                     <div class="pd-price" id="pdPrice">$0.00</div>
                     <div class="pd-meta">
-                        <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val" id="pdWeight">—</div></div>
-                        <div class="pd-meta-cell"><div class="lbl">Sales</div><div class="val" id="pdSales">—</div></div>
-                        <div class="pd-meta-cell"><div class="lbl">Listing</div><div class="val" id="pdSeller">—</div></div>
-                        <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val" id="pdBatch">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_weight">Weight</div><div class="val" id="pdWeight">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_sales">Sales</div><div class="val" id="pdSales">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_listing">Listing</div><div class="val" id="pdSeller">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_batch">Batch</div><div class="val" id="pdBatch">—</div></div>
                     </div>
                     <div>
-                        <div class="pd-sec-head"><span id="pdVariantCount">Versions</span></div>
+                        <div class="pd-sec-head"><span id="pdVariantCount" data-i18n="pd_versions">Versions</span></div>
                         <div class="pd-variants" id="pdVariants"></div>
                     </div>
                     <div>
-                        <div class="pd-sec-head">QC photos</div>
+                        <div class="pd-sec-head" data-i18n="pd_qc">QC photos</div>
                         <div id="pdQc"></div>
                     </div>
                 </div>
@@ -1019,16 +1046,16 @@
         <div class="agent-picker">
             <button class="agent-picker-close" onclick="closeAgentPicker()" aria-label="Close">&times;</button>
             <div class="agent-picker-head">
-                <p class="agent-picker-label">Open with</p>
-                <h3 class="agent-picker-title" id="agentPickerName">Choose an agent</h3>
+                <p class="agent-picker-label" data-i18n="ap_openwith">Open with</p>
+                <h3 class="agent-picker-title" id="agentPickerName" data-i18n="ap_choose">Choose an agent</h3>
             </div>
             <div class="agent-picker-list" id="agentPickerList">
-                <div class="agent-picker-empty">Loading...</div>
+                <div class="agent-picker-empty" data-i18n="ap_loading">Loading...</div>
             </div>
             <div class="agent-picker-buy-wrap" id="agentPickerBuyWrap">
-                <a class="agent-picker-buy" id="agentPickerBuyBtn" href="#" target="_blank" rel="noopener">Buy</a>
+                <a class="agent-picker-buy" id="agentPickerBuyBtn" href="#" target="_blank" rel="noopener" data-i18n="ap_buy">Buy</a>
             </div>
-            <p class="agent-picker-foot">Pick an agent, then hit Buy.</p>
+            <p class="agent-picker-foot" data-i18n="ap_foot">Pick an agent, then hit Buy.</p>
         </div>
     </div>
 
@@ -1036,14 +1063,14 @@
         <div class="popup signup-popup">
             <button class="popup-close" onclick="closePopup()">&times;</button>
             <div class="popup-headline">
-                <span class="eyebrow">Welcome</span>
-                <h2>Shipping Coupons <span class="accent">$50&ndash;$500</span></h2>
-                <p>Sign up to your agent of choice — claim your welcome credit.</p>
+                <span class="eyebrow" data-i18n="popup_welcome">Welcome</span>
+                <h2 data-i18n-html="popup_title_html">Shipping Coupons <span class="accent">$50&ndash;$500</span></h2>
+                <p data-i18n="popup_sub">Sign up to your agent of choice — claim your welcome credit.</p>
             </div>
             <div id="signupAgentList">
                 <!-- featured + other agents injected by JS -->
             </div>
-            <p class="popup-dismiss" onclick="closePopup()">Maybe later</p>
+            <p class="popup-dismiss" onclick="closePopup()" data-i18n="popup_dismiss">Maybe later</p>
         </div>
     </div>
 
@@ -1051,7 +1078,7 @@
         <img class="sn-img" id="snImg" src="" alt="">
         <div class="sn-info">
             <div class="sn-name" id="snName"></div>
-            <div class="sn-sub">Someone just viewed this</div>
+            <div class="sn-sub" data-i18n="sn_sub">Someone just viewed this</div>
             <div class="sn-time" id="snTime"></div>
         </div>
     </a>
@@ -1061,7 +1088,7 @@
     {% if request.path != '/' and not request.path.startswith('/admin') %}
     <button type="button" class="page-back" onclick="if(window.history.length>1){history.back();}else{location.href='/shop';}" aria-label="Go back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Back
+        <span data-i18n="back">Back</span>
     </button>
     {% endif %}
 
@@ -1386,8 +1413,8 @@
             var list = document.getElementById('agentPickerList');
             var name = document.getElementById('agentPickerName');
             var buyWrap = document.getElementById('agentPickerBuyWrap');
-            list.innerHTML = '<div class="agent-picker-empty">Loading agents...</div>';
-            name.textContent = 'Choose an agent';
+            list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_loading')) || 'Loading...') + '</div>';
+            name.textContent = (window.i18nT && i18nT('ap_choose')) || 'Choose an agent';
             buyWrap.classList.remove('active');
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1638,14 +1665,14 @@
                     var buy = document.getElementById('pdBuyBtn');
                     buy.removeAttribute('href');            // no agent picked yet → button must prompt
                     buy.removeAttribute('target');
-                    buy.textContent = 'Buy';
+                    buy.textContent = (window.i18nT && i18nT('pd_buy')) || 'Buy';
                     delete buy.dataset.agentKey;
                     delete buy.dataset.agentName;
                     buy.dataset.rawUrl = data.raw_url || data.agent_url || '';
                     buy.dataset.pid = data.id;
                     // Reset the Choose-Agent button label and clear any prior pickprompt.
                     var lbl = document.getElementById('pdAgentBtnLabel');
-                    if (lbl) lbl.textContent = 'Choose Agent';
+                    if (lbl) lbl.textContent = (window.i18nT && i18nT('pd_choose_agent')) || 'Choose Agent';
                     var pickWarn = document.getElementById('pdAgentPickWarn');
                     if (pickWarn) pickWarn.classList.remove('active');
                     // If the user already picked an agent in a previous session,
@@ -1895,5 +1922,6 @@
     })();
     </script>
     <script src="/static/js/currency.js" defer></script>
+    <script src="/static/js/i18n.js" defer></script>
 </body>
 </html>

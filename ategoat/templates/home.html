@@ -244,24 +244,24 @@
     <div class="hero-content">
         <p class="hero-label" data-edit="hero_label">{{ settings.hero_label or 'The Open Catalogue' }}</p>
         <h1 class="hero-title" data-edit="hero_title" data-edit-html="1">{% if settings.hero_title %}{{ settings.hero_title|safe }}{% else %}Every<br><span class="accent">Find.</span><br>Anywhere.{% endif %}</h1>
-        <p class="hero-sub" data-edit="hero_sub">{{ settings.hero_sub or (site.product_count_label ~ ' curated products. Open every listing with the agent you trust — KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.') }}</p>
+        <p class="hero-sub" data-edit="hero_sub">{{ settings.hero_sub or (site.product_count_label ~ ' curated products. Open every listing with the agent you trust — Litbuy, Hipobuy, Mulebuy, USFANS, Oopbuy, KakoBuy, ACBuy, JoyaGoo, Sugargoo, or Lovegobuy.') }}</p>
         <form class="hero-search" id="heroSearchForm" action="/shop" method="get" role="search" autocomplete="off" onsubmit="trackClick('search','hero_submit','','','')">
             <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" name="q" id="heroSearch" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off">
-            <button type="submit" class="hero-search-go">Search</button>
+            <input type="text" name="q" id="heroSearch" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off" data-i18n-ph="search_ph" data-i18n-n="{{ site.product_count_label }}">
+            <button type="submit" class="hero-search-go" data-i18n="search_btn">Search</button>
             <div class="hero-search-dropdown" id="heroSearchDropdown" role="listbox"></div>
         </form>
-        <a href="/shop" class="btn hero-browse-btn">Browse All Products &rarr;</a>
-        <p class="hero-scroll">Scroll Down</p>
+        <a href="/shop" class="btn hero-browse-btn" data-i18n="hero_browse">Browse All Products &rarr;</a>
+        <p class="hero-scroll" data-i18n="hero_scroll">Scroll Down</p>
     </div>
 </section>
 
 {% if conveyor %}
 <div class="conveyor-section reveal">
     <div class="section" style="padding-bottom:16px;padding-top:0;">
-        <div class="sec-header"><h2 class="sec-title">Latest Drops</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
+        <div class="sec-header"><h2 class="sec-title" data-i18n="sec_latest">Latest Drops</h2><a href="/shop" class="sec-link" data-i18n="sec_viewall">View All &rarr;</a></div>
     </div>
     <div class="conveyor-wrap">
         <div class="conveyor-fade-l"></div><div class="conveyor-fade-r"></div>
@@ -271,13 +271,13 @@
             {% for p in conveyor %}
             <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
             </a>
             {% endfor %}
             {% for p in conveyor %}
             <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}">
                 <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
             </a>
             {% endfor %}
         </div>
@@ -287,14 +287,14 @@
 
 <div class="mid-cta reveal">
     <a href="/agents" onclick="trackClick('signup','mid-cta','','')">
-        <span>Sign Up to Any Agent — Get Coupons $50–$500</span>
-        <span>Lowest shipping rates guaranteed.</span>
+        <span data-i18n="mid_cta_1">Sign Up to Any Agent — Get Coupons $50–$500</span>
+        <span data-i18n="mid_cta_2">Lowest shipping rates guaranteed.</span>
     </a>
 </div>
 
 
 <div class="cat-tabs reveal">
-    <a href="/shop" class="cat-tab active">All</a>
+    <a href="/shop" class="cat-tab active" data-i18n="cat_all">All</a>
     {% for cat in categories if cat.slug != 'trending' %}
     <a href="/shop?category={{ cat.slug }}" class="cat-tab">{{ cat.name }}</a>
     {% endfor %}
@@ -302,15 +302,15 @@
 
 {% if products %}
 <div class="section reveal">
-    <div class="sec-header"><h2 class="sec-title">Best Selling</h2><a href="/shop" class="sec-link">View All &rarr;</a></div>
+    <div class="sec-header"><h2 class="sec-title" data-i18n="sec_best">Best Selling</h2><a href="/shop" class="sec-link" data-i18n="sec_viewall">View All &rarr;</a></div>
     <div class="product-grid" data-best-selling="1">
         {% for p in featured %}
         <a href="/product/{{ p.id }}" data-pid="{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button>
                 <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
-                <span class="product-card-badge">Best Selling</span>
+                <span class="product-card-badge" data-i18n="badge_best">Best Selling</span>
             </div>
-            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
         </a>
         {% endfor %}
     </div>
@@ -326,7 +326,7 @@
         {% for p in cp.picks %}
         <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
             <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
-            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy">Buy</span></div></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
         </a>
         {% endfor %}
     </div>
@@ -337,23 +337,23 @@
 
 <hr class="divider" style="max-width:1200px;margin:0 auto;">
 <div class="stat-row reveal">
-    <div class="stat"><div class="stat-num" data-count="{{ product_count }}" data-suffix="+">{{ '{:,}'.format(product_count) }}+</div><div class="stat-label">Products</div></div>
-    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">${{ '{:,}'.format(site.coupon_amount|int) }}</div><div class="stat-label">In Coupons</div></div>
-    <div class="stat"><div class="stat-num" data-count="{{ category_count }}">{{ category_count }}</div><div class="stat-label">Categories</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ product_count }}" data-suffix="+">{{ '{:,}'.format(product_count) }}+</div><div class="stat-label" data-i18n="stat_products">Products</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">${{ '{:,}'.format(site.coupon_amount|int) }}</div><div class="stat-label" data-i18n="stat_coupons">In Coupons</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ category_count }}">{{ category_count }}</div><div class="stat-label" data-i18n="stat_categories">Categories</div></div>
 </div>
 
 <section class="cta-section reveal">
     <div class="cta-glow"></div>
-    <p class="section-label" style="position:relative;">Limited Time</p>
-    <h2>Coupons $50–$500</h2>
-    <p>Most agents offer a welcome credit when you sign up via a referral link. Use any agent — choose the one with the best rates.</p>
-    <a href="/agents" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','cta','','')">Claim Your Coupons</a>
+    <p class="section-label" style="position:relative;" data-i18n="cta_limited">Limited Time</p>
+    <h2 data-i18n="cta_coupons_title">Coupons $50–$500</h2>
+    <p data-i18n="cta_coupons_sub">Most agents offer a welcome credit when you sign up via a referral link. Use any agent — choose the one with the best rates.</p>
+    <a href="/agents" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','cta','','')" data-i18n="cta_claim">Claim Your Coupons</a>
 </section>
 
 <section class="section reveal" style="padding-top:32px;padding-bottom:48px;max-width:800px;">
-    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;">The Open Catalogue — Any Agent, Any Time</h2>
-    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;">{{ site.name }} is an agent-neutral catalogue of curated finds from trusted Weidian, Taobao, and 1688 sellers. Every listing — shoes, hoodies, shirts, jackets, accessories, tech, womens — can be opened on the shopping agent of your choice: KakoBuy, Oopbuy, Hipobuy, JoyaGoo, Sugargoo, HubBuy, Mulebuy, ACBuy, Litbuy, or UsFans.</p>
-    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;">Use our free link converter to switch any shopping-agent product link to the agent you actually use. No lock-in, no preferred partner — pick whichever agent has the best rates or shipping for you today.</p>
+    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;" data-i18n="oc_title">The Open Catalogue — Any Agent, Any Time</h2>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;" data-i18n="oc_p1" data-i18n-name="{{ site.name }}">{{ site.name }} is an agent-neutral catalogue of curated finds from trusted Weidian, Taobao, and 1688 sellers. Every listing — shoes, hoodies, shirts, jackets, accessories, tech, womens — can be opened on the shopping agent of your choice.</p>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;" data-i18n="oc_p2">Use our free link converter to switch any shopping-agent product link to the agent you actually use. No lock-in, no preferred partner — pick whichever agent has the best rates or shipping for you today.</p>
 </section>
 {% endblock %}
 

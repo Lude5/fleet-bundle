@@ -95,7 +95,7 @@
         <button type="button" class="pd-copy pd-agent-btn" id="ppAgentBtn" onclick="ppOpenAgents()" aria-label="Switch agent">
           <span class="pd-agent-top">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-            <span>Switch Agent</span>
+            <span data-i18n="pd_switch_agent">Switch Agent</span>
           </span>
           <span class="pd-agent-sub" id="ppAgentSub"></span>
         </button>
@@ -104,8 +104,8 @@
         <div class="agent-picker">
           <button type="button" class="agent-picker-close" onclick="ppCloseAgents()" aria-label="Close">&times;</button>
           <div class="agent-picker-head">
-            <div class="agent-picker-title">Choose your agent</div>
-            <div class="agent-picker-sub">Same product — open it on whichever agent you trust. Your pick is remembered.</div>
+            <div class="agent-picker-title" data-i18n="ap_choose">Choose your agent</div>
+            <div class="agent-picker-sub" data-i18n="pp_agent_sub">Same product — open it on whichever agent you trust. Your pick is remembered.</div>
           </div>
           <div class="agent-picker-list" id="ppAgentList"></div>
         </div>
@@ -123,18 +123,18 @@
       </div>
       <div class="pd-price" id="ppPrice" data-pf="price" data-pf-type="price" data-price-usd="{{ product.price_numeric or product.price }}">${{ product.price }}</div>
       <div class="pd-meta">
-        <div class="pd-meta-cell"><div class="lbl">Weight</div><div class="val" data-pf="weight">{{ product.weight or '—' }}</div></div>
-        <div class="pd-meta-cell"><div class="lbl">Batch</div><div class="val" data-pf="batch">{{ product.batch or 'Unspecified' }}</div></div>
-        <div class="pd-meta-cell{% if not (product.sales and product.sales|int > 0) %} pf-empty{% endif %}"><div class="lbl">Sales</div><div class="val">🔥 <span data-pf="sales" data-pf-type="int">{{ product.sales|int if product.sales else 0 }}</span> sold</div></div>
-        <div class="pd-meta-cell{% if not product.retail_price %} pf-empty{% endif %}"><div class="lbl">Retail</div><div class="val retail-val" data-pf="retail_price" data-pf-type="money">{{ ('$' ~ product.retail_price) if product.retail_price else '—' }}</div></div>
-        <div class="pd-meta-cell{% if not product.seller %} pf-empty{% endif %}"><div class="lbl">Seller</div><div class="val" data-pf="seller">{{ product.seller or '—' }}</div></div>
+        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_weight">Weight</div><div class="val" data-pf="weight">{{ product.weight or '—' }}</div></div>
+        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_batch">Batch</div><div class="val" data-pf="batch">{{ product.batch or 'Unspecified' }}</div></div>
+        <div class="pd-meta-cell{% if not (product.sales and product.sales|int > 0) %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_sales">Sales</div><div class="val">🔥 <span data-pf="sales" data-pf-type="int">{{ product.sales|int if product.sales else 0 }}</span> sold</div></div>
+        <div class="pd-meta-cell{% if not product.retail_price %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_retail">Retail</div><div class="val retail-val" data-pf="retail_price" data-pf-type="money">{{ ('$' ~ product.retail_price) if product.retail_price else '—' }}</div></div>
+        <div class="pd-meta-cell{% if not product.seller %} pf-empty{% endif %}"><div class="lbl" data-i18n="pd_seller">Seller</div><div class="val" data-pf="seller">{{ product.seller or '—' }}</div></div>
       </div>
       <div>
-        <div class="pd-sec-head" data-variant-edit="1"><span id="ppVariantCount">Versions</span></div>
+        <div class="pd-sec-head" data-variant-edit="1"><span id="ppVariantCount" data-i18n="pd_versions">Versions</span></div>
         <div class="pd-variants" id="ppVariants"><div class="pd-qc-empty">Loading variants…</div></div>
       </div>
       <div>
-        <div class="pd-sec-head" data-qc-edit="1">QC photos</div>
+        <div class="pd-sec-head" data-qc-edit="1" data-i18n="pd_qc">QC photos</div>
         <div id="ppQc"><div class="pd-qc-empty">Looking for QC photos…</div></div>
       </div>
     </div>
@@ -143,14 +143,14 @@
 
 {% if related %}
 <div class="pp-related">
-  <h2>You might also like</h2>
+  <h2 data-i18n="related_title">You might also like</h2>
   <div class="product-grid">
     {% for r in related %}
     <a href="/product/{{ r.id }}" class="product-card{% if r.in_stock == 0 %} out-of-stock{% endif %}">
       <div class="product-card-img-wrap"><img class="product-card-img" src="{{ r.image }}" alt="{{ r.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
       <div class="product-card-body">
         <div class="product-card-name">{{ r.name }}</div>
-        <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ r.price_numeric or r.price }}">${{ r.price }}</span><span class="product-card-buy">View</span></div>
+        <div class="product-card-row"><span class="product-card-price" data-price-usd="{{ r.price_numeric or r.price }}">${{ r.price }}</span><span class="product-card-buy" data-i18n="card_view">View</span></div>
       </div>
     </a>
     {% endfor %}

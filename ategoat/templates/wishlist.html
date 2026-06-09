@@ -35,6 +35,9 @@
 
 {% block extra_js %}
 (function(){
+  // base.html defines window.wlGet / wlInjectHearts further down the page, so
+  // wait for DOMContentLoaded (by which point all inline scripts have parsed).
+  function startWishlist(){
     var ids = (window.wlGet ? window.wlGet() : []);
     var grid = document.getElementById('wishlistGrid');
     var loading = document.getElementById('wlLoading');
@@ -63,7 +66,7 @@
                  + '<div class="product-card-img-wrap"><img class="product-card-img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" referrerpolicy="no-referrer"></div>'
                  + '<div class="product-card-body"><div class="product-card-name">' + esc(p.name) + '</div>'
                  + '<div class="product-card-row"><span class="product-card-price" data-price-usd="' + esc(price) + '">$' + esc(p.price) + '</span>'
-                 + '<span class="product-card-buy">View</span></div></div></a>';
+                 + '<span class="product-card-buy">' + ((window.i18nT && i18nT('card_view')) || 'View') + '</span></div></div></a>';
         }).join('');
         if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' item' : ' items');
         // wire hearts + currency on the freshly-rendered cards
@@ -75,5 +78,8 @@
             if (h) { setTimeout(function(){ if (!window.wlCount()) showEmpty(); else { var c=document.getElementById('wlPageCount'); if(c) c.textContent=window.wlCount()+' items'; } }, 50); }
         });
     });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startWishlist);
+  else startWishlist();
 })();
 {% endblock %}
