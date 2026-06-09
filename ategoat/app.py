@@ -744,6 +744,13 @@ def tutorial():
     return render_template('tutorial.html')
 
 
+@app.route('/wishlist')
+def wishlist_page():
+    """Client-side wishlist (saved in the browser). The page is populated by JS
+    from localStorage via /api/product/<id>, so no server state is needed."""
+    return render_template('wishlist.html', categories=get_categories())
+
+
 @app.route('/spreadsheet')
 def spreadsheet():
     products = get_products()

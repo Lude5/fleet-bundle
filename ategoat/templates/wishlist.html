@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Wishlist | {{ site.name }}{% endblock %}
+{% block description %}Your saved finds on {{ site.name }}.{% endblock %}
+
+{% block extra_css %}
+.wl-wrap { max-width: 1320px; margin: 0 auto; padding: 96px 32px 64px; }
+.wl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border-subtle); }
+.wl-title { font-family: var(--font-display); font-size: clamp(30px, 5vw, 46px); text-transform: uppercase; letter-spacing: 1px; }
+.wl-title .accent { color: var(--accent); }
+.wl-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+.wl-empty { text-align: center; padding: 80px 20px; }
+.wl-empty .heart { font-size: 48px; color: var(--text-muted); opacity: .5; }
+.wl-empty h2 { font-family: var(--font-display); font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; }
+.wl-empty p { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.wl-loading { text-align: center; padding: 60px; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; }
+@media (max-width: 768px) { .wl-wrap { padding: 84px 16px 48px; } }
+{% endblock %}
+
+{% block content %}
+<div class="wl-wrap">
+  <div class="wl-head">
+    <h1 class="wl-title" data-i18n="wishlist_title">Wish<span class="accent">list</span></h1>
+    <span class="wl-count" id="wlPageCount"></span>
+  </div>
+  <div class="wl-loading" id="wlLoading" data-i18n="wishlist_loading">Loading your saved finds…</div>
+  <div class="product-grid" id="wishlistGrid" style="display:none;"></div>
+  <div class="wl-empty" id="wlEmpty" style="display:none;">
+    <div class="heart">&#9825;</div>
+    <h2 data-i18n="wishlist_empty_title">Nothing saved yet</h2>
+    <p data-i18n="wishlist_empty_sub">Tap the heart on any product to save it here for later.</p>
+    <a href="/shop" class="btn btn-primary" data-i18n="wishlist_browse">Browse products</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+(function(){
+    var ids = (window.wlGet ? window.wlGet() : []);
+    var grid = document.getElementById('wishlistGrid');
+    var loading = document.getElementById('wlLoading');
+    var empty = document.getElementById('wlEmpty');
+    var countEl = document.getElementById('wlPageCount');
+
+    function showEmpty(){ loading.style.display='none'; grid.style.display='none'; empty.style.display='block'; if(countEl) countEl.textContent=''; }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+    if (!ids.length) { showEmpty(); return; }
+
+    // Fetch each saved product; drop any that no longer exist.
+    Promise.all(ids.map(function(id){
+        return fetch('/api/product/' + encodeURIComponent(id))
+            .then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(d){ return (d && !d.error) ? d : null; })
+            .catch(function(){ return null; });
+    })).then(function(results){
+        var items = results.filter(Boolean);
+        if (!items.length) { showEmpty(); return; }
+        loading.style.display = 'none';
+        grid.style.display = '';
+        grid.innerHTML = items.map(function(p){
+            var price = (p.price_numeric || p.price || '');
+            return '<a href="/product/' + esc(p.id) + '" class="product-card" onclick="trackClick(\'view\',\'wishlist\',\'' + esc(p.id) + '\',\'' + esc(p.category||'') + '\',\'' + esc(p.name||'') + '\')">'
+                 + '<div class="product-card-img-wrap"><img class="product-card-img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" referrerpolicy="no-referrer"></div>'
+                 + '<div class="product-card-body"><div class="product-card-name">' + esc(p.name) + '</div>'
+                 + '<div class="product-card-row"><span class="product-card-price" data-price-usd="' + esc(price) + '">$' + esc(p.price) + '</span>'
+                 + '<span class="product-card-buy">View</span></div></div></a>';
+        }).join('');
+        if (countEl) countEl.textContent = items.length + (items.length === 1 ? ' item' : ' items');
+        // wire hearts + currency on the freshly-rendered cards
+        if (window.wlInjectHearts) window.wlInjectHearts();
+        if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
+        // when a heart removes the last item, fall back to empty state on reload
+        grid.addEventListener('click', function(e){
+            var h = e.target.closest && e.target.closest('.product-card-wish');
+            if (h) { setTimeout(function(){ if (!window.wlCount()) showEmpty(); else { var c=document.getElementById('wlPageCount'); if(c) c.textContent=window.wlCount()+' items'; } }, 50); }
+        });
+    });
+})();
+{% endblock %}

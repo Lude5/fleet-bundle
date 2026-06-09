@@ -160,6 +160,20 @@
         .nav-links a.active::after { content: ''; position: absolute; bottom: 0; left: 16px; right: 16px; height: 2px; background: var(--accent); }
         .nav-cta { padding: 8px 18px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; transition: background 0.2s; margin-left: 8px; }
         .nav-cta:hover { background: var(--accent-hover); }
+        /* Wishlist heart in nav + on cards */
+        .nav-wishlist { position: relative; display: inline-flex; align-items: center; font-size: 18px; color: var(--text-secondary); padding: 20px 12px; transition: color .2s; }
+        .nav-wishlist:hover, .nav-wishlist.active { color: var(--accent); }
+        .nav-wish-count { position: absolute; top: 11px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; background: var(--accent); color: #fff; border-radius: 999px; font-family: var(--font-mono); font-size: 9px; font-weight: 800; line-height: 16px; text-align: center; display: none; }
+        .nav-wish-count.show { display: inline-block; }
+        .product-card-wish {
+            position: absolute; top: 8px; left: 8px; z-index: 4;
+            width: 32px; height: 32px; border-radius: 999px;
+            background: rgba(255,255,255,0.92); border: 1px solid var(--border-subtle);
+            color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+            font-size: 15px; cursor: pointer; transition: all .15s; padding: 0; line-height: 1;
+        }
+        .product-card-wish:hover { color: #e0245e; border-color: #e0245e; transform: scale(1.08); }
+        .product-card-wish.on { color: #e0245e; border-color: #e0245e; background: #fff; }
 
         /* Currency switcher */
         .currency-switcher { position: relative; margin-right: 4px; }
@@ -883,7 +897,8 @@
                     <button type="button" onclick="setCurrency('CAD')">CAD <span class="sym">C$</span></button>
                 </div>
             </li>
-            <li><a href="/agents" class="nav-cta">Sign Up — Coupons $50–$500</a></li>
+            <li><a href="/wishlist" class="nav-wishlist {% if request.path == '/wishlist' %}active{% endif %}" aria-label="Wishlist" data-i18n-title="wishlist">&#9825;<span class="nav-wish-count" id="navWishCount"></span></a></li>
+            <li><a href="/agents" class="nav-cta" data-i18n="nav_signup">Sign Up — Coupons $50–$500</a></li>
         </ul>
         <button class="nav-hamburger" onclick="var p=document.getElementById('popup');if(p)p.classList.remove('active');document.getElementById('mob').classList.add('open')">&#9776;</button>
     </nav>
@@ -1826,6 +1841,59 @@
         <button class="qc-lb-nav qc-lb-next" type="button" onclick="qcLbNext(1)" aria-label="Next">›</button>
         <div class="qc-lb-counter" id="qcLbCounter">1 / 1</div>
     </div>
+    <script>
+    /* ============================================================
+       WISHLIST — client-side (localStorage), shared across pages.
+       Heart on every product card + a nav counter + the /wishlist page.
+       ============================================================ */
+    (function(){
+        var WL_KEY = 'repsloot_wishlist';
+        window.wlGet = function(){ try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; } catch(e){ return []; } };
+        window.wlHas = function(id){ return window.wlGet().indexOf(String(id)) > -1; };
+        window.wlCount = function(){ return window.wlGet().length; };
+        window.wlToggle = function(id){
+            id = String(id); var a = window.wlGet(); var i = a.indexOf(id);
+            if (i > -1) a.splice(i,1); else a.push(id);
+            try { localStorage.setItem(WL_KEY, JSON.stringify(a)); } catch(e){}
+            window.wlSyncUI();
+            return a.indexOf(id) > -1;
+        };
+        window.wlSyncUI = function(){
+            var n = window.wlCount();
+            var b = document.getElementById('navWishCount');
+            if (b) { b.textContent = n; b.classList.toggle('show', n > 0); }
+            var mb = document.getElementById('mobWishCount'); if (mb) mb.textContent = n ? (' (' + n + ')') : '';
+            [].forEach.call(document.querySelectorAll('.product-card-wish'), function(h){
+                var on = window.wlHas(h.dataset.wish);
+                h.classList.toggle('on', on);
+                h.innerHTML = on ? '&#9829;' : '&#9825;';
+                h.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Add to wishlist');
+            });
+        };
+        // Inject a heart onto every product card (avoids editing each card markup).
+        window.wlInjectHearts = function(){
+            [].forEach.call(document.querySelectorAll('.product-card'), function(card){
+                if (card.__wl) return;
+                var id = '';
+                var m = (card.getAttribute('href') || '').match(/\/product\/([A-Za-z0-9]+)/);
+                if (m) id = m[1];
+                if (!id) id = card.dataset.productId || card.dataset.pid || '';
+                if (!id) return;
+                card.__wl = 1;
+                var wrap = card.querySelector('.product-card-img-wrap') || card;
+                if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+                var h = document.createElement('button');
+                h.type = 'button'; h.className = 'product-card-wish'; h.dataset.wish = id;
+                h.innerHTML = '&#9825;';
+                h.onclick = function(e){ e.preventDefault(); e.stopPropagation(); window.wlToggle(id); };
+                wrap.appendChild(h);
+            });
+            window.wlSyncUI();
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', window.wlInjectHearts);
+        else window.wlInjectHearts();
+    })();
+    </script>
     <script src="/static/js/currency.js" defer></script>
 </body>
 </html>
