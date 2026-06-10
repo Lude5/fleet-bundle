@@ -406,9 +406,16 @@
             transition: opacity .25s ease;
         }
         .popup {
-            background: var(--surface); border: 1px solid var(--border);
+            /* translucent glass panel; must NEVER exceed the viewport (the close
+               button was getting clipped off-screen on phones) */
+            background: rgba(20,20,20,0.88);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
             border-radius: var(--radius);
             max-width: 400px; width: 100%;
+            max-height: calc(100vh - 32px);
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             text-align: center; padding: 48px 32px;
             position: relative;
             opacity: 0; transform: scale(.94) translateY(10px);
@@ -570,20 +577,20 @@
         .popup-dismiss:hover { color: var(--text); background: var(--surface-2); }
 
         /* Welcome popup — agent picker w/ KakoBuy featured */
-        .popup.signup-popup { max-width: 520px; padding: 28px 24px; text-align: left; }
-        .popup-headline { text-align: center; margin-bottom: 18px; }
+        .popup.signup-popup { max-width: 520px; padding: 22px 20px 18px; text-align: left; }
+        .popup-headline { text-align: center; margin-bottom: 14px; padding: 0 36px; }
         .popup-headline .eyebrow {
-            display: inline-block; font-family: var(--font-mono); font-size: 10px;
+            display: inline-block; font-family: var(--font-mono); font-size: 9px;
             letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .popup-headline h2 {
-            font-family: var(--font-display); font-size: clamp(24px, 4vw, 32px);
-            text-transform: uppercase; line-height: 1; margin-bottom: 10px;
+            font-family: var(--font-display); font-size: clamp(19px, 4.5vw, 26px);
+            text-transform: uppercase; line-height: 1.05; margin-bottom: 6px;
             letter-spacing: 1px;
         }
         .popup-headline h2 .accent { color: var(--accent); }
-        .popup-headline p { font-size: 13px; color: var(--text-secondary); margin: 0; }
+        .popup-headline p { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.45; }
         .signup-featured {
             display: flex; align-items: center; gap: 12px;
             padding: 16px 18px;
@@ -646,6 +653,19 @@
         .signup-other-meta { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
         .signup-other-meta .nm { font-weight: 700; }
         .signup-other-meta .cp { font-family: var(--font-mono); font-size: 8.5px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.5px; text-transform: none; margin-top: 3px; }
+        @media (max-width: 480px) {
+            /* phones: compact everything so the whole popup (X included) fits the frame */
+            .popup-overlay { padding: 12px; }
+            .popup { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+            .popup.signup-popup { padding: 14px 12px 12px; }
+            .popup-headline { padding: 0 34px; margin-bottom: 10px; }
+            .popup-headline p { font-size: 11px; }
+            .signup-featured { padding: 12px 14px; margin-bottom: 10px; }
+            .signup-featured .meta .ttl { font-size: 16px; }
+            .signup-other-label { margin: 10px 0 6px; }
+            .signup-other { padding: 8px 9px; }
+            .popup-dismiss { margin-top: 6px; padding: 10px 16px; min-height: 40px; }
+        }
 
         /* Product detail modal */
         .pd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 400; display: none; align-items: center; justify-content: center; padding: 24px; }
