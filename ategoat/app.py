@@ -365,20 +365,17 @@ def _b_lovegobuy(url, _id, _plat, code):
 # so editing the code in one place updates every link site-wide. Only kakobuy/
 # oopbuy/hipobuy ship with verified codes; the rest default to '' (no code) until
 # the operator drops their own in via the master_admin agent editor.
-# Client (repsloot.com) sequence + invite codes — Litbuy recommended/first,
-# HubBuy replaced by Lovegobuy. One `code` drives both the buy URLs and the
-# signup link ({code} placeholder). Some signups use special invite links.
 AGENTS = [
-    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'code': 'vektor',                    'signup': 'https://litbuy.com/register?invitecode={code}',     'coupon': 'Up to $150 in coupons', 'recommended': True},
-    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'code': '3tig853we',                 'signup': 'https://hipobuy.com/register?invitecode={code}',    'coupon': 'Up to $100 in coupons'},
-    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'code': '201304698',                 'signup': 'https://mulebuy.com/register?ref={code}',           'coupon': 'Up to $200 in coupons'},
-    {'key': 'usfans',      'name': 'USFANS',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'code': '7PRFKR',                    'signup': 'https://usfans.com/register?ref={code}',            'coupon': 'Up to $100 in coupons'},
-    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'code': '896y7vi0v',                 'signup': 'https://oopbuy.com/register?invitecode={code}',     'coupon': 'Up to $300 in coupons'},
-    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'vault'), 'signup': 'https://ikako.vip/r/n62s8s',          'coupon': 'Up to $500 shipping credit'},
-    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'code': '2fccf7',                    'signup': 'https://www.acbuy.com/login?loginstatus=register&code={code}', 'coupon': 'Up to $250 in coupons'},
-    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'code': '301008733',                 'signup': 'https://joyagoo.com/register?ref={code}',           'coupon': 'Up to $300 in coupons'},
-    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'code': '3442195388988570735',       'signup': 'https://www.sugargoo.com/register?memberid={code}', 'coupon': 'Up to $200 in coupons'},
-    {'key': 'lovegobuy',   'name': 'Lovegobuy',   'build': _b_lovegobuy,   'color': '#f59e0b', 'domain': 'lovegobuy.com',   'code': 'izl5g2',                    'signup': 'https://www.lovegobuy.com/?invite_code={code}',     'coupon': 'Up to $150 in coupons'},
+    {'key': 'kakobuy',     'name': 'KakoBuy',     'build': _b_kakobuy,     'color': '#0d9488', 'domain': 'kakobuy.com',     'code': SITE_CONFIG.get('affiliate_code', 'ategoat'), 'signup': 'https://www.kakobuy.com/register?affcode={code}',   'coupon': 'Up to $500 shipping credit'},
+    {'key': 'oopbuy',      'name': 'Oopbuy',      'build': _b_oopbuy,      'color': '#22c55e', 'domain': 'oopbuy.com',      'code': 'KRLHFHSGL',                                  'signup': 'https://oopbuy.com/register?inviteCode={code}',     'coupon': 'Up to $300 in coupons'},
+    {'key': 'hipobuy',     'name': 'Hipobuy',     'build': _b_hipobuy,     'color': '#14b8a6', 'domain': 'hipobuy.com',     'code': '25RXG9B0E',                                  'signup': 'https://hipobuy.com/register?inviteCode={code}',    'coupon': 'Up to $100 in coupons'},
+    {'key': 'joyagoo',     'name': 'JoyaGoo',     'build': _b_joyagoo,     'color': '#ef4444', 'domain': 'joyagoo.com',     'code': '',                                           'signup': 'https://www.joyagoo.com/index/user/register',       'coupon': 'Up to $300 in coupons'},
+    {'key': 'sugargoo',    'name': 'Sugargoo',    'build': _b_sugargoo,    'color': '#ec4899', 'domain': 'sugargoo.com',    'code': '',                                           'signup': 'https://www.sugargoo.com/index/user/register',      'coupon': 'Up to $200 in coupons'},
+    {'key': 'hubbuy',      'name': 'HubBuy',      'build': _b_hubbuy,      'color': '#3b82f6', 'domain': 'hubbuycn.com',    'code': '',                                           'signup': 'https://www.hubbuycn.com/register',                 'coupon': 'Up to $150 in coupons'},
+    {'key': 'mulebuy',     'name': 'Mulebuy',     'build': _b_mulebuy,     'color': '#a855f7', 'domain': 'mulebuy.com',     'code': '',                                           'signup': 'https://mulebuy.com/register',                      'coupon': 'Up to $200 in coupons'},
+    {'key': 'acbuy',       'name': 'ACBuy',       'build': _b_acbuy,       'color': '#8b5cf6', 'domain': 'acbuy.com',       'code': '',                                           'signup': 'https://acbuy.com/register',                        'coupon': 'Up to $250 in coupons'},
+    {'key': 'litbuy',      'name': 'Litbuy',      'build': _b_litbuy,      'color': '#06b6d4', 'domain': 'litbuy.com',      'code': '',                                           'signup': 'https://www.litbuy.com/register',                   'coupon': 'Up to $150 in coupons'},
+    {'key': 'usfans',      'name': 'UsFans',      'build': _b_usfans,      'color': '#dc2626', 'domain': 'usfans.com',      'code': '',                                           'signup': 'https://www.usfans.com/register',                   'coupon': 'Up to $100 in coupons'},
 ]
 
 # key -> default agent record, and the default display order.
