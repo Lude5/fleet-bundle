@@ -39,6 +39,7 @@
 .ae-codechip:hover { background: rgba(34,211,238,.18); }
 .ae-codechip:focus { background: rgba(34,211,238,.24); box-shadow: 0 0 0 3px rgba(34,211,238,.16); }
 .ae-codechip::placeholder { color: var(--text-muted); font-weight: 400; font-style: italic; }
+.ae-warn { color: #f59e0b; font-weight: 600; }
 .ae-name-row { display: flex; align-items: center; gap: 8px; }
 .ae-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 .ae-savebar { position: sticky; bottom: 0; margin-top: 22px; padding: 14px 0; background: linear-gradient(transparent, var(--bg) 30%); display: flex; gap: 12px; align-items: center; max-width: 920px; }
@@ -130,6 +131,7 @@ function buyPreviewTmpl(a){
   if (a.custom){
     const t = (a.buy_url||'').trim();
     if (!t) return '⚠ add a buy-link URL so buy buttons work';
+    if (!/\{url\}|\{rawurl\}|\{itemID\}/.test(t)) return '⚠ buy-link needs {url} (or {itemID}) so it opens the actual product';
     return t.replace('{url}','<item-link>').replace('{rawurl}','<item-link>')
             .replace('{itemID}','<id>').split('{code}').join(CHIP+'{code}'+CHIP);
   }
@@ -160,15 +162,26 @@ function pvLine(label, tmpl, a){
   return html + '</b>';
 }
 function previewHTML(a){
-  return pvLine('BUY', buyPreviewTmpl(a), a) + '<br>' + pvLine('SIGNUP', signupPreviewTmpl(a), a);
+  const buyLine = pvLine('BUY', buyPreviewTmpl(a), a);
+  let signupLine = pvLine('SIGNUP', signupPreviewTmpl(a), a);
+  const sgn = (a.signup||'').trim();
+  // Honesty: if a code is set but the signup URL has no {code} slot, the code can't ride
+  // along on the signup link (it still applies to buy buttons). Warn, don't silently drop.
+  if (sgn && sgn.indexOf('{code}') < 0){
+    const show = (a.code||'').trim() ? 'inline' : 'none';
+    signupLine += ` <span class="ae-warn" data-codewarn style="display:${show}">⚠ code not in signup link — add {code} to include it here</span>`;
+  }
+  return buyLine + '<br>' + signupLine;
 }
 function bindCodeChips(row, a){
+  const warn = row.querySelector('[data-codewarn]');
   row.querySelectorAll('[data-codechip]').forEach(chip => {
     chip.addEventListener('input', () => {
       a.code = chip.value; dirty();
       const top = row.querySelector('input[data-f=code]');
       if (top && top.value !== a.code) top.value = a.code;   // sync code field (no re-render → caret stays)
       row.querySelectorAll('[data-codechip]').forEach(c2 => { if (c2!==chip && c2.value!==a.code) c2.value = a.code; });
+      if (warn) warn.style.display = a.code.trim() ? 'inline' : 'none';   // keep the signup-gap hint live
       chip.style.width = Math.max(46, (a.code.length||7)*7.5 + 16) + 'px';
     });
   });
@@ -191,7 +204,7 @@ function render(){
       <div class="ae-fields">
         <div class="ae-field"><label>Name${a.custom?' · <span style="color:var(--accent)">custom</span>':''}</label><input data-f="name" value="${esc(a.name)}" placeholder="Agent name"></div>
         <div class="ae-field code"><label>Invite / affiliate code</label><input data-f="code" value="${esc(a.code)}" placeholder="(none)"></div>
-        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom)?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
+        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom||(a.code||'').trim())?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
         ${a.custom ? `<div class="ae-field full"><label>Buy-link URL (use {url} and {code})</label><input data-f="buy_url" value="${esc(a.buy_url||'')}" placeholder="https://agent.com/import?url={url}&code={code}"></div>` : ''}
         <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}" placeholder="Up to \$X in coupons"></div>
         <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>

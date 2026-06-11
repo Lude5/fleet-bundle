@@ -409,6 +409,11 @@ def _make_custom_build(buy_tpl):
         t = (buy_tpl or '').strip()
         if not t:
             return ''
+        # A product buy link MUST reference the item, else every product would route to
+        # the same static URL. If the template carries no item placeholder, drop it from
+        # the buy-picker (the agent can still be signup-only) rather than mis-route traffic.
+        if '{url}' not in t and '{rawurl}' not in t and '{itemID}' not in t:
+            return ''
         return (t.replace('{url}', _up.quote(seller_url or '', safe=''))
                  .replace('{rawurl}', seller_url or '')
                  .replace('{itemID}', item_id or '')
