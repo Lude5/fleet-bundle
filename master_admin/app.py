@@ -18,7 +18,17 @@ from flask import (Flask, render_template, request, jsonify, redirect,
 
 ROOT = Path(__file__).resolve().parent       # _master_admin/
 CLIENTS = ROOT.parent                         # clients/
-SITES_FILE = ROOT / 'sites.json'
+_REPO_SITES = ROOT / 'sites.json'             # committed seed (read-only on Render's ephemeral app dir)
+# Persist the sites config on the Render disk so UI edits (add / remove / edit sites)
+# survive restarts AND redeploys. The app directory is EPHEMERAL on Render — writing
+# sites.json there meant every change was reverted to the committed copy on the next
+# boot. The bundle's persistent disk is mounted at /data (same one ategoat uses).
+_PERSIST_DIR = '/data/master_admin' if os.path.isdir('/data') else str(ROOT)
+try:
+    os.makedirs(_PERSIST_DIR, exist_ok=True)
+    SITES_FILE = Path(_PERSIST_DIR) / 'sites.json'
+except OSError:
+    SITES_FILE = _REPO_SITES
 
 
 def _sibling(name):
@@ -177,8 +187,19 @@ def _overlay_secrets(sites):
 
 def load_sites():
     if not SITES_FILE.exists():
-        save_sites(DEFAULT_SITES)
-        return _overlay_secrets([dict(s) for s in DEFAULT_SITES])
+        # First run on a fresh disk: seed the persistent store from the committed
+        # sites.json (or DEFAULT_SITES), then the persistent copy is authoritative.
+        seed = None
+        if _REPO_SITES.exists() and _REPO_SITES != SITES_FILE:
+            try:
+                with open(_REPO_SITES, 'r', encoding='utf-8') as f:
+                    seed = json.load(f)
+            except (json.JSONDecodeError, OSError):
+                seed = None
+        if seed is None:
+            seed = [dict(s) for s in DEFAULT_SITES]
+        save_sites(seed)
+        return _overlay_secrets(seed)
     try:
         with open(SITES_FILE, 'r', encoding='utf-8') as f:
             return _overlay_secrets(json.load(f))
