@@ -81,6 +81,7 @@
 <div class="ae-list" id="aeList"><div class="ae-status">Loading agents…</div></div>
 <div class="ae-savebar">
   <button class="ae-btn" id="aeSave" disabled>Save changes</button>
+  <button class="ae-btn ae-btn-ghost" id="aeAdd" type="button">+ Add Agent</button>
   <button class="ae-btn ae-btn-ghost" id="aePreview" type="button">👁 Preview popup</button>
   <span class="ae-status" id="aeStatus"></span>
 </div>
@@ -111,6 +112,11 @@ let AGENTS = [];
 function esc(s){ return (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 function buyPreview(a){
+  if (a.custom){
+    const t = (a.buy_url||'').trim();
+    if (!t) return '⚠ add a buy-link URL so buy buttons work';
+    return t.replace('{url}','<item-link>').replace('{rawurl}','<item-link>').replace('{itemID}','<id>').replace('{code}', a.code||'');
+  }
   // mirror the server builders just enough to show the operator what a buy link looks like
   const c = a.code || '';
   const sample = 'https://weidian.com/item.html?itemID=7717247027';
@@ -139,15 +145,17 @@ function render(){
     row.dataset.key = a.key;
     row.innerHTML = `
       ${a.key===topKey ? '<span class="ae-best">★ Best Option — shown first</span>' : ''}
+      ${a.custom ? '<button type="button" class="ae-remove" data-act="remove" title="Remove this agent" style="position:absolute;top:-9px;right:14px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.45);font-family:var(--font-mono);font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:6px;cursor:pointer;z-index:3;">× remove</button>' : ''}
       <div class="ae-grip" title="Drag to reorder">⋮⋮</div>
       <button type="button" class="ae-toggle ${a.enabled===false?'':'on'}" data-act="toggle"></button>
       <img class="ae-logo" src="${esc(a.logo)}" alt="" referrerpolicy="no-referrer"
            onerror="this.style.visibility='hidden'">
       <div class="ae-fields">
-        <div class="ae-field"><label>Name</label><input data-f="name" value="${esc(a.name)}"></div>
+        <div class="ae-field"><label>Name${a.custom?' · <span style="color:var(--accent)">custom</span>':''}</label><input data-f="name" value="${esc(a.name)}" placeholder="Agent name"></div>
         <div class="ae-field code"><label>Invite / affiliate code</label><input data-f="code" value="${esc(a.code)}" placeholder="(none)"></div>
-        <div class="ae-field full"><label>Sign-up URL ${a.code_param?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}"></div>
-        <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}"></div>
+        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom)?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
+        ${a.custom ? `<div class="ae-field full"><label>Buy-link URL (use {url} and {code})</label><input data-f="buy_url" value="${esc(a.buy_url||'')}" placeholder="https://agent.com/import?url={url}&code={code}"></div>` : ''}
+        <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}" placeholder="Up to \$X in coupons"></div>
         <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>
         <div class="ae-preview">BUY: <b>${esc(buyPreview(a))}</b><br>SIGNUP: <b>${esc(signupPreview(a))}</b></div>
       </div>`;
@@ -157,6 +165,10 @@ function render(){
     });
     row.querySelector('[data-act=toggle]').addEventListener('click', () => {
       a.enabled = (a.enabled===false); render(); dirty();
+    });
+    const rmBtn = row.querySelector('[data-act=remove]');
+    if (rmBtn) rmBtn.addEventListener('click', () => {
+      AGENTS = AGENTS.filter(x => x.key !== a.key); render(); dirty();
     });
     attachDrag(row);
     listEl.appendChild(row);
@@ -230,6 +242,7 @@ saveBtn.addEventListener('click', async () => {
   const payload = { agents: AGENTS.map(a => ({
     key: a.key, name: a.name, code: a.code, signup: a.signup,
     coupon: a.coupon, color: a.color, enabled: a.enabled !== false,
+    ...(a.custom ? { custom: true, buy_url: a.buy_url || '', domain: a.domain || '' } : {}),
   })) };
   try {
     const r = await fetch('/agents/' + SITE + '/save', {
@@ -263,6 +276,18 @@ function buildPopupPreview(){
   if (!enabled.length) html = '<div class="ae-status">No agents enabled — toggle some on.</div>';
   document.getElementById('aePvList').innerHTML = html;
 }
+// ---- Add a brand-new custom agent ----
+document.getElementById('aeAdd').addEventListener('click', () => {
+  const k = 'custom_' + Math.random().toString(36).slice(2, 9);
+  AGENTS.push({ key:k, name:'', code:'', signup:'https://', buy_url:'', coupon:'',
+                color:'#06b6d4', enabled:true, custom:true, code_param:true, domain:'', logo:'' });
+  render(); dirty();
+  const rows = listEl.querySelectorAll('.ae-row');
+  const last = rows[rows.length-1];
+  if (last){ last.scrollIntoView({behavior:'smooth', block:'center'});
+             const n = last.querySelector('input[data-f=name]'); if (n) setTimeout(()=>n.focus(), 60); }
+});
+
 document.getElementById('aePreview').addEventListener('click', () => { buildPopupPreview(); pvOverlay.classList.add('open'); });
 document.getElementById('aePvClose').addEventListener('click', () => pvOverlay.classList.remove('open'));
 pvOverlay.addEventListener('click', (e) => { if (e.target === pvOverlay) pvOverlay.classList.remove('open'); });

@@ -400,22 +400,59 @@ def _load_agents_config():
     return {'order': [], 'overrides': {}}
 
 
+def _make_custom_build(buy_tpl):
+    """Buy-URL builder for an operator-added CUSTOM agent. The template may use
+    {url} (URL-encoded seller link), {rawurl} (plain), {itemID} and {code}."""
+    import urllib.parse as _up
+
+    def _b(seller_url, item_id, platform, code):
+        t = (buy_tpl or '').strip()
+        if not t:
+            return ''
+        return (t.replace('{url}', _up.quote(seller_url or '', safe=''))
+                 .replace('{rawurl}', seller_url or '')
+                 .replace('{itemID}', item_id or '')
+                 .replace('{code}', code or ''))
+    return _b
+
+
+def _agent_host(*urls):
+    from urllib.parse import urlparse
+    for u in urls:
+        try:
+            h = urlparse(u or '').netloc
+            if h:
+                return h.replace('www.', '')
+        except Exception:
+            pass
+    return ''
+
+
 def get_effective_agents(include_disabled=False):
-    """Merge hardcoded AGENTS defaults with operator overrides (code, name, color,
-    coupon, signup, enabled) and order. Each returned entry keeps its build fn so
-    buy URLs still work. This is the single source the whole site reads."""
+    """Merge hardcoded AGENTS defaults + operator-added CUSTOM agents with the
+    operator's overrides (code, name, color, coupon, signup, enabled) and order.
+    Each entry keeps a build fn so buy URLs work. Single source the whole site reads."""
     cfg = _load_agents_config()
     overrides = cfg.get('overrides') or {}
-    order = [k for k in (cfg.get('order') or []) if k in AGENT_DEFAULTS]
+    order = list(cfg.get('order') or [])          # keep saved order, incl. custom keys
     for k in AGENT_DEFAULT_ORDER:
         if k not in order:
             order.append(k)
     out = []
     for k in order:
-        base = AGENT_DEFAULTS.get(k)
-        if not base:
-            continue
         ov = overrides.get(k) or {}
+        base = AGENT_DEFAULTS.get(k)
+        if base is None:
+            # operator-added custom agent: must carry its own definition
+            if not ov.get('custom'):
+                continue
+            base = {
+                'key': k, 'name': ov.get('name') or k, 'code': ov.get('code') or '',
+                'color': ov.get('color') or '#444444', 'signup': ov.get('signup') or '',
+                'coupon': ov.get('coupon') or '', 'custom': True, 'buy_url': ov.get('buy_url') or '',
+                'domain': ov.get('domain') or _agent_host(ov.get('buy_url'), ov.get('signup')),
+                'build': _make_custom_build(ov.get('buy_url') or ''),
+            }
         enabled = ov.get('enabled', True)
         if not include_disabled and enabled is False:
             continue
@@ -2549,6 +2586,8 @@ def api_admin_agents_config():
         'signup_resolved': _agent_signup_url(a),
         'enabled': a.get('enabled', True),
         'code_param': ('{code}' in (a.get('signup', '') or '')),
+        'custom': bool(a.get('custom')),
+        'buy_url': a.get('buy_url', ''),
         'logo': f'https://www.google.com/s2/favicons?domain={a.get("domain","")}&sz=64',
     } for a in agents]})
 
@@ -2564,18 +2603,27 @@ def api_admin_save_agents_config():
     data = request.get_json(silent=True) or {}
     order = list(data.get('order') or [])
     overrides = dict(data.get('overrides') or {})
+    import re as _re
     if isinstance(data.get('agents'), list):
         order, overrides = [], {}
         for a in data['agents']:
-            k = a.get('key')
-            if not k or k not in AGENT_DEFAULTS:
+            k = (a.get('key') or '').strip()
+            if not k:
                 continue
-            order.append(k)
-            overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
-    clean = {
-        'order': [k for k in order if k in AGENT_DEFAULTS],
-        'overrides': {k: v for k, v in overrides.items() if k in AGENT_DEFAULTS},
-    }
+            if k in AGENT_DEFAULTS:
+                order.append(k)
+                overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
+            else:
+                # operator-added CUSTOM agent — sanitize key, require a name, keep full definition
+                k = _re.sub(r'[^a-z0-9_]+', '', k.lower())[:40]
+                if not k or k in AGENT_DEFAULTS or not (a.get('name') or '').strip():
+                    continue
+                ov = {f: (a.get(f) or '') for f in ('name', 'code', 'signup', 'coupon', 'color', 'buy_url', 'domain')}
+                ov['enabled'] = a.get('enabled', True) is not False
+                ov['custom'] = True
+                order.append(k)
+                overrides[k] = ov
+    clean = {'order': order, 'overrides': overrides}
     set_settings({'agents_config': json.dumps(clean)})
     return jsonify({'ok': True, 'agents_config': clean})
 
