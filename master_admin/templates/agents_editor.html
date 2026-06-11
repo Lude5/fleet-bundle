@@ -178,13 +178,38 @@ function bindCodeChips(row, a){
   row.querySelectorAll('[data-codechip]').forEach(chip => {
     chip.addEventListener('input', () => {
       a.code = chip.value; dirty();
-      const top = row.querySelector('input[data-f=code]');
-      if (top && top.value !== a.code) top.value = a.code;   // sync code field (no re-render → caret stays)
+      syncCodeFields(row, a, chip);   // mirror into the code field + resolved Sign-up URL field
       row.querySelectorAll('[data-codechip]').forEach(c2 => { if (c2!==chip && c2.value!==a.code) c2.value = a.code; });
       if (warn) warn.style.display = a.code.trim() ? 'inline' : 'none';   // keep the signup-gap hint live
       chip.style.width = Math.max(46, (a.code.length||7)*7.5 + 16) + 'px';
     });
   });
+}
+
+// The Sign-up URL FIELD shows the code resolved (…affcode=ategoat) instead of the raw
+// {code} template, but a.signup keeps the template so the code stays auto-updated everywhere.
+function resolveSignup(a){
+  // always fill the {code} slot (empty string when no code) so the raw {code} token never shows
+  return (a.signup || '').split('{code}').join(a.code || '');
+}
+function parseSignupField(displayVal, a){
+  // turn an edited (resolved) Sign-up URL back into {template, code}
+  const tpl = a.signup || '', i = tpl.indexOf('{code}');
+  if (i >= 0){                                   // template known: the bit between prefix/suffix is the code
+    const pre = tpl.slice(0, i), post = tpl.slice(i + 6);
+    if (displayVal.startsWith(pre) && displayVal.endsWith(post) && displayVal.length >= pre.length + post.length)
+      return { signup: tpl, code: displayVal.slice(pre.length, displayVal.length - post.length) };
+  }
+  // URL structure changed (or no template yet): re-mark the current code as {code} where it appears
+  const code = a.code || '';
+  const signup = (code && displayVal.indexOf(code) >= 0) ? displayVal.split(code).join('{code}') : displayVal;
+  return { signup, code };
+}
+function syncCodeFields(row, a, exceptEl){
+  const codeF = row.querySelector('input[data-f=code]');
+  if (codeF && codeF !== exceptEl && codeF.value !== (a.code||'')) codeF.value = a.code || '';
+  const sgnF = row.querySelector('input[data-f=signup]');
+  if (sgnF && sgnF !== exceptEl){ const rv = resolveSignup(a); if (sgnF.value !== rv) sgnF.value = rv; }
 }
 
 function render(){
@@ -204,7 +229,7 @@ function render(){
       <div class="ae-fields">
         <div class="ae-field"><label>Name${a.custom?' · <span style="color:var(--accent)">custom</span>':''}</label><input data-f="name" value="${esc(a.name)}" placeholder="Agent name"></div>
         <div class="ae-field code"><label>Invite / affiliate code</label><input data-f="code" value="${esc(a.code)}" placeholder="(none)"></div>
-        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom)?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
+        <div class="ae-field full"><label>Sign-up URL</label><input data-f="signup" value="${esc(resolveSignup(a))}" placeholder="https://agent.com/register?inviteCode=YOURCODE"></div>
         ${a.custom ? `<div class="ae-field full"><label>Buy-link URL (use {url} and {code})</label><input data-f="buy_url" value="${esc(a.buy_url||'')}" placeholder="https://agent.com/import?url={url}&code={code}"></div>` : ''}
         <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}" placeholder="Up to \$X in coupons"></div>
         <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>
@@ -212,7 +237,13 @@ function render(){
       </div>`;
     // field edits
     row.querySelectorAll('input[data-f]').forEach(inp => {
-      inp.addEventListener('input', () => { a[inp.dataset.f] = inp.value; dirty(); refreshPreview(row, a); });
+      inp.addEventListener('input', () => {
+        const f = inp.dataset.f;
+        if (f === 'signup'){ const r = parseSignupField(inp.value, a); a.signup = r.signup; a.code = r.code; syncCodeFields(row, a, inp); }
+        else if (f === 'code'){ a.code = inp.value; syncCodeFields(row, a, inp); }   // re-resolve the Sign-up URL field live
+        else { a[f] = inp.value; }
+        dirty(); refreshPreview(row, a);
+      });
     });
     row.querySelector('[data-act=toggle]').addEventListener('click', () => {
       a.enabled = (a.enabled===false); render(); dirty();
