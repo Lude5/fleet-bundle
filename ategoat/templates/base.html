@@ -198,9 +198,10 @@
         .mm-lang { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 4px; }
         .mm-lang button { flex: 0 0 auto; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
         .mm-lang button.active { border-color: var(--accent); color: var(--accent); }
-        @media (max-width: 768px) {
-            .currency-switcher, .lang-switcher { display: none; }
-        }
+        /* Language + currency + wishlist now live in the mobile top bar, so the
+           duplicate language chips + wishlist link are removed from the menu. */
+        .mm-lang { display: none; }
+        .mobile-menu a[href="/wishlist"] { display: none; }
 
         /* Floating right-side widget (Discord + Tutorial + Back-to-top) */
         .side-widget { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 90; display: flex; flex-direction: column; gap: 10px; }
@@ -234,8 +235,8 @@
             transition: opacity .3s ease, backdrop-filter .3s ease;
         }
         .mobile-menu a {
-            font-family: var(--font-display); font-size: 32px; text-transform: uppercase; letter-spacing: 3px; color: #fff;
-            text-align: center; max-width: 90vw; line-height: 1.1;
+            font-family: var(--font-display); font-size: 21px; text-transform: uppercase; letter-spacing: 2px; color: #fff;
+            text-align: center; max-width: 90vw; line-height: 1.1; padding: 7px 0;
             opacity: 0; transform: translateY(12px);
             transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1), color 0.2s;
         }
@@ -253,7 +254,7 @@
             color: #fff !important;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line1 {
-            font-family: var(--font-display); font-size: 32px; letter-spacing: 3px; line-height: 1; color: #fff;
+            font-family: var(--font-display); font-size: 21px; letter-spacing: 2px; line-height: 1; color: #fff;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line2 {
             font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; color: rgba(255,255,255,0.7); text-transform: uppercase;
@@ -262,7 +263,7 @@
         .mobile-menu .mobile-menu-brand {
             position: absolute; top: calc(env(safe-area-inset-top) + 110px);
             left: 50%; transform: translateX(-50%);
-            font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; line-height: 1;
+            font-family: var(--font-display); font-size: 30px; letter-spacing: 2px; line-height: 1;
             color: #fff; text-transform: uppercase;
             pointer-events: none;
             opacity: 1;
@@ -885,8 +886,14 @@
            fit and the rightmost item would clip (everything stays reachable in the
            hamburger menu, which also carries language + currency + wishlist). */
         @media (max-width: 900px) {
-            .nav-links { display: none; }
+            /* Keep the bar's quick controls (language + currency + wishlist) at the
+               top on mobile; only the text links + the long CTA move into the menu. */
+            .nav-links { display: flex; gap: 0; align-items: center; }
+            .nav-textlink, .nav-cta { display: none; }
             .nav-hamburger { display: flex; }
+            .nav-brand { font-size: 26px; }
+            .nav-links .currency-btn { padding: 6px 7px; font-size: 9px; gap: 2px; }
+            .nav-wishlist { padding: 0 7px; font-size: 20px; }
         }
         @media (max-width: 768px) {
             /* bigger footer tap targets on mobile (were ~24px, below the 40px min) */
@@ -920,10 +927,10 @@
     <nav class="nav" id="nav">
         <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
         <ul class="nav-links">
-            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}" data-i18n="nav_home">Home</a></li>
-            <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}" data-i18n="nav_shop">Shop</a></li>
-            <li><a href="/link-converter" class="{% if request.path == '/link-converter' %}active{% endif %}" data-i18n="nav_converter">Converter</a></li>
-            <li><a href="/tutorial" class="{% if request.path == '/tutorial' %}active{% endif %}" data-i18n="nav_howtobuy">How to Buy</a></li>
+            <li class="nav-textlink"><a href="/" class="{% if request.path == '/' %}active{% endif %}" data-i18n="nav_home">Home</a></li>
+            <li class="nav-textlink"><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}" data-i18n="nav_shop">Shop</a></li>
+            <li class="nav-textlink"><a href="/link-converter" class="{% if request.path == '/link-converter' %}active{% endif %}" data-i18n="nav_converter">Converter</a></li>
+            <li class="nav-textlink"><a href="/tutorial" class="{% if request.path == '/tutorial' %}active{% endif %}" data-i18n="nav_howtobuy">How to Buy</a></li>
             <li class="lang-switcher">
                 <button class="currency-btn" type="button" onclick="toggleLangMenu()" aria-label="Change language">
                     <span data-lang-label>EN</span><span class="caret">&#9662;</span>
