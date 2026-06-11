@@ -204,7 +204,7 @@ function render(){
       <div class="ae-fields">
         <div class="ae-field"><label>Name${a.custom?' · <span style="color:var(--accent)">custom</span>':''}</label><input data-f="name" value="${esc(a.name)}" placeholder="Agent name"></div>
         <div class="ae-field code"><label>Invite / affiliate code</label><input data-f="code" value="${esc(a.code)}" placeholder="(none)"></div>
-        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom||(a.code||'').trim())?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
+        <div class="ae-field full"><label>Sign-up URL ${(a.code_param||a.custom)?'(use {code})':''}</label><input data-f="signup" value="${esc(a.signup)}" placeholder="https://agent.com/register?inviteCode={code}"></div>
         ${a.custom ? `<div class="ae-field full"><label>Buy-link URL (use {url} and {code})</label><input data-f="buy_url" value="${esc(a.buy_url||'')}" placeholder="https://agent.com/import?url={url}&code={code}"></div>` : ''}
         <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}" placeholder="Up to \$X in coupons"></div>
         <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>
