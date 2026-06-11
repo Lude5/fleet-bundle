@@ -3,6 +3,9 @@
 {% block crumbs %}<a href="/">Master</a> <span class="sep">›</span> <a href="/sites">Sites</a> <span class="sep">›</span> <span class="current">Agents &amp; Codes</span>{% endblock %}
 {% block heading %}Agents &amp; Codes — {{ site.name }}{% endblock %}
 {% block topbar_actions %}
+    <select class="pill" onchange="location.href='/agents/'+this.value" style="cursor:pointer;padding:8px 12px;" title="Switch site">
+        {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id==site.id %}selected{% endif %}>{{ s.name }}{% if not (s.url and s.admin_token) %} (not connected){% endif %}</option>{% endfor %}
+    </select>
     <a href="/studio/{{ site.id }}" class="pill">Visual editor</a>
 {% endblock %}
 
