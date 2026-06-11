@@ -33,8 +33,12 @@
 .ae-field input:focus { outline: none; border-color: var(--accent); }
 .ae-field.code input { color: var(--accent); font-weight: 700; }
 .ae-field input[type=color] { padding: 2px; height: 34px; cursor: pointer; }
-.ae-preview { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); word-break: break-all; line-height: 1.5; }
+.ae-preview { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); word-break: break-all; line-height: 1.8; }
 .ae-preview b { color: var(--accent); }
+.ae-codechip { display: inline-block; background: rgba(34,211,238,.10); color: var(--accent); border: 1px solid var(--accent); border-radius: 5px; padding: 0 5px; margin: 0 2px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 1.5; min-width: 46px; outline: none; vertical-align: baseline; transition: background .12s, box-shadow .12s; cursor: text; }
+.ae-codechip:hover { background: rgba(34,211,238,.18); }
+.ae-codechip:focus { background: rgba(34,211,238,.24); box-shadow: 0 0 0 3px rgba(34,211,238,.16); }
+.ae-codechip::placeholder { color: var(--text-muted); font-weight: 400; font-style: italic; }
 .ae-name-row { display: flex; align-items: center; gap: 8px; }
 .ae-key { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 .ae-savebar { position: sticky; bottom: 0; margin-top: 22px; padding: 14px 0; background: linear-gradient(transparent, var(--bg) 30%); display: flex; gap: 12px; align-items: center; max-width: 920px; }
@@ -111,29 +115,63 @@ let AGENTS = [];
 
 function esc(s){ return (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-function buyPreview(a){
+function signupPreview(a){   // fully-resolved signup URL (used by the live popup preview)
+  if (a.signup && a.signup.indexOf('{code}')>=0) return a.signup.replace('{code}', a.code||'');
+  return a.signup || '';
+}
+
+// ---- Inline-editable affiliate code, right inside the URL display ----
+// The BUY/SIGNUP preview lines render the affiliate code as a live <input> chip so the
+// operator can edit it IN the URL. Chip edits two-way-sync with the "Invite / affiliate
+// code" field above and any sibling chip — without re-rendering, so the caret never jumps.
+const CHIP = '␟';   // sentinel marking where a code chip belongs in a template URL
+
+function buyPreviewTmpl(a){
   if (a.custom){
     const t = (a.buy_url||'').trim();
     if (!t) return '⚠ add a buy-link URL so buy buttons work';
-    return t.replace('{url}','<item-link>').replace('{rawurl}','<item-link>').replace('{itemID}','<id>').replace('{code}', a.code||'');
+    return t.replace('{url}','<item-link>').replace('{rawurl}','<item-link>')
+            .replace('{itemID}','<id>').split('{code}').join(CHIP+'{code}'+CHIP);
   }
-  // mirror the server builders just enough to show the operator what a buy link looks like
-  const c = a.code || '';
-  const sample = 'https://weidian.com/item.html?itemID=7717247027';
-  const enc = encodeURIComponent(sample);
+  const c = CHIP+'{code}'+CHIP;   // mirror the server builders enough to show the buy link
   const m = {
-    kakobuy:`kakobuy.com/item/details?url=…${c?'&affcode='+c:''}`,
-    oopbuy:`oopbuy.com/product/weidian/7717247027${c?'?inviteCode='+c:''}`,
-    hipobuy:`hipobuy.com/order/buy?url=…${c?'&affcode='+c:''}`,
-    sugargoo:`sugargoo.com/index/item/index.html?url=…${c?'&shareCode='+c:''}`,
-    acbuy:`acbuy.com/product?source=weidian&id=7717247027${c?'&u='+c:''}`,
+    kakobuy:`kakobuy.com/item/details?url=…&affcode=${c}`,
+    oopbuy:`oopbuy.com/product/weidian/7717247027?inviteCode=${c}`,
+    hipobuy:`hipobuy.com/order/buy?url=…&affcode=${c}`,
+    sugargoo:`sugargoo.com/index/item/index.html?url=…&shareCode=${c}`,
+    acbuy:`acbuy.com/product?source=weidian&id=7717247027&u=${c}`,
   };
-  return m[a.key] || (a.domain + (c?(' · code '+c):' · no code'));
+  return m[a.key] || ((a.domain||'agent') + ' · code ' + c);
 }
-
-function signupPreview(a){
-  if (a.signup && a.signup.indexOf('{code}')>=0) return a.signup.replace('{code}', a.code||'');
+function signupPreviewTmpl(a){
+  if (a.signup && a.signup.indexOf('{code}')>=0) return a.signup.split('{code}').join(CHIP+'{code}'+CHIP);
   return a.signup || '';
+}
+function codeChipHTML(a){
+  const v = a.code || '';
+  const w = Math.max(46, (v.length||7)*7.5 + 16);
+  return `<input class="ae-codechip" data-codechip value="${esc(v)}" placeholder="add code" spellcheck="false" autocomplete="off" style="width:${w}px">`;
+}
+function pvLine(label, tmpl, a){
+  const parts = String(tmpl).split(CHIP);
+  if (parts.length < 3) return label+': <b>'+esc(tmpl)+'</b>';   // this URL has no code slot
+  let html = label+': <b>'+esc(parts[0]);
+  for (let i=1; i<parts.length; i+=2){ html += codeChipHTML(a) + esc(parts[i+1]||''); }
+  return html + '</b>';
+}
+function previewHTML(a){
+  return pvLine('BUY', buyPreviewTmpl(a), a) + '<br>' + pvLine('SIGNUP', signupPreviewTmpl(a), a);
+}
+function bindCodeChips(row, a){
+  row.querySelectorAll('[data-codechip]').forEach(chip => {
+    chip.addEventListener('input', () => {
+      a.code = chip.value; dirty();
+      const top = row.querySelector('input[data-f=code]');
+      if (top && top.value !== a.code) top.value = a.code;   // sync code field (no re-render → caret stays)
+      row.querySelectorAll('[data-codechip]').forEach(c2 => { if (c2!==chip && c2.value!==a.code) c2.value = a.code; });
+      chip.style.width = Math.max(46, (a.code.length||7)*7.5 + 16) + 'px';
+    });
+  });
 }
 
 function render(){
@@ -157,7 +195,7 @@ function render(){
         ${a.custom ? `<div class="ae-field full"><label>Buy-link URL (use {url} and {code})</label><input data-f="buy_url" value="${esc(a.buy_url||'')}" placeholder="https://agent.com/import?url={url}&code={code}"></div>` : ''}
         <div class="ae-field"><label>Coupon text</label><input data-f="coupon" value="${esc(a.coupon)}" placeholder="Up to \$X in coupons"></div>
         <div class="ae-field"><label>Accent color</label><input type="color" data-f="color" value="${esc(a.color||'#444444')}"></div>
-        <div class="ae-preview">BUY: <b>${esc(buyPreview(a))}</b><br>SIGNUP: <b>${esc(signupPreview(a))}</b></div>
+        <div class="ae-preview">${previewHTML(a)}</div>
       </div>`;
     // field edits
     row.querySelectorAll('input[data-f]').forEach(inp => {
@@ -170,13 +208,16 @@ function render(){
     if (rmBtn) rmBtn.addEventListener('click', () => {
       AGENTS = AGENTS.filter(x => x.key !== a.key); render(); dirty();
     });
+    bindCodeChips(row, a);
     attachDrag(row);
     listEl.appendChild(row);
   });
 }
 function refreshPreview(row, a){
   const p = row.querySelector('.ae-preview');
-  if (p) p.innerHTML = 'BUY: <b>'+esc(buyPreview(a))+'</b><br>SIGNUP: <b>'+esc(signupPreview(a))+'</b>';
+  if (!p) return;
+  p.innerHTML = previewHTML(a);
+  bindCodeChips(row, a);
 }
 
 // Pointer-based drag reorder with a lifted "follow the cursor" row + FLIP sliding
