@@ -150,5 +150,24 @@
     "product_count": 0,
     "ga_measurement_id": "",
     "ga_property_id": ""
+  },
+  {
+    "id": "auralinks",
+    "name": "AuraLinks",
+    "slug": "auralinks",
+    "url": "https://fleet-bundle.onrender.com/auralinks",
+    "admin_url": "https://fleet-bundle.onrender.com/auralinks/admin",
+    "admin_password": "",
+    "admin_token": "",
+    "render_service_id": "",
+    "agent": "Litbuy",
+    "agent_signup": "https://litbuy.com/register?invitecode=vektor",
+    "affiliate_code": "n62s8s",
+    "color": "#ffc400",
+    "tag": "client",
+    "description": "Client site (Spready) — auralinks.de. Litbuy-based, yellow/white/red light theme.",
+    "product_count": 0,
+    "ga_measurement_id": "",
+    "ga_property_id": ""
   }
 ]

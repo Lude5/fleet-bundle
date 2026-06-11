@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Sign Up — Pick Your Agent | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.agents-page {
+    max-width: 1100px; margin: 0 auto;
+    padding: 110px 24px 80px;
+}
+.agents-hero {
+    text-align: center;
+    margin-bottom: 56px;
+}
+.agents-hero .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 18px;
+}
+.agents-hero h1 {
+    font-family: var(--font-display); font-size: clamp(40px, 7vw, 84px);
+    text-transform: uppercase; letter-spacing: 2px; line-height: 1;
+    color: var(--text); margin-bottom: 18px;
+}
+.agents-hero h1 .accent { color: var(--accent); }
+.agents-hero p {
+    font-size: 15px; color: var(--text-secondary);
+    max-width: 560px; margin: 0 auto; line-height: 1.6;
+}
+
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+}
+.agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex; flex-direction: column;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+.agent-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px var(--accent-dim);
+    text-decoration: none;
+}
+.agent-card-head {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+}
+.agent-card-logo {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+}
+.agent-card-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.agent-card-logo.letter { color: #fff; font-family: var(--font-mono); font-size: 22px; font-weight: 900; }
+.agent-card-name {
+    font-family: var(--font-display); font-size: 22px;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1.1;
+}
+.agent-card-domain {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-top: 4px;
+}
+.agent-card-coupon {
+    flex: 1;
+    font-family: var(--font-body); font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    line-height: 1.4;
+}
+.agent-card-coupon .amount {
+    display: block; font-family: var(--font-mono); font-size: 18px; font-weight: 800;
+    color: var(--accent); margin-bottom: 2px;
+}
+.agent-card-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 18px;
+    background: var(--accent); color: #fff;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+    text-decoration: none;
+}
+.agent-card-cta:hover { background: var(--accent-hover); text-decoration: none; }
+.agent-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-dim) 0%, var(--surface) 60%);
+    grid-column: span 2;
+}
+@media (max-width: 600px) { .agent-card.featured { grid-column: span 1; } }
+.agent-card.featured .agent-card-name { font-size: 30px; }
+.agent-card.featured .featured-badge {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: #fff; background: var(--accent);
+    padding: 3px 8px; border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.agents-foot {
+    text-align: center;
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase;
+}
+.agents-foot a { color: var(--accent); border-bottom: 1px solid var(--accent); }
+.agents-foot a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
+
+@media (max-width: 768px) {
+    .agents-page { padding: 90px 16px 60px; }
+    .agents-grid { gap: 12px; }
+    .agent-card { padding: 20px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="agents-page">
+    <div class="agents-hero reveal in">
+        <p class="eyebrow">Pick your <span class="accent">agent</span></p>
+        <h1>Sign up.<br><span class="accent">Get coupons.</span></h1>
+        <p>Every shopping agent offers welcome credit when you sign up via a referral. Pick the one with the best rates / coupons / shipping for you.</p>
+    </div>
+
+    <div class="agents-grid">
+        {% for a in agents %}
+        <a class="agent-card{% if loop.first %} featured{% endif %} reveal" href="{{ a.signup }}" target="_blank" rel="noopener" onclick="trackClick('signup','agents_page_{{ a.key }}','','','')">
+            {% if loop.first %}<span class="featured-badge">Best Coupons</span>{% endif %}
+            <div class="agent-card-head">
+                <span class="agent-card-logo"><img src="https://www.google.com/s2/favicons?domain={{ a.domain }}&sz=64" alt="{{ a.name }}" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML='{{ a.name[0] }}';this.parentNode.classList.add('letter');this.parentNode.style.background='{{ a.color }}';"></span>
+                <div>
+                    <div class="agent-card-name">{{ a.name }}</div>
+                    <div class="agent-card-domain">{{ a.domain }}</div>
+                </div>
+            </div>
+            <div class="agent-card-coupon">
+                <span class="amount">{{ a.coupon }}</span>
+                Welcome credit applied automatically when you sign up via this link.
+            </div>
+            <span class="agent-card-cta">Sign Up Free →</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <p class="agents-foot">
+        Once you have an account, return to <a href="/shop">the catalogue</a> and open any product with that agent.
+    </p>
+</div>
+{% endblock %}

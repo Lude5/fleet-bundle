@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Link Converter — Open Any Listing on Any Agent | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.converter { max-width: 640px; margin: 0 auto; padding: 120px 24px 80px; }
+.converter h1 { font-family: var(--font-display); font-size: 36px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
+.converter-sub { text-align: center; color: var(--text-secondary); font-size: 13px; margin-bottom: 32px; }
+
+.converter-agent { margin-bottom: 14px; }
+.converter-agent label {
+    display: block;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.converter-agent select {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; outline: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+                      linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    background-position: calc(100% - 22px) center, calc(100% - 16px) center;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+.converter-agent select:focus { border-color: var(--accent); }
+
+.converter-input { display: flex; gap: 8px; margin-bottom: 24px; }
+.converter-input input { flex: 1; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none; font-family: var(--font-body); }
+.converter-input input:focus { border-color: var(--border); }
+.converter-input input::placeholder { color: var(--text-muted); }
+.converter-input button { padding: 14px 24px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
+.converter-input button:hover { background: var(--accent-hover); }
+
+.result { display: none; }
+.result.active { display: block; }
+.result-meta {
+    background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); padding: 16px 18px; margin-bottom: 16px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase;
+}
+.result-meta .accent { color: var(--accent); font-weight: 700; }
+.result-meta .raw { display: block; margin-top: 8px; color: var(--text-secondary); text-transform: none; letter-spacing: 0; word-break: break-all; font-size: 10px; }
+
+.agent-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.agent-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    transition: border-color 0.15s ease;
+}
+.agent-row:hover { border-color: var(--border); }
+.agent-row.selected { border-color: var(--accent); }
+.agent-row-name {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--text); text-transform: uppercase; letter-spacing: 1.5px;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.agent-row-copy {
+    padding: 8px 14px; background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.agent-row-copy:hover { color: var(--text); border-color: var(--border); }
+.agent-row-copy.copied { background: #22c55e; color: #fff; border-color: #22c55e; }
+.agent-row-open {
+    padding: 8px 14px; background: var(--accent); color: #fff;
+    border: 1px solid var(--accent); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    text-decoration: none; text-transform: uppercase; letter-spacing: 1px;
+}
+.agent-row-open:hover { background: var(--accent-hover); }
+
+.error-msg {
+    display: none; align-items: center; justify-content: center; gap: 8px;
+    margin: 16px auto 0; padding: 12px 14px;
+    width: fit-content; max-width: 100%;
+    background: rgba(239,68,68,0.12); border: 1px solid #ef4444;
+    border-radius: 8px; color: #ef4444;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.error-msg::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+.error-msg.active { display: flex; animation: lcShake 0.45s cubic-bezier(.36,.07,.19,.97); }
+@keyframes lcShake {
+    0%, 100% { transform: translateX(0); }
+    12%, 60% { transform: translateX(-6px); }
+    24%, 72% { transform: translateX(6px); }
+    36%, 84% { transform: translateX(-3px); }
+    48%, 96% { transform: translateX(3px); }
+}
+
+.supported { margin-top: 48px; text-align: center; }
+.supported h3 { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 3px; }
+.supported-grid { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.supported-tag { padding: 7px 14px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+@media (max-width: 768px) { .converter { padding: 90px 16px 60px; } .converter h1 { font-size: 28px; } .converter-input { flex-direction: column; } .agent-row { grid-template-columns: 1fr; gap: 8px; } .agent-row-name { justify-content: space-between; } }
+{% endblock %}
+
+{% block content %}
+<div class="converter">
+    <h1>Link Converter</h1>
+    <p class="converter-sub">Pick an agent, paste any Weidian/Taobao/1688 or other-agent link, hit Convert.</p>
+
+    <div class="converter-agent">
+        <label for="targetAgent">Open with</label>
+        <select id="targetAgent">
+            <option value="">— Select an agent —</option>
+            <option value="litbuy">Litbuy</option>
+            <option value="hipobuy">Hipobuy</option>
+            <option value="mulebuy">Mulebuy</option>
+            <option value="usfans">USFANS</option>
+            <option value="oopbuy">Oopbuy</option>
+            <option value="kakobuy">KakoBuy</option>
+            <option value="acbuy">ACBuy</option>
+            <option value="joyagoo">JoyaGoo</option>
+            <option value="sugargoo">Sugargoo</option>
+            <option value="lovegobuy">Lovegobuy</option>
+        </select>
+    </div>
+
+    <div class="converter-input">
+        <input type="text" id="linkInput" placeholder="Paste any agent / Weidian / Taobao link">
+        <button onclick="convertLink()">Convert</button>
+    </div>
+
+    <div class="result" id="result">
+        <div class="result-meta" id="resultMeta"></div>
+        <div class="agent-rows" id="agentRows"></div>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="supported">
+        <h3>Supported Agents</h3>
+        <div class="supported-grid">
+            <span class="supported-tag">Litbuy</span><span class="supported-tag">Hipobuy</span><span class="supported-tag">Mulebuy</span><span class="supported-tag">USFANS</span><span class="supported-tag">Oopbuy</span><span class="supported-tag">KakoBuy</span><span class="supported-tag">ACBuy</span><span class="supported-tag">JoyaGoo</span><span class="supported-tag">Sugargoo</span><span class="supported-tag">Lovegobuy</span>
+        </div>
+        <h3 style="margin-top: 24px;">Source Platforms</h3>
+        <div class="supported-grid">
+            <span class="supported-tag">Weidian</span><span class="supported-tag">Taobao</span><span class="supported-tag">1688</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+var DEFAULT_AGENT_NAME = '{{ site.agent_name }}';
+
+function convertLink() {
+    var input = document.getElementById('linkInput').value.trim();
+    var result = document.getElementById('result');
+    var err = document.getElementById('errorMsg');
+    result.classList.remove('active');
+    err.classList.remove('active');
+    function flashError(msg) {
+        err.textContent = msg;
+        // Force a reflow so the shake animation re-triggers on repeat clicks
+        void err.offsetWidth;
+        err.classList.add('active');
+    }
+    if (!input) { flashError('Not a valid URL'); return; }
+    fetch('/api/agents/from-url?url=' + encodeURIComponent(input))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if (d.error || !d.agents || !d.agents.length) {
+                flashError(d.error || 'Not a valid URL');
+                return;
+            }
+            var meta = document.getElementById('resultMeta');
+            var rows = document.getElementById('agentRows');
+            var platform = d.platform ? d.platform : 'unknown';
+            var itemId = d.item_id || '—';
+            meta.innerHTML = 'Platform: <span class="accent">' + platform + '</span>'
+                + ' &nbsp;·&nbsp; Item ID: <span class="accent">' + itemId + '</span>'
+                + (d.raw_url ? '<span class="raw">' + d.raw_url + '</span>' : '');
+
+            // If the user picked an agent from the dropdown, pull it to the
+            // top of the list and mark it selected. Otherwise show all agents
+            // in their natural order with no row highlighted.
+            var selectedKey = (document.getElementById('targetAgent') || {}).value || '';
+            var ordered = d.agents.slice();
+            if (selectedKey) {
+                ordered.sort(function(a, b){
+                    if (a.key === selectedKey) return -1;
+                    if (b.key === selectedKey) return 1;
+                    return 0;
+                });
+            }
+            var html = '';
+            ordered.forEach(function(a, i){
+                var isSelected = (selectedKey && a.key === selectedKey);
+                html += '<div class="agent-row' + (isSelected ? ' selected' : '') + '">'
+                     +   '<span class="agent-row-name">' + a.name + '</span>'
+                     +   '<button type="button" class="agent-row-copy" data-url="' + a.url.replace(/"/g, '&quot;') + '" onclick="copyAgentUrl(this)">Copy</button>'
+                     +   '<a class="agent-row-open" href="' + a.url + '" target="_blank" rel="noopener" '
+                     +     'onclick="trackClick(\'tool\',\'link_converter_open_' + a.key + '\',\'\',\'\',\'\')">Open →</a>'
+                     + '</div>';
+            });
+            rows.innerHTML = html;
+            result.classList.add('active');
+            trackClick('tool','link_converter','','','convert');
+        })
+        .catch(function(){
+            flashError('Conversion failed. Try a different link.');
+        });
+}
+
+function copyAgentUrl(btn) {
+    var url = btn.getAttribute('data-url');
+    navigator.clipboard.writeText(url).then(function(){
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+}
+
+document.getElementById('linkInput').addEventListener('keypress', function(e){
+    if (e.key === 'Enter') convertLink();
+});
+{% endblock %}

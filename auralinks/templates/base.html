@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="referrer" content="no-referrer">
+    <title>{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}</title>
+    <meta name="description" content="{% block description %}{{ site.name }} — agent-neutral catalogue of curated finds. Open every listing on Litbuy, Hipobuy, Mulebuy, USFANS, Oopbuy, KakoBuy, ACBuy, JoyaGoo, Sugargoo, or Lovegobuy.{% endblock %}">
+    <meta name="keywords" content="{{ site.name|lower }}, agent-neutral finds, rep finds, replica clothing, weidian, taobao, 1688, litbuy, hipobuy, mulebuy, usfans, oopbuy, kakobuy, acbuy, joyagoo, sugargoo, lovegobuy">
+    <link rel="canonical" href="{% block canonical %}https://{{ site.domain }}{{ request.path }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="{{ site.name }}">
+    <meta property="og:title" content="{% block og_title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Curated finds, agent-neutral. Open every listing with the shopping agent you trust.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://{{ site.domain }}{{ request.path }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{% block twitter_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
+    <meta name="theme-color" content="#fffdf7">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "{{ site.name }}",
+        "url": "https://{{ site.domain }}",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://{{ site.domain }}/shop?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Organization","name":"{{ site.name }}","url":"https://{{ site.domain }}","logo":"https://{{ site.domain }}/static/og.png"}
+    </script>
+    {% block structured_data %}{% endblock %}
+    {% if site.ga_measurement_id %}
+    <!-- Google Analytics 4 (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.ga_measurement_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ site.ga_measurement_id }}');
+    </script>
+    {% endif %}
+    {% if site.meta_pixel_id %}
+    <!-- Meta Pixel -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '{{ site.meta_pixel_id }}');
+    fbq('track', 'PageView');
+    </script>
+    {% endif %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* AuraLinks light theme — yellow / white / a bit of red (Litbuy-style).
+               Yellow is the fill accent (buttons, badges) and always carries DARK
+               ink (--accent-ink) — white-on-yellow is unreadable. Red is the
+               sparing emphasis colour (hearts, hot badges, sale cues). */
+            --bg: #fffdf7;
+            --surface: #ffffff;
+            --surface-2: #faf5e6;
+            --surface-3: #f3ecd6;
+            --border: {{ site.brand_color }}66;
+            --border-subtle: rgba(20,16,0,0.09);
+            --text: #161410;
+            --text-secondary: rgba(22,20,16,0.66);
+            --text-muted: rgba(22,20,16,0.42);
+            --accent: {{ site.brand_color }};
+            --accent-hover: #e8b000;
+            --accent-dim: {{ site.brand_color }}2e;
+            --accent-glow: {{ site.brand_color }}59;
+            --accent-ink: #1c1602;           /* text colour ON yellow fills */
+            --red: #e02b2b;                  /* the "bit of red" */
+            --font-display: 'Anton', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Space Grotesk', monospace;
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
+        html { scroll-behavior: smooth; overflow-x: clip; }
+        body { font-family: var(--font-body); font-size: 14px; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; line-height: 1.5; }
+        a { color: inherit; text-decoration: none; }
+        img { max-width: 100%; display: block; }
+
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            min-height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: max(env(safe-area-inset-top), 12px);
+            padding-bottom: 8px;
+            padding-left: max(env(safe-area-inset-left), 24px);
+            padding-right: max(env(safe-area-inset-right), 24px);
+            background: rgba(255,253,247,0.92); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        /* Reusable recent-searches dropdown (used by any search input via
+           window.attachRecentSearches). */
+        .aural-rsdd {
+            display: none;
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            z-index: 1000;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+            max-height: 60vh; overflow-y: auto;
+            text-align: left;
+        }
+        .aural-rsdd.active { display: block; }
+        .aural-rsdd .rs-head {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .aural-rsdd .rs-clear {
+            background: transparent; border: none; color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .aural-rsdd .rs-clear:hover { color: var(--accent); }
+        .aural-rsdd .rs-row {
+            display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
+            padding: 10px 14px;
+            align-items: center; cursor: pointer;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text); text-decoration: none;
+        }
+        .aural-rsdd .rs-row:last-of-type { border-bottom: none; }
+        .aural-rsdd .rs-row:hover { background: var(--surface-2); }
+        .aural-rsdd .rs-row svg { color: var(--text-muted); flex-shrink: 0; }
+        .aural-rsdd .rs-q {
+            font-family: var(--font-body); font-size: 13px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .aural-rsdd .rs-x {
+            background: transparent; border: none; cursor: pointer;
+            width: 24px; height: 24px; border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 16px; line-height: 1;
+        }
+        .aural-rsdd .rs-x:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .nav-brand { font-family: var(--font-display); font-size: 36px; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-brand .accent { color: var(--accent); }
+        .nav-links { display: flex; gap: 0; list-style: none; align-items: center; }
+        .nav-links a { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; padding: 22px 16px; transition: color 0.2s; position: relative; }
+        .nav-links a:hover { color: var(--text); }
+        .nav-links a.active { color: var(--accent); }
+        .nav-links a.active::after { content: ''; position: absolute; bottom: 0; left: 16px; right: 16px; height: 2px; background: var(--accent); }
+        .nav-cta { padding: 8px 18px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; transition: background 0.2s; margin-left: 8px; }
+        .nav-cta:hover { background: var(--accent-hover); }
+        /* Wishlist heart in nav + on cards */
+        .nav-wishlist { position: relative; display: inline-flex; align-items: center; font-size: 18px; color: var(--text-secondary); padding: 20px 12px; transition: color .2s; }
+        .nav-wishlist:hover, .nav-wishlist.active { color: var(--accent); }
+        .nav-wish-count { position: absolute; top: 11px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; background: var(--accent); color: #fff; border-radius: 999px; font-family: var(--font-mono); font-size: 9px; font-weight: 800; line-height: 16px; text-align: center; display: none; }
+        .nav-wish-count.show { display: inline-block; }
+        /* Bottom-left so it never collides with the "Best Selling" badge (top-left)
+           or the agent ⇄ button (top-right). */
+        .product-card-wish {
+            position: absolute; bottom: 8px; left: 8px; z-index: 5;
+            width: 32px; height: 32px; border-radius: 999px;
+            background: rgba(255,255,255,0.92); border: 1px solid var(--border-subtle);
+            color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+            font-size: 15px; cursor: pointer; transition: all .15s; padding: 0; line-height: 1;
+        }
+        .product-card-wish:hover { color: #e0245e; border-color: #e0245e; transform: scale(1.08); }
+        .product-card-wish.on { color: #e0245e; border-color: #e0245e; background: #fff; }
+        @media (hover: none) {
+            /* touch devices: 42px tap target (CLAUDE.md: min 44px), matches agent btn */
+            .product-card-wish { width: 42px; height: 42px; font-size: 18px; }
+        }
+
+        /* Currency switcher */
+        .currency-switcher { position: relative; margin-right: 4px; }
+        .currency-btn { background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 7px 10px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: border-color .2s, color .2s; }
+        .currency-btn:hover { border-color: var(--border); color: var(--text); }
+        .currency-btn .caret { font-size: 8px; opacity: 0.7; }
+        .currency-menu { position: absolute; top: calc(100% + 6px); right: 0; min-width: 140px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); display: none; z-index: 110; }
+        .currency-menu.open { display: block; }
+        .currency-menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 12px; background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 6px; text-align: left; }
+        .currency-menu button:hover { background: var(--surface-2); color: var(--text); }
+        .currency-menu button .sym { color: var(--text-muted); font-size: 11px; }
+        /* Language switcher reuses the currency-switcher styling */
+        .lang-switcher { position: relative; margin-right: 4px; }
+        .lang-menu { min-width: 150px; }
+        /* Mobile language row inside the slide-out menu */
+        .mm-lang { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 4px; }
+        .mm-lang button { flex: 0 0 auto; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .mm-lang button.active { border-color: var(--accent); color: var(--accent); }
+        @media (max-width: 768px) {
+            .currency-switcher, .lang-switcher { display: none; }
+        }
+
+        /* Floating right-side widget (Discord + Tutorial + Back-to-top) */
+        .side-widget { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 90; display: flex; flex-direction: column; gap: 10px; }
+        .side-btn { width: 52px; height: 52px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border-subtle); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s ease; position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.4); text-decoration: none; }
+        .side-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateX(-3px); box-shadow: 0 12px 30px var(--accent-dim); }
+        .side-btn svg { width: 22px; height: 22px; }
+        .side-btn .side-tip { position: absolute; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .2s; }
+        .side-btn:hover .side-tip { opacity: 1; }
+        .side-btn.discord:hover { background: #5865F2; border-color: #5865F2; box-shadow: 0 12px 30px rgba(88,101,242,0.35); }
+        @media (max-width: 768px) {
+            /* The floating How-to-Buy + Discord rail overlapped product BUY buttons
+               on phones; both actions live in the hamburger menu + footer, so the
+               rail is hidden on mobile to keep the right edge of every card tappable. */
+            .side-widget { display: none; }
+            .side-btn { width: 40px; height: 40px; border-radius: 10px; }
+            .side-btn svg { width: 16px; height: 16px; }
+            .side-btn .side-tip { display: none; }
+        }
+        .nav-hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; }
+        .mobile-menu {
+            display: flex; position: fixed; inset: 0;
+            background: rgba(255,253,247,0.97); backdrop-filter: blur(12px);
+            z-index: 600; /* above the signup popup (z-index 500) so they never overlap */
+            flex-direction: column; align-items: center; justify-content: center;
+            gap: 24px;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .3s ease, visibility 0s linear .3s, backdrop-filter .3s ease;
+        }
+        .mobile-menu.open {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transition: opacity .3s ease, backdrop-filter .3s ease;
+        }
+        .mobile-menu a {
+            font-family: var(--font-display); font-size: 32px; text-transform: uppercase; letter-spacing: 3px; color: var(--text);
+            text-align: center; max-width: 90vw; line-height: 1.1;
+            opacity: 0; transform: translateY(12px);
+            transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1), color 0.2s;
+        }
+        .mobile-menu.open a { opacity: 1; transform: translateY(0); }
+        .mobile-menu.open a:nth-child(2) { transition-delay: .04s; }
+        .mobile-menu.open a:nth-child(3) { transition-delay: .10s; }
+        .mobile-menu.open a:nth-child(4) { transition-delay: .16s; }
+        .mobile-menu.open a:nth-child(5) { transition-delay: .22s; }
+        .mobile-menu.open a:nth-child(6) { transition-delay: .28s; }
+        .mobile-menu.open a:nth-child(7) { transition-delay: .34s; }
+        .mobile-menu a:hover { color: var(--accent); }
+        .mobile-menu .mobile-menu-cta {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+            background: transparent; padding: 0; border-radius: 0; box-shadow: none;
+            color: var(--text) !important;
+        }
+        .mobile-menu .mobile-menu-cta .mm-cta-line1 {
+            font-family: var(--font-display); font-size: 32px; letter-spacing: 3px; line-height: 1; color: var(--text);
+        }
+        .mobile-menu .mobile-menu-cta .mm-cta-line2 {
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; color: var(--text-secondary); text-transform: uppercase;
+        }
+        .mobile-menu .mobile-menu-cta:hover .mm-cta-line1 { color: var(--accent); }
+        .mobile-menu .mobile-menu-brand {
+            /* 56px (was 110px) — at 110px the wordmark collided with the search
+               pill on short phones (≈667px viewports) */
+            position: absolute; top: calc(env(safe-area-inset-top) + 56px);
+            left: 50%; transform: translateX(-50%);
+            font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; line-height: 1;
+            color: var(--text); text-transform: uppercase;
+            pointer-events: none;
+            opacity: 1;
+        }
+        .mobile-menu .mobile-menu-brand .accent { color: var(--accent); }
+        .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
+
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; border-radius: var(--radius-sm); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .product-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); overflow: hidden; transition: all 0.3s; display: block; color: inherit; text-decoration: none; }
+        .product-card:hover { border-color: var(--border); transform: translateY(-4px); box-shadow: 0 12px 40px var(--accent-dim); }
+        .product-card-img-wrap { overflow: hidden; position: relative; background: #ffffff !important; aspect-ratio: 1; }
+        .product-card-img { width: 100%; height: 100%; object-fit: contain !important; padding: 8px; transition: transform 0.5s ease; background: #ffffff !important; }
+        /* Catch-all: anything that looks like a product image gets white bg
+           regardless of wrapper. Defensive against missed cases. */
+        img.product-card-img, img.pd-img, img.pd-thumb, img.sn-img,
+        img.uc-img, img.thumb, img.ri-img, img.edit-preview,
+        .pd-variant img, .pd-thumb img, .scrape-card img,
+        .padmin-card img, .bundle-card-imgs img, .pd-qc img,
+        .hero-search-suggestion img, .hero-bg-card img,
+        .padmin-compact .pcomp .img { background: #ffffff !important; object-fit: contain !important; }
+        /* NUCLEAR: every image whose src is from a product-image CDN gets a
+           white background, no matter what class or wrapper it's in. This
+           covers JS-injected <img> tags in variant grids, QC modals, search
+           suggestions, scrape preview, agent picker, and anywhere else a
+           product image lands that the class-based selectors above miss. */
+        img[src*="postimg.cc"],
+        img[src*="iili.io"],
+        img[src*="geilicdn.com"],
+        img[src*="googleusercontent.com"],
+        img[src*="alicdn.com"],
+        img[src*="img.kakobuy.com"],
+        img[src*="bcebos.com"],
+        img[src*="dhresource.com"],
+        img[src*="kongfupack.com"],
+        img[src*="weidian.com"],
+        img[src*="taobao.com"],
+        img[src*="alibaba.com"],
+        img[src*="aliimg.com"],
+        img[src*="/uploads/"] {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
+        /* Wrapper-based catch-all: every img inside any product container,
+           regardless of class on the img itself. Last-resort coverage for
+           JS-injected images that don't carry a recognized class. */
+        .product-card img, .product-grid img,
+        .pd-modal img:not(.agent-icon):not(.lang-flag),
+        .hero-bg-ticker img, .hero-bg-col img,
+        .bundle-card img, .bundle-card-imgs img,
+        .variant-grid img, .pd-variant img,
+        .scrape-card img, .pd-qc img,
+        .hero-search-dropdown img, .hero-search-suggestion img,
+        .conveyor-card img {
+            background: #ffffff !important;
+            object-fit: contain !important;
+        }
+        .product-card:hover .product-card-img { transform: scale(1.05); }
+        /* Hero ticker keeps cover-fit so the masthead background stays full-bleed */
+        .hero-bg-card { background: #ffffff !important; }
+        .hero-bg-card img { aspect-ratio: 4/5; object-fit: contain !important; padding: 4px; background: #ffffff !important; }
+        /* Product detail modal image */
+        #pdMainImage { background: #ffffff !important; object-fit: contain !important; padding: 12px; }
+        .pd-thumbs {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 6px; margin-top: 8px;
+        }
+        .pd-thumb {
+            aspect-ratio: 1; background: #ffffff;
+            border: 2px solid var(--border-subtle); border-radius: 8px;
+            overflow: hidden; cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+        }
+        .pd-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+        .pd-thumb:hover { border-color: var(--border); transform: translateY(-1px); }
+        .pd-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .pd-thumb.qc::after {
+            content: 'QC'; position: absolute; top: 2px; right: 2px;
+            background: var(--accent); color: #fff; font-family: var(--font-mono);
+            font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+        .pd-thumb { position: relative; }
+        .product-card-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 6px; }
+        .product-card-body { padding: 16px; }
+        .product-card-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .product-card-seller { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .product-card-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .product-card-price { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--accent); }
+        .product-card-buy { padding: 8px 14px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        /* Out-of-stock state on a product card */
+        .product-card.out-of-stock { opacity: 0.55; }
+        .product-card.out-of-stock .product-card-img { filter: grayscale(70%); }
+        .product-card.out-of-stock .product-card-img-wrap::after {
+            content: 'OUT OF STOCK'; position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55); color: #fff;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+            letter-spacing: 2px; text-transform: uppercase;
+            pointer-events: none;
+        }
+        .product-card.out-of-stock .product-card-buy { background: var(--surface-3); color: var(--text-muted); pointer-events: none; }
+        .product-card-buy:hover { background: var(--accent-hover); }
+
+        .section { padding: 64px 24px; max-width: 1200px; margin: 0 auto; }
+        .section-label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+        .section-title { font-family: var(--font-display); font-size: 48px; text-transform: uppercase; letter-spacing: 1px; line-height: 1; }
+        .sec-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+        .sec-title { font-family: var(--font-display); font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
+        .sec-link { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7; }
+        .sec-link:hover { opacity: 1; }
+        .divider { border: none; border-top: 1px solid var(--border-subtle); margin: 0; }
+
+        .stat-row { display: flex; justify-content: center; gap: 48px; padding: 48px 0; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat-num { font-family: var(--font-display); font-size: 48px; color: var(--accent); }
+        .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+
+        .cta-section { padding: 80px 24px; text-align: center; position: relative; overflow: hidden; }
+        .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, var(--accent-dim), transparent 70%); filter: blur(60px); pointer-events: none; }
+        .cta-section h2 { font-family: var(--font-display); font-size: 48px; text-transform: uppercase; margin-bottom: 12px; position: relative; }
+        .cta-section p { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; position: relative; }
+
+        .popup-overlay {
+            display: flex; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            z-index: 500;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity .25s ease, visibility 0s linear .25s;
+        }
+        .popup-overlay.active {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transition: opacity .25s ease;
+        }
+        .popup {
+            /* translucent glass panel; must NEVER exceed the viewport (the close
+               button was getting clipped off-screen on phones) */
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 400px; width: 100%;
+            max-height: calc(100vh - 32px);
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            text-align: center; padding: 48px 32px;
+            position: relative;
+            opacity: 0; transform: scale(.94) translateY(10px);
+            transition: opacity .3s ease, transform .45s cubic-bezier(.16, 1, .3, 1);
+        }
+        .popup-overlay.active .popup {
+            opacity: 1; transform: scale(1) translateY(0);
+        }
+        .popup-close {
+            position: absolute; top: 8px; right: 8px;
+            width: 44px; height: 44px;
+            background: var(--surface-2); border: 1px solid var(--border-subtle);
+            border-radius: 50%;
+            color: var(--text);
+            font-size: 22px; line-height: 1; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .popup-close:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.05); }
+
+        /* ---- Agent picker modal ---- */
+        .agent-picker-overlay {
+            display: none; position: fixed; inset: 0; z-index: 600;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .agent-picker-overlay.active { display: flex; }
+        .agent-picker {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 460px; width: 100%;
+            padding: 32px 28px 24px;
+            max-height: 84vh; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .agent-picker-close {
+            position: absolute; top: 14px; right: 14px;
+            background: none; border: none;
+            color: var(--text-muted); font-size: 22px; cursor: pointer;
+            line-height: 1; padding: 4px 8px;
+        }
+        .agent-picker-close:hover { color: var(--text); }
+        .agent-picker-head { margin-bottom: 18px; padding-right: 24px; }
+        .agent-picker-label {
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .agent-picker-title {
+            font-family: var(--font-display); font-size: 22px;
+            color: var(--text);
+            text-transform: uppercase; letter-spacing: 1px;
+            line-height: 1.2;
+        }
+        .agent-picker-list {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            overflow-y: auto;
+            padding: 4px 4px 4px 0;
+        }
+        @media (max-width: 480px) { .agent-picker-list { grid-template-columns: 1fr; } }
+        .agent-picker-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 12px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            text-align: left;
+        }
+        .agent-picker-item .logo {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+            color: #fff; font-family: var(--font-mono); font-size: 13px;
+            font-weight: 800; letter-spacing: 0;
+            background: #fff; overflow: hidden;
+        }
+        .agent-picker-item .logo img { width: 100%; height: 100%; object-fit: contain; }
+        .agent-picker-item .logo.letter { color: #fff; }
+        .agent-picker-item .name { flex: 1; }
+        .agent-picker-item:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        .agent-picker-item .arrow { font-size: 14px; opacity: 0.6; }
+        .agent-picker-item.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+        .agent-picker-item.selected::after { content: '✓'; font-size: 14px; margin-left: 10px; }
+        .agent-picker-buy-wrap { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: none; }
+        .agent-picker-buy-wrap.active { display: block; }
+        .agent-picker-buy {
+            display: block; text-align: center;
+            padding: 14px 22px;
+            background: var(--accent); color: #fff;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            border: none; border-radius: var(--radius-sm);
+            cursor: pointer; text-decoration: none;
+            transition: background 0.15s ease;
+        }
+        .agent-picker-buy:hover { background: var(--accent-hover); }
+        .agent-picker-empty {
+            grid-column: 1 / -1;
+            text-align: center; padding: 24px;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .agent-picker-foot {
+            margin-top: 18px; padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
+            font-family: var(--font-mono); font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* ---- Inline change-agent button on product cards ---- */
+        .product-card-agents {
+            position: absolute; top: 8px; right: 8px;
+            z-index: 3;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer;
+            opacity: 0; transition: opacity 0.15s ease, background 0.15s ease;
+        }
+        .product-card:hover .product-card-agents { opacity: 1; }
+        .product-card-agents:hover { background: var(--accent); border-color: var(--accent); }
+        @media (hover: none) {
+            /* touch devices: always visible + 42px tap target (was 32px, below the 40px min) */
+            .product-card-agents { opacity: 1; background: rgba(0,0,0,0.5); width: 42px; height: 42px; font-size: 18px; }
+        }
+        .popup-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+        .popup h2 { font-family: var(--font-display); font-size: 32px; text-transform: uppercase; margin-bottom: 12px; }
+        .popup p { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
+        .popup .btn { width: 100%; justify-content: center; }
+        .popup-dismiss {
+            font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+            margin-top: 16px; cursor: pointer;
+            letter-spacing: 1px; text-transform: uppercase;
+            display: inline-block; padding: 12px 18px;
+            border-radius: 8px;
+            min-height: 44px;
+        }
+        .popup-dismiss:hover { color: var(--text); background: var(--surface-2); }
+
+        /* Welcome popup — agent picker w/ KakoBuy featured */
+        .popup.signup-popup { max-width: 520px; padding: 22px 20px 18px; text-align: left; }
+        .popup-headline { text-align: center; margin-bottom: 14px; padding: 0 36px; }
+        .popup-headline .eyebrow {
+            display: inline-block; font-family: var(--font-mono); font-size: 9px;
+            letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .popup-headline h2 {
+            font-family: var(--font-display); font-size: clamp(19px, 4.5vw, 26px);
+            text-transform: uppercase; line-height: 1.05; margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+        .popup-headline h2 .accent { color: var(--accent); }
+        .popup-headline p { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.45; }
+        .signup-featured {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            background: var(--accent);
+            border-radius: 12px;
+            text-decoration: none; color: #fff;
+            position: relative;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .signup-featured:hover { transform: translateY(-1px); box-shadow: 0 10px 30px var(--accent-dim); text-decoration: none; }
+        .signup-featured .logo {
+            width: 40px; height: 40px; border-radius: 8px;
+            background: #fff; display: inline-flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .signup-featured .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+        .signup-featured .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .signup-featured .meta .ttl { display: block; font-family: var(--font-display); font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1.05; }
+        .signup-featured .meta .sub { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.85); margin-top: 5px; line-height: 1.3; }
+        .signup-featured .badge {
+            position: absolute; top: -10px; right: 12px;
+            background: #fff; color: var(--accent);
+            font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .signup-featured .go-arrow { font-size: 22px; opacity: 0.8; }
+        .signup-other-label {
+            font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 14px 0 8px;
+            text-align: center;
+        }
+        .signup-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+        }
+        @media (max-width: 460px) { .signup-grid { grid-template-columns: 1fr; } }
+        .signup-other {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+            transition: all 0.15s ease;
+        }
+        .signup-other:hover { border-color: var(--border); transform: translateY(-1px); text-decoration: none; }
+        .signup-other .logo {
+            width: 22px; height: 22px; border-radius: 4px;
+            background: #fff; display: inline-flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .signup-other .logo img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+        .signup-other-meta { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+        .signup-other-meta .nm { font-weight: 700; }
+        .signup-other-meta .cp { font-family: var(--font-mono); font-size: 8.5px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.5px; text-transform: none; margin-top: 3px; }
+        @media (max-width: 480px) {
+            /* phones: compact everything so the whole popup (X included) fits the frame */
+            .popup-overlay { padding: 12px; }
+            .popup { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+            .popup.signup-popup { padding: 14px 12px 12px; }
+            .popup-headline { padding: 0 34px; margin-bottom: 10px; }
+            .popup-headline p { font-size: 11px; }
+            .signup-featured { padding: 12px 14px; margin-bottom: 10px; }
+            .signup-featured .meta .ttl { font-size: 16px; }
+            .signup-other-label { margin: 10px 0 6px; }
+            .signup-other { padding: 8px 9px; }
+            .popup-dismiss { margin-top: 6px; padding: 10px 16px; min-height: 40px; }
+        }
+
+        /* Product detail modal */
+        .pd-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 400; display: none; align-items: center; justify-content: center; padding: 24px; }
+        .pd-overlay.active { display: flex; }
+        .pd-modal { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 20px; max-width: 1100px; width: 100%; max-height: 92vh; overflow-y: auto; position: relative; box-shadow: 0 30px 90px rgba(0,0,0,0.6); }
+        .pd-close {
+            position: fixed;
+            top: max(env(safe-area-inset-top), 14px);
+            left: 14px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+            color: #fff; font-size: 22px; line-height: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 500; transition: all .15s;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        .pd-close:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.3); }
+        .pd-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; padding: 32px; }
+        .pd-img-wrap { background: #ffffff; border-radius: var(--radius); overflow: hidden; aspect-ratio: 1; position: relative; }
+        .pd-img { width: 100%; height: 100%; object-fit: contain; display: block; transition: opacity .2s; background: #ffffff; }
+        .pd-buy-row { display: flex; gap: 8px; margin-top: 16px; }
+        .pd-buy { flex: 1 1 50%; min-width: 0; display: inline-flex; align-items: center; justify-content: center; padding: 16px; background: var(--accent); color: var(--accent-ink); font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; transition: all .15s; text-decoration: none; white-space: nowrap; }
+        .pd-buy:hover { background: var(--accent-hover); color: var(--accent-ink); }
+        .pd-copy { flex: 1 1 50%; min-width: 0; padding: 16px 14px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text); border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .15s; font-family: var(--font-mono); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+        .pd-copy svg { flex-shrink: 0; }
+        .pd-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .pd-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .pd-raw-copy {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 10px; padding: 8px 12px;
+            background: transparent; border: 1px solid var(--border-subtle);
+            color: var(--text-muted); border-radius: 8px; cursor: pointer;
+            font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all .15s ease;
+        }
+        .pd-raw-copy:hover { color: var(--text); border-color: var(--border); }
+        .pd-raw-copy.copied { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .pd-agent-pickprompt {
+            display: none; align-items: center; gap: 8px;
+            padding: 12px 14px; margin-top: 10px;
+            background: rgba(239,68,68,0.12); border: 1px solid #ef4444;
+            border-radius: 8px; color: #ef4444;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .pd-agent-pickprompt.active { display: inline-flex; animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
+        .pd-agent-pickprompt::before { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-weight: 900; font-size: 12px; flex-shrink: 0; }
+        @keyframes pdShake {
+            0%, 100% { transform: translateX(0); }
+            12%, 60% { transform: translateX(-6px); }
+            24%, 72% { transform: translateX(6px); }
+            36%, 84% { transform: translateX(-3px); }
+            48%, 96% { transform: translateX(3px); }
+        }
+        .pd-agent-btn-shake { animation: pdShake 0.45s cubic-bezier(.36,.07,.19,.97); }
+
+        .pd-side { display: flex; flex-direction: column; gap: 18px; }
+        .pd-source { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+        .pd-source .src-dot { width: 14px; height: 14px; border-radius: 4px; background: var(--accent); display: inline-block; }
+        .pd-title { font-family: var(--font-display); font-size: 38px; line-height: 1; letter-spacing: 0.5px; text-transform: uppercase; }
+        .pd-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+        .pd-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 7px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+        .pd-badge.quality { background: rgba(34,197,94,0.15); color: #15803d; }
+        .pd-badge.verified { background: rgba(59,130,246,0.15); color: #1d4ed8; }
+        .pd-badge.cat { background: var(--surface-2); color: var(--text-secondary); text-transform: uppercase; }
+        .pd-price { font-family: var(--font-display); font-size: 32px; color: var(--accent); letter-spacing: 0.5px; }
+
+        .pd-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; padding: 14px; background: var(--surface-2); border-radius: 12px; }
+        .pd-meta-cell { padding: 0 4px; }
+        .pd-meta-cell .lbl { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+        .pd-meta-cell .val { font-size: 13px; font-weight: 600; }
+
+        .pd-sec-head { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+
+        .pd-variants { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-height: 380px; overflow-y: auto; padding: 4px; }
+        .pd-variant {
+            border-radius: 9px; overflow: hidden;
+            cursor: pointer; border: 2px solid transparent;
+            background: #ffffff; transition: all .15s; padding: 0;
+            display: flex; flex-direction: column;
+        }
+        .pd-variant img { width: 100%; aspect-ratio: 1; object-fit: contain; padding: 2px; }
+        .pd-variant:hover { transform: translateY(-2px); }
+        .pd-variant.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+        .pd-variant-lbl {
+            display: block; background: var(--surface-2); color: var(--text);
+            font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.3px; padding: 4px 4px 1px; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pd-variant-price {
+            display: block; background: var(--surface-2); color: var(--accent-text);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+            padding: 0 4px 4px; text-align: center;
+        }
+
+        .pd-qc { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+        .pd-qc-empty { padding: 28px 14px; text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; background: var(--surface-2); border: 1px dashed var(--border-subtle); border-radius: 12px; }
+        .pd-qc img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 9px; background: #ffffff; cursor: pointer; transition: transform .15s; padding: 4px; }
+        .pd-qc img:hover { transform: scale(1.05); }
+
+        /* QC lightbox — full-screen inline viewer for QC photos */
+        .qc-lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; padding: 60px 20px;
+        }
+        .qc-lightbox.open { display: flex; }
+        .qc-lb-img {
+            max-width: 100%; max-height: 100%;
+            background: #ffffff !important; object-fit: contain;
+            border-radius: 8px; padding: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+        .qc-lb-close, .qc-lb-nav {
+            position: absolute; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            cursor: pointer; user-select: none;
+            backdrop-filter: blur(10px); transition: all .15s;
+        }
+        .qc-lb-close {
+            top: 18px; right: 18px;
+            width: 44px; height: 44px; border-radius: 50%;
+            font-size: 24px; line-height: 1;
+        }
+        .qc-lb-nav {
+            top: 50%; transform: translateY(-50%);
+            width: 52px; height: 80px; border-radius: 10px;
+            font-size: 36px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qc-lb-prev { left: 18px; }
+        .qc-lb-next { right: 18px; }
+        .qc-lb-close:hover, .qc-lb-nav:hover {
+            background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4);
+        }
+        .qc-lb-counter {
+            position: absolute; bottom: 18px; left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px; background: rgba(0,0,0,0.6);
+            color: #fff; border-radius: 999px;
+            font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+        @media (max-width: 600px) {
+            .qc-lightbox { padding: 40px 8px; }
+            .qc-lb-nav { width: 40px; height: 60px; font-size: 28px; }
+            .qc-lb-prev { left: 6px; }
+            .qc-lb-next { right: 6px; }
+            .qc-lb-close { top: 10px; right: 10px; width: 38px; height: 38px; font-size: 20px; }
+        }
+
+        @media (max-width: 860px) {
+            .pd-body { grid-template-columns: 1fr; padding: 20px; gap: 22px; }
+            .pd-title { font-size: 28px; }
+            .pd-price { font-size: 26px; }
+            .pd-buy-row { flex-wrap: wrap; }
+        }
+
+        .footer { padding: 48px 24px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle); }
+        .footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 40px; flex-wrap: wrap; }
+        .footer-brand { font-family: var(--font-display); font-size: 30px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .footer-desc { font-size: 12px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
+        .footer-col h4 { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+        .footer-col a { display: block; padding: 3px 0; color: var(--text-secondary); font-size: 12px; transition: color 0.2s; }
+        .footer-col a:hover { color: var(--accent); }
+        .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+        .sales-notif { display: none; position: fixed; bottom: 24px; left: 24px; z-index: 300; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px; max-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); cursor: pointer; }
+        .sales-notif.active { display: flex; gap: 10px; align-items: center; }
+        .sn-img { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: #ffffff; flex-shrink: 0; padding: 2px; }
+        .sn-info { flex: 1; min-width: 0; }
+        .sn-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sn-sub { font-size: 10px; color: var(--text-muted); }
+        .sn-time { font-size: 10px; color: var(--accent); margin-top: 1px; }
+
+        .back-top { position: fixed; bottom: 24px; right: 24px; z-index: 300; width: 40px; height: 40px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; color: var(--text-muted); cursor: pointer; font-size: 14px; display: none; align-items: center; justify-content: center; }
+        .back-top.vis { display: flex; }
+        .back-top:hover { color: var(--accent); }
+
+        /* Floating back button shown on every non-home page */
+        .page-back {
+            position: fixed;
+            top: calc(max(env(safe-area-inset-top), 12px) + 72px);
+            left: 14px;
+            z-index: 95;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 14px 8px 10px;
+            background: rgba(255,253,247,0.9); backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            cursor: pointer; text-decoration: none;
+            box-shadow: 0 8px 24px rgba(20,16,0,0.12);
+            transition: all .15s;
+        }
+        .page-back:hover { color: var(--text); border-color: var(--border); background: rgba(255,251,238,0.96); }
+        .page-back svg { width: 14px; height: 14px; }
+        @media (max-width: 768px) {
+            /* Fully opaque on mobile so it reads as solid chrome over scrolling
+               content instead of a translucent layering glitch. */
+            .page-back { top: calc(max(env(safe-area-inset-top), 12px) + 60px); padding: 7px 12px 7px 8px; font-size: 10px; background: rgba(255,252,243,0.97); }
+            /* Hide the "someone just viewed" toast while the mobile menu is open. */
+            #mob.open ~ .sales-notif { display: none !important; }
+        }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .reveal.vis { opacity: 1; transform: translateY(0); }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Collapse the desktop nav to the hamburger at 900px — below that the full
+           link row + language + currency + wishlist + the long Sign-Up CTA no longer
+           fit and the rightmost item would clip (everything stays reachable in the
+           hamburger menu, which also carries language + currency + wishlist). */
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .nav-hamburger { display: flex; }
+        }
+        @media (max-width: 768px) {
+            /* bigger footer tap targets on mobile (were ~24px, below the 40px min) */
+            .footer-col a { padding: 11px 0; }
+            /* search field inside the mobile menu */
+            .mm-search { width: min(86vw, 360px); margin-bottom: 6px; }
+            .mm-search input { width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; color: #fff; font-size: 15px; padding: 13px 15px; outline: none; }
+            .mm-search input:focus { border-color: var(--accent); }
+            .mm-search input::placeholder { color: rgba(255,255,255,0.5); }
+            .nav-brand { font-size: 20px; letter-spacing: 0; max-width: 38vw; overflow: hidden; }
+            .section { padding: 48px 16px; }
+            .section-title { font-size: 32px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .product-card-body { padding: 12px; }
+            .product-card-name { font-size: 11px; }
+            .product-card-price { font-size: 14px; }
+            .product-card-buy { padding: 7px 11px; font-size: 11px; }
+            /* Let price + a long buy label ("Buy on KakoBuy" on the spreadsheet)
+               wrap on very narrow cards instead of cramming against each other.
+               Short labels (Buy/View) still sit inline since wrap only triggers on overflow. */
+            .product-card-row { flex-wrap: wrap; row-gap: 6px; }
+            .stat-num { font-size: 36px; }
+            .cta-section h2 { font-size: 32px; }
+            .footer-top { flex-direction: column; }
+        }
+        {% block extra_css %}{% endblock %}
+
+        /* ============================================================
+           AURALINKS LIGHT-THEME PATCH — keep LAST in this stylesheet.
+           The engine was authored dark; this block re-inks everything
+           the variables can't reach. Three rules of the theme:
+             1. Yellow fills ALWAYS carry dark ink (never white-on-yellow).
+             2. Yellow as TEXT becomes readable amber (--accent-text).
+             3. Brand/display accents go red — the "bit of red".
+           Placed after extra_css so it also overrides page-level styles.
+           ============================================================ */
+        :root { --accent-text: #a37e00; }
+
+        /* 1 — dark ink on yellow fills */
+        .nav-cta, .nav-wish-count, .btn-primary, .product-card-badge,
+        .product-card-buy, .popup-close:hover, .agent-picker-item.selected,
+        .agent-picker-item:hover,
+        .agent-picker-buy, .pd-buy:hover, .pd-copy.copied, .pd-raw-copy.copied,
+        .side-btn:hover, .hero-signup, .hero-search-go, .hero-search-allbtn:hover,
+        .conv-btn:hover, .tut-step-num, .tut-card .tut-link, .converter-input button,
+        .agent-rec-badge, .product-card-agents:hover, .nf-btn,
+        .agent-card-cta, .agent-card.featured .featured-badge, .agent-row-open,
+        .signup-featured, .signup-featured .meta .ttl, .signup-featured .go-arrow {
+            color: var(--accent-ink);
+        }
+        .hero-browse-btn { color: var(--accent-ink) !important; }
+        .signup-featured .meta .sub { color: rgba(28,22,2,0.78); }
+        .signup-featured .badge { background: #fff; color: var(--red); }
+
+        /* 2 — yellow text on light surfaces -> readable amber */
+        .nav-links a.active, .product-card-price, .section-label, .sec-link,
+        .stat-num, .hero-bg-card-price, .hero-label, .popup-headline .eyebrow,
+        .mm-lang button.active, .filter-tab.active, .cat-tab.active, .tut-eyebrow,
+        .result-meta .accent, .pp-agentchip.active, .sn-time, .pd-price,
+        .hero-search-allbtn, .spread-stat-num, .bundle-total-amount,
+        .bundle-eyebrow .accent,
+        .agents-hero .eyebrow, .agent-card-coupon .amount,
+        .agents-foot a, .tut-faq-q .chev {
+            color: var(--accent-text);
+        }
+
+        /* 3 — brand + display accents in red */
+        .nav-brand .accent, .hero-title .accent, .wl-title .accent,
+        .mobile-menu .mobile-menu-brand .accent, .popup-headline h2 .accent,
+        .agents-hero h1 .accent, .spread-hero h1 .accent,
+        .bundle-page-header h1 .accent, .nf-code {
+            color: var(--red);
+        }
+
+        /* ghost controls that were white-on-dark -> dark-on-light */
+        .pd-close { background: rgba(20,16,0,0.06); border-color: rgba(20,16,0,0.16); color: var(--text); }
+        .pd-close:hover { background: rgba(20,16,0,0.12); border-color: rgba(20,16,0,0.3); }
+        .mm-search input { background: rgba(20,16,0,0.05) !important; border-color: rgba(20,16,0,0.18) !important; color: var(--text) !important; }
+        .mm-search input::placeholder { color: var(--text-muted) !important; }
+        /* soften the heavy dark drop shadows for a light page */
+        .sales-notif { box-shadow: 0 8px 24px rgba(20,16,0,0.14); }
+        .currency-menu { box-shadow: 0 8px 30px rgba(20,16,0,0.16); }
+        .aural-rsdd { box-shadow: 0 18px 40px rgba(20,16,0,0.16); }
+        .side-btn { box-shadow: 0 8px 24px rgba(20,16,0,0.12); }
+        .pd-modal { box-shadow: 0 30px 90px rgba(20,16,0,0.18); }
+        .hero-search-dropdown { box-shadow: 0 18px 40px rgba(20,16,0,0.16); }
+    </style>
+    <script src="/static/js/preview-mode.js"></script>
+</head>
+<body>
+    <nav class="nav" id="nav">
+        <a href="/" class="nav-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></a>
+        <ul class="nav-links">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}" data-i18n="nav_home">Home</a></li>
+            <li><a href="/shop" class="{% if '/shop' in request.path %}active{% endif %}" data-i18n="nav_shop">Shop</a></li>
+            <li><a href="/link-converter" class="{% if request.path == '/link-converter' %}active{% endif %}" data-i18n="nav_converter">Converter</a></li>
+            <li><a href="/tutorial" class="{% if request.path == '/tutorial' %}active{% endif %}" data-i18n="nav_howtobuy">How to Buy</a></li>
+            <li class="lang-switcher">
+                <button class="currency-btn" type="button" onclick="toggleLangMenu()" aria-label="Change language">
+                    <span data-lang-label>EN</span><span class="caret">&#9662;</span>
+                </button>
+                <div class="currency-menu lang-menu" id="langMenu">
+                    <button type="button" onclick="setLang('en')">English <span class="sym">EN</span></button>
+                    <button type="button" onclick="setLang('de')">Deutsch <span class="sym">DE</span></button>
+                    <button type="button" onclick="setLang('pl')">Polski <span class="sym">PL</span></button>
+                    <button type="button" onclick="setLang('es')">Español <span class="sym">ES</span></button>
+                    <button type="button" onclick="setLang('fr')">Français <span class="sym">FR</span></button>
+                </div>
+            </li>
+            <li class="currency-switcher">
+                <button class="currency-btn" type="button" onclick="toggleCurrencyMenu()" aria-label="Change currency">
+                    <span data-currency-label>USD</span><span class="caret">&#9662;</span>
+                </button>
+                <div class="currency-menu" id="currencyMenu">
+                    <button type="button" onclick="setCurrency('USD')">USD <span class="sym">$</span></button>
+                    <button type="button" onclick="setCurrency('CNY')">CNY <span class="sym">&yen;</span></button>
+                    <button type="button" onclick="setCurrency('EUR')">EUR <span class="sym">&euro;</span></button>
+                    <button type="button" onclick="setCurrency('GBP')">GBP <span class="sym">&pound;</span></button>
+                    <button type="button" onclick="setCurrency('CAD')">CAD <span class="sym">C$</span></button>
+                </div>
+            </li>
+            <li><a href="/wishlist" class="nav-wishlist {% if request.path == '/wishlist' %}active{% endif %}" aria-label="Wishlist" data-i18n-title="wishlist">&#9825;<span class="nav-wish-count" id="navWishCount"></span></a></li>
+            <li><a href="/agents" class="nav-cta" data-i18n="nav_signup">Sign Up — Coupons $50–$500</a></li>
+        </ul>
+        <button class="nav-hamburger" onclick="var p=document.getElementById('popup');if(p)p.classList.remove('active');document.getElementById('mob').classList.add('open')">&#9776;</button>
+    </nav>
+
+    <div class="mobile-menu" id="mob">
+        <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
+        <div class="mobile-menu-brand">{{ site.name_part1 }}<span class="accent">{{ site.name_part2 }}</span></div>
+        <form class="mm-search" action="/shop" method="get" role="search">
+            <input type="search" name="q" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off" data-i18n-ph="search_ph" data-i18n-n="{{ site.product_count_label }}">
+        </form>
+        <a href="/" data-i18n="nav_home">Home</a>
+        <a href="/shop" data-i18n="nav_shop">Shop</a>
+        <a href="/link-converter" data-i18n="nav_converter">Converter</a>
+        <a href="/tutorial" data-i18n="nav_howtobuy">How to Buy</a>
+        <a href="/wishlist"><span data-i18n="wishlist">Wishlist</span><span id="mobWishCount"></span></a>
+        <a href="/agents" class="mobile-menu-cta">
+            <span class="mm-cta-line1" data-i18n="mm_signup">Sign Up</span>
+            <span class="mm-cta-line2" data-i18n="mm_coupons">Coupons $50–$500</span>
+        </a>
+        <div class="mm-lang">
+            <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+            <button type="button" data-lang="de" onclick="setLang('de')">DE</button>
+            <button type="button" data-lang="pl" onclick="setLang('pl')">PL</button>
+            <button type="button" data-lang="es" onclick="setLang('es')">ES</button>
+            <button type="button" data-lang="fr" onclick="setLang('fr')">FR</button>
+        </div>
+    </div>
+
+    <!-- Floating right-side widget -->
+    <div class="side-widget" aria-label="Quick actions">
+        <a href="/tutorial" class="side-btn tutorial" aria-label="How to buy tutorial" onclick="trackClick('tool','side-tutorial','','')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+            <span class="side-tip" data-i18n="side_howtobuy">How to Buy</span>
+        </a>
+        {% if site.discord_url %}
+        <a href="{{ site.discord_url }}" target="_blank" rel="noopener" class="side-btn discord" aria-label="Join our Discord" onclick="trackClick('social','side-discord','','')">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            <span class="side-tip" data-i18n="side_discord">Join Discord</span>
+        </a>
+        {% endif %}
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <footer class="footer">
+        <div class="footer-top">
+            <div>
+                <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--red);">{{ site.name_part2 }}</span></div>
+                <p class="footer-desc" data-i18n="footer_desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
+            </div>
+            <div class="footer-col">
+                <h4 data-i18n="footer_categories">Categories</h4>
+                <a href="/shop?category=shoes" data-i18n="footer_shoes">Shoes</a>
+                <a href="/shop?category=tracksuits" data-i18n="footer_tracksuits">Tracksuits &amp; Sets</a>
+                <a href="/shop?category=hoodies" data-i18n="footer_hoodies">Hoodies</a>
+                <a href="/shop?category=jackets" data-i18n="footer_jackets">Jackets</a>
+            </div>
+            <div class="footer-col">
+                <h4 data-i18n="footer_tools">Tools</h4>
+                <a href="/shop" data-i18n="footer_allproducts">All Products</a>
+                <a href="/link-converter" data-i18n="footer_linkconverter">Link Converter</a>
+                <a href="/tutorial" data-i18n="nav_howtobuy">How to Buy</a>
+            </div>
+            <div class="footer-col">
+                <h4 data-i18n="footer_legal">Legal</h4>
+                <a href="/privacy" data-i18n="footer_privacy">Privacy</a>
+                <a href="/terms" data-i18n="footer_terms">Terms</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p style="text-transform:none; letter-spacing:0; line-height:1.6; max-width:720px; margin:0 auto 10px;" data-i18n="footer_disclaimer" data-i18n-name="{{ site.name }}">{{ site.name }} is a curated catalogue of independent third-party listings. We may earn a commission when you open or buy through our links, at no extra cost to you. {{ site.name }} does not sell, stock, or ship any items.</p>
+            &copy; 2026 {{ site.name }}. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Product detail modal -->
+    <div class="pd-overlay" id="pdModal" onclick="if(event.target===this)closeProductModal()">
+        <div class="pd-modal" role="dialog" aria-modal="true" aria-labelledby="pdTitle">
+            <button class="pd-close" type="button" onclick="closeProductModal()" aria-label="Close">&times;</button>
+            <div class="pd-body">
+                <div>
+                    <div class="pd-img-wrap"><img id="pdMainImage" class="pd-img" src="" alt="" referrerpolicy="no-referrer"></div>
+                    <div class="pd-buy-row">
+                        <a id="pdBuyBtn" class="pd-buy" href="#" rel="noopener" onclick="return handleBuyClick(event)" data-i18n="pd_buy">Buy</a>
+                        <button type="button" class="pd-copy" id="pdAgentBtn" onclick="openAgentPicker(event, document.getElementById('pdModal').dataset.pid)" aria-label="Choose agent" title="Choose agent">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+                            <span id="pdAgentBtnLabel" data-i18n="pd_choose_agent">Choose Agent</span>
+                        </button>
+                    </div>
+                    <div class="pd-agent-pickprompt" id="pdAgentPickWarn" data-i18n="pd_pick_first">Pick an agent first ↑</div>
+                    <button type="button" id="pdRawCopy" onclick="copyRawSellerUrl()" class="pd-raw-copy" title="Copy raw seller link (no agent)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span id="pdRawCopyLabel" data-i18n="pd_copy_raw">Copy raw seller link</span>
+                    </button>
+                </div>
+                <div class="pd-side">
+                    <span class="pd-source"><span class="src-dot"></span><span id="pdCategory">CATEGORY</span></span>
+                    <h2 class="pd-title" id="pdTitle">—</h2>
+                    <div class="pd-badges" id="pdBadges"></div>
+                    <div class="pd-price" id="pdPrice">$0.00</div>
+                    <div class="pd-meta">
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_weight">Weight</div><div class="val" id="pdWeight">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_sales">Sales</div><div class="val" id="pdSales">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_listing">Listing</div><div class="val" id="pdSeller">—</div></div>
+                        <div class="pd-meta-cell"><div class="lbl" data-i18n="pd_batch">Batch</div><div class="val" id="pdBatch">—</div></div>
+                    </div>
+                    <div>
+                        <div class="pd-sec-head"><span id="pdVariantCount" data-i18n="pd_versions">Versions</span></div>
+                        <div class="pd-variants" id="pdVariants"></div>
+                    </div>
+                    <div>
+                        <div class="pd-sec-head" data-i18n="pd_qc">QC photos</div>
+                        <div id="pdQc"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent picker modal -->
+    <div class="agent-picker-overlay" id="agentPicker" onclick="if(event.target===this)closeAgentPicker()">
+        <div class="agent-picker">
+            <button class="agent-picker-close" onclick="closeAgentPicker()" aria-label="Close">&times;</button>
+            <div class="agent-picker-head">
+                <p class="agent-picker-label" data-i18n="ap_openwith">Open with</p>
+                <h3 class="agent-picker-title" id="agentPickerName" data-i18n="ap_choose">Choose an agent</h3>
+            </div>
+            <div class="agent-picker-list" id="agentPickerList">
+                <div class="agent-picker-empty" data-i18n="ap_loading">Loading...</div>
+            </div>
+            <div class="agent-picker-buy-wrap" id="agentPickerBuyWrap">
+                <a class="agent-picker-buy" id="agentPickerBuyBtn" href="#" target="_blank" rel="noopener" data-i18n="ap_buy">Buy</a>
+            </div>
+            <p class="agent-picker-foot" data-i18n="ap_foot">Pick an agent, then hit Buy.</p>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="popup">
+        <div class="popup signup-popup">
+            <button class="popup-close" onclick="closePopup()">&times;</button>
+            <div class="popup-headline">
+                <span class="eyebrow" data-i18n="popup_welcome">Welcome</span>
+                <h2 data-i18n-html="popup_title_html">Shipping Coupons <span class="accent">$50&ndash;$500</span></h2>
+                <p data-i18n="popup_sub">Sign up to your agent of choice — claim your welcome credit.</p>
+            </div>
+            <div id="signupAgentList">
+                <!-- featured + other agents injected by JS -->
+            </div>
+            <p class="popup-dismiss" onclick="closePopup()" data-i18n="popup_dismiss">Maybe later</p>
+        </div>
+    </div>
+
+    <a class="sales-notif" id="sn" href="#" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
+        <img class="sn-img" id="snImg" src="" alt="">
+        <div class="sn-info">
+            <div class="sn-name" id="snName"></div>
+            <div class="sn-sub" data-i18n="sn_sub">Someone just viewed this</div>
+            <div class="sn-time" id="snTime"></div>
+        </div>
+    </a>
+
+    <button class="back-top" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+    {% if request.path != '/' and not request.path.startswith('/admin') %}
+    <button type="button" class="page-back" onclick="if(window.history.length>1){history.back();}else{location.href='/shop';}" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <span data-i18n="back">Back</span>
+    </button>
+    {% endif %}
+
+    <script>
+        // Gracefully degrade any product image whose external host 404s or blocks
+        // hotlinking — swap to a neutral placeholder tile so a dead link never
+        // renders as a jarring blank white card (error events don't bubble, so we
+        // listen in the capture phase).
+        (function(){
+            var PH = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#f2f2f4"/><g fill="none" stroke="#c7c7cf" stroke-width="3"><rect x="30" y="34" width="40" height="32" rx="3"/><circle cx="41" cy="46" r="4"/><path d="M34 62l12-12 8 8 8-9 8 13"/></g></svg>');
+            document.addEventListener('error', function(e){
+                var t = e.target;
+                if (t && t.tagName === 'IMG' && t.classList && t.classList.contains('product-card-img') && t.src.indexOf('data:image') !== 0){
+                    t.src = PH;
+                }
+            }, true);
+        })();
+        // ====================================================================
+        // Global recent-searches helper. Any search input can call:
+        //   attachRecentSearches({ input, form, autocompleteEl, getResults })
+        // Stores up to 8 queries in localStorage (deduped, most recent first).
+        // Renders a dropdown anchored under the input with per-row × delete +
+        // a "Clear all" link. Shown when the input is focused and empty.
+        // ====================================================================
+        (function(){
+            var KEY = 'auralinks_recent_searches';
+            var MAX = 8;
+            function load() {
+                try { return JSON.parse(localStorage.getItem(KEY) || '[]') || []; }
+                catch(_) { return []; }
+            }
+            function save(q) {
+                q = (q || '').trim();
+                if (!q) return;
+                var list = load().filter(function(x){ return x.toLowerCase() !== q.toLowerCase(); });
+                list.unshift(q);
+                if (list.length > MAX) list = list.slice(0, MAX);
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(_) {}
+            }
+            function remove(q) {
+                var list = load().filter(function(x){ return x !== q; });
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(_) {}
+            }
+            function clear() { try { localStorage.removeItem(KEY); } catch(_) {} }
+            function esc(s) {
+                return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+            }
+
+            // Default dropdown element + styles. Inserted next to the input
+            // if the caller doesn't supply their own (used by /shop).
+            function ensureDropdown(input) {
+                var dd = input.nextElementSibling;
+                if (dd && dd.classList && dd.classList.contains('aural-rsdd')) return dd;
+                dd = document.createElement('div');
+                dd.className = 'aural-rsdd';
+                input.parentNode.insertBefore(dd, input.nextSibling);
+                return dd;
+            }
+            function renderInto(dd, callbacks) {
+                var list = load();
+                if (!list.length) { dd.classList.remove('active'); dd.innerHTML = ''; return; }
+                var rows = list.map(function(q){
+                    var safe = esc(q);
+                    return '<a class="rs-row" href="/shop?q=' + encodeURIComponent(q) + '" data-q="' + safe + '">'
+                         +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>'
+                         +   '<span class="rs-q">' + safe + '</span>'
+                         +   '<button type="button" class="rs-x" aria-label="Remove" data-remove="' + safe + '">&times;</button>'
+                         + '</a>';
+                }).join('');
+                dd.innerHTML = '<div class="rs-head"><span>Recent searches</span>'
+                            + '<button type="button" class="rs-clear">Clear all</button></div>'
+                            + rows;
+                dd.classList.add('active');
+            }
+
+            window.attachRecentSearches = function(opts) {
+                var input = opts.input;
+                if (!input) return;
+                var form = opts.form || input.closest('form');
+                var dd = opts.dropdown || ensureDropdown(input);
+                var navTo = opts.navTo || function(q){ return '/shop?q=' + encodeURIComponent(q); };
+
+                function render() { renderInto(dd, {}); }
+                function maybeShow() {
+                    var v = input.value.trim();
+                    if (!v) render();
+                    else dd.classList.remove('active');
+                }
+                input.addEventListener('focus', maybeShow);
+                input.addEventListener('input', function(){
+                    // Don't fight the page's autocomplete — only show recents
+                    // when the input is empty. Otherwise hide the dropdown.
+                    if (!input.value.trim()) render();
+                    else dd.classList.remove('active');
+                });
+                if (form) form.addEventListener('submit', function(){ save(input.value); });
+
+                dd.addEventListener('click', function(e){
+                    var x = e.target.closest('.rs-x');
+                    if (x) {
+                        e.preventDefault(); e.stopPropagation();
+                        remove(x.getAttribute('data-remove'));
+                        render();
+                        return;
+                    }
+                    if (e.target.classList && e.target.classList.contains('rs-clear')) {
+                        e.preventDefault(); e.stopPropagation();
+                        clear(); dd.classList.remove('active');
+                        return;
+                    }
+                    var row = e.target.closest('.rs-row');
+                    if (row) {
+                        save(row.getAttribute('data-q'));
+                        // let the <a> navigate naturally
+                    }
+                });
+                document.addEventListener('click', function(e){
+                    if (!input.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('active');
+                });
+            };
+        })();
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('active');
+            document.body.style.overflow = '';
+            // 7-day dismissal — survives navigation, reloads, browser closes,
+            // sessionStorage clears, deep-links. So mobile users actually stop
+            // seeing it after they tap "Maybe later".
+            try {
+                var until = Date.now() + 7 * 24 * 60 * 60 * 1000;
+                localStorage.setItem('pp_dismiss_until', String(until));
+                sessionStorage.setItem('pp', '1');
+            } catch(e) {}
+        }
+
+        // Populate the signup popup with agents. KakoBuy is featured at top
+        // (big card, "Best Option" badge), the rest are listed below.
+        (function loadSignupAgents() {
+            var wrap = document.getElementById('signupAgentList');
+            if (!wrap) return;
+            fetch('/api/signup-agents').then(function(r){ return r.json(); }).then(function(d){
+                var agents = (d && d.agents) || [];
+                if (!agents.length) return;
+                var featured = agents[0];  // the top agent (operator-ordered) is the "Best Option"
+                var others = agents.filter(function(a){ return a.key !== featured.key; });
+                function safe(s){ return String(s).replace(/"/g, '&quot;'); }
+                var html = '<a class="signup-featured" href="' + safe(featured.signup_url) + '" target="_blank" rel="noopener" onclick="trackClick(\'signup\',\'popup_featured_' + featured.key + '\',\'\',\'\',\'\')">'
+                         +   '<span class="badge">Best Option</span>'
+                         +   '<span class="logo"><img src="' + safe(featured.logo) + '" alt="' + safe(featured.name) + '" referrerpolicy="no-referrer"></span>'
+                         +   '<span class="meta"><span class="ttl">' + safe(featured.name) + '</span><span class="sub">' + safe(featured.coupon || 'Welcome credit') + '</span></span>'
+                         +   '<span class="go-arrow">→</span>'
+                         + '</a>'
+                         + '<p class="signup-other-label">Or choose another agent</p>'
+                         + '<div class="signup-grid">';
+                others.forEach(function(a){
+                    html += '<a class="signup-other" href="' + safe(a.signup_url) + '" target="_blank" rel="noopener" onclick="trackClick(\'signup\',\'popup_other_' + a.key + '\',\'\',\'\',\'\')">'
+                          +   '<span class="logo"><img src="' + safe(a.logo) + '" alt="' + safe(a.name) + '" referrerpolicy="no-referrer"></span>'
+                          +   '<span class="signup-other-meta"><span class="nm">' + safe(a.name) + '</span><span class="cp">' + safe(a.coupon || '') + '</span></span>'
+                          + '</a>';
+                });
+                html += '</div>';
+                wrap.innerHTML = html;
+            }).catch(function(){});
+        })();
+
+        // Signup popup — 2s after load. Dismissed popup stays dismissed for
+        // 7 days via localStorage, so mobile users don't get pestered on
+        // every page load.
+        (function() {
+            try {
+                var until = parseInt(localStorage.getItem('pp_dismiss_until') || '0', 10);
+                if (until && Date.now() < until) return;
+                if (sessionStorage.getItem('pp') === '1') return;   // once per session, not every page load
+                setTimeout(function() {
+                    var mob = document.getElementById('mob');
+                    if (mob && mob.classList.contains('open')) return;   // never pop over the open mobile menu
+                    if (sessionStorage.getItem('pp') !== '1') {
+                        document.getElementById('popup').classList.add('active');
+                        try { sessionStorage.setItem('pp', '1'); } catch(e) {}   // mark shown → suppress on later pages this session
+                    }
+                }, 2000);
+            } catch(e) {}
+        })();
+
+        window.addEventListener('scroll', function() {
+            var btt = document.getElementById('btt');
+            if (btt) btt.classList.toggle('vis', window.scrollY > 500);
+        });
+
+        var revealEls = document.querySelectorAll('.reveal');
+        var rObs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('vis'); rObs.unobserve(e.target); } });
+        }, { threshold: 0, rootMargin: '0px 0px 200px 0px' });
+        revealEls.forEach(function(el) { rObs.observe(el); });
+        // Fallback: guarantee any section near/above the viewport reveals even on fast momentum scroll
+        function revealInView() { revealEls.forEach(function(el) { if (el.getBoundingClientRect().top < window.innerHeight + 200) el.classList.add('vis'); }); }
+        window.addEventListener('scroll', revealInView, { passive: true });
+        window.addEventListener('load', revealInView);
+
+        var counted = false;
+        var sObs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting && !counted) {
+                    counted = true;
+                    document.querySelectorAll('[data-count]').forEach(function(el) {
+                        var t = parseInt(el.dataset.count);
+                        var prefix = el.dataset.prefix || '';
+                        var suffix = el.dataset.suffix || '';
+                        var dur = parseInt(el.dataset.duration) || 2400;
+                        var st = performance.now();
+                        function step(now) {
+                            var p = Math.min((now - st) / dur, 1);
+                            // ease-out-quart — finishes ~75% slower than cubic, feels gradual
+                            var eased = 1 - Math.pow(1 - p, 4);
+                            el.textContent = prefix + Math.round(eased * t).toLocaleString() + suffix;
+                            if (p < 1) requestAnimationFrame(step);
+                        }
+                        el.textContent = prefix + '0' + suffix;
+                        requestAnimationFrame(step);
+                    });
+                }
+            });
+        }, { threshold: 0.35 });
+        var sr = document.querySelector('.stat-row');
+        if (sr) sObs.observe(sr);
+
+        var snProducts = [];
+        var snT = ['just now','2 min ago','5 min ago','8 min ago'];
+        fetch('/api/products?limit=50').then(function(r){return r.json();}).then(function(data){
+            snProducts = data.filter(function(p){return p.image && p.image.length > 10;});
+        }).catch(function(){});
+        function showSN() {
+            if (!snProducts.length) return;
+            var p = snProducts[Math.floor(Math.random()*snProducts.length)];
+            var n = document.getElementById('sn');
+            document.getElementById('snName').textContent = p.name;
+            document.getElementById('snTime').textContent = snT[Math.floor(Math.random()*snT.length)];
+            document.getElementById('snImg').src = p.image;
+            n.href = '/go/' + p.id;
+            n.classList.add('active');
+            setTimeout(function(){ n.classList.remove('active'); }, 6000);
+        }
+        setTimeout(function(){ showSN(); setInterval(showSN, 25000+Math.random()*15000); }, 10000);
+
+        fetch('/api/track-pageview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page:window.location.pathname})}).catch(function(){});
+        function trackClick(t,el,pid,cat,name){
+            fetch('/api/click',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({element_type:el,product_id:pid||'',product_name:name||'',category:cat||'',page:window.location.pathname})}).catch(function(){});
+            if(typeof fbq!=='undefined'){
+                if(el==='buy'||el==='affiliate'){fbq('track','ViewContent',{content_name:name||'',content_category:cat||'',content_ids:[pid||''],content_type:'product'});}
+                if(el==='popup'||el==='cta'||el==='hero'||el==='mid-cta'||t==='signup'){fbq('track','Lead',{content_name:'{{ site.agent_name }} Signup'});}
+            }
+        }
+
+        // Swap the main product image when a thumbnail is clicked.
+        window.swapMainImg = function(thumbBtn, url) {
+            if (!url) return;
+            var img = document.getElementById('pdMainImage');
+            if (img) img.src = url;
+        };
+
+        // Swap main image + highlight the active variant button.
+        window.swapVariantImg = function(btn, url) {
+            if (url) {
+                var img = document.getElementById('pdMainImage');
+                if (img) img.src = url;
+            }
+            document.querySelectorAll('#pdVariants .pd-variant').forEach(function(v){ v.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+        };
+
+        // ============================================================
+        // Saved-agent helpers — remember the user's preferred agent so
+        // they don't have to pick every single time.
+        // ============================================================
+        window.getSavedAgent = function() {
+            try {
+                var v = localStorage.getItem('auralinks_agent');
+                if (!v) return null;
+                var p = JSON.parse(v);
+                return (p && p.key && p.name) ? p : null;
+            } catch (e) { return null; }
+        };
+        window.saveAgent = function(key, name) {
+            try { localStorage.setItem('auralinks_agent', JSON.stringify({key: key, name: name})); } catch (e) {}
+        };
+        // Apply the saved agent to a freshly-opened product modal: hit
+        // /api/agents/<pid>, find the user's preferred entry, and wire
+        // the Buy button to it so they can click Buy immediately.
+        window.applySavedAgentToBuy = function(pid) {
+            var saved = getSavedAgent();
+            if (!saved) return;
+            fetch('/api/agents/' + encodeURIComponent(pid))
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    var match = (d.agents || []).filter(function(a){ return a.key === saved.key; })[0];
+                    if (!match) return;
+                    var pdBuy = document.getElementById('pdBuyBtn');
+                    if (!pdBuy) return;
+                    pdBuy.href = match.url;
+                    pdBuy.target = '_blank';
+                    pdBuy.rel = 'noopener';
+                    pdBuy.textContent = 'Buy on ' + match.name;
+                    pdBuy.dataset.agentKey = match.key;
+                    pdBuy.dataset.agentName = match.name;
+                    var lbl = document.getElementById('pdAgentBtnLabel');
+                    if (lbl) lbl.textContent = match.name + ' ✓';
+                });
+        };
+
+        // ============================================================
+        // Agent picker — pick first, then Buy.
+        // Click an agent → it gets selected (highlighted), the Buy bar
+        // at the bottom is enabled, and if the product-detail modal is
+        // open we also wire its Buy button to the same URL.
+        // ============================================================
+        var _pickerPid = null;
+        window.openAgentPicker = function(ev, pid) {
+            if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+            _pickerPid = pid;
+            var overlay = document.getElementById('agentPicker');
+            var list = document.getElementById('agentPickerList');
+            var name = document.getElementById('agentPickerName');
+            var buyWrap = document.getElementById('agentPickerBuyWrap');
+            list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_loading')) || 'Loading...') + '</div>';
+            name.textContent = (window.i18nT && i18nT('ap_choose')) || 'Choose an agent';
+            buyWrap.classList.remove('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            fetch('/api/agents/' + encodeURIComponent(pid))
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (d.product_name) name.textContent = d.product_name;
+                    if (!d.agents || !d.agents.length) {
+                        list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_none')) || 'No agents available for this product.') + '</div>';
+                        return;
+                    }
+                    var saved = getSavedAgent();
+                    var html = '';
+                    d.agents.forEach(function(a){
+                        var sel = (saved && saved.key === a.key) ? ' selected' : '';
+                        // Real favicon if available, fall back to a colored letter circle.
+                        var letter = (a.letter || a.name[0]).toUpperCase();
+                        var bg = a.color || '#444';
+                        var logoHtml = a.logo
+                            ? '<span class="logo"><img src="' + a.logo + '" alt="' + a.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=&quot;' + letter + '&quot;;this.parentNode.classList.add(&quot;letter&quot;);this.parentNode.style.background=&quot;' + bg + '&quot;;"></span>'
+                            : '<span class="logo letter" style="background:' + bg + '">' + letter + '</span>';
+                        html += '<button type="button" class="agent-picker-item' + sel + '"'
+                             +  ' data-key="' + a.key + '"'
+                             +  ' data-name="' + a.name.replace(/"/g, '&quot;') + '"'
+                             +  ' data-url="' + a.url.replace(/"/g, '&quot;') + '"'
+                             +  ' onclick="selectAgent(this)">'
+                             +  logoHtml
+                             +  '<span class="name">' + a.name + '</span>'
+                             +  '</button>';
+                    });
+                    list.innerHTML = html;
+                    // If user already has a preferred agent, pre-arm Confirm with it
+                    if (saved) {
+                        var preselected = list.querySelector('.agent-picker-item.selected');
+                        if (preselected) selectAgent(preselected);
+                    }
+                })
+                .catch(function(){
+                    list.innerHTML = '<div class="agent-picker-empty">' + ((window.i18nT && i18nT('ap_failed')) || 'Failed to load agents.') + '</div>';
+                });
+        };
+        window.selectAgent = function(btn) {
+            var key = btn.dataset.key;
+            var name = btn.dataset.name;
+            var url = btn.dataset.url;
+            saveAgent(key, name);  // persist for next visit
+            // Mark selected — clear others
+            var items = document.querySelectorAll('#agentPickerList .agent-picker-item');
+            items.forEach(function(i){ i.classList.remove('selected'); });
+            btn.classList.add('selected');
+            var pdModal = document.getElementById('pdModal');
+            var modalOpen = pdModal && pdModal.classList.contains('active');
+            var buyWrap = document.getElementById('agentPickerBuyWrap');
+            var confirmBtn = document.getElementById('agentPickerBuyBtn');
+            if (modalOpen) {
+                // Confirm flow — picker tells the user what they've selected;
+                // hitting Confirm just locks it in and closes the picker. The
+                // product-modal's Buy button is what fires the outbound click.
+                confirmBtn.textContent = "Confirm";
+                confirmBtn.removeAttribute('href');
+                confirmBtn.removeAttribute('target');
+                confirmBtn.onclick = function(ev) {
+                    if (ev) { ev.preventDefault(); }
+                    trackClick('select','agent_pick_' + key, _pickerPid || '', '', '');
+                    closeAgentPicker();
+                };
+                var pdBuy = document.getElementById('pdBuyBtn');
+                pdBuy.href = url;
+                pdBuy.target = '_blank';
+                pdBuy.rel = 'noopener';
+                pdBuy.textContent = 'Buy on ' + name;
+                pdBuy.dataset.agentKey = key;
+                pdBuy.dataset.agentName = name;
+                var lbl = document.getElementById('pdAgentBtnLabel');
+                if (lbl) lbl.textContent = name + ' ✓';
+                var warn = document.getElementById('pdAgentPickWarn');
+                if (warn) warn.classList.remove('active');
+            } else {
+                // No modal context (picker opened from a card) — bottom bar
+                // becomes the buy itself, no separate confirm step.
+                confirmBtn.textContent = "Buy";
+                confirmBtn.href = url;
+                confirmBtn.target = '_blank';
+                confirmBtn.rel = 'noopener';
+                confirmBtn.onclick = function() {
+                    trackClick('affiliate','agent_pick_' + key, _pickerPid || '', '', '');
+                    setTimeout(closeAgentPicker, 100);
+                };
+            }
+            buyWrap.classList.add('active');
+        };
+        // Buy on the product modal: refuse to open until an agent is picked.
+        // Show a clear error + shake the Choose Agent button. Do NOT auto-open
+        // the picker — let the user read the error then click Choose Agent.
+        window.handleBuyClick = function(ev) {
+            var buy = document.getElementById('pdBuyBtn');
+            if (!buy.dataset.agentKey) {
+                ev.preventDefault();
+                var warn = document.getElementById('pdAgentPickWarn');
+                if (warn) {
+                    warn.textContent = 'Select an agent first';
+                    warn.classList.remove('active');
+                    // re-trigger animation
+                    void warn.offsetWidth;
+                    warn.classList.add('active');
+                }
+                var chooser = document.getElementById('pdAgentBtn');
+                if (chooser) {
+                    chooser.classList.remove('pd-agent-btn-shake');
+                    void chooser.offsetWidth;
+                    chooser.classList.add('pd-agent-btn-shake');
+                    setTimeout(function(){ chooser.classList.remove('pd-agent-btn-shake'); }, 600);
+                }
+                return false;
+            }
+            trackClick('affiliate','buy', buy.dataset.pid, '', '');
+            return true;
+        };
+        // Copy the raw seller URL (no agent wrap, no affcode).
+        // Resilient: tries Clipboard API, falls back to a hidden textarea +
+        // execCommand('copy') for older browsers / insecure contexts.
+        window.copyRawSellerUrl = function() {
+            var buy = document.getElementById('pdBuyBtn');
+            var url = '';
+            if (buy && buy.dataset.rawUrl) url = buy.dataset.rawUrl;
+            // Belt-and-braces: if rawUrl is missing, fall back to the href and unwrap.
+            if (!url && buy && buy.href) url = buy.href;
+            try {
+                if (url) {
+                    var u = new URL(url, window.location.origin);
+                    var inner = u.searchParams.get('url') || u.searchParams.get('productUrl') || u.searchParams.get('product_url');
+                    if (inner) url = decodeURIComponent(inner);
+                }
+            } catch (e) {}
+            var btn = document.getElementById('pdRawCopy');
+            var lbl = document.getElementById('pdRawCopyLabel');
+            function showStatus(text, isErr) {
+                if (!lbl) return;
+                lbl.textContent = text;
+                btn.classList.toggle('copied', !isErr);
+                btn.style.borderColor = isErr ? '#ef4444' : '';
+                btn.style.color = isErr ? '#ef4444' : '';
+                setTimeout(function(){
+                    if (lbl) lbl.textContent = 'Copy raw seller link';
+                    btn.classList.remove('copied');
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 1800);
+            }
+            if (!url) {
+                showStatus('No link to copy', true);
+                return;
+            }
+            function fallbackCopy() {
+                try {
+                    var ta = document.createElement('textarea');
+                    ta.value = url;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.top = '0'; ta.style.left = '0';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus(); ta.select();
+                    var ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showStatus(ok ? 'Copied seller link' : 'Copy blocked — long-press to copy: ' + url, !ok);
+                } catch (e) {
+                    showStatus('Copy failed', true);
+                }
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(
+                    function(){ showStatus('Copied seller link'); },
+                    function(){ fallbackCopy(); }
+                );
+            } else {
+                fallbackCopy();
+            }
+        };
+        window.closeAgentPicker = function() {
+            document.getElementById('agentPicker').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape') {
+                var ov = document.getElementById('agentPicker');
+                if (ov && ov.classList.contains('active')) closeAgentPicker();
+            }
+        });
+
+        function initConveyor(el){
+            if(!el)return;
+            var pos={p:0,target:null};el._convPos=pos;
+            var p=0,s=0.7,t=0.7,h=el.scrollWidth/2;
+            var dragging=false,startX=0,startP=0;
+            el.addEventListener('mouseenter',function(){t=0;});
+            el.addEventListener('mouseleave',function(){if(!dragging)t=0.7;});
+            el.addEventListener('mousedown',function(e){dragging=true;startX=e.clientX;startP=p;t=0;e.preventDefault();});
+            window.addEventListener('mousemove',function(e){if(!dragging)return;var dx=e.clientX-startX;p=startP-dx;if(p<0)p+=h;if(p>=h)p-=h;});
+            window.addEventListener('mouseup',function(){if(dragging){dragging=false;t=0.7;}});
+            function step(){
+                if(pos.target!==null){var diff=pos.target-p;if(Math.abs(diff)<1){p=pos.target;pos.target=null;}else{p+=diff*0.08;}}
+                else{s+=(t-s)*0.015;p+=s;}
+                if(p>=h)p-=h;if(p<0)p+=h;pos.p=p;
+                el.style.transform='translateX('+(-p)+'px)';requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+        {% block extra_js %}{% endblock %}
+
+        // ===== Product detail modal =====
+        var SITE_AGENT = '{{ site.agent_name }}';
+        var pdState = { product: null };
+        function openProductModal(productId) {
+            fetch('/api/product/' + encodeURIComponent(productId))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) return;
+                    pdState.product = data;
+                    document.getElementById('pdTitle').textContent = data.name;
+                    document.getElementById('pdCategory').textContent = (data.category || 'Find').toUpperCase();
+                    document.getElementById('pdMainImage').src = data.image;
+                    document.getElementById('pdMainImage').alt = data.name;
+                    var priceEl = document.getElementById('pdPrice');
+                    priceEl.textContent = '$' + data.price;
+                    priceEl.setAttribute('data-price-usd', data.price_numeric || data.price);
+                    // "Listing" field — verified-badge only. No shop name,
+                    // no marketplace string. Just the green check.
+                    document.getElementById('pdSeller').innerHTML =
+                        '<span style="display:inline-flex;align-items:center;gap:6px;color:#22c55e;">'
+                        + '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#22c55e;color:#fff;border-radius:50%;font-size:9px;font-weight:900;">✓</span>'
+                        + 'Verified</span>';
+                    document.getElementById('pdBatch').textContent = data.batch || 'Unspecified';
+                    document.getElementById('pdWeight').textContent = data.weight || '—';
+                    var salesCell = document.getElementById('pdSales');
+                    var salesParent = salesCell.closest('.pd-meta-cell');
+                    if (data.sales && data.sales > 0) {
+                        salesCell.textContent = data.sales + ' sold';
+                        if (salesParent) salesParent.style.display = '';
+                    } else if (salesParent) {
+                        salesParent.style.display = 'none';
+                    }
+
+                    // Remember pid so the change-agent button on this modal knows
+                    // which product to look up.
+                    document.getElementById('pdModal').dataset.pid = data.id;
+
+                    var buy = document.getElementById('pdBuyBtn');
+                    buy.removeAttribute('href');            // no agent picked yet → button must prompt
+                    buy.removeAttribute('target');
+                    buy.textContent = (window.i18nT && i18nT('pd_buy')) || 'Buy';
+                    delete buy.dataset.agentKey;
+                    delete buy.dataset.agentName;
+                    buy.dataset.rawUrl = data.raw_url || data.agent_url || '';
+                    buy.dataset.pid = data.id;
+                    // Reset the Choose-Agent button label and clear any prior pickprompt.
+                    var lbl = document.getElementById('pdAgentBtnLabel');
+                    if (lbl) lbl.textContent = (window.i18nT && i18nT('pd_choose_agent')) || 'Choose Agent';
+                    var pickWarn = document.getElementById('pdAgentPickWarn');
+                    if (pickWarn) pickWarn.classList.remove('active');
+                    // If the user already picked an agent in a previous session,
+                    // pre-wire Buy so they don't have to choose every time.
+                    applySavedAgentToBuy(data.id);
+
+                    // Badges
+                    var badges = document.getElementById('pdBadges');
+                    badges.innerHTML = '';
+                    if (data.quality) {
+                        badges.insertAdjacentHTML('beforeend', '<span class="pd-badge quality">' + ((window.i18nT && i18nT('badge_quality')) || 'Quality') + ' ' + data.quality + '</span>');
+                    }
+                    badges.insertAdjacentHTML('beforeend', '<span class="pd-badge verified">' + ((window.i18nT && i18nT('badge_verified')) || 'Verified') + '</span>');
+                    if (data.category) {
+                        badges.insertAdjacentHTML('beforeend', '<span class="pd-badge cat">' + data.category + '</span>');
+                    }
+
+                    // Variants (versions grid)
+                    var vWrap = document.getElementById('pdVariants');
+                    vWrap.innerHTML = '';
+                    var vCount = document.getElementById('pdVariantCount');
+                    if (data.variants && data.variants.length > 1) {
+                        vCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · ' + data.variants.length;
+                        data.variants.forEach(function(v) {
+                            var btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'pd-variant' + (v.id === data.id ? ' active' : '');
+                            btn.title = v.name;
+                            btn.innerHTML = '<img src="' + (v.image || '') + '" alt="" referrerpolicy="no-referrer">';
+                            btn.onclick = function() {
+                                document.getElementById('pdMainImage').src = v.image;
+                                document.getElementById('pdMainImage').alt = v.name;
+                                document.getElementById('pdTitle').textContent = v.name;
+                                var p = document.getElementById('pdPrice');
+                                p.textContent = '$' + v.price;
+                                p.setAttribute('data-price-usd', v.price_numeric || v.price);
+                                if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
+                                document.getElementById('pdBuyBtn').href = '/go/' + v.id;
+                                vWrap.querySelectorAll('.pd-variant').forEach(function(el) { el.classList.remove('active'); });
+                                btn.classList.add('active');
+                            };
+                            vWrap.appendChild(btn);
+                        });
+                    } else {
+                        vCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · 1';
+                        vWrap.innerHTML = '<div class="pd-qc-empty" style="grid-column:1/-1;">' + ((window.i18nT && i18nT('pd_only_one')) || 'Only one version') + '</div>';
+                    }
+
+                    // (Thumb strip removed per operator request — variant tiles
+                    // on the right side already let users swap colors/styles.)
+
+                    // Lazy variants — fetch SKU list from the source catalogue by name match.
+                    var variantsBox = document.getElementById('pdVariants');
+                    var variantCount = document.getElementById('pdVariantCount');
+                    if (variantsBox) {
+                        variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_loading_variants')) || 'Loading variants…') + '</div>';
+                        if (variantCount) variantCount.textContent = (window.i18nT && i18nT('pd_versions')) || 'Versions';
+                        fetch('/api/variants/' + encodeURIComponent(data.id))
+                            .then(function(r){ return r.json(); })
+                            .then(function(vd){
+                                var variants = (vd && vd.variants) || [];
+                                var extraImgs = (vd && vd.images) || [];
+                                // Render variant buttons
+                                if (variants.length) {
+                                    if (variantCount) variantCount.textContent = ((window.i18nT && i18nT('pd_versions')) || 'Versions') + ' · ' + variants.length;
+                                    variantsBox.innerHTML = variants.map(function(v, i){
+                                        var img = (v.image || '').replace(/'/g, "\\'");
+                                        return '<button type="button" class="pd-variant" title="' + v.title + '"'
+                                             + ' onclick="swapVariantImg(this, \'' + img + '\')">'
+                                             +   (v.image ? '<img src="' + v.image + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '')
+                                             +   '<span class="pd-variant-lbl">' + v.title + '</span>'
+                                             + '</button>';
+                                    }).join('');
+                                } else {
+                                    variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_single_variant')) || 'Single variant') + '</div>';
+                                    if (variantCount) variantCount.textContent = 'Variants · 1';
+                                }
+                            })
+                            .catch(function(){
+                                variantsBox.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('pd_no_variants')) || 'No variants available') + '</div>';
+                            });
+                    }
+
+                    // QC photos — async fetch on modal open.
+                    var qc = document.getElementById('pdQc');
+                    qc.className = '';
+                    qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_looking')) || 'Looking for QC photos…') + '</div>';
+                    fetch('/api/qc/' + encodeURIComponent(data.id))
+                        .then(function(r){ return r.json(); })
+                        .then(function(qd){
+                            var photos = (qd && qd.photos) || [];
+                            if (photos.length) {
+                                qc.className = 'pd-qc';
+                                window._qcPhotos = photos;
+                                qc.innerHTML = photos.map(function(u, i){
+                                    return '<img src="' + u + '" alt="QC photo" loading="lazy" referrerpolicy="no-referrer" onclick="openQcLightbox(' + i + ')">';
+                                }).join('');
+                            } else {
+                                qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_none')) || 'No QC photos available for this listing yet.') + '</div>';
+                            }
+                        })
+                        .catch(function(){ qc.innerHTML = '<div class="pd-qc-empty">' + ((window.i18nT && i18nT('qc_failed')) || "Couldn't load QC photos.") + '</div>'; });
+
+                    if (typeof refreshCurrencyPrices === 'function') refreshCurrencyPrices();
+                    document.getElementById('pdModal').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    trackClick('view', 'product', data.id, data.category, data.name);
+                })
+                .catch(function() { /* network error — silently fail */ });
+        }
+
+        window.closeProductModal = function() {
+            document.getElementById('pdModal').classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        window.copyProductLink = function() {
+            if (!pdState.product) return;
+            var url = window.location.origin + pdState.product.go_url;
+            navigator.clipboard.writeText(url).then(function() {
+                var btn = document.getElementById('pdCopyBtn');
+                btn.classList.add('copied');
+                setTimeout(function() { btn.classList.remove('copied'); }, 1500);
+            });
+        };
+
+        // Hijack product card clicks site-wide
+        document.addEventListener('click', function(e) {
+            var card = e.target.closest('.product-card');
+            if (!card) return;
+            // Allow modifier-clicks to go through (open in new tab)
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+            // Find product id from data-product-id attr, or extract from href
+            var pid = card.dataset.productId;
+            if (!pid && card.href) {
+                var m = card.href.match(/\/go\/([^\/?#]+)/);
+                if (m) pid = m[1];
+            }
+            if (!pid) return;
+            e.preventDefault();
+            openProductModal(pid);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('pdModal').classList.contains('active')) closeProductModal();
+        });
+
+        // Storefront preview: if URL has ?preview=<pid>, auto-open that product's
+        // modal so the admin can verify their changes from the storefront.
+        (function(){
+            try {
+                var qp = new URLSearchParams(location.search);
+                var pid = qp.get('preview');
+                if (pid) setTimeout(function(){ openProductModal(pid); }, 200);
+            } catch(_){}
+        })();
+
+        // === QC lightbox — opens QC photos inline, never navigates away ===
+        window._qcIdx = 0;
+        window.openQcLightbox = function(idx) {
+            var photos = window._qcPhotos || [];
+            if (!photos.length) return;
+            window._qcIdx = Math.max(0, Math.min(idx, photos.length - 1));
+            var lb = document.getElementById('qcLightbox');
+            document.getElementById('qcLbImg').src = photos[window._qcIdx];
+            document.getElementById('qcLbCounter').textContent = (window._qcIdx + 1) + ' / ' + photos.length;
+            lb.classList.add('open');
+        };
+        window.closeQcLightbox = function() {
+            document.getElementById('qcLightbox').classList.remove('open');
+        };
+        window.qcLbNext = function(delta) {
+            var photos = window._qcPhotos || [];
+            if (!photos.length) return;
+            window._qcIdx = (window._qcIdx + delta + photos.length) % photos.length;
+            document.getElementById('qcLbImg').src = photos[window._qcIdx];
+            document.getElementById('qcLbCounter').textContent = (window._qcIdx + 1) + ' / ' + photos.length;
+        };
+        document.addEventListener('keydown', function(e){
+            var lb = document.getElementById('qcLightbox');
+            if (!lb || !lb.classList.contains('open')) return;
+            if (e.key === 'Escape') closeQcLightbox();
+            else if (e.key === 'ArrowRight') qcLbNext(1);
+            else if (e.key === 'ArrowLeft') qcLbNext(-1);
+        });
+    </script>
+
+    <!-- QC photo lightbox -->
+    <div class="qc-lightbox" id="qcLightbox" onclick="if(event.target===this)closeQcLightbox()">
+        <button class="qc-lb-close" type="button" onclick="closeQcLightbox()" aria-label="Close">&times;</button>
+        <button class="qc-lb-nav qc-lb-prev" type="button" onclick="qcLbNext(-1)" aria-label="Previous">‹</button>
+        <img id="qcLbImg" class="qc-lb-img" src="" alt="QC photo" referrerpolicy="no-referrer">
+        <button class="qc-lb-nav qc-lb-next" type="button" onclick="qcLbNext(1)" aria-label="Next">›</button>
+        <div class="qc-lb-counter" id="qcLbCounter">1 / 1</div>
+    </div>
+    <script>
+    /* ============================================================
+       WISHLIST — client-side (localStorage), shared across pages.
+       Heart on every product card + a nav counter + the /wishlist page.
+       ============================================================ */
+    (function(){
+        var WL_KEY = 'auralinks_wishlist';
+        window.wlGet = function(){ try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]') || []; } catch(e){ return []; } };
+        window.wlHas = function(id){ return window.wlGet().indexOf(String(id)) > -1; };
+        window.wlCount = function(){ return window.wlGet().length; };
+        window.wlToggle = function(id){
+            id = String(id); var a = window.wlGet(); var i = a.indexOf(id);
+            if (i > -1) a.splice(i,1); else a.push(id);
+            try { localStorage.setItem(WL_KEY, JSON.stringify(a)); } catch(e){}
+            window.wlSyncUI();
+            // Let an interested page (e.g. /wishlist) react to add/remove. The
+            // heart's own handler stops propagation, so this hook is how the
+            // wishlist grid stays in sync without relying on event bubbling.
+            if (typeof window.onWishlistChange === 'function') { try { window.onWishlistChange(id); } catch(e){} }
+            return a.indexOf(id) > -1;
+        };
+        window.wlSyncUI = function(){
+            var n = window.wlCount();
+            var b = document.getElementById('navWishCount');
+            if (b) { b.textContent = n; b.classList.toggle('show', n > 0); }
+            var mb = document.getElementById('mobWishCount'); if (mb) mb.textContent = n ? (' (' + n + ')') : '';
+            [].forEach.call(document.querySelectorAll('.product-card-wish'), function(h){
+                var on = window.wlHas(h.dataset.wish);
+                h.classList.toggle('on', on);
+                h.innerHTML = on ? '&#9829;' : '&#9825;';
+                h.setAttribute('aria-label', on ? ((window.i18nT && i18nT('wl_remove')) || 'Remove from wishlist') : ((window.i18nT && i18nT('wl_add')) || 'Add to wishlist'));
+            });
+        };
+        // Inject a heart onto every product card (avoids editing each card markup).
+        window.wlInjectHearts = function(){
+            [].forEach.call(document.querySelectorAll('.product-card'), function(card){
+                if (card.__wl) return;
+                var id = '';
+                var m = (card.getAttribute('href') || '').match(/\/product\/([A-Za-z0-9]+)/);
+                if (m) id = m[1];
+                if (!id) id = card.dataset.productId || card.dataset.pid || '';
+                if (!id) return;
+                card.__wl = 1;
+                var wrap = card.querySelector('.product-card-img-wrap') || card;
+                if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+                var h = document.createElement('button');
+                h.type = 'button'; h.className = 'product-card-wish'; h.dataset.wish = id;
+                h.innerHTML = '&#9825;';
+                h.onclick = function(e){ e.preventDefault(); e.stopPropagation(); window.wlToggle(id); };
+                wrap.appendChild(h);
+            });
+            window.wlSyncUI();
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', window.wlInjectHearts);
+        else window.wlInjectHearts();
+    })();
+    </script>
+    <script src="/static/js/currency.js" defer></script>
+    <script src="/static/js/i18n.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}
+
+{% block extra_css %}
+.hero-combined { position: relative; overflow: hidden; height: 100vh; max-height: 1100px; min-height: 650px; }
+.hero-bg-ticker { position: absolute; inset: 0; z-index: 0; display: flex; gap: 16px; padding: 0 16px; align-items: flex-start; justify-content: center; }
+.hero-bg-col { flex: 1; max-width: 380px; height: 100%; overflow: hidden; }
+.hero-bg-scroll { display: flex; flex-direction: column; gap: 14px; animation: bgTick 80s linear infinite; }
+.hero-bg-col:nth-child(2) .hero-bg-scroll { animation-duration: 95s; animation-direction: reverse; }
+.hero-bg-col:nth-child(3) .hero-bg-scroll { animation-duration: 70s; }
+@keyframes bgTick { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+.hero-bg-card { border-radius: 16px; overflow: hidden; background: var(--surface); border: 1px solid var(--border-subtle); }
+.hero-bg-card img { width: 100%; aspect-ratio: 4/5; object-fit: contain; background: #ffffff; padding: 6px; }
+.hero-bg-card-info { padding: 12px 14px; }
+.hero-bg-card-name { font-family: var(--font-display); font-size: 13px; text-transform: uppercase; line-height: 1.1; margin-bottom: 4px; }
+.hero-bg-card-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent); }
+.hero-overlay {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    /* light scrim over the product ticker so the dark hero text stays readable */
+    background:
+        linear-gradient(to right, rgba(255,253,247,1) 0%, rgba(255,253,247,0.82) 18%, rgba(255,253,247,0.55) 40%, rgba(255,253,247,0.5) 50%, rgba(255,253,247,0.55) 60%, rgba(255,253,247,0.82) 82%, rgba(255,253,247,1) 100%),
+        linear-gradient(to bottom, rgba(255,253,247,0.92) 0%, rgba(255,253,247,0.55) 30%, rgba(255,253,247,0.45) 50%, rgba(255,253,247,0.55) 70%, rgba(255,253,247,1) 100%);
+}
+.hero-content { position: relative; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 96px 24px 32px; }
+.hero-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; animation: fadeUp 0.5s ease 0.1s both; }
+.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 4px 40px rgba(255,253,247,0.8); }
+.hero-title .accent { color: var(--accent); }
+.hero-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 16px rgba(255,253,247,0.7); }
+.hero-cta-row { display: flex; gap: 12px; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; justify-content: center; }
+.hero-signup { padding: 16px 32px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: var(--radius-sm); transition: all 0.2s; text-decoration: none; }
+.hero-signup:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); }
+
+/* Hero search */
+.hero-search {
+    position: relative; display: flex; align-items: center; gap: 0;
+    width: 100%; max-width: 540px; margin: 0 auto;
+    background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px; padding: 6px 6px 6px 18px;
+    box-shadow: 0 10px 30px rgba(20,16,0,0.12);
+    animation: fadeUp 0.5s ease 0.4s both;
+    z-index: 100;
+}
+.hero-search:has(.hero-search-dropdown.active) { z-index: 1000; }
+.hero-search:focus-within { border-color: var(--accent); box-shadow: 0 12px 32px var(--accent-dim); }
+.hero-search-icon { color: var(--text-muted); flex-shrink: 0; }
+.hero-search input {
+    flex: 1; min-width: 0;
+    padding: 14px 14px; background: transparent; border: none; outline: none;
+    color: var(--text);
+    font-family: var(--font-body); font-size: 16px;
+}
+.hero-search input::placeholder { color: var(--text-muted); }
+.hero-search-go {
+    padding: 12px 24px; background: var(--accent); color: #fff;
+    border: none; border-radius: 999px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    transition: background 0.15s ease; flex-shrink: 0;
+}
+.hero-search-go:hover { background: var(--accent-hover); }
+.hero-search-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+    max-height: 60vh; overflow-y: auto;
+    z-index: 1000; text-align: left;
+}
+.hero-search-dropdown.active { display: block; }
+.hero-search-suggestion {
+    display: grid; grid-template-columns: 48px 1fr auto; gap: 12px;
+    padding: 10px 14px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+    color: inherit; text-decoration: none;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+.hero-search-suggestion:last-child { border-bottom: none; }
+.hero-search-suggestion:hover, .hero-search-suggestion.active { background: var(--surface-2); }
+.hero-search-suggestion img {
+    width: 48px; height: 48px; object-fit: contain; border-radius: 8px;
+    background: #ffffff; padding: 2px;
+}
+.hero-search-sug-text { min-width: 0; }
+.hero-search-sug-name {
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-search-sug-cat {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-top: 2px;
+}
+.hero-search-sug-price {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    color: var(--accent);
+}
+.hero-search-empty {
+    padding: 24px;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-muted);
+    text-align: center; text-transform: uppercase; letter-spacing: 2px;
+}
+.hero-search-allbtn {
+    display: block; text-align: center;
+    padding: 12px 14px;
+    background: var(--accent-dim); color: var(--accent);
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    border-top: 1px solid var(--border-subtle);
+    text-decoration: none;
+}
+.hero-search-allbtn:hover { background: var(--accent); color: #fff; }
+
+/* Recent searches */
+.hero-search-recent-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.hero-search-recent-clear {
+    background: transparent; border: none; color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px;
+}
+.hero-search-recent-clear:hover { color: var(--accent); }
+.hero-search-recent-row {
+    display: grid; grid-template-columns: 18px 1fr auto; gap: 10px;
+    padding: 10px 14px;
+    align-items: center; cursor: pointer;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text); text-decoration: none;
+}
+.hero-search-recent-row:last-of-type { border-bottom: none; }
+.hero-search-recent-row:hover, .hero-search-recent-row.active { background: var(--surface-2); }
+.hero-search-recent-row svg { color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0; }
+.hero-search-recent-q {
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero-search-recent-x {
+    background: transparent; border: none; cursor: pointer;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 14px; line-height: 1;
+    transition: all 0.15s;
+}
+.hero-search-recent-x:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+.hero-browse-btn {
+    margin: 22px auto 0;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 18px 46px !important;
+    background: var(--accent) !important; color: #fff !important; border: none !important;
+    font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    border-radius: 14px;
+    box-shadow: 0 12px 34px var(--accent-dim);
+    animation: fadeUp 0.5s ease 0.5s both, heroBrowsePulse 2.6s ease-in-out 1s infinite;
+}
+.hero-browse-btn:hover { background: var(--accent-hover) !important; transform: translateY(-2px); box-shadow: 0 16px 44px var(--accent-glow); }
+@keyframes heroBrowsePulse {
+    0%, 100% { box-shadow: 0 12px 34px var(--accent-dim); }
+    50% { box-shadow: 0 12px 40px var(--accent-glow), 0 0 0 6px var(--accent-dim); }
+}
+/* Best Sellers — centered + roomier so they read clearly */
+.product-grid[data-best-selling="1"] {
+    justify-content: center;
+    max-width: 1060px; margin-left: auto; margin-right: auto;
+}
+.hero-scroll { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 36px; animation: fadeUp 0.5s ease 0.6s both; }
+
+.conveyor-section { padding: 48px 0; }
+.conveyor-wrap { overflow: hidden; position: relative; }
+.conveyor-track { display: flex; gap: 16px; width: max-content; cursor: grab; user-select: none; }
+.conveyor-track:active { cursor: grabbing; }
+.conveyor-fade-l, .conveyor-fade-r { position: absolute; top: 0; bottom: 0; width: 100px; z-index: 5; pointer-events: none; }
+.conveyor-fade-l { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.conveyor-fade-r { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+.conv-btn { position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border-subtle); color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.conv-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.conv-btn-l { left: 12px; }
+.conv-btn-r { right: 12px; }
+.conveyor-track .product-card { flex: 0 0 220px; }
+
+.cat-tabs { display: flex; gap: 0; justify-content: center; padding: 0 24px; border-bottom: 1px solid var(--border-subtle); overflow-x: auto; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 18px; white-space: nowrap; border-bottom: 2px solid transparent; }
+.cat-tab:hover { color: var(--text-secondary); }
+.cat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.mid-cta { background: var(--accent); padding: 20px 24px; text-align: center; overflow: hidden; }
+.mid-cta a { display: block; font-family: var(--font-display); font-size: 20px; text-transform: uppercase; color: var(--accent-ink); letter-spacing: 2px; line-height: 1.2; word-break: break-word; }
+.mid-cta span { font-family: var(--font-mono); font-size: 12px; color: rgba(28,22,2,0.78); display: block; margin-top: 4px; letter-spacing: 1px; line-height: 1.4; word-break: break-word; }
+
+/* Outfit bundles — kai-style cards */
+.bundle-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.bundle-card { display: block; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; color: inherit; text-decoration: none; transition: all 0.2s ease; }
+.bundle-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); text-decoration: none; }
+.bundle-card-imgs { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1px; background: var(--border-subtle); aspect-ratio: 1; overflow: hidden; }
+.bundle-card-imgs img { width: 100%; height: 100%; aspect-ratio: 1; object-fit: contain; background: #ffffff; display: block; padding: 4px; min-width: 0; min-height: 0; }
+.bundle-card-body { padding: 14px 16px; }
+.bundle-card-name { font-family: var(--font-display); font-size: 16px; text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; margin-bottom: 8px; color: var(--text); }
+.bundle-card-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+.bundle-card-count { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.bundle-card-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent); }
+
+@media (max-width: 768px) {
+    .hero-combined { min-height: 550px; }
+    .hero-bg-col:nth-child(3) { display: none; }
+    .hero-cta-row { flex-direction: column; align-items: center; }
+    .conveyor-track .product-card { flex: 0 0 170px; }
+    .cat-tabs { padding: 0 16px; justify-content: flex-start; scroll-padding-left: 16px; }
+    .cat-tab { padding: 12px 14px; font-size: 10px; }
+    .mid-cta { padding: 16px 14px; }
+    .mid-cta a { font-size: 15px; letter-spacing: 1px; }
+    .mid-cta span { font-size: 10px; letter-spacing: 0.6px; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero-combined">
+    {% if products and hero_products %}
+    {% set col1 = hero_products[:8] %}
+    {% set col2 = hero_products[8:16] if hero_products|length > 8 else hero_products[:8] %}
+    {% set col3 = hero_products[16:24] if hero_products|length > 16 else hero_products[:8] %}
+    <div class="hero-bg-ticker">
+        {% for col in [col1, col2, col3] %}
+        <div class="hero-bg-col">
+            <div class="hero-bg-scroll">
+                {% for p in col %}<div class="hero-bg-card"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"><div class="hero-bg-card-info"><div class="hero-bg-card-name">{{ p.name }}</div><div class="hero-bg-card-price">${{ p.price }}</div></div></div>{% endfor %}
+                {% for p in col %}<div class="hero-bg-card"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"><div class="hero-bg-card-info"><div class="hero-bg-card-name">{{ p.name }}</div><div class="hero-bg-card-price">${{ p.price }}</div></div></div>{% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <p class="hero-label" data-edit="hero_label">{{ settings.hero_label or 'The Open Catalogue' }}</p>
+        <h1 class="hero-title" data-edit="hero_title" data-edit-html="1">{% if settings.hero_title %}{{ settings.hero_title|safe }}{% else %}Every<br><span class="accent">Find.</span><br>Anywhere.{% endif %}</h1>
+        <p class="hero-sub" data-edit="hero_sub">{{ settings.hero_sub or (site.product_count_label ~ ' curated products. Open every listing with the agent you trust — Litbuy, Hipobuy, Mulebuy, USFANS, Oopbuy, KakoBuy, ACBuy, JoyaGoo, Sugargoo, or Lovegobuy.') }}</p>
+        <form class="hero-search" id="heroSearchForm" action="/shop" method="get" role="search" autocomplete="off" onsubmit="trackClick('search','hero_submit','','','')">
+            <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" name="q" id="heroSearch" placeholder="Search {{ site.product_count_label }} finds…" aria-label="Search products" autocomplete="off" data-i18n-ph="search_ph" data-i18n-n="{{ site.product_count_label }}">
+            <button type="submit" class="hero-search-go" data-i18n="search_btn">Search</button>
+            <div class="hero-search-dropdown" id="heroSearchDropdown" role="listbox"></div>
+        </form>
+        <a href="/shop" class="btn hero-browse-btn" data-i18n="hero_browse">Browse All Products &rarr;</a>
+        <p class="hero-scroll" data-i18n="hero_scroll">Scroll Down</p>
+    </div>
+</section>
+
+{% if conveyor %}
+<div class="conveyor-section reveal">
+    <div class="section" style="padding-bottom:16px;padding-top:0;">
+        <div class="sec-header"><h2 class="sec-title" data-i18n="sec_latest">Latest Drops</h2><a href="/shop" class="sec-link" data-i18n="sec_viewall">View All &rarr;</a></div>
+    </div>
+    <div class="conveyor-wrap">
+        <div class="conveyor-fade-l"></div><div class="conveyor-fade-r"></div>
+        <button class="conv-btn conv-btn-l" onclick="scrollConv(-1)">&#8249;</button>
+        <button class="conv-btn conv-btn-r" onclick="scrollConv(1)">&#8250;</button>
+        <div class="conveyor-track" id="conv">
+            {% for p in conveyor %}
+            <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+                <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
+            </a>
+            {% endfor %}
+            {% for p in conveyor %}
+            <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}">
+                <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+                <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mid-cta reveal">
+    <a href="/agents" onclick="trackClick('signup','mid-cta','','')">
+        <span data-i18n="mid_cta_1">Sign Up to Any Agent — Get Coupons $50–$500</span>
+        <span data-i18n="mid_cta_2">Lowest shipping rates guaranteed.</span>
+    </a>
+</div>
+
+
+<div class="cat-tabs reveal">
+    <a href="/shop" class="cat-tab active" data-i18n="cat_all">All</a>
+    {% for cat in categories if cat.slug != 'trending' %}
+    <a href="/shop?category={{ cat.slug }}" class="cat-tab">{{ cat.name }}</a>
+    {% endfor %}
+</div>
+
+{% if products %}
+<div class="section reveal">
+    <div class="sec-header"><h2 class="sec-title" data-i18n="sec_best">Best Selling</h2><a href="/shop" class="sec-link" data-i18n="sec_viewall">View All &rarr;</a></div>
+    <div class="product-grid" data-best-selling="1">
+        {% for p in featured %}
+        <a href="/product/{{ p.id }}" data-pid="{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button>
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+                <span class="product-card-badge" data-i18n="badge_best">Best Selling</span>
+            </div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% for cat in categories %}
+{% set cp = cat_previews.get(cat.slug) %}
+{% if cp %}
+<hr class="divider" style="max-width:1200px;margin:0 auto;">
+<div class="section reveal" style="padding-top:40px;padding-bottom:40px;">
+    <div class="sec-header"><h2 class="sec-title">{{ cat.name }}</h2><a href="/shop?category={{ cat.slug }}" class="sec-link">View All ({{ cp.count }}) &rarr;</a></div>
+    <div class="product-grid">
+        {% for p in cp.picks %}
+        <a href="/product/{{ p.id }}" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('view','product','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap"><button type="button" class="product-card-agents" onclick="openAgentPicker(event, '{{ p.id }}')" aria-label="Choose agent">⇄</button><img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer"></div>
+            <div class="product-card-body"><div class="product-card-name">{{ p.name }}</div><div class="product-card-row"><span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span><span class="product-card-buy" data-i18n="card_buy">Buy</span></div></div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+<hr class="divider" style="max-width:1200px;margin:0 auto;">
+<div class="stat-row reveal">
+    <div class="stat"><div class="stat-num" data-count="{{ product_count }}" data-suffix="+">{{ '{:,}'.format(product_count) }}+</div><div class="stat-label" data-i18n="stat_products">Products</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ site.coupon_amount }}" data-prefix="$">${{ '{:,}'.format(site.coupon_amount|int) }}</div><div class="stat-label" data-i18n="stat_coupons">In Coupons</div></div>
+    <div class="stat"><div class="stat-num" data-count="{{ category_count }}">{{ category_count }}</div><div class="stat-label" data-i18n="stat_categories">Categories</div></div>
+</div>
+
+<section class="cta-section reveal">
+    <div class="cta-glow"></div>
+    <p class="section-label" style="position:relative;" data-i18n="cta_limited">Limited Time</p>
+    <h2 data-i18n="cta_coupons_title">Coupons $50–$500</h2>
+    <p data-i18n="cta_coupons_sub">Most agents offer a welcome credit when you sign up via a referral link. Use any agent — choose the one with the best rates.</p>
+    <a href="/agents" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','cta','','')" data-i18n="cta_claim">Claim Your Coupons</a>
+</section>
+
+<section class="section reveal" style="padding-top:32px;padding-bottom:48px;max-width:800px;">
+    <h2 style="font-family:var(--font-display);font-size:24px;text-transform:uppercase;margin-bottom:16px;" data-i18n="oc_title">The Open Catalogue — Any Agent, Any Time</h2>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;margin-bottom:16px;" data-i18n="oc_p1" data-i18n-name="{{ site.name }}">{{ site.name }} is an agent-neutral catalogue of curated finds from trusted Weidian, Taobao, and 1688 sellers. Every listing — shoes, hoodies, shirts, jackets, accessories, tech, womens — can be opened on the shopping agent of your choice.</p>
+    <p style="color:var(--text-muted);font-size:13px;line-height:1.8;" data-i18n="oc_p2">Use our free link converter to switch any shopping-agent product link to the agent you actually use. No lock-in, no preferred partner — pick whichever agent has the best rates or shipping for you today.</p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+var convEl = document.getElementById('conv');
+initConveyor(convEl);
+function scrollConv(dir) {
+    if (!convEl || !convEl._convPos) return;
+    var h = convEl.scrollWidth / 2;
+    var target = convEl._convPos.p + dir * 240 * 3;
+    if (target < 0) target += h;
+    if (target >= h) target -= h;
+    convEl._convPos.target = target;
+}
+
+// ============================================================
+// Hero search — debounced live autocomplete from /api/search
+// ============================================================
+(function() {
+    var input = document.getElementById('heroSearch');
+    var dd = document.getElementById('heroSearchDropdown');
+    var form = document.getElementById('heroSearchForm');
+    if (!input || !dd || !form) return;
+    var timer = null;
+    var lastQuery = '';
+    var activeIdx = -1;
+    var results = [];
+
+    function close() { dd.classList.remove('active'); dd.innerHTML = ''; activeIdx = -1; }
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+    }
+
+    // -- Recent searches (localStorage, max 8, dedupe, most-recent first) ----
+    var RECENT_KEY = 'auralinks_recent_searches';
+    var RECENT_MAX = 8;
+    function loadRecent() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []; }
+        catch(_) { return []; }
+    }
+    function saveRecent(q) {
+        q = (q || '').trim();
+        if (!q) return;
+        var list = loadRecent().filter(function(x){ return x.toLowerCase() !== q.toLowerCase(); });
+        list.unshift(q);
+        if (list.length > RECENT_MAX) list = list.slice(0, RECENT_MAX);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(_) {}
+    }
+    function removeRecent(q) {
+        var list = loadRecent().filter(function(x){ return x !== q; });
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(_) {}
+    }
+    function clearRecent() {
+        try { localStorage.removeItem(RECENT_KEY); } catch(_) {}
+    }
+    function renderRecent() {
+        var list = loadRecent();
+        if (!list.length) { close(); return; }
+        var rows = list.map(function(q){
+            var safe = escapeHtml(q);
+            return '<a class="hero-search-recent-row" href="/shop?q=' + encodeURIComponent(q) + '" data-q="' + safe + '">'
+                 +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>'
+                 +   '<span class="hero-search-recent-q">' + safe + '</span>'
+                 +   '<button type="button" class="hero-search-recent-x" aria-label="Remove" data-remove="' + safe + '">&times;</button>'
+                 + '</a>';
+        }).join('');
+        dd.innerHTML =
+            '<div class="hero-search-recent-head">'
+          +   '<span>Recent searches</span>'
+          +   '<button type="button" class="hero-search-recent-clear" id="heroRecentClear">Clear all</button>'
+          + '</div>'
+          + rows;
+        dd.classList.add('active');
+    }
+    function render() {
+        if (!results.length) {
+            dd.innerHTML = '<div class="hero-search-empty">No matches</div>';
+            dd.classList.add('active');
+            return;
+        }
+        var q = encodeURIComponent(input.value.trim());
+        var html = results.map(function(r, i){
+            return '<a class="hero-search-suggestion' + (i === activeIdx ? ' active' : '') + '"'
+                 + ' href="/shop?q=' + q + '" data-pid="' + r.id + '" onclick="window.location.href=\'/shop?q=' + q + '\';return false;">'
+                 + (r.image ? '<img src="' + escapeHtml(r.image) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="" />')
+                 + '<div class="hero-search-sug-text">'
+                 +   '<div class="hero-search-sug-name">' + escapeHtml(r.name) + '</div>'
+                 +   '<div class="hero-search-sug-cat">' + escapeHtml(r.category || '') + '</div>'
+                 + '</div>'
+                 + '<div class="hero-search-sug-price">$' + escapeHtml(r.price) + '</div>'
+                 + '</a>';
+        }).join('');
+        html += '<a class="hero-search-allbtn" href="/shop?q=' + q + '">See all results →</a>';
+        dd.innerHTML = html;
+        dd.classList.add('active');
+        // Wire clicks to navigate properly (target /shop?q=…). Suggestion items
+        // could be enhanced to open the product modal directly, but for the
+        // hero we keep it simple — always send the user to the shop.
+    }
+    function runSearch(q) {
+        if (q.length < 2) { close(); return; }
+        if (q === lastQuery) return;
+        lastQuery = q;
+        fetch('/api/search?q=' + encodeURIComponent(q) + '&limit=8')
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                if ((input.value || '').trim() !== q) return; // stale
+                results = d.results || [];
+                activeIdx = -1;
+                render();
+            })
+            .catch(close);
+    }
+    input.addEventListener('input', function(){
+        clearTimeout(timer);
+        var v = input.value.trim();
+        if (!v) { renderRecent(); return; }
+        timer = setTimeout(function(){ runSearch(v); }, 180);
+    });
+    input.addEventListener('focus', function(){
+        var v = input.value.trim();
+        if (!v) { renderRecent(); return; }
+        if (results.length) dd.classList.add('active');
+    });
+
+    // Save query when the form is submitted (Enter or Search button)
+    form.addEventListener('submit', function(){
+        saveRecent(input.value);
+    });
+
+    // Delegate clicks inside the dropdown: handle the per-row X and Clear-all
+    // before the parent <a> navigates. Also save the recent on suggestion click.
+    dd.addEventListener('click', function(e){
+        var x = e.target.closest('.hero-search-recent-x');
+        if (x) {
+            e.preventDefault(); e.stopPropagation();
+            removeRecent(x.getAttribute('data-remove'));
+            renderRecent();
+            return;
+        }
+        if (e.target.id === 'heroRecentClear') {
+            e.preventDefault(); e.stopPropagation();
+            clearRecent();
+            close();
+            return;
+        }
+        var recentRow = e.target.closest('.hero-search-recent-row');
+        if (recentRow) {
+            // Save (re-promotes it to the top) before navigation completes
+            saveRecent(recentRow.getAttribute('data-q'));
+        }
+    });
+    input.addEventListener('keydown', function(e){
+        if (!dd.classList.contains('active') || !results.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, results.length - 1);
+            render();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, -1);
+            render();
+        } else if (e.key === 'Escape') {
+            close();
+        }
+    });
+    document.addEventListener('click', function(e){
+        if (!form.contains(e.target)) close();
+    });
+})();
+{% endblock %}

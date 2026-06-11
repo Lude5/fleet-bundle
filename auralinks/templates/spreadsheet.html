@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} Spreadsheet — {{ total }}+ Products | {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+.spread-hero { padding: 120px 24px 48px; max-width: 900px; margin: 0 auto; text-align: center; }
+.spread-hero h1 { font-family: var(--font-display); font-size: clamp(36px, 7vw, 64px); text-transform: uppercase; line-height: 0.95; margin-bottom: 16px; }
+.spread-hero h1 .accent { color: var(--accent); }
+.spread-hero p { color: var(--text-secondary); font-size: 15px; line-height: 1.7; max-width: 600px; margin: 0 auto 32px; }
+.spread-stats { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+.spread-stat { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 20px 32px; text-align: center; }
+.spread-stat-num { font-family: var(--font-display); font-size: 32px; color: var(--accent); }
+.spread-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+.spread-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+.spread-cats { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 800px; margin: 0 auto 48px; }
+.spread-cat { padding: 10px 20px; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+.spread-cat:hover { border-color: var(--accent); color: var(--accent); }
+.spread-faq { max-width: 700px; margin: 0 auto; }
+.spread-faq-item { border-bottom: 1px solid var(--border-subtle); padding: 20px 0; }
+.spread-faq-q { font-family: var(--font-body); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.spread-faq-a { color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+{% endblock %}
+
+{% block content %}
+<section class="spread-hero">
+    <h1>{{ site.name }}<br><span class="accent">Spreadsheet</span></h1>
+    <p>The most complete {{ site.name }} product spreadsheet with {{ total }}+ curated finds from Weidian, Taobao, and 1688. Every product verified, organized by category, and ready to buy.</p>
+
+    <div class="spread-stats">
+        <div class="spread-stat">
+            <div class="spread-stat-num">{{ total }}+</div>
+            <div class="spread-stat-label">Products</div>
+        </div>
+        <div class="spread-stat">
+            <div class="spread-stat-num">{{ categories|length }}</div>
+            <div class="spread-stat-label">Categories</div>
+        </div>
+        <div class="spread-stat">
+            <div class="spread-stat-num">${{ site.coupon_amount }}</div>
+            <div class="spread-stat-label">In Coupons</div>
+        </div>
+    </div>
+
+    <div class="spread-cta">
+        <a href="/shop" class="btn btn-primary" style="padding:16px 32px;font-size:13px;">Browse All Products</a>
+        <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-outline" style="padding:16px 32px;font-size:13px;" onclick="trackClick('signup','spreadsheet','','')">Sign Up — Coupons $50–$500</a>
+    </div>
+
+    <div class="spread-cats">
+        {% for cat in categories %}
+        <a href="/shop?category={{ cat.slug }}" class="spread-cat">{{ cat.name }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+<hr class="divider" style="max-width:900px;margin:0 auto;">
+
+<section class="section" style="max-width:900px;">
+    <div class="sec-header">
+        <h2 class="sec-title">Popular Products</h2>
+        <a href="/shop" class="sec-link">View All &rarr;</a>
+    </div>
+    <div class="product-grid">
+        {% for p in products[:12] %}
+        <a href="/go/{{ p.id }}" target="_blank" rel="noopener" class="product-card{% if p.in_stock == 0 %} out-of-stock{% endif %}" onclick="trackClick('affiliate','buy','{{ p.id }}','{{ p.category }}','{{ p.name }}')">
+            <div class="product-card-img-wrap">
+                <img class="product-card-img" src="{{ p.image }}" alt="{{ p.name }}" loading="lazy" referrerpolicy="no-referrer">
+            </div>
+            <div class="product-card-body">
+                <div class="product-card-name">{{ p.name }}</div>
+                <div class="product-card-row">
+                    <span class="product-card-price" data-price-usd="{{ p.price_numeric or p.price }}">${{ p.price }}</span>
+                    <span class="product-card-buy">Buy on {{ site.agent_name }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<hr class="divider" style="max-width:900px;margin:0 auto;">
+
+<section class="section" style="max-width:900px;">
+    <h2 class="sec-title" style="margin-bottom:24px;">About This Spreadsheet</h2>
+    <div class="spread-faq">
+        <div class="spread-faq-item">
+            <div class="spread-faq-q">What is the {{ site.name }} spreadsheet?</div>
+            <div class="spread-faq-a">The {{ site.name }} spreadsheet is a curated list of {{ total }}+ products sourced from Weidian, Taobao, and 1688 — the biggest Chinese marketplaces. Every product has been handpicked for quality and value, and is purchasable through {{ site.agent_name }}, a trusted shopping agent.</div>
+        </div>
+        <div class="spread-faq-item">
+            <div class="spread-faq-q">How do I buy from {{ site.agent_name }}?</div>
+            <div class="spread-faq-a">Click any product to be taken to {{ site.agent_name }} where you can add it to your cart, select size/color, and checkout. {{ site.agent_name }} handles purchasing from the Chinese seller, quality check photos, and international shipping to your address. Sign up with our link to get Coupons $50–$500.</div>
+        </div>
+        <div class="spread-faq-item">
+            <div class="spread-faq-q">Is {{ site.agent_name }} safe and legit?</div>
+            <div class="spread-faq-a">Yes — {{ site.agent_name }} is one of the most trusted shopping agents with thousands of users. They provide QC (quality check) photos before shipping, buyer protection, and responsive customer service. They also offer the lowest shipping rates compared to other agents.</div>
+        </div>
+        <div class="spread-faq-item">
+            <div class="spread-faq-q">How often is the spreadsheet updated?</div>
+            <div class="spread-faq-a">We add new products daily. Our team finds the best deals across Weidian and Taobao and adds them to the spreadsheet with images and pricing. Check back regularly for the latest drops.</div>
+        </div>
+        <div class="spread-faq-item">
+            <div class="spread-faq-q">What's the link converter for?</div>
+            <div class="spread-faq-a">If you have a product link from another agent (CNFans, Sugargoo, CSSBuy, Pandabuy, etc.), our link converter instantly converts it to a {{ site.agent_name }} link so you can buy through {{ site.agent_name }} instead and get better prices and shipping rates.</div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section reveal">
+    <div class="cta-glow"></div>
+    <h2>Start Shopping</h2>
+    <p>Sign up to {{ site.agent_name }} and get Coupons $50–$500 with the lowest shipping rates.</p>
+    <a href="{{ site.agent_signup_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="position:relative;padding:16px 36px;font-size:14px;" onclick="trackClick('signup','spreadsheet-cta','','')">Claim Your Coupons</a>
+</section>
+{% endblock %}

@@ -23,11 +23,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-# Persistent storage. On Render the disk mounts at /var/data; locally fall back to ./data.
-RENDER_DISK = '/var/data'
+# Persistent storage. Render mounts the disk at /data or /var/data depending on
+# service config (render.yaml says /var/data but the engine's production-incident
+# notes say /data) — accept whichever actually exists so per-app data dirs always
+# land on the persistent disk; locally fall back to ./data.
 LOCAL_DATA = os.path.join(HERE, 'data')
-DATA_ROOT = RENDER_DISK if os.path.isdir(RENDER_DISK) else LOCAL_DATA
-for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'terminal', 'editorial', 'ategoat', 'vault', 'master_admin'):
+DATA_ROOT = next((d for d in ('/data', '/var/data') if os.path.isdir(d)), LOCAL_DATA)
+for sub in ('kai', 'maywood', 'minimal', 'future', 'volume', 'terminal', 'editorial', 'ategoat', 'vault', 'auralinks', 'master_admin'):
     os.makedirs(os.path.join(DATA_ROOT, sub), exist_ok=True)
 
 # Set per-app data dirs BEFORE importing the apps.
@@ -40,6 +42,7 @@ os.environ.setdefault('TERMINAL_DATA_DIR', os.path.join(DATA_ROOT, 'terminal'))
 os.environ.setdefault('EDITORIAL_DATA_DIR', os.path.join(DATA_ROOT, 'editorial'))
 os.environ.setdefault('ATEGOAT_DATA_DIR', os.path.join(DATA_ROOT, 'ategoat'))
 os.environ.setdefault('VAULT_DATA_DIR', os.path.join(DATA_ROOT, 'vault'))
+os.environ.setdefault('AURALINKS_DATA_DIR', os.path.join(DATA_ROOT, 'auralinks'))
 os.environ.setdefault('MASTER_ADMIN_DATA_DIR', os.path.join(DATA_ROOT, 'master_admin'))
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware  # noqa: E402
@@ -54,11 +57,13 @@ from terminal.app import app as terminal_app  # noqa: E402
 from editorial.app import app as editorial_app  # noqa: E402
 from ategoat.app import app as ategoat_app  # noqa: E402
 from vault.app import app as vault_app  # noqa: E402
+from auralinks.app import app as auralinks_app  # noqa: E402
 
 # --- security hardening: cookies, headers, login throttle for every sub-app ---
 from security import harden as _harden  # noqa: E402
 for _sub_app in (master_app, kai_app, maywood_app, minimal_app, future_app,
-                 volume_app, terminal_app, editorial_app, ategoat_app, vault_app):
+                 volume_app, terminal_app, editorial_app, ategoat_app, vault_app,
+                 auralinks_app):
     _harden(_sub_app)
 
 kai_app.config['APPLICATION_ROOT'] = '/kai'
@@ -70,6 +75,7 @@ terminal_app.config['APPLICATION_ROOT'] = '/terminal'
 editorial_app.config['APPLICATION_ROOT'] = '/editorial'
 ategoat_app.config['APPLICATION_ROOT'] = '/ategoat'
 vault_app.config['APPLICATION_ROOT'] = '/vault'
+auralinks_app.config['APPLICATION_ROOT'] = '/auralinks'
 
 
 # ============================================================
@@ -178,6 +184,7 @@ terminal_wrapped = URLPrefixMiddleware(terminal_app, '/terminal')
 editorial_wrapped = URLPrefixMiddleware(editorial_app, '/editorial')
 ategoat_wrapped = URLPrefixMiddleware(ategoat_app, '/ategoat')
 vault_wrapped = URLPrefixMiddleware(vault_app, '/vault')
+auralinks_wrapped = URLPrefixMiddleware(auralinks_app, '/auralinks')
 
 _bundle = DispatcherMiddleware(master_app, {
     '/kai': kai_wrapped,
@@ -189,6 +196,7 @@ _bundle = DispatcherMiddleware(master_app, {
     '/editorial': editorial_wrapped,
     '/ategoat': ategoat_wrapped,
     '/vault': vault_wrapped,
+    '/auralinks': auralinks_wrapped,
 })
 
 # ============================================================
@@ -206,12 +214,15 @@ _bundle = DispatcherMiddleware(master_app, {
 # the same app + same database that repsloot.com serves, edits appear on the
 # public domain instantly. So we deliberately DO NOT redirect /ategoat away.
 ATEGOAT_ROOT_HOSTS = {'repsloot.com', 'www.repsloot.com'}
+AURALINKS_ROOT_HOSTS = {'auralinks.de', 'www.auralinks.de'}
 
 
 def application(environ, start_response):
     host = (environ.get('HTTP_HOST') or '').split(':')[0].strip().lower()
     if host in ATEGOAT_ROOT_HOSTS:
         return ategoat_app(environ, start_response)
+    if host in AURALINKS_ROOT_HOSTS:
+        return auralinks_app(environ, start_response)
     return _bundle(environ, start_response)
 
 
