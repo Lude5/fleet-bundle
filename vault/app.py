@@ -408,11 +408,17 @@ def _b_acbuy(_url, item_id, platform, code):
     if code: out += f'&u={code}'
     return out
 
-def _b_litbuy(url, _id, _plat, code):
-    from urllib.parse import quote
+def _b_litbuy(url, item_id, platform, code):
+    """Litbuy routes products path-style (litbuy.com/product/<platform>/<id>).
+    The old /transmit?url= endpoint is dead — Litbuy bounces it to the homepage."""
+    if item_id and platform:
+        out = f'https://litbuy.com/product/{platform}/{item_id}'
+        if code: out += f'?inviteCode={code}'
+        return out
     if not url: return None
-    out = f'https://www.litbuy.com/transmit?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+    from urllib.parse import quote
+    out = f'https://litbuy.com/?url={quote(url, safe="")}'
+    if code: out += f'&inviteCode={code}'
     return out
 
 def _b_hipobuy(url, _id, _plat, code):
