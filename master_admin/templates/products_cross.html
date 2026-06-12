@@ -83,7 +83,7 @@ function render() {
         const row = document.createElement('div'); row.className = 'cp-row';
         row.innerHTML = `<img src="${esc(g.image)}" referrerpolicy="no-referrer" onerror="this.style.opacity=.15">
             <div><div class="cp-name">${esc(g.name)}</div>
-              <div class="cp-meta">$${esc(g.price)} · ${esc(g.category || '—')} · ${Object.keys(sites).length} site(s)</div>
+              <div class="cp-meta">$${esc(String(g.price == null ? '' : g.price).replace(/^\s*\$\s*/, ''))} · ${esc(g.category || '—')} · ${Object.keys(sites).length} site(s)</div>
               <div class="cp-sites">${badges}</div></div>
             <button class="cp-edit">Edit everywhere</button>`;
         row.querySelector('.cp-edit').onclick = () => cpOpen(g);
@@ -98,7 +98,7 @@ function cpOpen(g) {
     const sn = [...new Set(g.sites.map(s => s.site_name))];
     document.getElementById('cpMSites').textContent = 'Updates ' + sn.length + ' site(s): ' + sn.join(', ');
     document.getElementById('cpfName').value = g.name || '';
-    document.getElementById('cpfPrice').value = g.price || '';
+    document.getElementById('cpfPrice').value = (String(g.price == null ? '' : g.price).replace(/[^0-9.]/g, '')) || '';
     document.getElementById('cpfCat').value = g.category || '';
     document.getElementById('cpfImg').value = g.image || '';
     const p = document.getElementById('cpPrev'); p.src = g.image || ''; p.style.opacity = 1;
