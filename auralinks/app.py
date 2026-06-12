@@ -293,18 +293,25 @@ def _b_kakobuy(url, _id, _plat, code):
     if code: out += f'&affcode={code}'
     return out
 
-def _b_joyagoo(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.joyagoo.com/index/item/index.html?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_joyagoo(_url, item_id, platform, code):
+    """JoyaGoo query-style: platform token WEIDIAN/TAOBAO/ALI_1688, `ref` code.
+    The old /index/item/index.html?url= scheme is dead. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    plat = {'weidian': 'WEIDIAN', 'taobao': 'TAOBAO', '1688': 'ALI_1688'}.get(platform)
+    if not plat: return None
+    out = f'https://joyagoo.com/product?id={item_id}&platform={plat}'
+    if code: out += f'&ref={code}'
     return out
 
 def _b_sugargoo(url, _id, _plat, code):
+    """Sugargoo /products route wants the seller URL DOUBLE url-encoded; the code is
+    the numeric memberId. Logged-out users hit Sugargoo's own login gate, which
+    preserves the product link + memberId. Verified in-browser 2026-06."""
     from urllib.parse import quote
     if not url: return None
-    out = f'https://www.sugargoo.com/index/item/index.html?url={quote(url, safe="")}'
-    if code: out += f'&shareCode={code}'
+    link = quote(quote(url, safe=''), safe='')
+    out = f'https://www.sugargoo.com/products?productLink={link}'
+    if code: out += f'&memberId={code}'
     return out
 
 def _b_allchinabuy(url, _id, _plat, code):
@@ -322,7 +329,9 @@ def _b_mulebuy(_url, item_id, platform, code):
 
 def _b_oopbuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
-    out = f'https://oopbuy.com/product/{platform}/{item_id}'
+    # oopbuy path platform encoding: weidian stays 'weidian', taobao->1, 1688->0
+    plat = {'weidian': 'weidian', 'taobao': '1', '1688': '0'}.get(platform, platform)
+    out = f'https://www.oopbuy.com/product/{plat}/{item_id}'
     if code: out += f'?inviteCode={code}'
     return out
 
@@ -336,7 +345,11 @@ def _b_hubbuy(url, _id, _plat, code):
 
 def _b_acbuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
-    out = f'https://acbuy.com/product?source={platform}&id={item_id}'
+    # acbuy 2-letter source: weidian=WD, taobao=TB, 1688=AL. The literal platform
+    # strings bounce to /uni-order with an empty product. Verified in-browser 2026-06.
+    src = {'weidian': 'WD', 'taobao': 'TB', '1688': 'AL'}.get(platform)
+    if not src: return None
+    out = f'https://www.acbuy.com/product/?id={item_id}&source={src}'
     if code: out += f'&u={code}'
     return out
 
@@ -354,24 +367,29 @@ def _b_litbuy(url, item_id, platform, code):
     if code: out += f'&inviteCode={code}'
     return out
 
-def _b_hipobuy(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.hipobuy.com/order/buy?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_hipobuy(_url, item_id, platform, code):
+    """Hipobuy is on the shared path-style platform (like litbuy/oopbuy); the old
+    /order/buy?url= endpoint dumps users on the homepage. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    out = f'https://hipobuy.com/product/{platform}/{item_id}'
+    if code: out += f'?inviteCode={code}'
     return out
 
-def _b_usfans(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.usfans.com/product/buy?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_usfans(_url, item_id, platform, code):
+    """USFans path-style with NUMERIC platform code (1688=1, taobao=2, weidian=3)
+    and a `ref` code param. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    plat = {'1688': '1', 'taobao': '2', 'weidian': '3'}.get(platform)
+    if not plat: return None
+    out = f'https://www.usfans.com/product/{plat}/{item_id}'
+    if code: out += f'?ref={code}'
     return out
 
-def _b_lovegobuy(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.lovegobuy.com/product?url={quote(url, safe="")}'
+def _b_lovegobuy(_url, item_id, platform, code):
+    """Lovegobuy query-style id/shop_type; the old ?url= form lands on the homepage.
+    Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    out = f'https://www.lovegobuy.com/product?id={item_id}&shop_type={platform}'
     if code: out += f'&invite_code={code}'
     return out
 
@@ -419,22 +437,64 @@ def _load_agents_config():
     return {'order': [], 'overrides': {}}
 
 
+def _make_custom_build(buy_tpl):
+    """Buy-URL builder for an operator-added CUSTOM agent. The template may use
+    {url} (URL-encoded seller link), {rawurl} (plain), {itemID} and {code}."""
+    import urllib.parse as _up
+
+    def _b(seller_url, item_id, platform, code):
+        t = (buy_tpl or '').strip()
+        if not t:
+            return ''
+        # A product buy link MUST reference the item, else every product would route to
+        # the same static URL. If the template carries no item placeholder, drop it from
+        # the buy-picker (the agent can still be signup-only) rather than mis-route traffic.
+        if '{url}' not in t and '{rawurl}' not in t and '{itemID}' not in t:
+            return ''
+        return (t.replace('{url}', _up.quote(seller_url or '', safe=''))
+                 .replace('{rawurl}', seller_url or '')
+                 .replace('{itemID}', item_id or '')
+                 .replace('{code}', code or ''))
+    return _b
+
+
+def _agent_host(*urls):
+    from urllib.parse import urlparse
+    for u in urls:
+        try:
+            h = urlparse(u or '').netloc
+            if h:
+                return h.replace('www.', '')
+        except Exception:
+            pass
+    return ''
+
+
 def get_effective_agents(include_disabled=False):
-    """Merge hardcoded AGENTS defaults with operator overrides (code, name, color,
-    coupon, signup, enabled) and order. Each returned entry keeps its build fn so
-    buy URLs still work. This is the single source the whole site reads."""
+    """Merge hardcoded AGENTS defaults + operator-added CUSTOM agents with the
+    operator's overrides (code, name, color, coupon, signup, enabled) and order.
+    Each entry keeps a build fn so buy URLs work. Single source the whole site reads."""
     cfg = _load_agents_config()
     overrides = cfg.get('overrides') or {}
-    order = [k for k in (cfg.get('order') or []) if k in AGENT_DEFAULTS]
+    order = list(cfg.get('order') or [])          # keep saved order, incl. custom keys
     for k in AGENT_DEFAULT_ORDER:
         if k not in order:
             order.append(k)
     out = []
     for k in order:
-        base = AGENT_DEFAULTS.get(k)
-        if not base:
-            continue
         ov = overrides.get(k) or {}
+        base = AGENT_DEFAULTS.get(k)
+        if base is None:
+            # operator-added custom agent: must carry its own definition
+            if not ov.get('custom'):
+                continue
+            base = {
+                'key': k, 'name': ov.get('name') or k, 'code': ov.get('code') or '',
+                'color': ov.get('color') or '#444444', 'signup': ov.get('signup') or '',
+                'coupon': ov.get('coupon') or '', 'custom': True, 'buy_url': ov.get('buy_url') or '',
+                'domain': ov.get('domain') or _agent_host(ov.get('buy_url'), ov.get('signup')),
+                'build': _make_custom_build(ov.get('buy_url') or ''),
+            }
         enabled = ov.get('enabled', True)
         if not include_disabled and enabled is False:
             continue
@@ -2568,6 +2628,8 @@ def api_admin_agents_config():
         'signup_resolved': _agent_signup_url(a),
         'enabled': a.get('enabled', True),
         'code_param': ('{code}' in (a.get('signup', '') or '')),
+        'custom': bool(a.get('custom')),
+        'buy_url': a.get('buy_url', ''),
         'logo': f'https://www.google.com/s2/favicons?domain={a.get("domain","")}&sz=64',
     } for a in agents]})
 
@@ -2583,18 +2645,27 @@ def api_admin_save_agents_config():
     data = request.get_json(silent=True) or {}
     order = list(data.get('order') or [])
     overrides = dict(data.get('overrides') or {})
+    import re as _re
     if isinstance(data.get('agents'), list):
         order, overrides = [], {}
         for a in data['agents']:
-            k = a.get('key')
-            if not k or k not in AGENT_DEFAULTS:
+            k = (a.get('key') or '').strip()
+            if not k:
                 continue
-            order.append(k)
-            overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
-    clean = {
-        'order': [k for k in order if k in AGENT_DEFAULTS],
-        'overrides': {k: v for k, v in overrides.items() if k in AGENT_DEFAULTS},
-    }
+            if k in AGENT_DEFAULTS:
+                order.append(k)
+                overrides[k] = {f: a[f] for f in AGENT_EDITABLE_FIELDS if f in a}
+            else:
+                # operator-added CUSTOM agent — sanitize key, require a name, keep full definition
+                k = _re.sub(r'[^a-z0-9_]+', '', k.lower())[:40]
+                if not k or k in AGENT_DEFAULTS or not (a.get('name') or '').strip():
+                    continue
+                ov = {f: (a.get(f) or '') for f in ('name', 'code', 'signup', 'coupon', 'color', 'buy_url', 'domain')}
+                ov['enabled'] = a.get('enabled', True) is not False
+                ov['custom'] = True
+                order.append(k)
+                overrides[k] = ov
+    clean = {'order': order, 'overrides': overrides}
     set_settings({'agents_config': json.dumps(clean)})
     return jsonify({'ok': True, 'agents_config': clean})
 
