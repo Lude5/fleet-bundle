@@ -950,21 +950,20 @@
         .signup-featured .badge { background: #fff; color: var(--red); }
 
         /* 2 — yellow text on light surfaces -> readable amber */
-        .nav-links a.active, .product-card-price, .section-label, .sec-link,
-        .hero-bg-card-price, .hero-label, .popup-headline .eyebrow,
-        .mm-lang button.active, .filter-tab.active, .cat-tab.active, .tut-eyebrow,
-        .result-meta .accent, .pp-agentchip.active, .sn-time, .pd-price,
+        .nav-links a.active, .product-card-price, .sec-link,
+        .hero-bg-card-price,
+        .mm-lang button.active, .filter-tab.active, .cat-tab.active,
+        .result-meta .accent, .pp-agentchip.active, .pd-price,
         .hero-search-allbtn, .spread-stat-num, .bundle-total-amount,
         .bundle-eyebrow .accent,
-        .agents-hero .eyebrow, .agent-card-coupon .amount,
+        .agent-card-coupon .amount,
         .agents-foot a, .tut-faq-q .chev {
             color: var(--accent-text);
         }
 
-        /* 3 — the "bit of red" lives ONLY in the small brand wordmark; all the
-           big display accents carry the brand yellow (large type reads it fine) */
+        /* 3 — brand wordmark + big display accents all carry the brand yellow */
         .nav-brand .accent, .mobile-menu .mobile-menu-brand .accent {
-            color: var(--red);
+            color: var(--accent);
         }
         .hero-title .accent, .wl-title .accent, .popup-headline h2 .accent,
         .agents-hero h1 .accent, .spread-hero h1 .accent,
@@ -972,6 +971,16 @@
             color: var(--accent);
             text-shadow: 0 1px 0 rgba(20,16,0,0.18);
         }
+
+        /* 4 — the "bit of red" lives in the SMALL accents: eyebrow labels,
+           count bubbles, tiny badges, toast timestamps (hearts + the BEST
+           OPTION chip are red already) */
+        .hero-label, .section-label, .popup-headline .eyebrow,
+        .agents-hero .eyebrow, .tut-eyebrow, .sn-time {
+            color: var(--red);
+        }
+        .nav-wish-count { background: var(--red); color: #fff; }
+        .product-card-badge { background: var(--red); color: #fff; }
 
         /* ghost controls that were white-on-dark -> dark-on-light */
         .pd-close { background: rgba(20,16,0,0.06); border-color: rgba(20,16,0,0.16); color: var(--text); }
@@ -1073,7 +1082,7 @@
     <footer class="footer">
         <div class="footer-top">
             <div>
-                <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--red);">{{ site.name_part2 }}</span></div>
+                <div class="footer-brand">{{ site.name_part1 }}<span style="color:var(--accent);">{{ site.name_part2 }}</span></div>
                 <p class="footer-desc" data-i18n="footer_desc">An agent-neutral catalogue. Curated daily. Open every listing on the agent you trust.</p>
             </div>
             <div class="footer-col">
