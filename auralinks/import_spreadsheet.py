@@ -140,7 +140,7 @@ def harvest(ws, tabname, cfg):
         if not (name_cell and name_cell.value):
             name_cell = grid.get((r, col - 1))
         name = clean_name(name_cell.value if name_cell else '')
-        if not name or len(name) < 3:
+        if not name or len(name) < 3 or name.strip().upper() in ('LINK', 'CNFANS LINK', 'QC'):
             continue
         # PRICE: master layout -> col C (link col - 2); grid -> usd at col+2 ('44.62$' text or number)
         usd = None
@@ -260,19 +260,57 @@ def main():
         per_tab[tabname] = len(got)
         all_items.extend(got)
 
-    # dedupe by (platform, pid): prefer a category-tab hit over byname tabs,
-    # keep trending flag if ANY occurrence was trending
+    # ------------------------------------------------------------------
+    # Dedupe. The sheet attaches ONE listing link to MULTIPLE products
+    # (sellers' multi-product listings: e.g. one link named "Fendi Shorts",
+    # "Adidas Slippers" AND "Goyard Cardholder"). Collapsing by pid alone
+    # mixed one entry's name/price with another's listing — so the key is
+    # (pid, canonical-name): every distinct product entry survives with its
+    # own name + price. Within a pid, only true SYNONYMS are merged
+    # ("LV Belt" / "Louis Vuitton Belt" / same first word or substring),
+    # keeping the most descriptive name and preferring a category-tab record.
+    # ------------------------------------------------------------------
     def specificity(it):
         return 0 if TABS[it['tab']]['cat'] in ('byname',) else 1
-    best = {}
+
+    def canon(n):
+        return re.sub(r'\s+', ' ', n).strip().lower()
+
+    _SYN = {'louis vuitton': 'lv', 'christian louboutin': 'louboutin'}
+    def syn_form(n):
+        s = canon(n)
+        for long, short in _SYN.items():
+            s = s.replace(long, short)
+        return s
+
+    def similar(a, b):
+        a, b = syn_form(a), syn_form(b)
+        if a == b or a in b or b in a:
+            return True
+        return a.split()[0] == b.split()[0] and len(set(a.split()) & set(b.split())) >= 2
+
     trending_ids = set()
+    groups = {}   # pid -> list of variant dicts
     for it in all_items:
-        key = (it['platform'], it['pid'])
+        pid_key = (it['platform'], it['pid'])
         if it['trending']:
-            trending_ids.add(key)
-        cur = best.get(key)
-        if cur is None or specificity(it) > specificity(cur):
-            best[key] = it
+            trending_ids.add(pid_key)
+        variants = groups.setdefault(pid_key, [])
+        for v in variants:
+            if similar(v['name'], it['name']):
+                # synonym of an existing entry: keep the better record
+                if (specificity(it), len(it['name'])) > (specificity(v), len(v['name'])):
+                    v.update(it)
+                break
+        else:
+            variants.append(dict(it))
+
+    best = {}
+    for pid_key, variants in groups.items():
+        for v in variants:
+            best[(pid_key[0], pid_key[1], canon(v['name']))] = v
+    n_multi = sum(1 for vs in groups.values() if len(vs) > 1)
+    print(f'listings with multiple distinct products kept separate: {n_multi}')
 
     # old catalogue: image + extra images by source pid (any platform)
     old_by_pid = {}
@@ -297,13 +335,17 @@ def main():
         '%3Cpath d=%22M34 62l12-12 8 8 8-9 8 13%22/%3E%3C/g%3E%3C/svg%3E')
 
     out, with_img = [], 0
-    for (plat, pid), it in best.items():
+    for (plat, pid, cname), it in best.items():
         cat = cat_for(TABS[it['tab']], it['name'])
         old_p = old_by_pid.get(pid)
         image = (old_p or {}).get('image') or ''
+        if image.startswith('data:'):
+            image = ''   # placeholder from a previous write isn't a real photo
         images = (old_p or {}).get('images') or ([image] if image else [])
         if image: with_img += 1
-        pid_hash = 'p' + hashlib.md5(f'{plat}:{pid}'.encode()).hexdigest()[:8]
+        # id hashes pid + canonical name so multi-product listings keep
+        # one catalogue entry PER product
+        pid_hash = 'p' + hashlib.md5(f'{plat}:{pid}:{cname}'.encode()).hexdigest()[:10]
         rec = {
             'id': pid_hash,
             'name': it['name'],
@@ -314,7 +356,7 @@ def main():
             'image': image,
             'seller': '', 'batch': '', 'retail_price': '',
             'tags': 'trending' if (plat, pid) in trending_ids else '',
-            'images': images[:12],
+            'images': [u for u in images if not str(u).startswith('data:')][:12],
             '_platform': plat, '_pid': pid,
         }
         out.append(rec)
