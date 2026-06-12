@@ -181,7 +181,7 @@ try:
             from database import get_db as _gdb
         _mc = _gdb()
         _n = 0
-        for _wrong in ('ategoat', 'thelude'):
+        for _wrong in ('ategoat', 'thelude', 'vault'):
             _n += _mc.execute(
                 f"UPDATE products SET url = REPLACE(url, 'affcode={_wrong}', 'affcode=bswes') "
                 f"WHERE url LIKE '%affcode={_wrong}%'").rowcount
