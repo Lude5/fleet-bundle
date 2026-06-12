@@ -281,18 +281,25 @@ def _b_kakobuy(url, _id, _plat, code):
     if code: out += f'&affcode={code}'
     return out
 
-def _b_joyagoo(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.joyagoo.com/index/item/index.html?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_joyagoo(_url, item_id, platform, code):
+    """JoyaGoo query-style: platform token WEIDIAN/TAOBAO/ALI_1688, `ref` code.
+    The old /index/item/index.html?url= scheme is dead. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    plat = {'weidian': 'WEIDIAN', 'taobao': 'TAOBAO', '1688': 'ALI_1688'}.get(platform)
+    if not plat: return None
+    out = f'https://joyagoo.com/product?id={item_id}&platform={plat}'
+    if code: out += f'&ref={code}'
     return out
 
 def _b_sugargoo(url, _id, _plat, code):
+    """Sugargoo /products route wants the seller URL DOUBLE url-encoded; the code is
+    the numeric memberId. Logged-out users hit Sugargoo's own login gate, which
+    preserves the product link + memberId. Verified in-browser 2026-06."""
     from urllib.parse import quote
     if not url: return None
-    out = f'https://www.sugargoo.com/index/item/index.html?url={quote(url, safe="")}'
-    if code: out += f'&shareCode={code}'
+    link = quote(quote(url, safe=''), safe='')
+    out = f'https://www.sugargoo.com/products?productLink={link}'
+    if code: out += f'&memberId={code}'
     return out
 
 def _b_allchinabuy(url, _id, _plat, code):
@@ -310,7 +317,9 @@ def _b_mulebuy(_url, item_id, platform, code):
 
 def _b_oopbuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
-    out = f'https://oopbuy.com/product/{platform}/{item_id}'
+    # oopbuy path platform encoding: weidian stays 'weidian', taobao->1, 1688->0
+    plat = {'weidian': 'weidian', 'taobao': '1', '1688': '0'}.get(platform, platform)
+    out = f'https://www.oopbuy.com/product/{plat}/{item_id}'
     if code: out += f'?inviteCode={code}'
     return out
 
@@ -324,7 +333,11 @@ def _b_hubbuy(url, _id, _plat, code):
 
 def _b_acbuy(_url, item_id, platform, code):
     if not item_id or not platform: return None
-    out = f'https://acbuy.com/product?source={platform}&id={item_id}'
+    # acbuy 2-letter source: weidian=WD, taobao=TB, 1688=AL. The literal platform
+    # strings bounce to /uni-order with an empty product. Verified in-browser 2026-06.
+    src = {'weidian': 'WD', 'taobao': 'TB', '1688': 'AL'}.get(platform)
+    if not src: return None
+    out = f'https://www.acbuy.com/product/?id={item_id}&source={src}'
     if code: out += f'&u={code}'
     return out
 
@@ -341,24 +354,29 @@ def _b_litbuy(url, item_id, platform, code):
     if code: out += f'&inviteCode={code}'
     return out
 
-def _b_hipobuy(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.hipobuy.com/order/buy?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_hipobuy(_url, item_id, platform, code):
+    """Hipobuy is on the shared path-style platform (like litbuy/oopbuy); the old
+    /order/buy?url= endpoint dumps users on the homepage. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    out = f'https://hipobuy.com/product/{platform}/{item_id}'
+    if code: out += f'?inviteCode={code}'
     return out
 
-def _b_usfans(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.usfans.com/product/buy?url={quote(url, safe="")}'
-    if code: out += f'&affcode={code}'
+def _b_usfans(_url, item_id, platform, code):
+    """USFans path-style with NUMERIC platform code (1688=1, taobao=2, weidian=3)
+    and a `ref` code param. Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    plat = {'1688': '1', 'taobao': '2', 'weidian': '3'}.get(platform)
+    if not plat: return None
+    out = f'https://www.usfans.com/product/{plat}/{item_id}'
+    if code: out += f'?ref={code}'
     return out
 
-def _b_lovegobuy(url, _id, _plat, code):
-    from urllib.parse import quote
-    if not url: return None
-    out = f'https://www.lovegobuy.com/product?url={quote(url, safe="")}'
+def _b_lovegobuy(_url, item_id, platform, code):
+    """Lovegobuy query-style id/shop_type; the old ?url= form lands on the homepage.
+    Verified in-browser 2026-06."""
+    if not item_id or not platform: return None
+    out = f'https://www.lovegobuy.com/product?id={item_id}&shop_type={platform}'
     if code: out += f'&invite_code={code}'
     return out
 
