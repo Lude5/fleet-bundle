@@ -16,7 +16,7 @@
     <meta property="og:image" content="{% block og_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="{% block twitter_image %}https://{{ site.domain }}/static/og.png{% endblock %}">
-    <meta name="theme-color" content="#fffdf7">
+    <meta name="theme-color" content="#0d0d0d">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
     <script type="application/ld+json">
@@ -67,25 +67,27 @@
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            /* AuraLinks light theme — yellow / white / a bit of red (Litbuy-style).
-               Yellow is the fill accent (buttons, badges) and always carries DARK
-               ink (--accent-ink) — white-on-yellow is unreadable. Red is the
-               sparing emphasis colour (hearts, hot badges, sale cues). */
-            --bg: #fffdf7;
+            /* AuraLinks — Litbuy palette: bright yellow + BLACK chrome + flame
+               orange + white content. Yellow fills always carry near-black ink
+               (--accent-ink); orange is the emphasis colour (like "Finds LIT!");
+               nav / footer / banner strips are black (--chrome). */
+            --bg: #ffffff;
             --surface: #ffffff;
-            --surface-2: #faf5e6;
-            --surface-3: #f3ecd6;
+            --surface-2: #f6f6f6;
+            --surface-3: #ececec;
             --border: {{ site.brand_color }}66;
-            --border-subtle: rgba(20,16,0,0.09);
-            --text: #161410;
-            --text-secondary: rgba(22,20,16,0.66);
-            --text-muted: rgba(22,20,16,0.42);
+            --border-subtle: rgba(0,0,0,0.09);
+            --text: #111111;
+            --text-secondary: rgba(17,17,17,0.66);
+            --text-muted: rgba(17,17,17,0.42);
             --accent: {{ site.brand_color }};
-            --accent-hover: #e8b000;
+            --accent-hover: #e9c000;
             --accent-dim: {{ site.brand_color }}2e;
             --accent-glow: {{ site.brand_color }}59;
-            --accent-ink: #1c1602;           /* text colour ON yellow fills */
-            --red: #e02b2b;                  /* the "bit of red" */
+            --accent-ink: #111111;           /* text colour ON yellow fills */
+            --red: #ff6a00;                  /* flame orange — the emphasis colour */
+            --accent-text: #e05f00;          /* darker flame for orange TEXT on white */
+            --chrome: #0d0d0d;               /* black chrome: nav, footer, banners */
             --font-display: 'Anton', sans-serif;
             --font-body: 'Inter', sans-serif;
             --font-mono: 'Space Grotesk', monospace;
@@ -105,8 +107,8 @@
             padding-bottom: 8px;
             padding-left: max(env(safe-area-inset-left), 24px);
             padding-right: max(env(safe-area-inset-right), 24px);
-            background: rgba(255,253,247,0.92); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(13,13,13,0.97); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         /* Reusable recent-searches dropdown (used by any search input via
@@ -228,7 +230,7 @@
         .nav-hamburger { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; }
         .mobile-menu {
             display: flex; position: fixed; inset: 0;
-            background: rgba(255,253,247,0.97); backdrop-filter: blur(12px);
+            background: rgba(10,10,10,0.97); backdrop-filter: blur(12px);
             z-index: 600; /* above the signup popup (z-index 500) so they never overlap */
             flex-direction: column; align-items: center; justify-content: center;
             gap: 24px;
@@ -240,7 +242,7 @@
             transition: opacity .3s ease, backdrop-filter .3s ease;
         }
         .mobile-menu a {
-            font-family: var(--font-display); font-size: 32px; text-transform: uppercase; letter-spacing: 3px; color: var(--text);
+            font-family: var(--font-display); font-size: 32px; text-transform: uppercase; letter-spacing: 3px; color: #ffffff;
             text-align: center; max-width: 90vw; line-height: 1.1;
             opacity: 0; transform: translateY(12px);
             transition: opacity .35s ease, transform .45s cubic-bezier(.16, 1, .3, 1), color 0.2s;
@@ -256,13 +258,13 @@
         .mobile-menu .mobile-menu-cta {
             display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
             background: transparent; padding: 0; border-radius: 0; box-shadow: none;
-            color: var(--text) !important;
+            color: #ffffff !important;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line1 {
-            font-family: var(--font-display); font-size: 32px; letter-spacing: 3px; line-height: 1; color: var(--text);
+            font-family: var(--font-display); font-size: 32px; letter-spacing: 3px; line-height: 1; color: #ffffff;
         }
         .mobile-menu .mobile-menu-cta .mm-cta-line2 {
-            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; color: var(--text-secondary); text-transform: uppercase;
+            font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; line-height: 1; color: rgba(255,255,255,0.7); text-transform: uppercase;
         }
         .mobile-menu .mobile-menu-cta:hover .mm-cta-line1 { color: var(--accent); }
         .mobile-menu .mobile-menu-brand {
@@ -271,12 +273,12 @@
             position: absolute; top: calc(env(safe-area-inset-top) + 56px);
             left: 50%; transform: translateX(-50%);
             font-family: var(--font-display); font-size: 38px; letter-spacing: 2px; line-height: 1;
-            color: var(--text); text-transform: uppercase;
+            color: #ffffff; text-transform: uppercase;
             pointer-events: none;
             opacity: 1;
         }
         .mobile-menu .mobile-menu-brand .accent { color: var(--accent); }
-        .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
+        .mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: #ffffff; font-size: 28px; cursor: pointer; }
 
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; border-radius: var(--radius-sm); }
         .btn-primary { background: var(--accent); color: #fff; }
@@ -931,8 +933,6 @@
              3. Brand/display accents go red — the "bit of red".
            Placed after extra_css so it also overrides page-level styles.
            ============================================================ */
-        :root { --accent-text: #a37e00; }
-
         /* 1 — dark ink on yellow fills */
         .nav-cta, .nav-wish-count, .btn-primary, .product-card-badge,
         .product-card-buy, .popup-close:hover, .agent-picker-item.selected,
@@ -945,11 +945,10 @@
         .signup-featured, .signup-featured .meta .ttl, .signup-featured .go-arrow {
             color: var(--accent-ink);
         }
-        .hero-browse-btn { color: var(--accent-ink) !important; }
-        .signup-featured .meta .sub { color: rgba(28,22,2,0.78); }
-        .signup-featured .badge { background: #fff; color: var(--red); }
+        .signup-featured .meta .sub { color: rgba(17,17,17,0.78); }
+        .signup-featured .badge { background: var(--chrome); color: var(--accent); }
 
-        /* 2 — yellow text on light surfaces -> readable amber */
+        /* 2 — yellow text on light surfaces -> flame-orange accents (Litbuy) */
         .nav-links a.active, .product-card-price, .sec-link,
         .hero-bg-card-price,
         .mm-lang button.active, .filter-tab.active, .cat-tab.active,
@@ -961,39 +960,73 @@
             color: var(--accent-text);
         }
 
-        /* 3 — brand wordmark + big display accents all carry the brand yellow */
-        .nav-brand .accent, .mobile-menu .mobile-menu-brand .accent {
-            color: var(--accent);
-        }
+        /* 3 — black nav chrome (Litbuy): white links, yellow brand + active */
+        .nav-brand { color: #ffffff; }
+        .nav-brand .accent { color: var(--accent); }
+        .nav-links a { color: rgba(255,255,255,0.72); }
+        .nav-links a:hover { color: #ffffff; }
+        .nav-links a.active { color: var(--accent); }
+        .nav-links a.active::after { background: var(--accent); }
+        .nav-hamburger { color: #ffffff; }
+        .nav-wishlist { color: rgba(255,255,255,0.85); }
+        .nav-wishlist:hover, .nav-wishlist.active { color: var(--accent); }
+        .nav-links .currency-btn { border-color: rgba(255,255,255,0.28); color: rgba(255,255,255,0.85); }
+        .nav-links .currency-btn:hover { border-color: rgba(255,255,255,0.5); color: #ffffff; }
+        .mobile-menu .mobile-menu-brand .accent { color: var(--accent); }
+        .mm-lang button { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
+        .mm-lang button.active { border-color: var(--accent); color: var(--accent); }
+
+        /* 4 — display accents: black headline + flame-orange accent word,
+           exactly the Litbuy "Make All Your Finds LIT!" treatment */
         .hero-title .accent, .wl-title .accent, .popup-headline h2 .accent,
         .agents-hero h1 .accent, .spread-hero h1 .accent,
         .bundle-page-header h1 .accent, .nf-code, .stat-num {
-            color: var(--accent);
-            text-shadow: 0 1px 0 rgba(20,16,0,0.18);
+            color: var(--red);
         }
 
-        /* 4 — the "bit of red" lives in the SMALL accents: eyebrow labels,
-           count bubbles, tiny badges, toast timestamps (hearts + the BEST
-           OPTION chip are red already) */
+        /* 5 — flame orange on the small accents */
         .hero-label, .section-label, .popup-headline .eyebrow,
         .agents-hero .eyebrow, .tut-eyebrow, .sn-time {
             color: var(--red);
         }
         .nav-wish-count { background: var(--red); color: #fff; }
-        .product-card-badge { background: var(--red); color: #fff; }
+        /* Best Selling chip: black tag with yellow text, like Litbuy's banners */
+        .product-card-badge { background: var(--chrome); color: var(--accent); }
+        /* hearts join the flame palette */
+        .product-card-wish:hover, .product-card-wish.on { color: var(--red); border-color: var(--red); }
 
-        /* ghost controls that were white-on-dark -> dark-on-light */
-        .pd-close { background: rgba(20,16,0,0.06); border-color: rgba(20,16,0,0.16); color: var(--text); }
-        .pd-close:hover { background: rgba(20,16,0,0.12); border-color: rgba(20,16,0,0.3); }
-        .mm-search input { background: rgba(20,16,0,0.05) !important; border-color: rgba(20,16,0,0.18) !important; color: var(--text) !important; }
-        .mm-search input::placeholder { color: var(--text-muted) !important; }
-        /* soften the heavy dark drop shadows for a light page */
-        .sales-notif { box-shadow: 0 8px 24px rgba(20,16,0,0.14); }
-        .currency-menu { box-shadow: 0 8px 30px rgba(20,16,0,0.16); }
-        .aural-rsdd { box-shadow: 0 18px 40px rgba(20,16,0,0.16); }
-        .side-btn { box-shadow: 0 8px 24px rgba(20,16,0,0.12); }
-        .pd-modal { box-shadow: 0 30px 90px rgba(20,16,0,0.18); }
-        .hero-search-dropdown { box-shadow: 0 18px 40px rgba(20,16,0,0.16); }
+        /* 6 — black banner strips + black footer (full-bleed, content stays centred) */
+        .mid-cta { background: var(--chrome); }
+        .mid-cta a { color: var(--accent); }
+        .mid-cta span { color: rgba(255,255,255,0.75); }
+        .mid-cta a > span:first-child { color: var(--accent); }
+        .footer { max-width: none; background: var(--chrome); border-top: none;
+                  padding-left: max(24px, calc((100% - 1200px) / 2));
+                  padding-right: max(24px, calc((100% - 1200px) / 2)); }
+        .footer-brand { color: #ffffff; }
+        .footer-brand span { color: var(--accent) !important; }
+        .footer-desc { color: rgba(255,255,255,0.55); }
+        .footer-col h4 { color: var(--accent); }
+        .footer-col a { color: rgba(255,255,255,0.7); }
+        .footer-col a:hover { color: var(--accent); }
+        .footer-bottom { color: rgba(255,255,255,0.45); border-top-color: rgba(255,255,255,0.12); }
+        .footer-bottom p { color: rgba(255,255,255,0.45) !important; }
+        /* hero Browse CTA: black pill + yellow text so it pops on the yellow band */
+        .hero-browse-btn { background: var(--chrome) !important; color: var(--accent) !important; }
+
+        /* ghost controls on light surfaces */
+        .pd-close { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.16); color: var(--text); }
+        .pd-close:hover { background: rgba(0,0,0,0.12); border-color: rgba(0,0,0,0.3); }
+        /* mobile-menu search input on the BLACK menu */
+        .mm-search input { background: rgba(255,255,255,0.08) !important; border-color: rgba(255,255,255,0.2) !important; color: #ffffff !important; }
+        .mm-search input::placeholder { color: rgba(255,255,255,0.5) !important; }
+        /* soft neutral shadows for the light content area */
+        .sales-notif { box-shadow: 0 8px 24px rgba(0,0,0,0.14); }
+        .currency-menu { box-shadow: 0 8px 30px rgba(0,0,0,0.16); }
+        .aural-rsdd { box-shadow: 0 18px 40px rgba(0,0,0,0.16); }
+        .side-btn { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .pd-modal { box-shadow: 0 30px 90px rgba(0,0,0,0.18); }
+        .hero-search-dropdown { box-shadow: 0 18px 40px rgba(0,0,0,0.16); }
     </style>
     <script src="/static/js/preview-mode.js"></script>
 </head>

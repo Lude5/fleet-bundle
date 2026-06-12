@@ -16,16 +16,17 @@
 .hero-bg-card-price { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--accent); }
 .hero-overlay {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    /* light scrim over the product ticker so the dark hero text stays readable */
+    /* Litbuy-style YELLOW band over the product ticker — black headline +
+       flame accent word sit on top; fades to white at the bottom into content */
     background:
-        linear-gradient(to right, rgba(255,253,247,1) 0%, rgba(255,253,247,0.82) 18%, rgba(255,253,247,0.55) 40%, rgba(255,253,247,0.5) 50%, rgba(255,253,247,0.55) 60%, rgba(255,253,247,0.82) 82%, rgba(255,253,247,1) 100%),
-        linear-gradient(to bottom, rgba(255,253,247,0.92) 0%, rgba(255,253,247,0.55) 30%, rgba(255,253,247,0.45) 50%, rgba(255,253,247,0.55) 70%, rgba(255,253,247,1) 100%);
+        linear-gradient(to right, rgba(255,212,0,0.96) 0%, rgba(255,212,0,0.8) 18%, rgba(255,212,0,0.62) 40%, rgba(255,212,0,0.58) 50%, rgba(255,212,0,0.62) 60%, rgba(255,212,0,0.8) 82%, rgba(255,212,0,0.96) 100%),
+        linear-gradient(to bottom, rgba(255,212,0,0.85) 0%, rgba(255,212,0,0.5) 35%, rgba(255,212,0,0.45) 55%, rgba(255,250,235,0.9) 88%, #ffffff 100%);
 }
 .hero-content { position: relative; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 96px 24px 32px; }
 .hero-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; animation: fadeUp 0.5s ease 0.1s both; }
-.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 4px 40px rgba(255,253,247,0.8); }
+.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 3px 24px rgba(255,212,0,0.55); }
 .hero-title .accent { color: var(--accent); }
-.hero-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 16px rgba(255,253,247,0.7); }
+.hero-sub { font-size: 15px; color: rgba(17,17,17,0.78); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 14px rgba(255,212,0,0.5); }
 .hero-cta-row { display: flex; gap: 12px; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; justify-content: center; }
 .hero-signup { padding: 16px 32px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: var(--radius-sm); transition: all 0.2s; text-decoration: none; }
 .hero-signup:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); }
