@@ -951,7 +951,7 @@
 
         /* 2 — yellow text on light surfaces -> readable amber */
         .nav-links a.active, .product-card-price, .section-label, .sec-link,
-        .stat-num, .hero-bg-card-price, .hero-label, .popup-headline .eyebrow,
+        .hero-bg-card-price, .hero-label, .popup-headline .eyebrow,
         .mm-lang button.active, .filter-tab.active, .cat-tab.active, .tut-eyebrow,
         .result-meta .accent, .pp-agentchip.active, .sn-time, .pd-price,
         .hero-search-allbtn, .spread-stat-num, .bundle-total-amount,
@@ -961,12 +961,16 @@
             color: var(--accent-text);
         }
 
-        /* 3 — brand + display accents in red */
-        .nav-brand .accent, .hero-title .accent, .wl-title .accent,
-        .mobile-menu .mobile-menu-brand .accent, .popup-headline h2 .accent,
-        .agents-hero h1 .accent, .spread-hero h1 .accent,
-        .bundle-page-header h1 .accent, .nf-code {
+        /* 3 — the "bit of red" lives ONLY in the small brand wordmark; all the
+           big display accents carry the brand yellow (large type reads it fine) */
+        .nav-brand .accent, .mobile-menu .mobile-menu-brand .accent {
             color: var(--red);
+        }
+        .hero-title .accent, .wl-title .accent, .popup-headline h2 .accent,
+        .agents-hero h1 .accent, .spread-hero h1 .accent,
+        .bundle-page-header h1 .accent, .nf-code, .stat-num {
+            color: var(--accent);
+            text-shadow: 0 1px 0 rgba(20,16,0,0.18);
         }
 
         /* ghost controls that were white-on-dark -> dark-on-light */
