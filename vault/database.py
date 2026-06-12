@@ -4,8 +4,11 @@ import json
 import shutil
 from datetime import datetime, timedelta
 
-DB_PATH = '/data/site.db' if os.path.exists('/data') else 'site.db'
-BACKUP_DIR = '/data/backups' if os.path.exists('/data') else 'data/backups'
+# Per-app DB so vault no longer shares /data/site.db with ategoat (the shared file
+# caused catalog + affcode collisions — see the engine notes). /data/vault is on the
+# persistent disk. ategoat keeps /data/site.db untouched, so repsloot is unaffected.
+DB_PATH = '/data/vault/site.db' if os.path.exists('/data') else 'site.db'
+BACKUP_DIR = '/data/vault/backups' if os.path.exists('/data') else 'data/backups'
 
 
 def get_db():
