@@ -248,22 +248,13 @@ try:
         else:
             print(f"Seed up to date ({get_products() and len(get_products()) or 0} products, hash {json_hash[:8]})")
 
-    # Idempotent hygiene: scrub any leftover competitor referral code from stored
-    # product URLs so it can't sit in the data / page source. The live buy flow
-    # (/go, /api/agents) already swaps to our affcode, so this is data cleanliness.
-    # Runs every boot (no-op once clean) and re-runs after a product re-seed.
-    try:
-        try:
-            from .database import get_db as _gdb
-        except ImportError:
-            from database import get_db as _gdb
-        _mc = _gdb()
-        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=vault') WHERE url LIKE '%affcode=bswes%'").rowcount
-        _mc.commit(); _mc.close()
-        if _n:
-            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> vault)")
-    except Exception as _e:
-        print(f"Affcode scrub warning: {_e}")
+    # REMOVED: the affcode scrub that rewrote bswes -> vault. vault and ategoat currently
+    # share /data/site.db (both database.py hardcode it), so this in-place rewrite was
+    # clobbering repsloot's CORRECT 'bswes' affcode to 'vault' on the shared catalogue
+    # every boot. vault's own buy links come from its agent config, not this stored-URL
+    # rewrite, so dropping it costs vault nothing. The real fix is giving each bundle app
+    # its own DB file (per-app DATA_DIR, like auralinks) — until then, never rewrite
+    # affcodes here, or it corrupts the other app's data on the shared DB.
 
     if not get_categories():
         CATS = [
