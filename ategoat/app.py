@@ -168,22 +168,28 @@ try:
         else:
             print(f"Seed up to date ({get_products() and len(get_products()) or 0} products, hash {json_hash[:8]})")
 
-    # Idempotent hygiene: scrub any leftover competitor referral code from stored
-    # product URLs so it can't sit in the data / page source. The live buy flow
-    # (/go, /api/agents) already swaps to our affcode, so this is data cleanliness.
-    # Runs every boot (no-op once clean) and re-runs after a product re-seed.
+    # Idempotent hygiene: normalize stored product-URL KakoBuy affcodes to OUR code,
+    # bswes (confirmed correct via ategoat.com). 'ategoat' was a wrong placeholder a
+    # prior pass wrote; 'thelude' is the operator's personal reptools code that leaked
+    # into this catalogue. The live buy flow (/go, /api/agents) already uses bswes; this
+    # keeps the stored data / page source consistent. In-place URL rewrite (does NOT
+    # re-seed, so product edits like uploaded images survive). Runs every boot + re-seed.
     try:
         try:
             from .database import get_db as _gdb
         except ImportError:
             from database import get_db as _gdb
         _mc = _gdb()
-        _n = _mc.execute("UPDATE products SET url = REPLACE(url, 'affcode=bswes', 'affcode=ategoat') WHERE url LIKE '%affcode=bswes%'").rowcount
+        _n = 0
+        for _wrong in ('ategoat', 'thelude'):
+            _n += _mc.execute(
+                f"UPDATE products SET url = REPLACE(url, 'affcode={_wrong}', 'affcode=bswes') "
+                f"WHERE url LIKE '%affcode={_wrong}%'").rowcount
         _mc.commit(); _mc.close()
         if _n:
-            print(f"Affcode scrub: rewrote {_n} product URLs (bswes -> ategoat)")
+            print(f"Affcode normalize: rewrote {_n} product URLs (ategoat/thelude -> bswes)")
     except Exception as _e:
-        print(f"Affcode scrub warning: {_e}")
+        print(f"Affcode normalize warning: {_e}")
 
     if not get_categories():
         CATS = [
