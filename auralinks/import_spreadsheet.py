@@ -250,6 +250,42 @@ def enrich_images(records):
     print(f'images: {have}/{len(records)} have a real photo | hard failures this pass: {failed}')
 
 
+def build_sheet_images(path):
+    """Map (platform, pid, canon_name) -> the row's =IMAGE() url, and (platform,pid) ->
+    first url. MUST read the FORMULA layer (data_only=False): an =IMAGE() cell renders a
+    picture and has NO cached value, so data_only=True returns blank for it — which is
+    why these per-product photos were missed and items fell back to itemID-matched ones."""
+    wbf = openpyxl.load_workbook(path, data_only=False)
+    img_re = re.compile(r'https?://[^\s"“”\)\']+')
+    by_key, by_pid = {}, {}
+    for ws in wbf.worksheets:
+        grid = {(c.row, c.column): c for row in ws.iter_rows() for c in row}
+        for (r, col), c in list(grid.items()):
+            plat, pid = source_from_link(getattr(c.hyperlink, 'target', None) if c.hyperlink else None)
+            if not pid:
+                continue
+            ncell = grid.get((r, col - 3)) if str(c.value or '').strip().upper().startswith('CNFANS') else None
+            if not (ncell and ncell.value):
+                ncell = grid.get((r, col - 1))
+            name = clean_name(ncell.value if ncell else '')
+            if not name or len(name) < 3:
+                continue
+            img = ''
+            for cc in range(1, ws.max_column + 1):
+                v = ws.cell(r, cc).value
+                if isinstance(v, str) and 'IMAGE(' in v.upper():
+                    m = img_re.search(v)
+                    if m:
+                        img = m.group(0)
+                        break
+            if not img:
+                continue
+            by_key.setdefault((plat, pid, re.sub(r'\s+', ' ', name).strip().lower()), img)
+            by_pid.setdefault((plat, pid), img)
+    print(f'sheet =IMAGE() photos: {len(by_pid)} items ({len(by_key)} (id,name) keys)')
+    return by_key, by_pid
+
+
 def main():
     wb = openpyxl.load_workbook(XLSX, read_only=False, data_only=True)
     all_items, per_tab = [], {}
@@ -334,14 +370,19 @@ def main():
         '%3Ccircle cx=%2241%22 cy=%2246%22 r=%224%22/%3E'
         '%3Cpath d=%22M34 62l12-12 8 8 8-9 8 13%22/%3E%3C/g%3E%3C/svg%3E')
 
+    sheet_key, sheet_pid = build_sheet_images(XLSX)
+
     out, with_img = [], 0
     for (plat, pid, cname), it in best.items():
         cat = cat_for(TABS[it['tab']], it['name'])
         old_p = old_by_pid.get(pid)
-        image = (old_p or {}).get('image') or ''
+        # the sheet's own =IMAGE() photo is authoritative (correct even for multi-product
+        # listings); fall back to the old catalogue / Weidian enrichment only if absent
+        sheet_img = sheet_key.get((plat, pid, cname)) or sheet_pid.get((plat, pid)) or ''
+        image = sheet_img or (old_p or {}).get('image') or ''
         if image.startswith('data:'):
             image = ''   # placeholder from a previous write isn't a real photo
-        images = (old_p or {}).get('images') or ([image] if image else [])
+        images = ([sheet_img] if sheet_img else None) or (old_p or {}).get('images') or ([image] if image else [])
         if image: with_img += 1
         # id hashes pid + canonical name so multi-product listings keep
         # one catalogue entry PER product
