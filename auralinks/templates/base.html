@@ -984,8 +984,8 @@
         .bundle-page-header h1 .accent, .nf-code, .stat-num {
             color: var(--accent);
         }
-        /* the hero accent word sits on the YELLOW band -> white, repsloot-style */
-        .hero-title .accent { color: #ffffff; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+        /* hero accent word in brand yellow on the dark scrim */
+        .hero-title .accent { color: var(--accent); }
 
         /* 5 — small accents in yellow (black ink where yellow is a fill) */
         .section-label, .popup-headline .eyebrow,
@@ -1015,18 +1015,17 @@
         .footer-col a:hover { color: var(--accent); }
         .footer-bottom { color: rgba(255,255,255,0.45); border-top-color: rgba(255,255,255,0.12); }
         .footer-bottom p { color: rgba(255,255,255,0.45) !important; }
-        /* hero Browse CTA: black pill + yellow text so it pops on the yellow band */
-        .hero-browse-btn { background: var(--chrome) !important; color: var(--accent) !important; }
+        /* hero Browse CTA: yellow pill + black ink pops on the dark scrim */
+        .hero-browse-btn { background: var(--accent) !important; color: var(--accent-ink) !important; }
 
         /* ghost controls on dark surfaces */
         .pd-close { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: var(--text); }
         .pd-close:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.35); }
 
-        /* 7 — the YELLOW hero band keeps BLACK text + dark search-pill internals
-           (white pill is one of the deliberate white survivors) */
-        .hero-title { color: #111111; }
-        .hero-label { color: rgba(17,17,17,0.72); }
-        .hero-scroll { color: rgba(17,17,17,0.6); }
+        /* 7 — dark hero scrim: light text; the white search pill keeps dark
+           internals (it's one of the deliberate white survivors) */
+        .hero-title { color: var(--text); }
+        .hero-label { color: var(--accent); }
         .hero-search input { color: #111111; }
         .hero-search input::placeholder { color: rgba(17,17,17,0.45); }
         .hero-search-icon { color: rgba(17,17,17,0.45); }

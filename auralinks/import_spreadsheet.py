@@ -375,14 +375,12 @@ def main():
     out, with_img = [], 0
     for (plat, pid, cname), it in best.items():
         cat = cat_for(TABS[it['tab']], it['name'])
-        old_p = old_by_pid.get(pid)
-        # the sheet's own =IMAGE() photo is authoritative (correct even for multi-product
-        # listings); fall back to the old catalogue / Weidian enrichment only if absent
+        # Images come from the spreadsheet's own =IMAGE() cells ONLY (client
+        # decision) — never from the listing/Weidian. No sheet photo -> the
+        # neutral placeholder tile.
         sheet_img = sheet_key.get((plat, pid, cname)) or sheet_pid.get((plat, pid)) or ''
-        image = sheet_img or (old_p or {}).get('image') or ''
-        if image.startswith('data:'):
-            image = ''   # placeholder from a previous write isn't a real photo
-        images = ([sheet_img] if sheet_img else None) or (old_p or {}).get('images') or ([image] if image else [])
+        image = sheet_img
+        images = [sheet_img] if sheet_img else []
         if image: with_img += 1
         # id hashes pid + canonical name so multi-product listings keep
         # one catalogue entry PER product
@@ -397,12 +395,10 @@ def main():
             'image': image,
             'seller': '', 'batch': '', 'retail_price': '',
             'tags': 'trending' if (plat, pid) in trending_ids else '',
-            'images': [u for u in images if not str(u).startswith('data:')][:12],
+            'images': images,
             '_platform': plat, '_pid': pid,
         }
         out.append(rec)
-
-    enrich_images(out)
     for r in out:
         r.pop('_platform', None); r.pop('_pid', None)
 

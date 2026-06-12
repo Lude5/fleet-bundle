@@ -2,7 +2,9 @@
 {% block title %}{{ site.name }} — Curated Finds, Open on Any Agent{% endblock %}
 
 {% block extra_css %}
-.hero-combined { position: relative; overflow: hidden; height: 100vh; max-height: 1100px; min-height: 650px; }
+/* min-height + safe center (not fixed height + center): with a fixed height the
+   flex centring CLIPPED the top of the hero under the fixed nav on short screens */
+.hero-combined { position: relative; overflow: hidden; min-height: 100vh; height: auto; }
 .hero-bg-ticker { position: absolute; inset: 0; z-index: 0; display: flex; gap: 16px; padding: 0 16px; align-items: flex-start; justify-content: center; }
 .hero-bg-col { flex: 1; max-width: 380px; height: 100%; overflow: hidden; }
 .hero-bg-scroll { display: flex; flex-direction: column; gap: 14px; animation: bgTick 80s linear infinite; }
@@ -19,15 +21,15 @@
     /* Litbuy-style YELLOW band over the product ticker — black headline +
        flame accent word sit on top; fades to white at the bottom into content */
     background:
-        /* black tint fading in from the SIDES (repsloot-style), yellow centre */
-        linear-gradient(to right, rgba(13,13,13,1) 0%, rgba(13,13,13,0.78) 16%, rgba(13,13,13,0.18) 38%, rgba(13,13,13,0.08) 50%, rgba(13,13,13,0.18) 62%, rgba(13,13,13,0.78) 84%, rgba(13,13,13,1) 100%),
-        linear-gradient(to bottom, rgba(255,212,0,0.85) 0%, rgba(255,212,0,0.55) 35%, rgba(255,212,0,0.5) 55%, rgba(20,16,0,0.85) 88%, #0d0d0d 100%);
+        /* dark tint fading in from the sides + dark centre scrim (no yellow) */
+        linear-gradient(to right, rgba(13,13,13,1) 0%, rgba(13,13,13,0.8) 18%, rgba(13,13,13,0.45) 40%, rgba(13,13,13,0.4) 50%, rgba(13,13,13,0.45) 60%, rgba(13,13,13,0.8) 82%, rgba(13,13,13,1) 100%),
+        linear-gradient(to bottom, rgba(13,13,13,0.9) 0%, rgba(13,13,13,0.45) 30%, rgba(13,13,13,0.35) 50%, rgba(13,13,13,0.45) 70%, rgba(13,13,13,1) 100%);
 }
-.hero-content { position: relative; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 96px 24px 32px; }
+.hero-content { position: relative; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: safe center; min-height: 100vh; text-align: center; padding: 96px 24px 40px; }
 .hero-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; animation: fadeUp 0.5s ease 0.1s both; }
-.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 3px 24px rgba(255,212,0,0.55); }
+.hero-title { font-family: var(--font-display); font-size: clamp(52px, 11vw, 110px); text-transform: uppercase; line-height: 0.92; letter-spacing: 2px; margin-bottom: 20px; animation: fadeUp 0.5s ease 0.2s both; text-shadow: 0 4px 40px rgba(0,0,0,0.5); }
 .hero-title .accent { color: var(--accent); }
-.hero-sub { font-size: 15px; color: rgba(17,17,17,0.78); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 14px rgba(255,212,0,0.5); }
+.hero-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 480px; margin: 0 auto 32px; animation: fadeUp 0.5s ease 0.3s both; text-shadow: 0 2px 16px rgba(0,0,0,0.4); }
 .hero-cta-row { display: flex; gap: 12px; animation: fadeUp 0.5s ease 0.4s both; flex-wrap: wrap; justify-content: center; }
 .hero-signup { padding: 16px 32px; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: var(--radius-sm); transition: all 0.2s; text-decoration: none; }
 .hero-signup:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-dim); }
@@ -216,13 +218,6 @@
 @media (max-width: 768px) {
     .hero-combined { min-height: 550px; }
     .hero-bg-col:nth-child(3) { display: none; }
-    /* phones: gentler side fade — at 375px the full-strength black edges
-       reached the centre and muddied the dark hero copy */
-    .hero-overlay {
-        background:
-            linear-gradient(to right, rgba(13,13,13,0.82) 0%, rgba(13,13,13,0.4) 14%, rgba(13,13,13,0.06) 34%, rgba(13,13,13,0) 50%, rgba(13,13,13,0.06) 66%, rgba(13,13,13,0.4) 86%, rgba(13,13,13,0.82) 100%),
-            linear-gradient(to bottom, rgba(255,212,0,0.88) 0%, rgba(255,212,0,0.6) 35%, rgba(255,212,0,0.55) 55%, rgba(20,16,0,0.85) 88%, #0d0d0d 100%);
-    }
     .hero-cta-row { flex-direction: column; align-items: center; }
     .conveyor-track .product-card { flex: 0 0 170px; }
     .cat-tabs { padding: 0 16px; justify-content: flex-start; scroll-padding-left: 16px; }
