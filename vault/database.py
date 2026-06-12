@@ -4,11 +4,14 @@ import json
 import shutil
 from datetime import datetime, timedelta
 
-# Per-app DB so vault no longer shares /data/site.db with ategoat (the shared file
-# caused catalog + affcode collisions — see the engine notes). /data/vault is on the
-# persistent disk. ategoat keeps /data/site.db untouched, so repsloot is unaffected.
-DB_PATH = '/data/vault/site.db' if os.path.exists('/data') else 'site.db'
-BACKUP_DIR = '/data/vault/backups' if os.path.exists('/data') else 'data/backups'
+# NOTE: reverted to the shared /data/site.db. Separating vault's DB exposed a
+# pre-existing duplicate-catalogue problem in ategoat's DB (two generations:
+# n+itemID with white-bg uploads, AND p+hash from static products.json — repsloot
+# re-seeds the p+hash every boot but vault's seed was silently deleting it, masking
+# the dupes). Until the canonical ategoat catalogue is chosen + deduped, keep the
+# shared DB (functional at ~9,535) rather than surface 18,888 duplicates on repsloot.
+DB_PATH = '/data/site.db' if os.path.exists('/data') else 'site.db'
+BACKUP_DIR = '/data/backups' if os.path.exists('/data') else 'data/backups'
 
 
 def get_db():
