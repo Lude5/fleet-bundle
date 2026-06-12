@@ -620,6 +620,16 @@ def _source_item_key(url):
             return f'{plat}:{m.group(1)}'
     return ''
 
+def _canon_name(n):
+    return _recp.sub(r'\s+', ' ', str(n or '')).strip().lower()
+
+def _cross_key(p):
+    """Identity of 'the same product' across sites = source itemID + canonical name.
+    Name matters because one listing/itemID is reused for several DIFFERENT products
+    (multi-product listings); itemID alone would wrongly merge them into one group."""
+    ik = _source_item_key(p.get('url') or '')
+    return (ik + '|' + _canon_name(p.get('name'))) if ik else ''
+
 def _kakobuy_link(seller_url, affcode):
     out = 'https://www.kakobuy.com/item/details?url=' + _upcp.quote(seller_url or '', safe='')
     if affcode:
@@ -681,7 +691,7 @@ def products_cross_data():
     groups = {}
     for site, prods in results:
         for p in (prods or []):
-            key = _source_item_key(p.get('url') or '')
+            key = _cross_key(p)
             if not key:
                 continue
             g = groups.setdefault(key, {'key': key, 'name': p.get('name', ''),
@@ -711,7 +721,7 @@ def products_cross_edit():
     results = fetch_all_sites(fetch_site_products, sites)
     out = {}
     for site, prods in results:
-        ids = [p['id'] for p in (prods or []) if _source_item_key(p.get('url') or '') == key]
+        ids = [p['id'] for p in (prods or []) if _cross_key(p) == key]
         if not ids:
             out[site['id']] = {'ok': True, 'matched': 0}
             continue
