@@ -19,8 +19,9 @@
     /* Litbuy-style YELLOW band over the product ticker — black headline +
        flame accent word sit on top; fades to white at the bottom into content */
     background:
-        linear-gradient(to right, rgba(255,212,0,0.96) 0%, rgba(255,212,0,0.8) 18%, rgba(255,212,0,0.62) 40%, rgba(255,212,0,0.58) 50%, rgba(255,212,0,0.62) 60%, rgba(255,212,0,0.8) 82%, rgba(255,212,0,0.96) 100%),
-        linear-gradient(to bottom, rgba(255,212,0,0.85) 0%, rgba(255,212,0,0.5) 35%, rgba(255,212,0,0.45) 55%, rgba(20,16,0,0.82) 88%, #0d0d0d 100%);
+        /* black tint fading in from the SIDES (repsloot-style), yellow centre */
+        linear-gradient(to right, rgba(13,13,13,1) 0%, rgba(13,13,13,0.78) 16%, rgba(13,13,13,0.18) 38%, rgba(13,13,13,0.08) 50%, rgba(13,13,13,0.18) 62%, rgba(13,13,13,0.78) 84%, rgba(13,13,13,1) 100%),
+        linear-gradient(to bottom, rgba(255,212,0,0.85) 0%, rgba(255,212,0,0.55) 35%, rgba(255,212,0,0.5) 55%, rgba(20,16,0,0.85) 88%, #0d0d0d 100%);
 }
 .hero-content { position: relative; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 96px 24px 32px; }
 .hero-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 24px; animation: fadeUp 0.5s ease 0.1s both; }
@@ -215,6 +216,13 @@
 @media (max-width: 768px) {
     .hero-combined { min-height: 550px; }
     .hero-bg-col:nth-child(3) { display: none; }
+    /* phones: gentler side fade — at 375px the full-strength black edges
+       reached the centre and muddied the dark hero copy */
+    .hero-overlay {
+        background:
+            linear-gradient(to right, rgba(13,13,13,0.82) 0%, rgba(13,13,13,0.4) 14%, rgba(13,13,13,0.06) 34%, rgba(13,13,13,0) 50%, rgba(13,13,13,0.06) 66%, rgba(13,13,13,0.4) 86%, rgba(13,13,13,0.82) 100%),
+            linear-gradient(to bottom, rgba(255,212,0,0.88) 0%, rgba(255,212,0,0.6) 35%, rgba(255,212,0,0.55) 55%, rgba(20,16,0,0.85) 88%, #0d0d0d 100%);
+    }
     .hero-cta-row { flex-direction: column; align-items: center; }
     .conveyor-track .product-card { flex: 0 0 170px; }
     .cat-tabs { padding: 0 16px; justify-content: flex-start; scroll-padding-left: 16px; }

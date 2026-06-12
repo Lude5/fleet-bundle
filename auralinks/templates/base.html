@@ -87,8 +87,8 @@
             --accent-dim: {{ site.brand_color }}2e;
             --accent-glow: {{ site.brand_color }}59;
             --accent-ink: #111111;           /* text colour ON yellow fills */
-            --red: #ff6a00;                  /* flame orange — the emphasis colour */
-            --accent-text: #ff7d1f;          /* bright flame for orange TEXT on black */
+            --red: {{ site.brand_color }};   /* emphasis = brand yellow (orange removed per client) */
+            --accent-text: {{ site.brand_color }};  /* yellow text reads perfectly on black */
             --chrome: #0d0d0d;               /* black chrome: nav, footer, banners */
             --font-display: 'Anton', sans-serif;
             --font-body: 'Inter', sans-serif;
@@ -978,24 +978,25 @@
         .mm-lang button { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
         .mm-lang button.active { border-color: var(--accent); color: var(--accent); }
 
-        /* 4 — display accents: black headline + flame-orange accent word,
-           exactly the Litbuy "Make All Your Finds LIT!" treatment */
-        .hero-title .accent, .wl-title .accent, .popup-headline h2 .accent,
+        /* 4 — display accents in brand yellow (they all sit on dark surfaces) */
+        .wl-title .accent, .popup-headline h2 .accent,
         .agents-hero h1 .accent, .spread-hero h1 .accent,
         .bundle-page-header h1 .accent, .nf-code, .stat-num {
-            color: var(--red);
+            color: var(--accent);
         }
+        /* the hero accent word sits on the YELLOW band -> white, repsloot-style */
+        .hero-title .accent { color: #ffffff; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
 
-        /* 5 — flame orange on the small accents */
-        .hero-label, .section-label, .popup-headline .eyebrow,
+        /* 5 — small accents in yellow (black ink where yellow is a fill) */
+        .section-label, .popup-headline .eyebrow,
         .agents-hero .eyebrow, .tut-eyebrow, .sn-time {
-            color: var(--red);
+            color: var(--accent);
         }
-        .nav-wish-count { background: var(--red); color: #fff; }
+        .nav-wish-count { background: var(--accent); color: var(--accent-ink); }
         /* Best Selling chip: black tag with yellow text, like Litbuy's banners */
         .product-card-badge { background: var(--chrome); color: var(--accent); }
-        /* hearts join the flame palette */
-        .product-card-wish:hover, .product-card-wish.on { color: var(--red); border-color: var(--red); }
+        /* hearts: black on the white chip (no orange/red in this palette) */
+        .product-card-wish:hover, .product-card-wish.on { color: #111111; border-color: #111111; }
 
         /* 6 — on the black page the banner strip flips to YELLOW so it pops
            (Litbuy's yellow promo bands); footer stays black with a separator */
@@ -1024,6 +1025,7 @@
         /* 7 — the YELLOW hero band keeps BLACK text + dark search-pill internals
            (white pill is one of the deliberate white survivors) */
         .hero-title { color: #111111; }
+        .hero-label { color: rgba(17,17,17,0.72); }
         .hero-scroll { color: rgba(17,17,17,0.6); }
         .hero-search input { color: #111111; }
         .hero-search input::placeholder { color: rgba(17,17,17,0.45); }
