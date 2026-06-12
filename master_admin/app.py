@@ -590,27 +590,135 @@ def products():
         active='products')
 
 
+# --- Cross-site product helpers ----------------------------------------------------
+# The SAME product appears on every site with the SAME source itemID; only the KakoBuy
+# affcode in the buy URL differs per site. So we cross-reference by (platform:itemID)
+# and rebuild each site's buy link with THAT site's own affcode.
+import urllib.parse as _upcp, re as _recp
+
+def _seller_url_from(url):
+    """Inner weidian/taobao/1688 seller URL from an agent wrapper (?url=...), else as-is."""
+    if not url:
+        return ''
+    try:
+        q = _upcp.parse_qs(_upcp.urlparse(url).query)
+        for k in ('url', 'productUrl', 'product_url'):
+            if q.get(k):
+                return _upcp.unquote(q[k][0])
+    except Exception:
+        pass
+    return url
+
+def _source_item_key(url):
+    """Cross-site identity 'platform:itemID' parsed from any buy/seller URL (affcode-agnostic)."""
+    s = _upcp.unquote(_seller_url_from(url) or '')
+    for pat, plat in ((r'weidian\.com/item\.html\?[^"\s]*itemID=(\d+)', 'weidian'),
+                      (r'taobao\.com/item\.htm\?[^"\s]*id=(\d+)', 'taobao'),
+                      (r'1688\.com/offer/(\d+)\.html', '1688')):
+        m = _recp.search(pat, s, _recp.I)
+        if m:
+            return f'{plat}:{m.group(1)}'
+    return ''
+
+def _kakobuy_link(seller_url, affcode):
+    out = 'https://www.kakobuy.com/item/details?url=' + _upcp.quote(seller_url or '', safe='')
+    if affcode:
+        out += '&affcode=' + affcode
+    return out
+
+_KAKO_CODE_CACHE = {}
+def _site_kakobuy_code(site):
+    """The site's LIVE KakoBuy affiliate code (its agents-config kakobuy code), cached."""
+    sid = site.get('id')
+    if sid in _KAKO_CODE_CACHE:
+        return _KAKO_CODE_CACHE[sid]
+    code = site.get('affiliate_code') or ''
+    try:
+        data, _err = _call_site_detailed(site, '/admin/api/agents-config', method='GET')
+        if data and data.get('agents'):
+            kb = next((a for a in data['agents'] if a.get('key') == 'kakobuy'), None)
+            if kb and kb.get('code'):
+                code = kb['code']
+    except Exception:
+        pass
+    _KAKO_CODE_CACHE[sid] = code
+    return code
+
+
 @app.route('/products/push', methods=['POST'])
 def products_push():
-    """Bulk-push a product to multiple target sites."""
+    """Bulk-push a product to multiple target sites, rebuilding each site's KakoBuy buy
+    link with THAT site's own affcode (same product everywhere, correct per-site link)."""
     data = request.get_json(silent=True) or {}
     payload = data.get('product') or {}
     targets = data.get('targets') or []
     if not payload or not targets:
         return jsonify({'error': 'product and targets required'}), 400
     sites = {s['id']: s for s in load_sites()}
+    seller = _seller_url_from(payload.get('url') or '')
     results = {}
     for tid in targets:
         site = sites.get(tid)
         if not site:
             results[tid] = {'ok': False, 'error': 'site not found'}
             continue
-        # Strip site-specific metadata before pushing
         body = {k: v for k, v in payload.items() if not k.startswith('_')}
         body.pop('id', None)  # let target generate a fresh ID
+        if seller:
+            body['url'] = _kakobuy_link(seller, _site_kakobuy_code(site))  # per-site affcode
         resp = _call_site(site, '/admin/api/products', method='POST', json_body=body)
         results[tid] = {'ok': bool(resp and resp.get('ok')), 'data': resp}
     return jsonify({'ok': True, 'results': results})
+
+
+@app.route('/products/cross')
+def products_cross_data():
+    """Cross-reference products across every connected site by source itemID. Returns one
+    group per item with the canonical name/image/price + which sites carry it (and the
+    per-site product id), so a single edit can fan out to all of them."""
+    sites = [s for s in load_sites() if s.get('admin_token')]
+    results = fetch_all_sites(fetch_site_products, sites)
+    groups = {}
+    for site, prods in results:
+        for p in (prods or []):
+            key = _source_item_key(p.get('url') or '')
+            if not key:
+                continue
+            g = groups.setdefault(key, {'key': key, 'name': p.get('name', ''),
+                                        'image': p.get('image', ''), 'price': p.get('price'),
+                                        'category': p.get('category', ''), 'sites': []})
+            g['sites'].append({'site_id': site['id'], 'site_name': site['name'], 'color': site.get('color', ''),
+                               'pid': p.get('id'), 'name': p.get('name', ''),
+                               'image': p.get('image', ''), 'price': p.get('price')})
+    out = sorted(groups.values(), key=lambda g: -len(g['sites']))
+    return jsonify({'ok': True, 'count': len(out),
+                    'groups': out,
+                    'sites': [{'id': s['id'], 'name': s['name'], 'color': s.get('color', '')} for s in sites]})
+
+
+@app.route('/products/cross/edit', methods=['POST'])
+def products_cross_edit():
+    """Batch-edit one product across every site that has it (matched by source itemID).
+    Body: {key:'weidian:123', fields:{name,image,price,category}, sites:[ids] (empty=all)}."""
+    data = request.get_json(silent=True) or {}
+    key = data.get('key')
+    fields = {k: v for k, v in (data.get('fields') or {}).items()
+              if k in ('name', 'image', 'price', 'price_numeric', 'category', 'images', 'tags')}
+    only = set(data.get('sites') or [])
+    if not key or not fields:
+        return jsonify({'error': 'key and fields required'}), 400
+    sites = [s for s in load_sites() if s.get('admin_token') and (not only or s['id'] in only)]
+    results = fetch_all_sites(fetch_site_products, sites)
+    out = {}
+    for site, prods in results:
+        ids = [p['id'] for p in (prods or []) if _source_item_key(p.get('url') or '') == key]
+        if not ids:
+            out[site['id']] = {'ok': True, 'matched': 0}
+            continue
+        updates = [dict(fields, id=pid) for pid in ids]
+        resp = _call_site(site, '/admin/api/products/bulk', method='POST', json_body={'updates': updates})
+        out[site['id']] = {'ok': bool(resp), 'matched': len(ids)}
+    return jsonify({'ok': True, 'results': out})
 
 
 @app.route('/products/scrape', methods=['POST'])
