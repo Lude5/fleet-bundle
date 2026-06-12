@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block crumbs %}<a href="/products">Products</a> <span class="sep">›</span> <span class="current">Cross-Site</span>{% endblock %}
+{% block heading %}Cross-Site Products{% endblock %}
+{% block topbar_actions %}
+    <span class="pill" id="cpCount">loading…</span>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .cp-intro { color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-bottom: 16px; max-width: 820px; }
+    .cp-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .cp-bar input[type=search] { flex: 1; min-width: 240px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 10px 13px; color: var(--text); font-size: 13px; }
+    .cp-toggle { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); cursor: pointer; user-select: none; white-space: nowrap; }
+    .cp-row { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 11px 14px; margin-bottom: 8px; }
+    .cp-row > img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; background: var(--surface-3); }
+    .cp-name { font-weight: 600; font-size: 14px; color: var(--text); }
+    .cp-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .cp-sites { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+    .cp-badge { font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; color: #fff; }
+    .cp-edit { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 16px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .cp-edit:hover { filter: brightness(1.08); }
+    .cp-ov { position: fixed; inset: 0; background: rgba(0,0,0,.62); display: none; align-items: center; justify-content: center; z-index: 200; }
+    .cp-ov.open { display: flex; }
+    .cp-modal { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px 24px; width: min(520px, 92vw); max-height: 88vh; overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+    .cp-modal h2 { margin: 0 0 4px; font-size: 19px; }
+    .cp-modal label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 13px 0 4px; }
+    .cp-modal input { width: 100%; box-sizing: border-box; background: var(--surface-3); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 9px 11px; color: var(--text); font-size: 13px; }
+    .cp-modal input:focus { outline: none; border-color: var(--accent); }
+    .cp-imgprev { width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; margin-top: 8px; background: var(--surface-3); }
+</style>
+{% endblock %}
+{% block content %}
+<p class="cp-intro">The same product across every connected site — matched by <b>source item ID + name</b> (the seller link is identical everywhere; only each site's affiliate code differs). Edit a product's name, photo, price or category <b>once</b> and it updates on every site that carries it — each keeps its own buy link.</p>
+<div class="cp-bar">
+    <input type="search" id="cpSearch" placeholder="Search products…">
+    <label class="cp-toggle"><input type="checkbox" id="cpMulti" checked> Only products on 2+ sites</label>
+</div>
+<div id="cpList"><div style="color:var(--text-muted);padding:34px;text-align:center;">Loading cross-site products…</div></div>
+
+<div class="cp-ov" id="cpOv" onclick="if(event.target===this)cpClose()">
+    <div class="cp-modal">
+        <h2 id="cpMTitle">Edit everywhere</h2>
+        <p id="cpMSites" style="color:var(--text-muted);font-size:12px;margin:0 0 6px;"></p>
+        <label>Name</label><input id="cpfName">
+        <label>Price (USD)</label><input id="cpfPrice" type="number" step="0.01">
+        <label>Category</label><input id="cpfCat">
+        <label>Image URL</label><input id="cpfImg" oninput="var p=document.getElementById('cpPrev');p.src=this.value;p.style.opacity=1">
+        <img id="cpPrev" class="cp-imgprev" referrerpolicy="no-referrer" onerror="this.style.opacity=.18">
+        <div style="display:flex; gap:10px; margin-top:18px;">
+            <button class="cp-edit" style="flex:1;" id="cpSave" onclick="cpSave()">Apply to all sites</button>
+            <button onclick="cpClose()" style="background:var(--surface-3);color:var(--text);border:none;border-radius:9px;padding:9px 16px;cursor:pointer;">Cancel</button>
+        </div>
+        <div id="cpMStatus" style="margin-top:11px;font-size:12px;min-height:16px;"></div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let GROUPS = [], CUR = null;
+const esc = s => (s == null ? '' : String(s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+async function load() {
+    try {
+        const d = await (await fetch('/products/cross')).json();
+        GROUPS = d.groups || [];
+        document.getElementById('cpCount').textContent = (d.count || 0).toLocaleString() + ' products · ' + (d.sites || []).length + ' sites';
+        render();
+    } catch (e) {
+        document.getElementById('cpList').innerHTML = '<div style="color:var(--danger,#ef4444);padding:30px;text-align:center;">Could not load: ' + esc(e.message) + '</div>';
+    }
+}
+function render() {
+    const q = (document.getElementById('cpSearch').value || '').toLowerCase();
+    const multi = document.getElementById('cpMulti').checked;
+    const list = document.getElementById('cpList'); list.innerHTML = '';
+    let shown = 0, capped = false;
+    for (const g of GROUPS) {
+        const sites = {}; g.sites.forEach(s => { sites[s.site_id] = s; });
+        if (multi && Object.keys(sites).length < 2) continue;
+        if (q && !(g.name || '').toLowerCase().includes(q)) continue;
+        shown++;
+        if (shown > 400) { capped = true; continue; }
+        const badges = Object.values(sites).map(s => `<span class="cp-badge" style="background:${esc(s.color || '#666')}">${esc(s.site_name)}</span>`).join('');
+        const row = document.createElement('div'); row.className = 'cp-row';
+        row.innerHTML = `<img src="${esc(g.image)}" referrerpolicy="no-referrer" onerror="this.style.opacity=.15">
+            <div><div class="cp-name">${esc(g.name)}</div>
+              <div class="cp-meta">$${esc(g.price)} · ${esc(g.category || '—')} · ${Object.keys(sites).length} site(s)</div>
+              <div class="cp-sites">${badges}</div></div>
+            <button class="cp-edit">Edit everywhere</button>`;
+        row.querySelector('.cp-edit').onclick = () => cpOpen(g);
+        list.appendChild(row);
+    }
+    if (!shown) list.innerHTML = '<div style="color:var(--text-muted);padding:34px;text-align:center;">No matching products.</div>';
+    else if (capped) list.insertAdjacentHTML('beforeend', '<div style="color:var(--text-muted);padding:14px;text-align:center;font-size:12px;">Showing first 400 — refine your search to see more.</div>');
+}
+function cpOpen(g) {
+    CUR = g;
+    document.getElementById('cpMTitle').textContent = g.name || 'Edit everywhere';
+    const sn = [...new Set(g.sites.map(s => s.site_name))];
+    document.getElementById('cpMSites').textContent = 'Updates ' + sn.length + ' site(s): ' + sn.join(', ');
+    document.getElementById('cpfName').value = g.name || '';
+    document.getElementById('cpfPrice').value = g.price || '';
+    document.getElementById('cpfCat').value = g.category || '';
+    document.getElementById('cpfImg').value = g.image || '';
+    const p = document.getElementById('cpPrev'); p.src = g.image || ''; p.style.opacity = 1;
+    document.getElementById('cpMStatus').textContent = '';
+    document.getElementById('cpOv').classList.add('open');
+}
+function cpClose() { document.getElementById('cpOv').classList.remove('open'); }
+async function cpSave() {
+    if (!CUR) return;
+    const btn = document.getElementById('cpSave'); btn.disabled = true; btn.textContent = 'Applying…';
+    const fields = { name: document.getElementById('cpfName').value, category: document.getElementById('cpfCat').value, image: document.getElementById('cpfImg').value };
+    const pr = parseFloat(document.getElementById('cpfPrice').value);
+    if (!isNaN(pr)) { fields.price = pr; fields.price_numeric = pr; }
+    try {
+        const d = await (await fetch('/products/cross/edit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: CUR.key, fields }) })).json();
+        const total = Object.values(d.results || {}).reduce((a, b) => a + (b.matched || 0), 0);
+        const nsites = Object.values(d.results || {}).filter(b => b.matched).length;
+        document.getElementById('cpMStatus').innerHTML = '<span style="color:var(--accent)">✓ Updated ' + total + ' product(s) on ' + nsites + ' site(s).</span>';
+        CUR.name = fields.name; CUR.category = fields.category; CUR.image = fields.image;
+        if (fields.price != null) CUR.price = fields.price;
+        render();
+        setTimeout(cpClose, 1200);
+    } catch (e) {
+        document.getElementById('cpMStatus').innerHTML = '<span style="color:var(--danger,#ef4444)">Error: ' + esc(e.message) + '</span>';
+    }
+    btn.disabled = false; btn.textContent = 'Apply to all sites';
+}
+document.getElementById('cpSearch').addEventListener('input', render);
+document.getElementById('cpMulti').addEventListener('change', render);
+load();
+</script>
+{% endblock %}

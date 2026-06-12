@@ -731,6 +731,12 @@ def products_cross_edit():
     return jsonify({'ok': True, 'results': out})
 
 
+@app.route('/products/cross-view')
+def products_cross_view():
+    """Cross-Site Products page — batch-edit one product across every site at once."""
+    return render_template('products_cross.html', active='cross')
+
+
 @app.route('/products/scrape', methods=['POST'])
 def products_scrape():
     """Scrape a Weidian/Taobao/1688 (or agent-wrapped) link for the add-product composer.
