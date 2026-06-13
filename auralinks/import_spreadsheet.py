@@ -169,7 +169,9 @@ def harvest(ws, tabname, cfg):
 ENRICH_CACHE = os.path.join(HERE, 'static', 'enrich_cache.json')
 
 _IMG_JUNK = ('wx_default_headimg', 'hz_img_', 'icon-', '/avatar', 'login_', 'wd_logo', 'common-')
-_IMG_RE = re.compile(r'https?://[a-z]+\.geilicdn\.com/(?:pcitem|open)[^"\'\\\s&]+?\.(?:jpg|jpeg|png|webp)[^"\'\\\s&]*')
+# stop at '?' so Weidian's lazy-load resize param (e.g. ?w=30, a 30px thumbnail)
+# isn't glued on — the bare URL serves the native full-resolution image.
+_IMG_RE = re.compile(r'https?://[a-z]+\.geilicdn\.com/(?:pcitem|open)[^"\'\\\s&?]+?\.(?:jpg|jpeg|png|webp)')
 
 def fetch_weidian_images(pid, tries=3):
     """Product gallery images. Primary: the public item PAGE (robust, holds the
