@@ -256,7 +256,9 @@ def build_sheet_images(path):
     picture and has NO cached value, so data_only=True returns blank for it — which is
     why these per-product photos were missed and items fell back to itemID-matched ones."""
     wbf = openpyxl.load_workbook(path, data_only=False)
-    img_re = re.compile(r'https?://[^\s"“”\)\']+')
+    # exclude commas (incl. fullwidth ，) so `=IMAGE("url"，2)` mode params don't get
+    # glued onto the URL (that 404'd a handful of otherwise-valid postimg photos).
+    img_re = re.compile(r'https?://[^\s"“”\)\'，,]+')
     by_key, by_pid = {}, {}
     for ws in wbf.worksheets:
         grid = {(c.row, c.column): c for row in ws.iter_rows() for c in row}
