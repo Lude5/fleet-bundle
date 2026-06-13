@@ -260,24 +260,43 @@ def build_sheet_images(path):
     by_key, by_pid = {}, {}
     for ws in wbf.worksheets:
         grid = {(c.row, c.column): c for row in ws.iter_rows() for c in row}
+        # link columns per row — the sheet is a GRID: up to 4 products side-by-side
+        # per row, each in its own block [name, link, price, $, IMAGE]. The image
+        # MUST be read from THIS product's block, not the first IMAGE() in the row
+        # (that bug stamped one photo onto every product sharing a row).
+        links_by_row = {}
+        for (r, col), c in grid.items():
+            _, p = source_from_link(getattr(c.hyperlink, 'target', None) if c.hyperlink else None)
+            if p:
+                links_by_row.setdefault(r, []).append(col)
         for (r, col), c in list(grid.items()):
             plat, pid = source_from_link(getattr(c.hyperlink, 'target', None) if c.hyperlink else None)
             if not pid:
                 continue
-            ncell = grid.get((r, col - 3)) if str(c.value or '').strip().upper().startswith('CNFANS') else None
+            is_cnfans = str(c.value or '').strip().upper().startswith('CNFANS')
+            ncell = grid.get((r, col - 3)) if is_cnfans else None
             if not (ncell and ncell.value):
                 ncell = grid.get((r, col - 1))
             name = clean_name(ncell.value if ncell else '')
             if not name or len(name) < 3:
                 continue
+            # this product's block: CNFANS layout puts the IMAGE to the LEFT of the
+            # link (col 1); grid layout puts it to the RIGHT, before the next link.
+            if is_cnfans:
+                scan = range(col - 1, 0, -1)
+            else:
+                nxt = min([x for x in links_by_row.get(r, []) if x > col], default=ws.max_column + 1)
+                scan = range(col + 1, nxt)
             img = ''
-            for cc in range(1, ws.max_column + 1):
+            for cc in scan:
                 v = ws.cell(r, cc).value
                 if isinstance(v, str) and 'IMAGE(' in v.upper():
                     m = img_re.search(v)
                     if m:
                         img = m.group(0)
                         break
+            if 'load-failure' in img.lower():   # curator's broken-image marker -> placeholder
+                img = ''
             if not img:
                 continue
             by_key.setdefault((plat, pid, re.sub(r'\s+', ' ', name).strip().lower()), img)
