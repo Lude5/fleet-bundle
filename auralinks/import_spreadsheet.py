@@ -52,6 +52,27 @@ def clean_name(s):
     s = re.sub(r'[🔥⚡✨❄️☃️🐼⛄]', '', s)
     return re.sub(r'\s+', ' ', s).strip(' -–—|')
 
+_NUMERIC_CELL = re.compile(r'^[\d.,$%／/\s\-]+$')
+
+def find_name(grid, r, col):
+    """The product name sits LEFT of the link, but the offset VARIES by tab:
+    CNFANS master = link-3 (past USD/EUR), trending grid = link-1, and the
+    shoes/t-shirt/womens/hoodies/accessories grids = link-2 (a gap sits at
+    link-1). The old code only looked at link-1, silently dropping ~1,950 grid
+    products. Scan left for the nearest real TEXT cell, skipping price/number
+    and link/QC cells."""
+    for off in (1, 2, 3):
+        nc = grid.get((r, col - off))
+        if nc is None or nc.value is None:
+            continue
+        v = str(nc.value).strip()
+        if not v or v.upper() in ('LINK', 'CNFANS LINK', 'QC') or _NUMERIC_CELL.match(v):
+            continue
+        nm = clean_name(nc.value)
+        if nm and len(nm) >= 3 and nm.strip().upper() not in ('LINK', 'CNFANS LINK', 'QC'):
+            return nm
+    return ''
+
 def source_from_link(target):
     """Return (platform, item_id) from any agent/product wrapper, else (None, None)."""
     if not target:
@@ -134,13 +155,9 @@ def harvest(ws, tabname, cfg):
         plat, pid = source_from_link(target)
         if not pid:
             continue
-        # NAME: master-list layout (link col E, name col B) or grid layout (name
-        # immediately left of the LINK cell)
-        name_cell = grid.get((r, col - 3)) if str(c.value or '').strip().upper().startswith('CNFANS') else None
-        if not (name_cell and name_cell.value):
-            name_cell = grid.get((r, col - 1))
-        name = clean_name(name_cell.value if name_cell else '')
-        if not name or len(name) < 3 or name.strip().upper() in ('LINK', 'CNFANS LINK', 'QC'):
+        # NAME: offset from the link varies by tab layout — scan left for it.
+        name = find_name(grid, r, col)
+        if not name:
             continue
         # PRICE: master layout -> col C (link col - 2); grid -> usd at col+2 ('44.62$' text or number)
         usd = None
@@ -278,11 +295,8 @@ def build_sheet_images(path):
             if not pid:
                 continue
             is_cnfans = str(c.value or '').strip().upper().startswith('CNFANS')
-            ncell = grid.get((r, col - 3)) if is_cnfans else None
-            if not (ncell and ncell.value):
-                ncell = grid.get((r, col - 1))
-            name = clean_name(ncell.value if ncell else '')
-            if not name or len(name) < 3:
+            name = find_name(grid, r, col)
+            if not name:
                 continue
             # this product's block: CNFANS layout puts the IMAGE to the LEFT of the
             # link (col 1); grid layout puts it to the RIGHT, before the next link.
