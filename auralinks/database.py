@@ -241,8 +241,8 @@ def add_products_bulk(products):
     conn = get_db()
     for p in products:
         conn.execute('''
-            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            INSERT OR REPLACE INTO products (id, name, price, price_numeric, url, image, category, seller, rating, batch, retail_price, review_count, tags, manual, featured, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (
             p.get('id', ''),
             p.get('name', ''),
@@ -258,6 +258,10 @@ def add_products_bulk(products):
             int(p.get('review_count', 0) or 0),
             p.get('tags', ''),
             int(p.get('manual', 0) or 0),
+            # honour seed-provided ordering so "Trending Now" items sort first
+            # (SHOP_ORDER = featured DESC, position ASC, created_at DESC)
+            int(p.get('featured', 0) or 0),
+            int(p.get('position', 0) or 0),
         ))
     conn.commit()
     conn.close()
