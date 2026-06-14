@@ -2397,6 +2397,127 @@ def admin_auto_categorize_all():
     return jsonify({'ok': True, 'updated': updated, 'scanned': len(products)})
 
 
+_MOBILE_UA = ('Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 '
+              '(KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1')
+
+
+def _weidian_item_id(url):
+    import re as _re
+    m = _re.search(r'itemID(?:%3D|=)(\d+)', url or '', _re.I)
+    return m.group(1) if m else None
+
+
+def _listing_is_dead(item_id):
+    """Return True ONLY when Weidian definitively reports the listing doesn't
+    exist (small page carrying '商品不存在' / '已下架' and no product gallery).
+    Returns False for a live listing, and None for any network error / timeout /
+    rate-limit so a transient failure can NEVER hide a real product."""
+    import requests as _r
+    try:
+        resp = _r.get(f'https://weidian.com/item.html?itemID={item_id}',
+                      headers={'User-Agent': _MOBILE_UA, 'Range': 'bytes=0-45000'},
+                      timeout=12)
+        if resp.status_code not in (200, 206):
+            return None
+        # The "item does not exist / removed" markers are the definitive signal:
+        # Weidian's removed-item page is ~26KB and carries one of these; a live
+        # listing's page never does. Match on raw UTF-8 bytes to avoid any
+        # text-decoding ambiguity. (Note: the dead page DOES contain the bare
+        # string "geilicdn" from a default asset, so gallery presence is NOT a
+        # reliable signal — the marker is.)
+        raw = resp.content or b''
+        for marker in ('商品不存在', '已下架', '商品已删除', '不存在或已删除', '该商品已删除'):
+            if marker.encode('utf-8') in raw:
+                return True
+        return False
+    except Exception:
+        return None
+
+
+@app.route('/admin/products/check-listings', methods=['POST'])
+def admin_check_listings():
+    """Probe a SLICE of products against their Weidian source and auto-HIDE
+    (in_stock=0) any whose listing is confirmed dead/delisted — for operator
+    review, never deleted. Slice-based so the admin can drive it in batches
+    without long requests or rate-limit timeouts.
+
+    Body: {offset:int, limit:int<=120, apply:bool}. Returns the dead found in
+    this slice + progress. Network errors are skipped (never hidden)."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    from concurrent.futures import ThreadPoolExecutor
+    body = request.get_json(silent=True) or {}
+    offset = max(0, int(body.get('offset', 0)))
+    limit = min(120, max(10, int(body.get('limit', 80))))
+    apply = body.get('apply', True)
+    products = get_products()
+    total = len(products)
+    chunk = products[offset:offset + limit]
+
+    def check(p):
+        wid = _weidian_item_id(p.get('url'))
+        if not wid:
+            return ('skip', p)
+        v = _listing_is_dead(wid)              # True=dead, False=live, None=couldn't reach
+        return (('dead' if v else 'live') if v is not None else 'unknown', p)
+
+    dead, live, unknown = [], 0, 0
+    if chunk:
+        # modest concurrency — Weidian throttles aggressive bulk probing; the
+        # caller loops slices so total throughput stays reasonable
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            for verdict, p in ex.map(check, chunk):
+                if verdict == 'dead':
+                    dead.append({'id': p['id'], 'name': p.get('name', '')})
+                elif verdict == 'live':
+                    live += 1
+                elif verdict == 'unknown':
+                    unknown += 1
+    if apply and dead:
+        set_in_stock([d['id'] for d in dead], False)
+    return jsonify({
+        'ok': True, 'offset': offset, 'checked': len(chunk), 'total': total,
+        'dead': dead, 'live': live, 'unknown': unknown,
+        'hidden': len(dead) if apply else 0,
+        'has_more': offset + limit < total, 'next_offset': offset + limit,
+    })
+
+
+@app.route('/admin/products/recategorize-all', methods=['POST'])
+def admin_recategorize_all():
+    """Re-run the categorizer over EVERY product and CORRECT wrong categories
+    (not just fill blanks). Default is a dry run that reports what WOULD change;
+    pass {"apply": true} to write. A product is only changed when the guesser
+    returns a confident category that differs from the current one — so a name
+    with no clear hint keeps its existing category (never blanked).
+
+    Body: {apply: bool}. Returns {would_change|changed, total, sample:[...]}."""
+    if not is_admin():
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        from tag_utils import auto_category
+    except ImportError:
+        from .tag_utils import auto_category
+    apply = bool((request.get_json(silent=True) or {}).get('apply'))
+    products = get_products()
+    changes = []
+    for p in products:
+        guess = auto_category(p.get('name', ''), fallback='')
+        cur = (p.get('category') or '').strip()
+        if guess and guess != cur:
+            changes.append({'id': p['id'], 'name': p.get('name', ''), 'from': cur or '(blank)', 'to': guess})
+    if apply:
+        for ch in changes:
+            update_product(ch['id'], {'category': ch['to']})
+    return jsonify({
+        'ok': True,
+        'applied': apply,
+        ('changed' if apply else 'would_change'): len(changes),
+        'total': len(products),
+        'sample': changes[:40],
+    })
+
+
 # ===========================================================================
 # Cross-site API (used by the master admin) — token-auth alternative.
 # All routes accept either an admin session OR an X-Admin-Token header.

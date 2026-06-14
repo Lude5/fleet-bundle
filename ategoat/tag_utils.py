@@ -389,33 +389,63 @@ def is_tracksuit(name):
     return strong or bool(_TS_WEAK.search(name))
 
 
-_AUTO_CATEGORY_RULES = [
-    # Explicit tracksuit/co-ord names win first (e.g. "Nike Tech Tracksuit",
-    # "Trapstar 2-Piece") before brand-only rules below can claim them as shoes.
-    ('tracksuits',  _TS_STRONG),
-    ('bags',        _re.compile(r'\b(bag|backpack|tote|handbag|sling|duffel|messenger|crossbody|fanny[- ]?pack|pouch|luggage|suitcase|briefcase|clutch|satchel)\b', _re.I)),
-    ('shoes',       _re.compile(r'\b(shoe|shoes|sneaker|sneakers|trainer|trainers|boot|boots|slipper|slippers|slide|slides|sandal|sandals|loafer|mule|flip[- ]?flop|jordan|yeezy|samba|gazelle|campus|forum|stan[ -]?smith|nb[ -]?\d+|new[ -]?balance|asics|nike|adidas|puma|converse|reebok|vans|onitsuka|salomon|hoka|crocs|dunk|af1|air[- ]?force|p6000|9060|1906|nocta|tabi|mm6|moc\b|cleats|runner|kicks|high[ -]?heel|heel|stiletto|pump)\b', _re.I)),
-    # Luxury / archive sneaker brand-only names that lack a type word.
-    # Common in rep catalogs (e.g. "Dior B22", "Golden Goose Low", "Balenciaga Track").
-    ('shoes',       _re.compile(r'^(?:dior\s*b\s*\d|golden\s*goose|christian\s*loub(?:outin|otin)|birkenstock|maison\s*margiela|alexander\s*mcqueen|lanvin|bape(?:\s*sta)?|off\s*[- ]?white|timberland|loewe|valentino|ysl|balenciaga\s*(?:track|defender|3xl|alaska|speedhunter)|gucci\s*(?:chunky|rhyton|g\s*\d)|prada\s*(?:america|prax|downtown)|amiri|b\s*[1-9]\d?|hermes\s*(?:land|chypre|bouncing)|brunello\s*cucinelli|loro\s*piana|miu\s*miu|north\s*face|the\s*north\s*face|the\s*row|rick\s*owens)\b', _re.I)),
-    ('hoodies',     _re.compile(r'\b(hoodie|hoody|hooded|sweatshirt|crewneck|crew[- ]?neck|pullover|zip[- ]?up|zipup|fleece(?!.*jacket))\b', _re.I)),
-    ('jackets',     _re.compile(r'\b(jacket|coat|parka|puffer|vest|gilet|blazer|windbreaker|bomber|trench|overcoat|outerwear|down[- ]?jacket|quilted|softshell|hardshell|shell(?!\s*(?:tee|shirt)))\b', _re.I)),
-    ('shorts',      _re.compile(r'\b(short|shorts|shortie|shorties|trunks|board[- ]?short)\b', _re.I)),
-    ('pants',       _re.compile(r'\b(pant|pants|trouser|trousers|jean|jeans|denim|sweatpant|sweatpants|jogger|joggers|cargo|cargos|chino|chinos|legging|leggings|track[- ]?pant|track[- ]?pants|slack|slacks|skirt|skort)\b', _re.I)),
-    ('shirts',      _re.compile(r'\b(t[- ]?shirt|tshirt|tee|tees|polo|polos|shirt|shirts|button[- ]?up|button[- ]?down|jersey|tank|top|tops|long[- ]?sleeve|short[- ]?sleeve|knit|knitted(?!\s*hat)|sweater|cardigan)\b', _re.I)),
-    ('tech',        _re.compile(r'\b(iphone|samsung|airpod|airpods|earpod|earbud|earphone|headphone|laptop|macbook|ipad|tablet|charger|cable|speaker|airtag|dyson|stanley|kindle|switch|playstation|xbox|drone|smartwatch)\b', _re.I)),
-    ('headwear',    _re.compile(r'\b(hat|hats|cap|caps|beanie|beanies|bucket[ -]?hat|trucker|snapback|fedora|visor|skull[ -]?cap|knit cap|toque)\b', _re.I)),
-    ('accessories', _re.compile(r'\b(scarf|scarves|glove|gloves|belt|belts|wallet|cardholder|card[- ]?holder|sunglasses?|glasses?|watch|watches|jewel(?:ry|lery)?|necklace|chain|ring|earring|bracelet|brooch|bandana|tie\b|bowtie|cufflink|umbrella|keychain|sock|socks|mask)\b', _re.I)),
-    ('womens',      _re.compile(r'\b(womens?|women\'s|female|ladies|dress|skirt|bra|bralette|crop[- ]?top|romper|jumpsuit|bodysuit)\b', _re.I)),
+# GARMENT-TYPE rules — matched FIRST, in this order. The product TYPE word
+# (tee, shorts, hoodie, belt…) decides the category. Critically these contain
+# NO multi-category brand names (nike/adidas/bape/amiri make shoes AND apparel),
+# so "Nike Tee" -> shirts and "Bape Shorts" -> shorts instead of both wrongly
+# landing in shoes. Only AFTER no type word matches do we fall back to the
+# brand/model shoe heuristic below.
+_TYPE_RULES = [
+    ('bags',        _re.compile(r'\b(bag|backpack|tote|handbag|sling|duffel|duffle|messenger|cross[- ]?body|fanny[- ]?pack|pouch|luggage|suitcase|briefcase|clutch|satchel|keepall|cardholder|card[- ]?holder)\b', _re.I)),
+    ('headwear',    _re.compile(r'\b(hat|hats|cap|caps|beanie|beanies|bucket[ -]?hat|trucker|snapback|fedora|visor|skull[ -]?cap|knit[ -]?cap|toque|balaclava)\b', _re.I)),
+    ('accessories', _re.compile(r'\b(scarf|scarves|glove|gloves|belt|belts|wallet|sunglass(?:es)?|glasses|watch|watches|jewel(?:ry|lery)?|necklace|chain|ring|rings|earring|bracelet|brooch|bandana|tie\b|bowtie|cufflink|umbrella|keychain|key[- ]?ring|sock|socks|mask|underwear|boxer)\b', _re.I)),
+    ('tech',        _re.compile(r'\b(iphone|samsung|airpod|airpods|earpod|earbud|earphone|headphone|laptop|macbook|ipad|tablet|charger|cable|speaker|jbl|airtag|dyson|stanley|kindle|switch|playstation|xbox|drone|smart[- ]?watch|power[- ]?bank|flip\s*5)\b', _re.I)),
+    # require the PLURAL "shorts" (+ trunks/boardshorts) — bare "short" is an
+    # adjective in "short coat" / "short-sleeved shirt" and must NOT match here
+    ('shorts',      _re.compile(r'\b(shorts|shorties|trunks|board[- ]?shorts?|swim[- ]?shorts?)\b', _re.I)),
+    ('pants',       _re.compile(r'\b(pants?|trousers?|jeans?|sweat[- ]?pants?|joggers?|cargos?|chinos?|leggings?|track[- ]?pants?|slacks?|skort)\b', _re.I)),
+    ('hoodies',     _re.compile(r'\b(hoodie|hoody|hooded|sweat[- ]?shirt|crew[- ]?neck|crewneck|pullover|zip[- ]?up|zipup|sweater|knitwear|cardigan|jumper)\b', _re.I)),
+    ('jackets',     _re.compile(r'\b(jacket|coat|parka|puffer|vest|gilet|blazer|windbreaker|bomber|trench|overcoat|outerwear|down[- ]?jacket|quilted|softshell|hardshell)\b', _re.I)),
+    ('womens',      _re.compile(r'\b(womens?|women\'s|female|ladies|dress|skirt|bra|bralette|romper|jumpsuit|bodysuit)\b', _re.I)),
+    # shirts LAST among apparel; note: bare "top" is intentionally excluded — in
+    # rep listings "Top"/"Good" are QUALITY tiers ("Dior B30 Top" = a shoe), so
+    # it can't mean the garment here. Real tops say tank/polo/tee/crop.
+    ('shirts',      _re.compile(r'\b(t[- ]?shirts?|tshirts?|tees?|polos?|shirts?|button[- ]?up|button[- ]?down|jersey|tank|crop[- ]?top|long[- ]?sleeve|short[- ]?sleeve)\b', _re.I)),
+    # explicit shoe TYPE / MODEL words (shoe-dominant brands only — NOT nike/adidas/puma)
+    ('shoes',       _re.compile(r'\b(shoe|shoes|sneakers?|trainers?|boots?|slippers?|slides?|sandals?|loafer|mule|flip[- ]?flop|cleats?|heels?|stiletto|pump|'
+                               r'jordan|yeezy|dunk|af1|air[- ]?force|air[- ]?max|airmax|vapormax|samba|gazelle|campus|spezial|handball|forum|stan[ -]?smith|superstar|'
+                               r'new[ -]?balance|nb[ -]?\d+|asics|onitsuka|salomon|hoka|crocs|converse|vans|reebok|'
+                               r'p6000|9060|1906r?|2002r|990|550|530|327|shox|uptempo|foamposite|kobe|cortez|blazer|vomero|nocta|tabi|mm6|gel[- ]?\w+|protro)\b', _re.I)),
 ]
 
+# Brand/model names that ARE a shoe even with no type word ("Dior B22",
+# "Golden Goose", "Balenciaga Track"). Tried LAST so a garment word always wins.
+_SHOE_BRAND_ONLY = _re.compile(
+    r'^(?:\s*\d+[、,.]?\s*)?(?:dior\s*b\s*\d|golden\s*goose|christian\s*loub(?:outin|otin)|louboutin|birkenstock|'
+    r'maison\s*margiela|margiela|alexander\s*mcqueen|mcqueen|lanvin|bape\s*sta|timberland|valentino|'
+    r'balenciaga\s*(?:track|defender|3xl|alaska|speed|runner)|gucci\s*(?:chunky|rhyton|screener|g\s*\d)|'
+    r'prada\s*(?:america|prax|downtown|sport)|hermes\s*(?:land|chypre|bouncing|izmir)|'
+    r'loro\s*piana\s*(?:summer|walk)|brunello\s*cucinelli\s*shoe|miu\s*miu\s*(?:shoe|sneak)|rick\s*owens\s*(?:ramones|geo)|b\s*[1-9]\d?\b)',
+    _re.I)
+
+
 def auto_category(name, fallback=''):
-    """Return the most likely category slug for a product name, or `fallback`.
-    First-match-wins against the rules above. Used when the operator adds a
-    product without picking a category (or when bulk-importing)."""
+    """Most likely category slug for a product name (else `fallback`).
+
+    Precedence: tracksuit/co-ord → garment TYPE word (brand-agnostic) →
+    brand-only shoe model. The TYPE word always beats a brand, so multi-category
+    brands (Nike, Bape, Amiri, Off-White) no longer dump tees/shorts into shoes."""
     if not name:
         return fallback
-    for slug, pat in _AUTO_CATEGORY_RULES:
+    if is_tracksuit(name):
+        return 'tracksuits'
+    for slug, pat in _TYPE_RULES:
         if pat.search(name):
             return slug
+    if _SHOE_BRAND_ONLY.search(name):
+        return 'shoes'
     return fallback
+
+
+# Back-compat: some callers import _AUTO_CATEGORY_RULES directly.
+_AUTO_CATEGORY_RULES = [('tracksuits', _TS_STRONG)] + _TYPE_RULES + [('shoes', _SHOE_BRAND_ONLY)]

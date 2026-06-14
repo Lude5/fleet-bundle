@@ -30,6 +30,8 @@
         </div>
     </div>
     <button class="pill" type="button" onclick="document.getElementById('importPanel').scrollIntoView({behavior:'smooth'})" data-i18n="tb_add_product">+ Add</button>
+    <button class="pill" type="button" onclick="recategorizeAll()" id="recatBtn" title="Re-run the categorizer over every product and fix wrong categories (shows a preview first)">🗂️ Fix categories</button>
+    <button class="pill" type="button" onclick="checkListings()" id="checkListingsBtn" title="Check every product's source listing and auto-hide ones that have been delisted (for your review under the Out-of-stock filter)">🧹 Check listings</button>
     <a href="/" target="_blank" class="pill primary" data-i18n="tb_view_site">View site &rarr;</a>
 {% endblock %}
 
@@ -1894,5 +1896,60 @@ async function scrapeIntoManual(btn) {
         updateBulkBar();
     });
 })();
+
+// ---- Fix categories (#1): preview then apply ----------------------------------
+async function recategorizeAll(){
+    var btn = document.getElementById('recatBtn');
+    var old = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try {
+        var pre = await fetch('/admin/products/recategorize-all', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({apply:false})
+        }).then(r=>r.json());
+        var n = pre.would_change || 0;
+        if (!n){ alert('All categories already look correct — nothing to change.'); return; }
+        var sample = (pre.sample||[]).slice(0,12).map(function(c){return '• '+c.name.slice(0,38)+'  ('+c.from+' → '+c.to+')';}).join('\n');
+        if (!confirm(n + ' product(s) will be recategorized.\n\nExamples:\n' + sample + '\n\nApply these changes?')) return;
+        btn.textContent = 'Applying…';
+        var res = await fetch('/admin/products/recategorize-all', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({apply:true})
+        }).then(r=>r.json());
+        alert('Done — recategorized ' + (res.changed||0) + ' products. Reloading.');
+        location.reload();
+    } catch(e){ alert('Failed: ' + e); }
+    finally { btn.disabled = false; btn.textContent = old; }
+}
+
+// ---- Check listings (#2): scan in slices, auto-hide delisted -----------------
+async function checkListings(){
+    var btn = document.getElementById('checkListingsBtn');
+    var old = btn.textContent;
+    if (!confirm('Scan every product against its source listing and HIDE any that have been delisted?\n\nHidden items are not deleted — review them with the "Out of stock" filter. This can take a few minutes.')) return;
+    btn.disabled = true;
+    var offset = 0, total = null, hidden = 0, live = 0, unknown = 0, deadNames = [];
+    try {
+        while (true){
+            var d = await fetch('/admin/products/check-listings', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({offset:offset, limit:80, apply:true})
+            }).then(r=>r.json());
+            if (d.error){ alert('Stopped: '+d.error); break; }
+            total = d.total; hidden += (d.hidden||0); live += (d.live||0); unknown += (d.unknown||0);
+            (d.dead||[]).forEach(function(x){ deadNames.push(x.name); });
+            btn.textContent = 'Checked ' + Math.min(d.next_offset, total) + '/' + total + ' · ' + hidden + ' hidden';
+            if (!d.has_more) break;
+            offset = d.next_offset;
+        }
+        var preview = deadNames.slice(0,15).map(function(n){return '• '+n.slice(0,40);}).join('\n');
+        var coverage = '\n\nReached: ' + live + ' live, ' + hidden + ' delisted, ' + unknown + " couldn't be checked.";
+        if (unknown > live + hidden){
+            alert('⚠️ Weidian blocked most of the checks (' + unknown + " couldn't be reached). It hid only " + hidden + ' confirmed-dead so far.' + coverage + '\n\nRun it again later (it rechecks), or we switch to the slow background scan.');
+        } else {
+            alert('Done. Hid ' + hidden + ' delisted product(s).' + (hidden ? '\n\n' + preview : '') + coverage + (hidden ? '\n\nReview them under Filter → Out of stock.' : ''));
+        }
+        if (hidden) location.reload();
+    } catch(e){ alert('Failed: ' + e); }
+    finally { btn.disabled = false; btn.textContent = old; }
+}
 </script>
 {% endblock %}
