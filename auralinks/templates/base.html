@@ -211,6 +211,19 @@
         @media (max-width: 768px) {
             .currency-switcher, .lang-switcher { display: none; }
         }
+        /* Mobile top-bar actions (language + favorites), shown when the desktop
+           nav row collapses into the hamburger. Matches the dark nav chrome. */
+        .nav-mobile-actions { display: none; align-items: center; gap: 4px; margin-left: auto; }
+        .nav-mobile-actions .mob-lang { position: relative; }
+        .nav-mobile-actions .mob-lang-btn { background: transparent; border: 1px solid rgba(255,255,255,0.28); color: rgba(255,255,255,0.85); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 8px 9px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+        .nav-mobile-actions .mob-lang-btn:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+        .nav-mobile-actions .mob-lang-btn .caret { font-size: 8px; opacity: .7; }
+        .nav-mobile-actions #mobLangMenu { right: 0; left: auto; }
+        .nav-mobile-actions .nav-mob-wish { position: relative; display: inline-flex; align-items: center; font-size: 21px; line-height: 1; color: rgba(255,255,255,0.85); text-decoration: none; padding: 6px; }
+        .nav-mobile-actions .nav-mob-wish.active, .nav-mobile-actions .nav-mob-wish:hover { color: var(--accent); }
+        @media (max-width: 900px) {
+            .nav-mobile-actions { display: flex; }
+        }
 
         /* Floating right-side widget (Discord + Tutorial + Back-to-top) */
         .side-widget { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 90; display: flex; flex-direction: column; gap: 10px; }
@@ -1077,8 +1090,30 @@
             <li><a href="/wishlist" class="nav-wishlist {% if request.path == '/wishlist' %}active{% endif %}" aria-label="Wishlist" data-i18n-title="wishlist">&#9825;<span class="nav-wish-count" id="navWishCount"></span></a></li>
             <li><a href="/agents" class="nav-cta" data-i18n="nav_signup">Sign Up — Coupons $50–$500</a></li>
         </ul>
+        <!-- Mobile-only top-bar actions: language + favorites stay reachable at the
+             top on phones (the desktop row collapses into the hamburger ≤900px). -->
+        <div class="nav-mobile-actions">
+            <div class="mob-lang" id="mobLangSwitch">
+                <button class="mob-lang-btn" type="button" onclick="toggleMobLang(event)" aria-label="Change language">
+                    <span data-lang-label>EN</span><span class="caret">&#9662;</span>
+                </button>
+                <div class="currency-menu lang-menu" id="mobLangMenu">
+                    <button type="button" onclick="setLang('en');closeMobLang()">English <span class="sym">EN</span></button>
+                    <button type="button" onclick="setLang('de');closeMobLang()">Deutsch <span class="sym">DE</span></button>
+                    <button type="button" onclick="setLang('pl');closeMobLang()">Polski <span class="sym">PL</span></button>
+                    <button type="button" onclick="setLang('es');closeMobLang()">Español <span class="sym">ES</span></button>
+                    <button type="button" onclick="setLang('fr');closeMobLang()">Français <span class="sym">FR</span></button>
+                </div>
+            </div>
+            <a href="/wishlist" class="nav-mob-wish {% if request.path == '/wishlist' %}active{% endif %}" aria-label="Wishlist" data-i18n-title="wishlist">&#9825;<span class="nav-wish-count"></span></a>
+        </div>
         <button class="nav-hamburger" onclick="var p=document.getElementById('popup');if(p)p.classList.remove('active');document.getElementById('mob').classList.add('open')">&#9776;</button>
     </nav>
+    <script>
+        function toggleMobLang(e){ if(e){e.stopPropagation();} var m=document.getElementById('mobLangMenu'); var c=document.getElementById('currencyMenu'); if(c)c.classList.remove('open'); var l=document.getElementById('langMenu'); if(l)l.classList.remove('open'); if(m)m.classList.toggle('open'); }
+        function closeMobLang(){ var m=document.getElementById('mobLangMenu'); if(m)m.classList.remove('open'); }
+        document.addEventListener('click', function(e){ var m=document.getElementById('mobLangMenu'); if(m && m.classList.contains('open') && e.target.closest && !e.target.closest('#mobLangSwitch')) m.classList.remove('open'); });
+    </script>
 
     <div class="mobile-menu" id="mob">
         <button class="mobile-close" onclick="document.getElementById('mob').classList.remove('open')">&times;</button>
@@ -2049,8 +2084,9 @@
         };
         window.wlSyncUI = function(){
             var n = window.wlCount();
-            var b = document.getElementById('navWishCount');
-            if (b) { b.textContent = n; b.classList.toggle('show', n > 0); }
+            [].forEach.call(document.querySelectorAll('.nav-wish-count'), function (b) {
+                b.textContent = n; b.classList.toggle('show', n > 0);
+            });
             var mb = document.getElementById('mobWishCount'); if (mb) mb.textContent = n ? (' (' + n + ')') : '';
             [].forEach.call(document.querySelectorAll('.product-card-wish'), function(h){
                 var on = window.wlHas(h.dataset.wish);
